@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import org.jspecify.annotations.NullUnmarked;
+
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResults;
@@ -27,11 +29,14 @@ import org.springframework.javapoet.CodeBlock;
 import org.springframework.util.ClassUtils;
 
 /**
+ * Code blocks for generating code related to geo-near queries in MongoDB repositories.
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
 class GeoBlocks {
 
+	@NullUnmarked
 	static class GeoNearCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
@@ -91,16 +96,15 @@ class GeoBlocks {
 		}
 	}
 
+	@NullUnmarked
 	static class GeoNearExecutionCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
-		private final MongoQueryMethod queryMethod;
 		private String queryVariableName;
 
-		GeoNearExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		GeoNearExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context) {
 
 			this.context = context;
-			this.queryMethod = queryMethod;
 		}
 
 		GeoNearExecutionCodeBlockBuilder referencing(String queryVariableName) {

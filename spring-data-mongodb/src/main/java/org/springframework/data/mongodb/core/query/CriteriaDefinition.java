@@ -50,7 +50,7 @@ public interface CriteriaDefinition {
 
 		/**
 		 * Create a new placeholder for index bindable parameter.
-		 * 
+		 *
 		 * @param position the index of the parameter to bind.
 		 * @return new instance of {@link Placeholder}.
 		 */
@@ -65,20 +65,4 @@ public interface CriteriaDefinition {
 		Object getValue();
 	}
 
-	static class PlaceholderImpl implements Placeholder {
-		private final Object expression;
-
-		public PlaceholderImpl(Object expression) {
-			this.expression = expression;
-		}
-
-		@Override
-		public Object getValue() {
-			return expression;
-		}
-
-		public String toString() {
-			return getValue().toString();
-		}
-	}
 }

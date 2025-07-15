@@ -15,40 +15,49 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.BinaryVector;
 import org.bson.Document;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.mongodb.repository.query.MongoParameters;
 import org.springframework.data.repository.aot.generate.QueryMetadata;
 import org.springframework.util.StringUtils;
 
 /**
+ * A vector search interaction for MongoDB repositories.
+ *
  * @author Christoph Strobl
+ * @since 5.0
  */
-public class SearchInteraction extends MongoInteraction implements QueryMetadata {
+class SearchInteraction extends MongoInteraction implements QueryMetadata {
 
 	private final Class<?> domainType;
 	private final StringQuery filter;
-	private final @Nullable VectorSearch vectorSearch;
+	private final VectorSearch vectorSearch;
 	private final MongoParameters parameters;
+	private final MongoMappingContext mappingContext;
 
-	public SearchInteraction(Class<?> domainType, @Nullable VectorSearch vectorSearch, StringQuery filter,
-			MongoParameters parameters) {
+	public SearchInteraction(Class<?> domainType, VectorSearch vectorSearch, StringQuery filter,
+			MongoParameters parameters, MongoMappingContext mappingContext) {
 
 		this.domainType = domainType;
 		this.vectorSearch = vectorSearch;
 
 		this.filter = filter;
 		this.parameters = parameters;
+		this.mappingContext = mappingContext;
 	}
 
 	public StringQuery getFilter() {
@@ -57,7 +66,7 @@ public class SearchInteraction extends MongoInteraction implements QueryMetadata
 
 	@Nullable
 	String getIndexName() {
-		return vectorSearch != null ? vectorSearch.indexName() : null;
+		return vectorSearch.indexName();
 	}
 
 	public MongoParameters getParameters() {
@@ -74,7 +83,7 @@ public class SearchInteraction extends MongoInteraction implements QueryMetadata
 
 		Map<String, Object> serialized = new LinkedHashMap<>();
 
-		if (vectorSearch != null && StringUtils.hasText(vectorSearch.indexName())) {
+		if (StringUtils.hasText(vectorSearch.indexName())) {
 			serialized.put("index", vectorSearch.indexName());
 		}
 
@@ -117,14 +126,17 @@ public class SearchInteraction extends MongoInteraction implements QueryMetadata
 
 	public String getSearchPath() {
 
-		if (vectorSearch != null && StringUtils.hasText(vectorSearch.path())) {
+		if (StringUtils.hasText(vectorSearch.path())) {
 			return vectorSearch.path();
 		}
 
-		Field[] declaredFields = domainType.getDeclaredFields();
-		for (Field field : declaredFields) {
-			if (Vector.class.isAssignableFrom(field.getType())) {
-				return field.getName();
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainType);
+
+		for (MongoPersistentProperty property : entity) {
+
+			if (Vector.class.isAssignableFrom(property.getActualType())
+					|| BinaryVector.class.isAssignableFrom(property.getActualType())) {
+				return property.getName();
 			}
 		}
 

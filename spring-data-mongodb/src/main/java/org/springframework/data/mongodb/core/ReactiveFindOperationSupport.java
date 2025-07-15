@@ -239,6 +239,11 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			public Flux<GeoResult<G>> all() {
 				return template.doGeoNear(nearQuery, domainType, getCollectionName(), returnType, resultConverter);
 			}
+
+			@Override
+			public Mono<Long> count() {
+				return template.doGeoNearCount(nearQuery, domainType, getCollectionName());
+			}
 		}
 
 		/**

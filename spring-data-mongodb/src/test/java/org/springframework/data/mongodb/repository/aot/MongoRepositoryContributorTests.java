@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatException;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
 
 import example.aot.User;
 import example.aot.UserProjection;
@@ -37,23 +35,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.RetryingTest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.domain.KeysetScrollPosition;
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.OffsetScrollPosition;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Score;
-import org.springframework.data.domain.ScrollPosition;
-import org.springframework.data.domain.SearchResults;
-import org.springframework.data.domain.Similarity;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Vector;
-import org.springframework.data.domain.Window;
+import org.springframework.data.domain.*;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -73,8 +59,10 @@ import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.StringUtils;
+
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.mongodb.MongoDBAtlasLocalContainer;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.mongodb.client.MongoClient;
@@ -95,7 +83,7 @@ import com.mongodb.client.model.SearchIndexType;
 @SpringJUnitConfig(classes = MongoRepositoryContributorTests.MongoRepositoryContributorConfiguration.class)
 class MongoRepositoryContributorTests {
 
-	private static final @Container AtlasContainer atlasLocal = AtlasContainer.bestMatch();
+	private static final @Container MongoDBAtlasLocalContainer atlasLocal = AtlasContainer.bestMatch().withReuse(true);
 	private static final String DB_NAME = "aot-repo-tests";
 	private static final String COLLECTION_NAME = "user";
 
@@ -1019,6 +1007,7 @@ class MongoRepositoryContributorTests {
 				}
 				""");
 
+		client.getDatabase(DB_NAME).getCollection("user").deleteMany(new Document());
 		client.getDatabase(DB_NAME).getCollection("user")
 				.insertMany(List.of(luke, leia, han, chwebacca, yoda, vader, kylo));
 	}

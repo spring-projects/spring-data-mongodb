@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.aot.AggregationBlocks.AggregationCodeBlockBuilder;
@@ -98,10 +99,9 @@ class MongoCodeBlocks {
 	 * @param queryMethod
 	 * @return
 	 */
-	static UpdateCodeBlockBuilder updateBlockBuilder(AotQueryMethodGenerationContext context,
-			MongoQueryMethod queryMethod) {
+	static UpdateCodeBlockBuilder updateBlockBuilder(AotQueryMethodGenerationContext context) {
 
-		return new UpdateCodeBlockBuilder(context, queryMethod);
+		return new UpdateCodeBlockBuilder(context);
 	}
 
 	/**
@@ -126,7 +126,6 @@ class MongoCodeBlocks {
 	 */
 	static AggregationCodeBlockBuilder aggregationBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
-
 		return new AggregationCodeBlockBuilder(context, queryMethod);
 	}
 
@@ -139,7 +138,6 @@ class MongoCodeBlocks {
 	 */
 	static AggregationExecutionCodeBlockBuilder aggregationExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
-
 		return new AggregationExecutionCodeBlockBuilder(context, queryMethod);
 	}
 
@@ -161,16 +159,14 @@ class MongoCodeBlocks {
 	 * that can return {@link org.springframework.data.geo.GeoResults}.
 	 *
 	 * @param context
-	 * @param queryMethod
 	 * @return
 	 */
-	static GeoNearExecutionCodeBlockBuilder geoNearExecutionBlockBuilder(AotQueryMethodGenerationContext context,
-			MongoQueryMethod queryMethod) {
+	static GeoNearExecutionCodeBlockBuilder geoNearExecutionBlockBuilder(AotQueryMethodGenerationContext context) {
 
-		return new GeoNearExecutionCodeBlockBuilder(context, queryMethod);
+		return new GeoNearExecutionCodeBlockBuilder(context);
 	}
 
-	static CodeBlock asDocument(String source, Map<String, CodeBlock> arguments) {
+	static CodeBlock asDocument(String source, String argNames) {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
@@ -178,19 +174,13 @@ class MongoCodeBlocks {
 		} else if (!containsPlaceholder(source)) {
 			builder.add("$T.parse($S)", Document.class, source);
 		} else {
-			builder.add("bindParameters($S, ", source);
-			if (containsNamedPlaceholder(source)) {
-				builder.add(renderArgumentMap(arguments));
-			} else {
-				builder.add(renderArgumentArray(arguments));
-			}
-			builder.add(");\n");
+			builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S, $L);\n", source, argNames);
 		}
 		return builder.build();
 	}
 
 	static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName,
-			Map<String, CodeBlock> arguments) {
+			String argNames) {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
@@ -198,13 +188,8 @@ class MongoCodeBlocks {
 		} else if (!containsPlaceholder(source)) {
 			builder.addStatement("$1T $2L = $1T.parse($3S)", Document.class, variableName, source);
 		} else {
-			builder.add("$T $L = bindParameters($S, ", Document.class, variableName, source);
-			if (containsNamedPlaceholder(source)) {
-				builder.add(renderArgumentMap(arguments));
-			} else {
-				builder.add(renderArgumentArray(arguments));
-			}
-			builder.add(");\n");
+			builder.add("$T $L = bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S, $L);\n", Document.class,
+					variableName, source, argNames);
 		}
 		return builder.build();
 	}
@@ -242,16 +227,15 @@ class MongoCodeBlocks {
 	}
 
 	static CodeBlock evaluateNumberPotentially(String value, Class<? extends Number> targetType,
-			Map<String, CodeBlock> arguments) {
+			AotQueryMethodGenerationContext context) {
 		try {
 			Number number = NumberUtils.parseNumber(value, targetType);
 			return CodeBlock.of("$L", number);
 		} catch (IllegalArgumentException e) {
 
 			Builder builder = CodeBlock.builder();
-			builder.add("($T) evaluate($S, ", targetType, value);
-			builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
-			builder.add(")");
+			builder.add("($T) evaluate(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", targetType, value,
+					StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", "));
 			return builder.build();
 		}
 	}

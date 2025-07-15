@@ -47,6 +47,7 @@ import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -1015,11 +1016,20 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <O> Flux<O> doAggregate(Aggregation aggregation, String collectionName, @Nullable Class<?> inputType,
 			Class<O> outputType) {
-		return doAggregate(aggregation, collectionName, inputType, outputType, QueryResultConverter.entity());
+
+		AggregationDefinition context = queryOperations.createAggregation(aggregation, inputType);
+		return doAggregate(aggregation, collectionName, outputType, QueryResultConverter.entity(), context);
 	}
 
 	<T, O> Flux<O> doAggregate(Aggregation aggregation, String collectionName, @Nullable Class<?> inputType,
 			Class<T> outputType, QueryResultConverter<? super T, ? extends O> resultConverter) {
+
+		AggregationDefinition context = queryOperations.createAggregation(aggregation, inputType);
+		return doAggregate(aggregation, collectionName, outputType, resultConverter, context);
+	}
+
+	<T, O> Flux<O> doAggregate(Aggregation aggregation, String collectionName, Class<T> outputType,
+			QueryResultConverter<? super T, ? extends O> resultConverter, AggregationDefinition definition) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
 		Assert.hasText(collectionName, "Collection name must not be null or empty");
@@ -1028,17 +1038,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		AggregationOptions options = aggregation.getOptions();
 		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming");
 
-		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, inputType);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("Streaming aggregation: %s in collection %s",
-					serializeToJsonSafely(ctx.getAggregationPipeline()), collectionName));
+					serializeToJsonSafely(definition.getAggregationPipeline()), collectionName));
 		}
 
 		DocumentCallback<O> readCallback = new QueryResultConverterCallback<>(resultConverter,
 				new ReadDocumentCallback<>(mongoConverter, outputType, collectionName));
-		return execute(collectionName, collection -> aggregateAndMap(collection, ctx.getAggregationPipeline(),
-				ctx.isOutOrMerge(), options, readCallback, ctx.getInputType()));
+		return execute(collectionName, collection -> aggregateAndMap(collection, definition.getAggregationPipeline(),
+				definition.isOutOrMerge(), options, readCallback, definition.getInputType()));
 	}
 
 	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,
@@ -1091,6 +1100,33 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <T> Flux<GeoResult<T>> geoNear(NearQuery near, Class<?> entityClass, String collectionName,
 			Class<T> returnType) {
 		return doGeoNear(near, entityClass, collectionName, returnType, QueryResultConverter.entity());
+	}
+
+	Mono<Long> doGeoNearCount(NearQuery near, Class<?> domainType, String collectionName) {
+
+		Builder optionsBuilder = AggregationOptions.builder().collation(near.getCollation());
+
+		if (near.hasReadPreference()) {
+			optionsBuilder.readPreference(near.getReadPreference());
+		}
+
+		if (near.hasReadConcern()) {
+			optionsBuilder.readConcern(near.getReadConcern());
+		}
+
+		String distanceField = operations.nearQueryDistanceFieldName(domainType);
+		Aggregation $geoNear = TypedAggregation.newAggregation(domainType,
+				Aggregation.geoNear(near, distanceField).skip(-1).limit(-1), Aggregation.count().as("_totalCount"))
+				.withOptions(optionsBuilder.build());
+
+		AggregationDefinition definition = queryOperations.createAggregation($geoNear, (AggregationOperationContext) null);
+
+		Flux<Document> results = doAggregate($geoNear, collectionName, Document.class, QueryResultConverter.entity(),
+				definition);
+
+		return results.last()
+				.map(doc -> NumberUtils.convertNumberToTargetClass(doc.get("_totalCount", Integer.class), Long.class))
+				.defaultIfEmpty(0L);
 	}
 
 	@SuppressWarnings("unchecked")

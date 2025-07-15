@@ -111,7 +111,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	public @Nullable Object execute(Object[] parameters) {
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
-				new MongoParametersParameterAccessor(method, parameters));
+				new MongoParametersParameterAccessor(method.getParameters(), parameters));
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
@@ -179,11 +179,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		}
 
 		if (method.isGeoNearQuery() && method.isPageQuery()) {
-			return new PagingGeoNearExecution(operation, method, accessor, this);
+			return new PagingGeoNearExecution(operation, method, accessor);
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(operation, method, accessor);
 		} else if (method.isSliceQuery()) {
-			return new SlicedExecution(operation, accessor.getPageable());
+			return new SlicedExecution<>(operation, accessor.getPageable());
 		} else if (method.isStreamQuery()) {
 			return q -> operation.matching(q).stream();
 		} else if (method.isCollectionQuery()) {

@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.springframework.data.mongodb.core.query.Criteria.Placeholder;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -54,7 +54,6 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -255,16 +254,17 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		}
 	}
 
-	@NonNull
 	private static Criteria createPatternCriteria(Criteria criteria, Iterator<Object> parameters) {
+
 		Object param = parameters.next();
+
 		if (param instanceof Placeholder) {
 			return criteria.raw("$regex", param);
 		}
+
 		return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
 	}
 
-	@NonNull
 	private Criteria createNearCriteria(MongoPersistentProperty property, Criteria criteria,
 			Iterator<Object> parameters) {
 

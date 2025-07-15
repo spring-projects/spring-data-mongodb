@@ -124,13 +124,14 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	public Publisher<Object> execute(Object[] parameters) {
 
 		return method.hasReactiveWrapperParameter() ? executeDeferred(parameters)
-				: execute(new MongoParametersParameterAccessor(method, parameters));
+				: execute(new MongoParametersParameterAccessor(method.getParameters(), parameters));
 	}
 
 	@SuppressWarnings("unchecked")
 	private Publisher<Object> executeDeferred(Object[] parameters) {
 
-		ReactiveMongoParameterAccessor parameterAccessor = new ReactiveMongoParameterAccessor(method, parameters);
+		ReactiveMongoParameterAccessor parameterAccessor = new ReactiveMongoParameterAccessor(method.getParameters(),
+				parameters);
 
 		return parameterAccessor.resolveParameters().flatMapMany(this::execute);
 	}

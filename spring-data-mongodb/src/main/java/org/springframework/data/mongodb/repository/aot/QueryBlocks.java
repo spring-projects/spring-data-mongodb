@@ -15,26 +15,18 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
+
 import org.springframework.core.annotation.MergedAnnotation;
-import org.springframework.data.geo.Box;
-import org.springframework.data.geo.Circle;
-import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.annotation.Collation;
-import org.springframework.data.mongodb.core.geo.GeoJson;
-import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
-import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
@@ -145,53 +137,16 @@ class QueryBlocks {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
+		private final String parameterNames;
 
 		private QueryInteraction source;
-		private final Map<String, CodeBlock> arguments;
 		private String queryVariableName;
 
 		QueryCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
-
-			this.arguments = new LinkedHashMap<>();
 			this.queryMethod = queryMethod;
-			collectArguments(context);
-
-		}
-
-		private void collectArguments(AotQueryMethodGenerationContext context) {
-
-			for (MongoParameter parameter : queryMethod.getParameters().getBindableParameters()) {
-				String parameterName = context.getParameterName(parameter.getIndex());
-				if (ClassUtils.isAssignable(GeoJson.class, parameter.getType())) {
-
-					// renders as generic $geometry, thus can be handled by the converter when parsing
-					arguments.put(parameterName, CodeBlock.of(parameterName));
-				} else if (ClassUtils.isAssignable(Circle.class, parameter.getType())
-						|| ClassUtils.isAssignable(Sphere.class, parameter.getType())) {
-
-					// $center | $centerSphere : [ [ <x>, <y> ], <radius> ]
-					arguments.put(parameterName, CodeBlock.builder().add(
-							"$1T.of($1T.of($2L.getCenter().getX(), $2L.getCenter().getY()), $2L.getRadius().getNormalizedValue())",
-							List.class, parameterName).build());
-				} else if (ClassUtils.isAssignable(Box.class, parameter.getType())) {
-
-					// $box: [ [ <x1>, <y1> ], [ <x2>, <y2> ] ]
-					arguments.put(parameterName, CodeBlock.builder().add(
-							"$1T.of($1T.of($2L.getFirst().getX(), $2L.getFirst().getY()), $1T.of($2L.getSecond().getX(), $2L.getSecond().getY()))",
-							List.class, parameterName).build());
-				} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
-
-					// $polygon: [ [ <x1> , <y1> ], [ <x2> , <y2> ], [ <x3> , <y3> ], ... ]
-					String localVar = context.localVariable("_p");
-					arguments.put(parameterName,
-							CodeBlock.builder().add("$1L.getPoints().stream().map($2L -> $3T.of($2L.getX(), $2L.getY())).toList()",
-									parameterName, localVar, List.class).build());
-				} else {
-					arguments.put(parameterName, CodeBlock.of(parameterName));
-				}
-			}
+			this.parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
 		}
 
 		QueryCodeBlockBuilder filter(QueryInteraction query) {
@@ -215,7 +170,7 @@ class QueryBlocks {
 			if (StringUtils.hasText(source.getQuery().getFieldsString())) {
 
 				VariableSnippet fields = Snippet.declare(builder).variable(Document.class, context.localVariable("fields"))
-						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), arguments));
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), parameterNames));
 				builder.addStatement("$L.setFieldsObject($L)", queryVariableName, fields.getVariableName());
 			}
 
@@ -225,7 +180,7 @@ class QueryBlocks {
 			} else if (StringUtils.hasText(source.getQuery().getSortString())) {
 
 				VariableSnippet sort = Snippet.declare(builder).variable(Document.class, context.localVariable("sort"))
-						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), arguments));
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), parameterNames));
 				builder.addStatement("$L.setSortObject($L)", queryVariableName, sort.getVariableName());
 			}
 
@@ -278,9 +233,10 @@ class QueryBlocks {
 						builder.addStatement("$L.collation($T.parse($S))", queryVariableName,
 								org.springframework.data.mongodb.core.query.Collation.class, collationString);
 					} else {
-						builder.add("$L.collation(collationOf(evaluate($S, ", queryVariableName, collationString);
-						builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
-						builder.add(")));\n");
+
+						builder.addStatement(
+								"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S, $L)))",
+								queryVariableName, collationString, parameterNames);
 					}
 				}
 			}
@@ -307,13 +263,7 @@ class QueryBlocks {
 				return CodeBlock.of("new $T($T.parse($S))", BasicQuery.class, Document.class, source);
 			}
 			Builder builder = CodeBlock.builder();
-			builder.add("createQuery($S, ", source);
-			if (MongoCodeBlocks.containsNamedPlaceholder(source)) {
-				builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
-			} else {
-				builder.add(MongoCodeBlocks.renderArgumentArray(arguments));
-			}
-			builder.add(")");
+			builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", source, parameterNames);
 			return builder.build();
 		}
 	}

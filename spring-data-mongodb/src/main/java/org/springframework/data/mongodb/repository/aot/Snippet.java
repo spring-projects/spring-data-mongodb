@@ -85,17 +85,17 @@ interface Snippet {
 
 			@Override
 			public VariableBuilder variable(String variableName) {
-				return VariableSnippet.variable(variableName).targeting(builder);
+				return VariableSnippet.variable(variableName).appendTo(builder);
 			}
 
 			@Override
 			public VariableBuilder variable(Class<?> type, String variableName) {
-				return VariableSnippet.variable(type, variableName).targeting(builder);
+				return VariableSnippet.variable(type, variableName).appendTo(builder);
 			}
 
 			@Override
 			public VariableBuilder variable(ResolvableType resolvableType, String variableName) {
-				return VariableSnippet.variable(resolvableType, variableName).targeting(builder);
+				return VariableSnippet.variable(resolvableType, variableName).appendTo(builder);
 			}
 
 			@Override

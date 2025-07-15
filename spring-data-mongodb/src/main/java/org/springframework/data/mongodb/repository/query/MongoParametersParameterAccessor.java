@@ -41,7 +41,7 @@ import org.springframework.util.ClassUtils;
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
-	final MongoQueryMethod method;
+	final MongoParameters parameters;
 
 	/**
 	 * Creates a new {@link MongoParametersParameterAccessor}.
@@ -50,20 +50,27 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	 * @param values must not be {@literal null}.
 	 */
 	public MongoParametersParameterAccessor(MongoQueryMethod method, Object[] values) {
+		this(method.getParameters(), values);
+	}
 
-		super(method.getParameters(), values);
-
-		this.method = method;
+	/**
+	 * Creates a new {@link MongoParametersParameterAccessor}.
+	 *
+	 * @param parameters must not be {@literal null}.
+	 * @param values must not be {@literal null}.
+	 * @since 5.0
+	 */
+	public MongoParametersParameterAccessor(MongoParameters parameters, Object[] values) {
+		super(parameters, values);
+		this.parameters = parameters;
 	}
 
 	@SuppressWarnings("NullAway")
 	@Override
 	public Range<Score> getScoreRange() {
 
-		MongoParameters mongoParameters = method.getParameters();
-
-		if (mongoParameters.hasScoreRangeParameter()) {
-			return getValue(mongoParameters.getScoreRangeIndex());
+		if (parameters.hasScoreRangeParameter()) {
+			return getValue(parameters.getScoreRangeIndex());
 		}
 
 		Score score = getScore();
@@ -76,7 +83,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	@Override
 	public Range<Distance> getDistanceRange() {
 
-		MongoParameters mongoParameters = method.getParameters();
+		MongoParameters mongoParameters = parameters;
 
 		int rangeIndex = mongoParameters.getRangeIndex();
 
@@ -93,7 +100,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 
 	public @Nullable Point getGeoNearLocation() {
 
-		int nearIndex = method.getParameters().getNearIndex();
+		int nearIndex = parameters.getNearIndex();
 
 		if (nearIndex == -1) {
 			return null;
@@ -118,7 +125,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 
 	@Override
 	public @Nullable TextCriteria getFullText() {
-		int index = method.getParameters().getFullTextParameterIndex();
+		int index = parameters.getFullTextParameterIndex();
 		return index >= 0 ? potentiallyConvertFullText(getValue(index)) : null;
 	}
 
@@ -147,11 +154,11 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	@Override
 	public @Nullable Collation getCollation() {
 
-		if (method.getParameters().getCollationParameterIndex() == -1) {
+		if (parameters.getCollationParameterIndex() == -1) {
 			return null;
 		}
 
-		return getValue(method.getParameters().getCollationParameterIndex());
+		return getValue(parameters.getCollationParameterIndex());
 	}
 
 	@Override
@@ -162,7 +169,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	@Override
 	public @Nullable UpdateDefinition getUpdate() {
 
-		int updateIndex = method.getParameters().getUpdateIndex();
+		int updateIndex = parameters.getUpdateIndex();
 		return updateIndex == -1 ? null : (UpdateDefinition) getValue(updateIndex);
 	}
 }
