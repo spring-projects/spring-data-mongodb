@@ -546,7 +546,7 @@ Like for `BigDecimal`, which is represented as `String` instead of `Decimal128`,
 ----
 public class Balance {
 
-  @Field(targetType = DECIMAL128)
+  @Field(targetType = STRING)
   private BigDecimal value;
 
   // ...
@@ -559,14 +559,14 @@ You may even consider your own, custom annotation.
 ----
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-@Field(targetType = FieldType.DECIMAL128)
-public @interface Decimal128 { }
+@Field(targetType = FieldType.STRING)
+public @interface AsString { }
 
 // ...
 
 public class Balance {
 
-  @Decimal128
+  @AsString
   private BigDecimal value;
 
   // ...

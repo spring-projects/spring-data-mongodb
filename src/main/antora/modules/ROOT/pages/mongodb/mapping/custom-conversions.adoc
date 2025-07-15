@@ -14,7 +14,7 @@ public class Payment {
 
   @Id String id; <1>
 
-  @Field(targetType = FieldType.DECIMAL128) <2>
+  @Field(targetType = FieldType.STRING) <2>
   BigDecimal value;
 
   Date date; <3>
@@ -26,15 +26,15 @@ public class Payment {
 ----
 {
   "_id"   : ObjectId("5ca4a34fa264a01503b36af8"), <1>
-  "value" : NumberDecimal(2.099),                 <2>
+  "value" : "2.099",                              <2>
   "date"  : ISODate("2019-04-03T12:11:01.870Z")   <3>
 }
 ----
 <1> String _id_ values that represent a valid `ObjectId` are converted automatically. See xref:mongodb/template-crud-operations.adoc#mongo-template.id-handling[How the `_id` Field is Handled in the Mapping Layer]
 for details.
-<2> The desired target type is explicitly defined as `Decimal128` which translates to `NumberDecimal`.
+<2> The desired target type is explicitly defined as `String`.
 Otherwise, the
-`BigDecimal` value would have been turned into a `String`.
+`BigDecimal` value would have been turned into a `Decimal128`.
 <3> `Date` values are handled by the MongoDB driver itself are stored as `ISODate`.
 ====
 
@@ -111,11 +111,12 @@ class MyMongoConfiguration extends AbstractMongoClientConfiguration {
 MongoDB in its early days did not have support for large numeric values such as `BigDecimal`.
 To persist `BigDecimal` and `BigInteger` values, Spring Data MongoDB converted values their `String` representation.
 This approach had several downsides due to lexical instead of numeric comparison for queries, updates, etc.
+
 With MongoDB Server 3.4, `org.bson.types.Decimal128` offers a native representation for `BigDecimal` and `BigInteger`.
-As off Spring Data MongoDB 5.0 the default representation of those types moved to MongoDB native `org.bson.types.Decimal128` as well.
-You can still use the to the deprecated `String` variant by configuring the big decimal representation in `MongoCustomConversions` through `MongoCustomConversions.create(config -> config.bigDecimal(BigDecimalRepresentation.STRING))`.
+As of Spring Data MongoDB 5.0. the default representation of those types moved to MongoDB native `org.bson.types.Decimal128`.
+You can still use the to the previous `String` variant by configuring the big decimal representation in `MongoCustomConversions` through `MongoCustomConversions.create(config -> config.bigDecimal(BigDecimalRepresentation.STRING))`.
 
 [NOTE]
 ====
-Very large values, though being valid in their java, might exceed the maximum bit length of `org.bson.types.Decimal128` in their store native representation.
+Very large values, though being a valid `BigDecimal` or `BigInteger`, might exceed the maximum bit length of `org.bson.types.Decimal128` in their store native representation.
 ====

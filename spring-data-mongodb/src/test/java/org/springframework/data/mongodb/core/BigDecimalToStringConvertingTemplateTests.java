@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.MongoTemplateTests.TypeWithNumbers;
@@ -35,17 +35,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 
 import com.mongodb.client.MongoClient;
 
 /**
  * Tests for {@link MongoTemplate} using string representation of {@link BigInteger} values.
- * 
+ *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoClientExtension.class)
 public class BigDecimalToStringConvertingTemplateTests {
 
 	public static final String DB_NAME = "mongo-template-tests";
@@ -77,7 +75,7 @@ public class BigDecimalToStringConvertingTemplateTests {
 	});
 
 	@AfterEach
-	public void cleanUp() {
+	void cleanUp() {
 		template.flush();
 	}
 
@@ -157,8 +155,7 @@ public class BigDecimalToStringConvertingTemplateTests {
 
 		Update update = new Update()//
 				.min("bigIntegerVal", new BigInteger("700")) //
-				.min("bigDeciamVal", new BigDecimal("800")) //
-		;
+				.min("bigDeciamVal", new BigDecimal("800"));
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 

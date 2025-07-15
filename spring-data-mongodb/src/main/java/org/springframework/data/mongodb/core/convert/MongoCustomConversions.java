@@ -337,7 +337,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @since 3.4
 		 * @deprecated since 4.2. Use {@link #withPropertyValueConversions(PropertyValueConversions)} instead.
 		 */
-		@Deprecated(since = "4.2.0")
+		@Deprecated(since = "4.2")
 		public MongoConverterConfigurationAdapter setPropertyValueConversions(PropertyValueConversions valueConversions) {
 			return withPropertyValueConversions(valueConversions);
 		}
@@ -457,15 +457,17 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	public enum BigDecimalRepresentation {
 
 		/**
-		 * @deprecated since 5.0.0 — storing values as {@link Number#toString() String} retains precision,
-		 * but prevents efficient range queries. Prefer {@link #DECIMAL128} for better query support.
+		 * @deprecated since 5.0. Storing values as {@link Number#toString() String} retains precision, but prevents
+		 *             efficient range queries. Prefer {@link #DECIMAL128} for better query support.
 		 */
-		@Deprecated(since = "5.0.0")
+		@Deprecated(since = "5.0")
 		STRING,
 
 		/**
-		 * Store numbers using {@link org.bson.types.Decimal128}. Requires MongoDB Server 3.4 or later.
+		 * Store numbers using {@link org.bson.types.Decimal128} (default). Requires MongoDB Server 3.4 or later.
 		 */
 		DECIMAL128
+
 	}
+
 }
