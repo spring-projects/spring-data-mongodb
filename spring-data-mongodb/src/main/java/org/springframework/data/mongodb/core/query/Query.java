@@ -756,8 +756,8 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 	@Override
 	public String toString() {
-		return String.format("Query: %s, Fields: %s, Sort: %s", serializeToJsonSafely(getQueryObject()),
-				serializeToJsonSafely(getFieldsObject()), serializeToJsonSafely(getSortObject()));
+		return String.format("Query: %s, Fields: %s, Sort: %s, Limit: %d", serializeToJsonSafely(getQueryObject()),
+				serializeToJsonSafely(getFieldsObject()), serializeToJsonSafely(getSortObject()), getLimit());
 	}
 
 	@Override
