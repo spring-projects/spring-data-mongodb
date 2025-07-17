@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util https://www.springframework.org/schema/util/spring-util.xsd">
+
+	<mongo:db-factory dbname="repositories"/>
+
+	<mongo:mapping-converter auto-index-creation="true"/>
+
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg ref="mongoDbFactory"/>
+		<constructor-arg ref="mappingConverter"/>
+		<property name="writeConcern">
+			<util:constant static-field="com.mongodb.WriteConcern.JOURNALED"/>
+		</property>
+	</bean>
+
+	<bean class="org.springframework.data.mongodb.repository.SampleEvaluationContextExtension"/>
+
+</beans>
