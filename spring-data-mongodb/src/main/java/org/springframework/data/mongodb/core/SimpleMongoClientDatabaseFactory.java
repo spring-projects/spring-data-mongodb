@@ -34,7 +34,8 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 		implements DisposableBean {
 
 	/**
-	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance for the given {@code connectionString}.
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance for the given {@code connectionString}. Using this
+	 * constructor will create a new {@link MongoClient} instance that will be closed when calling {@link #destroy()}.
 	 *
 	 * @param connectionString connection coordinates for a database connection. Must contain a database name and must not
 	 *          be {@literal null} or empty.
@@ -45,7 +46,8 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 	}
 
 	/**
-	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance from the given {@link MongoClient}.
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance from the given {@link MongoClient}. Using this
+	 * constructor will create a new {@link MongoClient} instance that will be closed when calling {@link #destroy()}.
 	 *
 	 * @param connectionString connection coordinates for a database connection. Must contain also a database name and not
 	 *          be {@literal null}.
@@ -55,7 +57,10 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 	}
 
 	/**
-	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance from the given {@link MongoClient}.
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance from the given {@link MongoClient}. Note that the
+	 * client will not be closed when calling {@link #destroy()} as we assume a managed client instance that we do not
+	 * want to close on {@link #destroy()} meaning that you (or the application container) must dispose the client
+	 * instance once it is no longer required for use.
 	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
@@ -89,4 +94,5 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 	protected MongoDatabase doGetMongoDatabase(String dbName) {
 		return getMongoClient().getDatabase(dbName);
 	}
+
 }
