@@ -26,7 +26,6 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
@@ -55,7 +54,9 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	private @Nullable WriteConcern writeConcern;
 
 	/**
-	 * Creates a new {@link SimpleReactiveMongoDatabaseFactory} instance from the given {@link ConnectionString}.
+	 * Creates a new {@link SimpleReactiveMongoDatabaseFactory} instance from the given {@link ConnectionString}. Using
+	 * this constructor will create a new {@link MongoClient} instance that will be closed when calling
+	 * {@link #destroy()}.
 	 *
 	 * @param connectionString must not be {@literal null}.
 	 */
@@ -64,7 +65,10 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	}
 
 	/**
-	 * Creates a new {@link SimpleReactiveMongoDatabaseFactory} instance from the given {@link MongoClient}.
+	 * Creates a new {@link SimpleReactiveMongoDatabaseFactory} instance from the given {@link MongoClient}. Note that the
+	 * client will not be closed when calling {@link #destroy()} as we assume a managed client instance that we do not
+	 * want to close on {@link #destroy()} meaning that you (or the application container) must dispose the client
+	 * instance once it is no longer required for use.
 	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null}.
@@ -163,16 +167,8 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	static final class ClientSessionBoundMongoDbFactory implements ReactiveMongoDatabaseFactory {
-
-		private final ClientSession session;
-		private final ReactiveMongoDatabaseFactory delegate;
-
-		ClientSessionBoundMongoDbFactory(ClientSession session, ReactiveMongoDatabaseFactory delegate) {
-
-			this.session = session;
-			this.delegate = delegate;
-		}
+	record ClientSessionBoundMongoDbFactory(ClientSession session,
+			ReactiveMongoDatabaseFactory delegate) implements ReactiveMongoDatabaseFactory {
 
 		@Override
 		public Mono<MongoDatabase> getMongoDatabase() throws DataAccessException {
@@ -206,7 +202,7 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 
 		@Override
 		public boolean isTransactionActive() {
-			return session != null && session.hasActiveTransaction();
+			return session.hasActiveTransaction();
 		}
 
 		private MongoDatabase decorateDatabase(MongoDatabase database) {
@@ -217,7 +213,8 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoCollection proxyCollection(com.mongodb.session.ClientSession session, MongoCollection collection) {
+		private MongoCollection<?> proxyCollection(com.mongodb.session.ClientSession session,
+				MongoCollection<?> collection) {
 			return createProxyInstance(session, collection, MongoCollection.class);
 		}
 
@@ -234,39 +231,6 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 			return targetType.cast(factory.getProxy(target.getClass().getClassLoader()));
 		}
 
-		public ClientSession getSession() {
-			return this.session;
-		}
-
-		public ReactiveMongoDatabaseFactory getDelegate() {
-			return this.delegate;
-		}
-
-		@Override
-		public boolean equals(@Nullable Object o) {
-			if (this == o)
-				return true;
-			if (o == null || getClass() != o.getClass())
-				return false;
-
-			ClientSessionBoundMongoDbFactory that = (ClientSessionBoundMongoDbFactory) o;
-
-			if (!ObjectUtils.nullSafeEquals(this.session, that.session)) {
-				return false;
-			}
-			return ObjectUtils.nullSafeEquals(this.delegate, that.delegate);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = ObjectUtils.nullSafeHashCode(this.session);
-			result = 31 * result + ObjectUtils.nullSafeHashCode(this.delegate);
-			return result;
-		}
-
-		public String toString() {
-			return "SimpleReactiveMongoDatabaseFactory.ClientSessionBoundMongoDbFactory(session=" + this.getSession()
-					+ ", delegate=" + this.getDelegate() + ")";
-		}
 	}
+
 }
