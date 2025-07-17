@@ -15,6 +15,13 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.test.simple.SimpleTracer;
+
 import java.util.Properties;
 
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
@@ -27,8 +34,6 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
-import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -43,14 +48,8 @@ import org.springframework.data.repository.core.support.PropertiesBasedNamedQuer
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.tracing.Tracer;
-import io.micrometer.tracing.test.simple.SimpleTracer;
 
 /**
  * @author Mark Paluch
@@ -66,13 +65,23 @@ class TestConfig {
 	}
 
 	@Bean
-	MongoDatabaseFactory mongoDatabaseFactory(MongoClientSettings settings) {
-		return new SimpleMongoClientDatabaseFactory(MongoClients.create(settings), "observable");
+	MongoClient mongoClient(MongoClientSettings settings) {
+		return MongoClients.create(settings);
 	}
 
 	@Bean
-	ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory(MongoClientSettings settings) {
-		return new SimpleReactiveMongoDatabaseFactory(com.mongodb.reactivestreams.client.MongoClients.create(settings),
+	MongoDatabaseFactory mongoDatabaseFactory(MongoClient client) {
+		return MongoDatabaseFactory.create(client, "observable");
+	}
+
+	@Bean
+	com.mongodb.reactivestreams.client.MongoClient reactiveMongoClient(MongoClientSettings settings) {
+		return com.mongodb.reactivestreams.client.MongoClients.create(settings);
+	}
+
+	@Bean
+	ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory(com.mongodb.reactivestreams.client.MongoClient client) {
+		return ReactiveMongoDatabaseFactory.create(client,
 				"observable");
 	}
 
@@ -103,17 +112,13 @@ class TestConfig {
 
 	@Bean
 	MongoTemplate mongoTemplate(MongoDatabaseFactory mongoDatabaseFactory, MongoConverter mongoConverter) {
-
-		MongoTemplate template = new MongoTemplate(mongoDatabaseFactory, mongoConverter);
-		return template;
+		return new MongoTemplate(mongoDatabaseFactory, mongoConverter);
 	}
 
 	@Bean
 	ReactiveMongoTemplate reactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory,
 			MongoConverter mongoConverter) {
-
-		ReactiveMongoTemplate template = new ReactiveMongoTemplate(mongoDatabaseFactory, mongoConverter);
-		return template;
+		return new ReactiveMongoTemplate(mongoDatabaseFactory, mongoConverter);
 	}
 
 	@Bean

@@ -20,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -75,7 +74,7 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 	 */
 	@Bean
 	public MongoDatabaseFactory mongoDbFactory() {
-		return new SimpleMongoClientDatabaseFactory(mongoClient(), getDatabaseName());
+		return MongoDatabaseFactory.create(mongoClient(), getDatabaseName());
 	}
 
 	/**

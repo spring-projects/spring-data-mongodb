@@ -21,7 +21,6 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
@@ -79,7 +78,7 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	 */
 	@Bean
 	public ReactiveMongoDatabaseFactory reactiveMongoDbFactory() {
-		return new SimpleReactiveMongoDatabaseFactory(reactiveMongoClient(), getDatabaseName());
+		return ReactiveMongoDatabaseFactory.create(reactiveMongoClient(), getDatabaseName());
 	}
 
 	/**
