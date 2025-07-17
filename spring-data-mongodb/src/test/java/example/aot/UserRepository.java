@@ -140,6 +140,10 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	// TODO: TextSearch
 
+	/* Named Queries */
+
+	List<User> findByNamedQuery(String lastname);
+
 	/* Annotated Queries */
 
 	@Query("{ 'username' : ?0 }")

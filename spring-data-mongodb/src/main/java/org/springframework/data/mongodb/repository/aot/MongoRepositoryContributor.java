@@ -18,13 +18,16 @@ package org.springframework.data.mongodb.repository.aot;
 import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.*;
 import static org.springframework.data.mongodb.repository.aot.QueryBlocks.*;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -32,6 +35,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.mongodb.repository.VectorSearch;
+import org.springframework.data.mongodb.repository.config.MongoRepositoryConfigurationExtension;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotRepositoryClassBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
@@ -39,7 +43,11 @@ import org.springframework.data.repository.aot.generate.MethodContributor;
 import org.springframework.data.repository.aot.generate.QueryMetadata;
 import org.springframework.data.repository.aot.generate.RepositoryContributor;
 import org.springframework.data.repository.config.AotRepositoryContext;
+import org.springframework.data.repository.config.PropertiesBasedNamedQueriesFactoryBean;
+import org.springframework.data.repository.config.RepositoryConfigurationSource;
+import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.core.support.PropertiesBasedNamedQueries;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
@@ -61,10 +69,17 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 	private final AotQueryCreator queryCreator;
 	private final MongoMappingContext mappingContext;
+	private final NamedQueries namedQueries;
 
 	public MongoRepositoryContributor(AotRepositoryContext repositoryContext) {
 
 		super(repositoryContext);
+
+		ClassLoader classLoader = repositoryContext.getBeanFactory() != null ? repositoryContext.getClassLoader() : null;
+		if (classLoader == null) {
+			classLoader = getClass().getClassLoader();
+		}
+		namedQueries = getNamedQueries(repositoryContext.getConfigurationSource(), classLoader);
 
 		// avoid Java Time (JSR-310) Type introspection
 		MongoCustomConversions mongoCustomConversions = MongoCustomConversions
@@ -76,6 +91,32 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		this.mappingContext.afterPropertiesSet();
 
 		this.queryCreator = new AotQueryCreator(this.mappingContext);
+	}
+
+	private NamedQueries getNamedQueries(@Nullable RepositoryConfigurationSource configSource, ClassLoader classLoader) {
+
+		String location = configSource != null ? configSource.getNamedQueryLocation().orElse(null) : null;
+
+		if (location == null) {
+			location = new MongoRepositoryConfigurationExtension().getDefaultNamedQueryLocation();
+		}
+
+		if (StringUtils.hasText(location)) {
+
+			try {
+
+				PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(classLoader);
+
+				PropertiesBasedNamedQueriesFactoryBean factoryBean = new PropertiesBasedNamedQueriesFactoryBean();
+				factoryBean.setLocations(resolver.getResources(location));
+				factoryBean.afterPropertiesSet();
+				return factoryBean.getObject();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return new PropertiesBasedNamedQueries(new Properties());
 	}
 
 	@Override
@@ -189,6 +230,10 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		if (queryMethod.hasAnnotatedQuery() && queryAnnotation != null) {
 			query = new QueryInteraction(new AotStringQuery(queryMethod.getAnnotatedQuery()), queryAnnotation.count(),
 					queryAnnotation.delete(), queryAnnotation.exists());
+		} else if (namedQueries.hasQuery(queryMethod.getNamedQueryName())) {
+			query = new QueryInteraction(new AotStringQuery(namedQueries.getQuery(queryMethod.getNamedQueryName())),
+					queryAnnotation != null && queryAnnotation.count(), queryAnnotation != null && queryAnnotation.delete(),
+					queryAnnotation != null && queryAnnotation.exists());
 		} else {
 
 			PartTree partTree = new PartTree(queryMethod.getName(), repositoryInformation.getDomainType());

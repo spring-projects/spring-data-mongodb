@@ -23,10 +23,12 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.test.tools.TestCompiler;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -39,18 +41,25 @@ import org.springframework.util.ReflectionUtils;
  * <p>
  * This configuration generates the AOT repository, compiles sources and configures a BeanFactory to contain the AOT
  * fragment. Additionally, the fragment is exposed through a {@code repositoryInterface} JDK proxy forwarding method
- * invocations to the backing AOT fragment. Note that {@code repositoryInterface} is not a repository proxy.
+ * invocations to the backing AOT fragment by default (or when setting {@code fragmentFacade=true}). Note that
+ * {@code repositoryInterface} is not a repository proxy.
  *
  * @author Christoph Strobl
  */
 public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProcessor {
 
 	private final Class<?> repositoryInterface;
+	private final boolean registerFragmentFacade;
 	private final TestMongoAotRepositoryContext repositoryContext;
 
 	public AotFragmentTestConfigurationSupport(Class<?> repositoryInterface) {
+		this(repositoryInterface, true);
+	}
+
+	public AotFragmentTestConfigurationSupport(Class<?> repositoryInterface, boolean registerFragmentFacade) {
 
 		this.repositoryInterface = repositoryInterface;
+		this.registerFragmentFacade = registerFragmentFacade;
 		this.repositoryContext = new TestMongoAotRepositoryContext(repositoryInterface, null);
 	}
 
@@ -59,12 +68,13 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 
 		TestGenerationContext generationContext = new TestGenerationContext(repositoryInterface);
 
+		repositoryContext.setBeanFactory(beanFactory);
 		new MongoRepositoryContributor(repositoryContext).contribute(generationContext);
 
 		AbstractBeanDefinition aotGeneratedRepository = BeanDefinitionBuilder
 				.genericBeanDefinition(
 						repositoryInterface.getPackageName() + "." + repositoryInterface.getSimpleName() + "Impl__Aot") //
-				.addConstructorArgReference("mongoOperations") //
+				.addConstructorArgValue(new RuntimeBeanReference(MongoOperations.class)) //
 				.addConstructorArgValue(getCreationContext(repositoryContext)).getBeanDefinition();
 
 		TestCompiler.forSystem().withCompilerOptions("-parameters").with(generationContext).compile(compiled -> {
@@ -72,15 +82,17 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 			((BeanDefinitionRegistry) beanFactory).registerBeanDefinition("fragment", aotGeneratedRepository);
 		});
 
-		BeanDefinition fragmentFacade = BeanDefinitionBuilder.rootBeanDefinition((Class) repositoryInterface, () -> {
+		if (registerFragmentFacade) {
+			BeanDefinition fragmentFacade = BeanDefinitionBuilder.rootBeanDefinition((Class) repositoryInterface, () -> {
 
-			Object fragment = beanFactory.getBean("fragment");
-			Object proxy = getFragmentFacadeProxy(fragment);
+				Object fragment = beanFactory.getBean("fragment");
+				Object proxy = getFragmentFacadeProxy(fragment);
 
-			return repositoryInterface.cast(proxy);
-		}).getBeanDefinition();
+				return repositoryInterface.cast(proxy);
+			}).getBeanDefinition();
 
-		((BeanDefinitionRegistry) beanFactory).registerBeanDefinition("fragmentFacade", fragmentFacade);
+			((BeanDefinitionRegistry) beanFactory).registerBeanDefinition("fragmentFacade", fragmentFacade);
+		}
 
 		beanFactory.registerSingleton("generationContext", generationContext);
 	}
@@ -135,4 +147,5 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 			super(message);
 		}
 	}
+
 }

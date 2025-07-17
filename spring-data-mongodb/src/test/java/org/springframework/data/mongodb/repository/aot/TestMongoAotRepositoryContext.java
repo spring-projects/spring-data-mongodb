@@ -29,9 +29,14 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.test.tools.ClassFile;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.repository.support.MongoRepositoryFragmentsContributor;
+import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
 import org.springframework.data.repository.config.AotRepositoryContext;
+import org.springframework.data.repository.config.AotRepositoryInformation;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.AnnotationRepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryComposition;
 
 /**
@@ -39,16 +44,27 @@ import org.springframework.data.repository.core.support.RepositoryComposition;
  */
 public class TestMongoAotRepositoryContext implements AotRepositoryContext {
 
-	private final StubRepositoryInformation repositoryInformation;
+	private final AotRepositoryInformation repositoryInformation;
 	private final Environment environment = new StandardEnvironment();
+	private final Class<?> repositoryInterface;
+	private @Nullable ConfigurableListableBeanFactory beanFactory;
 
 	public TestMongoAotRepositoryContext(Class<?> repositoryInterface, @Nullable RepositoryComposition composition) {
-		this.repositoryInformation = new StubRepositoryInformation(repositoryInterface, composition);
+
+		this.repositoryInterface = repositoryInterface;
+
+		RepositoryMetadata metadata = AnnotationRepositoryMetadata.getMetadata(repositoryInterface);
+
+		RepositoryComposition.RepositoryFragments fragments = MongoRepositoryFragmentsContributor.DEFAULT
+				.describe(metadata);
+
+		this.repositoryInformation = new AotRepositoryInformation(metadata, SimpleMongoRepository.class,
+				fragments.stream().toList());
 	}
 
 	@Override
 	public ConfigurableListableBeanFactory getBeanFactory() {
-		return null;
+		return beanFactory;
 	}
 
 	@Override
@@ -78,7 +94,7 @@ public class TestMongoAotRepositoryContext implements AotRepositoryContext {
 
 	@Override
 	public Set<String> getBasePackages() {
-		return Set.of("org.springframework.data.dummy.repository.aot");
+		return Set.of(repositoryInterface.getPackageName());
 	}
 
 	@Override
@@ -121,4 +137,9 @@ public class TestMongoAotRepositoryContext implements AotRepositoryContext {
 	public Environment getEnvironment() {
 		return environment;
 	}
+
+	public void setBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
 }

@@ -77,6 +77,20 @@ class MongoRepositoryMetadataTests {
 				.containsEntry("type", "IMPERATIVE");
 	}
 
+	@Test // GH-4961
+	void shouldDocumentNamedQuery() throws IOException {
+
+		Resource resource = getResource();
+
+		assertThat(resource).isNotNull();
+		assertThat(resource.exists()).isTrue();
+
+		String json = resource.getContentAsString(StandardCharsets.UTF_8);
+
+		assertThatJson(json).inPath("$.methods[?(@.name == 'findByNamedQuery')].query").isArray().element(0).isObject()
+				.containsEntry("filter", "{'firstname' : ?0}");
+	}
+
 	@Test // GH-4964
 	void shouldDocumentDerivedQuery() throws IOException {
 
