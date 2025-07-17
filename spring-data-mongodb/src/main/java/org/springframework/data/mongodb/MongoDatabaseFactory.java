@@ -16,12 +16,17 @@
 package org.springframework.data.mongodb;
 
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+import org.springframework.util.Assert;
 
 import com.mongodb.ClientSessionOptions;
+import com.mongodb.ConnectionString;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -30,9 +35,55 @@ import com.mongodb.client.MongoDatabase;
  * @author Mark Pollack
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 3.0
  */
 public interface MongoDatabaseFactory extends CodecRegistryProvider, MongoSessionProvider {
+
+	/**
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance for the given {@code connectionString}. Using this
+	 * factory method will create a new {@link MongoClient} instance that will be closed when calling
+	 * {@link SimpleMongoClientDatabaseFactory#destroy()}.
+	 *
+	 * @param connectionString connection coordinates for a database connection. Must contain a database name and must not
+	 *          be {@literal null} or empty.
+	 * @since 4.5.2
+	 * @see <a href="https://docs.mongodb.com/manual/reference/connection-string/">MongoDB Connection String reference</a>
+	 */
+	static SimpleMongoClientDatabaseFactory create(String connectionString) {
+
+		Assert.notNull(connectionString, "ConnectionString must not be null");
+
+		return new SimpleMongoClientDatabaseFactory(connectionString);
+	}
+
+	/**
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance from the given {@link MongoClient}. Using this
+	 * factory will create a new {@link MongoClient} instance that will be closed when calling
+	 * {@link SimpleMongoClientDatabaseFactory#destroy()}.
+	 *
+	 * @param connectionString connection coordinates for a database connection. Must contain also a database name and not
+	 *          be {@literal null}.
+	 * @since 4.5.2
+	 */
+	static SimpleMongoClientDatabaseFactory create(ConnectionString connectionString) {
+
+		Assert.notNull(connectionString, "ConnectionString must not be null");
+
+		return new SimpleMongoClientDatabaseFactory(connectionString);
+	}
+
+	/**
+	 * Creates a new {@link MongoDatabaseFactory} instance from the given {@link MongoClient}. We assume a managed client
+	 * instance that will be disposed by you (or the application container) once the client is no longer required for use.
+	 *
+	 * @param mongoClient must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
+	 * @since 4.5.2
+	 */
+	static MongoDatabaseFactory create(MongoClient mongoClient, String databaseName) {
+		return new SimpleMongoClientDatabaseFactory(mongoClient, databaseName);
+	}
 
 	/**
 	 * Obtain a {@link MongoDatabase} from the underlying factory.

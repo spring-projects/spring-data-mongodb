@@ -72,7 +72,7 @@ class SimpleMongoClientDatabaseFactoryUnitTests {
 
 		ConnectionString mongoURI = new ConnectionString(
 				"mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
-		MongoDatabaseFactory mongoDbFactory = new SimpleMongoClientDatabaseFactory(mongoURI);
+		SimpleMongoClientDatabaseFactory mongoDbFactory = MongoDatabaseFactory.create(mongoURI);
 
 		assertThat(mongoDbFactory).hasFieldOrPropertyWithValue("databaseName", "myDatabase");
 	}
@@ -82,7 +82,7 @@ class SimpleMongoClientDatabaseFactoryUnitTests {
 
 		ConnectionString uri = new ConnectionString(
 				"mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
-		SimpleMongoClientDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(uri);
+		SimpleMongoClientDatabaseFactory factory = MongoDatabaseFactory.create(uri);
 
 		assertThat(factory).hasFieldOrPropertyWithValue("databaseName", "myDataBase");
 	}
@@ -92,7 +92,7 @@ class SimpleMongoClientDatabaseFactoryUnitTests {
 
 		when(mongo.getDatabase("foo")).thenReturn(database);
 
-		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(mongo, "foo");
+		MongoDatabaseFactory factory = MongoDatabaseFactory.create(mongo, "foo");
 		MongoDatabaseFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
 
 		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getMongoDatabase());

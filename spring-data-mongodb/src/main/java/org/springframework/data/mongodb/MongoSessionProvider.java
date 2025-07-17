@@ -31,7 +31,7 @@ import com.mongodb.client.ClientSession;
 public interface MongoSessionProvider {
 
 	/**
-	 * Obtain a {@link ClientSession} with with given options.
+	 * Obtain a {@link ClientSession} with given options.
 	 *
 	 * @param options must not be {@literal null}.
 	 * @return never {@literal null}.
