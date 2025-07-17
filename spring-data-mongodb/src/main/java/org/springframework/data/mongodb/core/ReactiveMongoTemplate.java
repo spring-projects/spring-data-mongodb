@@ -177,6 +177,9 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * <p>
  * You can also set the default {@link #setReadPreference(ReadPreference) ReadPreference} on the template level to
  * generally apply a {@link ReadPreference}.
+ * <p>
+ * When using transactions make sure to create this template with the same {@link ReactiveMongoDatabaseFactory} that is
+ * also used for {@code ReactiveMongoTransactionManager} creation.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -219,6 +222,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Constructor used for a basic template configuration.
+	 * <p>
+	 * If you intend to use transactions, make sure to use {@link #ReactiveMongoTemplate(ReactiveMongoDatabaseFactory)} or
+	 * {@link #ReactiveMongoTemplate(ReactiveMongoDatabaseFactory, MongoConverter)} constructors, otherwise, this template
+	 * will not participate in transactions using the default {@code SessionSynchronization.ON_ACTUAL_TRANSACTION} setting
+	 * as {@code ReactiveMongoTransactionManager} uses strictly its configured {@link ReactiveMongoDatabaseFactory} for
+	 * transaction participation.
 	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
@@ -560,7 +569,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Define if {@link ReactiveMongoTemplate} should participate in transactions. Default is set to
-	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION}.<br />
+	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION}.
+	 * <p>
 	 * <strong>NOTE:</strong> MongoDB transactions require at least MongoDB 4.0.
 	 *
 	 * @since 2.2

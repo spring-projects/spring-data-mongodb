@@ -37,20 +37,21 @@ import com.mongodb.reactivestreams.client.ClientSession;
 /**
  * A {@link org.springframework.transaction.ReactiveTransactionManager} implementation that manages
  * {@link com.mongodb.reactivestreams.client.ClientSession} based transactions for a single
- * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory}. <br />
+ * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory}.
+ * <p>
  * Binds a {@link ClientSession} from the specified
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory} to the subscriber
- * {@link reactor.util.context.Context}. <br />
- * {@link org.springframework.transaction.TransactionDefinition#isReadOnly() Readonly} transactions operate on a
- * {@link ClientSession} and enable causal consistency, and also {@link ClientSession#startTransaction() start},
+ * {@link reactor.util.context.Context}. {@link org.springframework.transaction.TransactionDefinition#isReadOnly()
+ * Readonly} transactions operate on a {@link ClientSession} and enable causal consistency, and also
+ * {@link ClientSession#startTransaction() start},
  * {@link com.mongodb.reactivestreams.client.ClientSession#commitTransaction() commit} or
- * {@link ClientSession#abortTransaction() abort} a transaction. <br />
+ * {@link ClientSession#abortTransaction() abort} a transaction.
+ * <p>
  * Application code is required to retrieve the {@link com.mongodb.reactivestreams.client.MongoDatabase} via
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseUtils#getDatabase(ReactiveMongoDatabaseFactory)} instead
  * of a standard {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase()} call. Spring
- * classes such as {@link org.springframework.data.mongodb.core.ReactiveMongoTemplate} use this strategy implicitly.
- * <br />
- * By default failure of a {@literal commit} operation raises a {@link TransactionSystemException}. You can override
+ * classes such as {@link org.springframework.data.mongodb.core.ReactiveMongoTemplate} use this strategy implicitly. By
+ * default, failure of a {@literal commit} operation raises a {@link TransactionSystemException}. You can override
  * {@link #doCommit(TransactionSynchronizationManager, ReactiveMongoTransactionObject)} to implement the
  * <a href="https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation">Retry Commit Operation</a>
  * behavior as outlined in the MongoDB reference manual.
