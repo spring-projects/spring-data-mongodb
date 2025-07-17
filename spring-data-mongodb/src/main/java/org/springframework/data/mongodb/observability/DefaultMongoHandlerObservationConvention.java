@@ -15,18 +15,16 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import io.micrometer.common.KeyValue;
-import io.micrometer.common.KeyValues;
-
-import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
-import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
-
 import com.mongodb.ConnectionString;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.event.CommandStartedEvent;
+import io.micrometer.common.KeyValues;
+import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+
+import static org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames.*;
 
 /**
  * Default {@link MongoHandlerObservationConvention} implementation.
@@ -41,54 +39,43 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 	@Override
 	public KeyValues getLowCardinalityKeyValues(MongoHandlerContext context) {
 
-		KeyValues keyValues = KeyValues.of(LowCardinalityCommandKeyNames.DB_SYSTEM.withValue("mongodb"),
-				LowCardinalityCommandKeyNames.MONGODB_COMMAND.withValue(context.getCommandName()));
-
-		ConnectionString connectionString = context.getConnectionString();
-		if (connectionString != null) {
-
-			keyValues = keyValues
-					.and(LowCardinalityCommandKeyNames.DB_CONNECTION_STRING.withValue(connectionString.getConnectionString()));
-
-			String user = connectionString.getUsername();
-
-			if (!ObjectUtils.isEmpty(user)) {
-				keyValues = keyValues.and(LowCardinalityCommandKeyNames.DB_USER.withValue(user));
-			}
-		}
-
-		if (!ObjectUtils.isEmpty(context.getDatabaseName())) {
-			keyValues = keyValues.and(LowCardinalityCommandKeyNames.DB_NAME.withValue(context.getDatabaseName()));
-		}
-
-		keyValues = keyValues.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(
-				ObjectUtils.isEmpty(context.getCollectionName()) ? KeyValue.NONE_VALUE : context.getCollectionName()));
-
 		if (context.getCommandStartedEvent() == null) {
 			throw new IllegalStateException("not command started event present");
 		}
 
+		ConnectionString connectionString = context.getConnectionString();
+		String connectionStringValue = connectionString != null ? connectionString.getConnectionString() : null;
+		String username = connectionString != null ? connectionString.getUsername() : null;
+
+		String transport = null,  peerName = null, peerPort =null,  clusterId = null;
 		ConnectionDescription connectionDescription = context.getCommandStartedEvent().getConnectionDescription();
-
 		if (connectionDescription != null) {
-
 			ServerAddress serverAddress = connectionDescription.getServerAddress();
 
 			if (serverAddress != null) {
-
-				keyValues = keyValues.and(LowCardinalityCommandKeyNames.NET_TRANSPORT.withValue("IP.TCP"),
-						LowCardinalityCommandKeyNames.NET_PEER_NAME.withValue(serverAddress.getHost()),
-						LowCardinalityCommandKeyNames.NET_PEER_PORT.withValue("" + serverAddress.getPort()));
+				transport = "IP.TCP";
+				peerName = serverAddress.getHost();
+				peerPort = String.valueOf(serverAddress.getPort());
 			}
 
 			ConnectionId connectionId = connectionDescription.getConnectionId();
 			if (connectionId != null) {
-				keyValues = keyValues.and(LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID
-						.withValue(connectionId.getServerId().getClusterId().getValue()));
+				clusterId = connectionId.getServerId().getClusterId().getValue();
 			}
 		}
 
-		return keyValues;
+		return KeyValues.of(
+				DB_SYSTEM.withValue("mongodb"),
+				MONGODB_COMMAND.withValue(context.getCommandName()),
+				DB_CONNECTION_STRING.withOptionalValue(connectionStringValue),
+				DB_USER.withOptionalValue(username),
+				DB_NAME.withOptionalValue(context.getDatabaseName()),
+				MONGODB_COLLECTION.withOptionalValue(context.getCollectionName()),
+				NET_TRANSPORT.withOptionalValue(transport),
+				NET_PEER_NAME.withOptionalValue(peerName),
+				NET_PEER_PORT.withOptionalValue(peerPort),
+				MONGODB_CLUSTER_ID.withOptionalValue(clusterId)
+		);
 	}
 
 	@Override
