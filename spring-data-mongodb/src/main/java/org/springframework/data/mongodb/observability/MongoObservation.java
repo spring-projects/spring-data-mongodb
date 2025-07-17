@@ -15,8 +15,11 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import io.micrometer.common.KeyValue;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.ObservationDocumentation;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 /**
  * A MongoDB-based {@link io.micrometer.observation.Observation}.
@@ -172,6 +175,15 @@ enum MongoObservation implements ObservationDocumentation {
 			public String asString() {
 				return "db.operation";
 			}
+		};
+
+		/**
+		 * Creates a key value for the given key name.
+		 * @param value value for key, if value is null or empty {@link KeyValue#NONE_VALUE} will be used
+		 * @return key value
+		 */
+		public KeyValue withOptionalValue(@Nullable String value) {
+			return withValue(ObjectUtils.isEmpty(value) ? KeyValue.NONE_VALUE : value);
 		}
 	}
 
