@@ -36,16 +36,18 @@ import com.mongodb.client.ClientSession;
 
 /**
  * A {@link org.springframework.transaction.PlatformTransactionManager} implementation that manages
- * {@link ClientSession} based transactions for a single {@link MongoDatabaseFactory}. <br />
- * Binds a {@link ClientSession} from the specified {@link MongoDatabaseFactory} to the thread. <br />
+ * {@link ClientSession} based transactions for a single {@link MongoDatabaseFactory}.
+ * <p>
+ * Binds a {@link ClientSession} from the specified {@link MongoDatabaseFactory} to the thread.
  * {@link TransactionDefinition#isReadOnly() Readonly} transactions operate on a {@link ClientSession} and enable causal
  * consistency, and also {@link ClientSession#startTransaction() start}, {@link ClientSession#commitTransaction()
- * commit} or {@link ClientSession#abortTransaction() abort} a transaction. <br />
+ * commit} or {@link ClientSession#abortTransaction() abort} a transaction.
+ * <p>
  * Application code is required to retrieve the {@link com.mongodb.client.MongoDatabase} via
  * {@link MongoDatabaseUtils#getDatabase(MongoDatabaseFactory)} instead of a standard
  * {@link MongoDatabaseFactory#getMongoDatabase()} call. Spring classes such as
- * {@link org.springframework.data.mongodb.core.MongoTemplate} use this strategy implicitly. <br />
- * By default failure of a {@literal commit} operation raises a {@link TransactionSystemException}. One may override
+ * {@link org.springframework.data.mongodb.core.MongoTemplate} use this strategy implicitly. By default, failure of a
+ * {@literal commit} operation raises a {@link TransactionSystemException}. One may override
  * {@link #doCommit(MongoTransactionObject)} to implement the
  * <a href="https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation">Retry Commit Operation</a>
  * behavior as outlined in the MongoDB reference manual.
@@ -205,7 +207,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * By default those labels are ignored, nevertheless one might check for
 	 * {@link MongoException#UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL transient commit errors labels} and retry the the
 	 * commit. <br />
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * int retries = 3;

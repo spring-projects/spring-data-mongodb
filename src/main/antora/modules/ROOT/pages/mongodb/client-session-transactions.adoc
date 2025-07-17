@@ -294,6 +294,11 @@ static class Config extends AbstractMongoClientConfiguration {
         return new MongoTransactionManager(dbFactory);
     }
 
+    @Bean
+    MongoTemplate mongoTemplate(MongoDatabaseFactory dbFactory) {                 <1>
+        return new MongoTemplate(dbFactory);
+    }
+
     // ...
 }
 
@@ -314,6 +319,7 @@ public class StateService {
 ----
 
 <1> Register `MongoTransactionManager` in the application context.
+Also, make sure to use the same `MongoDatabaseFactory` when creating `MongoTemplate` to participate in transactions in the scope of the same `MongoDatabaseFactory`.
 <2> Mark methods as transactional.
 
 NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` to also start a transaction that adds the
@@ -331,6 +337,11 @@ public class Config extends AbstractReactiveMongoConfiguration {
     @Bean
     ReactiveMongoTransactionManager transactionManager(ReactiveMongoDatabaseFactory factory) {  <1>
         return new ReactiveMongoTransactionManager(factory);
+    }
+
+    @Bean
+    ReactiveMongoTemplate reactiveMongoTemplate(ReactiveMongoDatabaseFactory dbFactory) {       <1>
+        return new ReactiveMongoTemplate(dbFactory);
     }
 
     // ...
@@ -351,6 +362,7 @@ public class StateService {
 ----
 
 <1> Register `ReactiveMongoTransactionManager` in the application context.
+Also, make sure to use the same `ReactiveMongoDatabaseFactory` when creating `ReactiveMongoTemplate` to participate in transactions in the scope of the same `ReactiveMongoDatabaseFactory`.
 <2> Mark methods as transactional.
 
 NOTE: `@Transactional(readOnly = true)` advises `ReactiveMongoTransactionManager` to also start a transaction that adds the `ClientSession` to outgoing requests.
@@ -418,20 +430,20 @@ Please refer to https://docs.mongodb.com/manual/reference/connection-string/#con
 
 MongoDB does *not* support collection operations, such as collection creation, within a transaction.
 This also affects the on the fly collection creation that happens on first usage.
-Therefore make sure to have all required structures in place.
+Therefore, make sure to have all required structures in place.
 
 *Transient Errors*
 
 MongoDB can add special labels to errors raised during transactional operations.
 Those may indicate transient failures that might vanish by merely retrying the operation.
 We highly recommend https://github.com/spring-projects/spring-retry[Spring Retry] for those purposes.
-Nevertheless one may override `MongoTransactionManager#doCommit(MongoTransactionObject)` to implement a https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation[Retry Commit Operation]
+Nevertheless, one may override `MongoTransactionManager#doCommit(MongoTransactionObject)` to implement a https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation[Retry Commit Operation]
 behavior as outlined in the MongoDB reference manual.
 
 *Count*
 
 MongoDB `count` operates upon collection statistics which may not reflect the actual situation within a transaction.
-The server responds with _error 50851_ when issuing a `count` command inside of a multi-document transaction.
+The server responds with _error 50851_ when issuing a `count` command inside a multi-document transaction.
 Once `MongoTemplate` detects an active transaction, all exposed `count()` methods are converted and delegated to the aggregation framework using `$match` and `$count` operators, preserving `Query` settings, such as `collation`.
 
 Restrictions apply when using geo commands inside of the aggregation count helper.
@@ -453,9 +465,9 @@ The following snippet shows `count` usage inside the session-bound closure:
 session.startTransaction();
 
 template.withSession(session)
-    .execute(action -> {
-        action.count(query(where("state").is("active")), Step.class)
-        ...
+    .execute(ops -> {
+        return ops.count(query(where("state").is("active")), Step.class)
+        });
 ----
 ====
 

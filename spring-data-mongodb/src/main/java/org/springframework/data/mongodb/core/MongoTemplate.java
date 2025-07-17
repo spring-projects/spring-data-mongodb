@@ -48,7 +48,6 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.domain.OffsetScrollPosition;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
@@ -160,6 +159,9 @@ import com.mongodb.client.result.UpdateResult;
  * <p>
  * You can also set the default {@link #setReadPreference(ReadPreference) ReadPreference} on the template level to
  * generally apply a {@link ReadPreference}.
+ * <p>
+ * When using transactions make sure to create this template with the same {@link MongoDatabaseFactory} that is also
+ * used for {@code MongoTransactionManager} creation.
  *
  * @author Thomas Risberg
  * @author Graeme Rocher
@@ -223,6 +225,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Constructor used for a basic template configuration.
+	 * <p>
+	 * If you intend to use transactions, make sure to use {@link #MongoTemplate(MongoDatabaseFactory)} or
+	 * {@link #MongoTemplate(MongoDatabaseFactory, MongoConverter)} constructors, otherwise, this template will not
+	 * participate in transactions using the default {@code SessionSynchronization.ON_ACTUAL_TRANSACTION} setting as
+	 * {@code MongoTransactionManager} uses strictly its configured {@link MongoDatabaseFactory} for transaction
+	 * participation.
 	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
@@ -641,7 +649,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Define if {@link MongoTemplate} should participate in transactions. Default is set to
-	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION}.<br />
+	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION}.
+	 * <p>
 	 * <strong>NOTE:</strong> MongoDB transactions require at least MongoDB 4.0.
 	 *
 	 * @since 2.1
