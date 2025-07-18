@@ -169,7 +169,7 @@ class MongoCodeBlocks {
 		if (!StringUtils.hasText(source)) {
 			builder.add("new $T()", Document.class);
 		} else if (containsPlaceholder(source)) {
-			builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S, $L);\n", source, argNames);
+			builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S$L);\n", source, argNames);
 		} else {
 			builder.add("parse($S)", source);
 		}
@@ -183,7 +183,7 @@ class MongoCodeBlocks {
 		if (!StringUtils.hasText(source)) {
 			builder.addStatement("$1T $2L = new $1T()", Document.class, variableName);
 		} else if (containsPlaceholder(source)) {
-			builder.add("$T $L = bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S, $L);\n", Document.class,
+			builder.add("$T $L = bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S$L);\n", Document.class,
 					variableName, source, argNames);
 		} else {
 			builder.addStatement("$1T $2L = parse($3S)", Document.class, variableName, source);
@@ -198,9 +198,17 @@ class MongoCodeBlocks {
 			return CodeBlock.of("$L", number);
 		} catch (IllegalArgumentException e) {
 
+			String parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
+
+			if (StringUtils.hasText(parameterNames)) {
+				parameterNames = ", " + parameterNames;
+			} else {
+				parameterNames = "";
+			}
+
 			Builder builder = CodeBlock.builder();
-			builder.add("($T) evaluate(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", targetType, value,
-					StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", "));
+			builder.add("($T) evaluate(ExpressionMarker.class.getEnclosingMethod(), $S$L)", targetType, value,
+					parameterNames);
 			return builder.build();
 		}
 	}

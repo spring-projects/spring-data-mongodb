@@ -173,7 +173,13 @@ class AggregationBlocks {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
-			this.parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
+			String parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
+
+			if (StringUtils.hasText(parameterNames)) {
+				this.parameterNames = ", " + parameterNames;
+			} else {
+				this.parameterNames = "";
+			}
 		}
 
 		AggregationCodeBlockBuilder stages(AggregationInteraction aggregation) {

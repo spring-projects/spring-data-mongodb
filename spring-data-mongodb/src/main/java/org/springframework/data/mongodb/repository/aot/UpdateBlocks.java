@@ -102,11 +102,20 @@ class UpdateBlocks {
 	static class UpdateCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
+		private final String parameterNames;
 		private UpdateInteraction source;
 		private String updateVariableName;
 
 		public UpdateCodeBlockBuilder(AotQueryMethodGenerationContext context) {
 			this.context = context;
+
+			String parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
+
+			if (StringUtils.hasText(parameterNames)) {
+				this.parameterNames = ", " + parameterNames;
+			} else {
+				this.parameterNames = "";
+			}
 		}
 
 		public UpdateCodeBlockBuilder update(UpdateInteraction update) {
@@ -127,7 +136,7 @@ class UpdateBlocks {
 			String tmpVariableName = updateVariableName + "Document";
 			builder.add(
 					MongoCodeBlocks.renderExpressionToDocument(source.getUpdate().getUpdateString(), tmpVariableName,
-							StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ")));
+							parameterNames));
 			builder.addStatement("$1T $2L = new $1T($3L)", BasicUpdate.class, updateVariableName, tmpVariableName);
 
 			return builder.build();

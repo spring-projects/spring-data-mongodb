@@ -146,7 +146,14 @@ class QueryBlocks {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
-			this.parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
+
+			String parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
+
+			if (StringUtils.hasText(parameterNames)) {
+				this.parameterNames = ", " + parameterNames;
+			} else {
+				this.parameterNames = "";
+			}
 		}
 
 		QueryCodeBlockBuilder filter(QueryInteraction query) {
@@ -235,7 +242,7 @@ class QueryBlocks {
 					} else {
 
 						builder.addStatement(
-								"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S, $L)))",
+								"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S$L)))",
 								queryVariableName, collationString, parameterNames);
 					}
 				}
@@ -260,7 +267,7 @@ class QueryBlocks {
 				return CodeBlock.of("new $T(new $T())", BasicQuery.class, Document.class);
 			} else if (MongoCodeBlocks.containsPlaceholder(source)) {
 				Builder builder = CodeBlock.builder();
-				builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", source, parameterNames);
+				builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S$L)", source, parameterNames);
 				return builder.build();
 			}
 			else {
