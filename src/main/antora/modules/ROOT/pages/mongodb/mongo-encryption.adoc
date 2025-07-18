@@ -146,7 +146,7 @@ It's useful when you need to explicitly manage data keys, encryption algorithms,
 ** ✅ Explicit configuration avoids the risk of surprises (e.g. missing configuration because of improper annotations or class-path scanning)
 ** ⚠️ An Explicit Field Configuration can diverge from the domain model and you must keep it in sync with the domain model
 
-**Derived setup*
+**Derived setup**
 
 Derived setup relies on annotations in your domain model and automatically generates the required encrypted field configuration from it.
 This is simpler and recommended for typical Spring applications where your data model is already annotated.
