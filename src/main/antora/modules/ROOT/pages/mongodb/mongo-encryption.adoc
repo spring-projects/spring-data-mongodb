@@ -24,7 +24,7 @@ Automatic Encryption requires a xref:mongodb/mapping/mapping-schema.adoc[JSON Sc
 
 Please refer to the xref:mongodb/mapping/mapping-schema.adoc#mongo.jsonSchema.encrypted-fields[JSON Schema] section for more information on defining a JSON Schema that holds encryption information.
 
-To make use of a the `MongoJsonSchema` it needs to be combined with `AutoEncryptionSettings` which can be done eg. via a `MongoClientSettingsBuilderCustomizer`.
+To use a `MongoJsonSchema`, you must supply it together with `AutoEncryptionSettings` which can be done eg. via a `MongoClientSettingsBuilderCustomizer`.
 
 [source,java]
 ----
