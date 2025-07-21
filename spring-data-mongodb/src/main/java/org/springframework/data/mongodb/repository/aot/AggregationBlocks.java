@@ -42,6 +42,7 @@ import org.springframework.data.repository.aot.generate.AotQueryMethodGeneration
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
+import org.springframework.lang.NonNull;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -80,12 +81,7 @@ class AggregationBlocks {
 
 			builder.add("\n");
 
-			Class<?> outputType = queryMethod.getReturnedObjectType();
-			if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
-				outputType = Document.class;
-			} else if (ClassUtils.isAssignable(AggregationResults.class, outputType)) {
-				outputType = queryMethod.getReturnType().getComponentType().getType();
-			}
+			Class<?> outputType = getOutputType(queryMethod);
 
 			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
 				builder.addStatement("$L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
@@ -155,6 +151,18 @@ class AggregationBlocks {
 
 			return builder.build();
 		}
+
+
+	}
+
+	private static Class<?> getOutputType(MongoQueryMethod queryMethod) {
+		Class<?> outputType = queryMethod.getReturnedObjectType();
+		if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
+			outputType = Document.class;
+		} else if (ClassUtils.isAssignable(AggregationResults.class, outputType)) {
+			outputType = queryMethod.getReturnType().getComponentType().getType();
+		}
+		return outputType;
 	}
 
 	@NullUnmarked
@@ -242,8 +250,17 @@ class AggregationBlocks {
 				builder.add(pagingStage(pageableParameter, queryMethod.isSliceQuery()));
 			}
 
-			builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineVariableName,
+			Class<?> outputType = getOutputType(queryMethod);
+			if(outputType.equals(Document.class) || outputType.equals(context.getRepositoryInformation().getDomainType())) {
+				builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineVariableName,
 					context.localVariable("stages"));
+			} else {
+				builder.addStatement("$T $L = createPipeline($L, $T.class)", AggregationPipeline.class, pipelineVariableName,
+					context.localVariable("stages"), outputType);
+			}
+
+
+
 			return builder.build();
 		}
 

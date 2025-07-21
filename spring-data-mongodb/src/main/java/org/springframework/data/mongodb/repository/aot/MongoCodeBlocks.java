@@ -169,7 +169,7 @@ class MongoCodeBlocks {
 		if (!StringUtils.hasText(source)) {
 			builder.add("new $T()", Document.class);
 		} else if (containsPlaceholder(source)) {
-			builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S$L);\n", source, argNames);
+			builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S$L)", source, argNames);
 		} else {
 			builder.add("parse($S)", source);
 		}

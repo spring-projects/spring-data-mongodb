@@ -24,7 +24,6 @@ import java.util.function.Consumer;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScoringFunction;
@@ -56,6 +55,7 @@ import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.Lazy;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ConcurrentLruCache;
 import org.springframework.util.ObjectUtils;
 
@@ -116,12 +116,12 @@ public class MongoAotRepositoryFragmentSupport {
 		ParameterBindingContext bindingContext = new ParameterBindingContext(parametersParameterAccessor::getBindableValue,
 				new ValueExpressionEvaluator() {
 
-			@Override
-			@SuppressWarnings("unchecked")
-			public <T> @Nullable T evaluate(String expression) {
+					@Override
+					@SuppressWarnings("unchecked")
+					public <T> @Nullable T evaluate(String expression) {
 						return (T) MongoAotRepositoryFragmentSupport.this.evaluate(method, expression, args);
-			}
-		});
+					}
+				});
 
 		return CODEC.decode(source, bindingContext);
 	}
@@ -231,26 +231,54 @@ public class MongoAotRepositoryFragmentSupport {
 	}
 
 	protected AggregationPipeline createPipeline(List<Object> rawStages) {
+		return createPipeline(rawStages, null);
+	}
 
-		List<AggregationOperation> stages = new ArrayList<>(rawStages.size());
-		boolean first = true;
-		for (Object rawStage : rawStages) {
-			if (rawStage instanceof Document stageDocument) {
-				if (first) {
-					stages.add((ctx) -> ctx.getMappedObject(stageDocument));
-				} else {
-					stages.add((ctx) -> stageDocument);
+	protected AggregationPipeline createPipeline(List<Object> rawStages, @Nullable Class<?> projection) {
+
+		if (rawStages.isEmpty()) {
+			return new AggregationPipeline(List.of());
+		}
+
+		int size = rawStages.size();
+		List<AggregationOperation> stages = new ArrayList<>(size);
+
+		Object firstElement = CollectionUtils.firstElement(rawStages);
+		stages.add(rawToAggregationOperation(firstElement, true, null));
+
+		if (size == 1) {
+			return new AggregationPipeline(stages);
+		}
+
+		for (int i = 1; i < size - 1; i++) {
+			stages.add(rawToAggregationOperation(firstElement, false, null));
+		}
+
+		Object lastElement = CollectionUtils.lastElement(rawStages);
+		stages.add(rawToAggregationOperation(lastElement, true, projection));
+
+		return new AggregationPipeline(stages);
+	}
+
+	private static AggregationOperation rawToAggregationOperation(Object rawStage, boolean requiresMapping,
+			@Nullable Class<?> type) {
+
+		if (rawStage instanceof Document stageDocument) {
+			if (requiresMapping) {
+				if (type != null) {
+					return (ctx) -> ctx.getMappedObject(stageDocument, type);
 				}
-			} else if (rawStage instanceof AggregationOperation aggregationOperation) {
-				stages.add(aggregationOperation);
+				return (ctx) -> ctx.getMappedObject(stageDocument);
 			} else {
-				throw new RuntimeException("%s cannot be converted to AggregationOperation".formatted(rawStage.getClass()));
-			}
-			if (first) {
-				first = false;
+				return (ctx) -> stageDocument;
 			}
 		}
-		return new AggregationPipeline(stages);
+
+		if (rawStage instanceof AggregationOperation aggregationOperation) {
+			return aggregationOperation;
+		}
+		throw new RuntimeException("%s cannot be converted to AggregationOperation".formatted(rawStage.getClass()));
+
 	}
 
 	protected List<Object> convertSimpleRawResults(Class<?> targetType, List<Document> rawResults) {

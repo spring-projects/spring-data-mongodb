@@ -237,8 +237,12 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		} else {
 
 			PartTree partTree = new PartTree(queryMethod.getName(), repositoryInformation.getDomainType());
-			query = new QueryInteraction(queryCreator.createQuery(partTree, queryMethod, source),
+			AotStringQuery aotStringQuery = queryCreator.createQuery(partTree, queryMethod, source);
+			query = new QueryInteraction(aotStringQuery,
 					partTree.isCountProjection(), partTree.isDelete(), partTree.isExistsProjection());
+//			if(partTree.isLimiting()) {
+//				query.s
+//			}
 		}
 
 		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {

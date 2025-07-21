@@ -104,6 +104,7 @@ class QueryBlocks {
 			}
 
 			if (queryMethod.isPageQuery()) {
+
 				builder.addStatement("return new $T($L, $L).execute($L)", PagedExecution.class, context.localVariable("finder"),
 						context.getPageableParameterName(), query.name());
 			} else if (queryMethod.isSliceQuery()) {
@@ -194,7 +195,7 @@ class QueryBlocks {
 			String limitParameter = context.getLimitParameterName();
 			if (StringUtils.hasText(limitParameter)) {
 				builder.addStatement("$L.limit($L)", queryVariableName, limitParameter);
-			} else if (context.getPageableParameterName() == null && source.getQuery().isLimited()) {
+			} else if (source.getQuery().isLimited()) {
 				builder.addStatement("$L.limit($L)", queryVariableName, source.getQuery().getLimit());
 			}
 

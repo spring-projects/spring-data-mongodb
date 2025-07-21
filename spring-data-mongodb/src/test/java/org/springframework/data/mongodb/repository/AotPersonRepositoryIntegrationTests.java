@@ -34,7 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Mark Paluch
  */
 @ContextConfiguration(classes = AotPersonRepositoryIntegrationTests.Config.class)
-@Disabled("Several mismatches, some class-loader visibility issues and some behavioral differences remain to be fixed")
+//@Disabled("Several mismatches, some class-loader visibility issues and some behavioral differences remain to be fixed")
 class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
 
 	@Configuration
