@@ -93,6 +93,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		this.queryCreator = new AotQueryCreator(this.mappingContext);
 	}
 
+	@SuppressWarnings("NullAway")
 	private NamedQueries getNamedQueries(@Nullable RepositoryConfigurationSource configSource, ClassLoader classLoader) {
 
 		String location = configSource != null ? configSource.getNamedQueryLocation().orElse(null) : null;
@@ -237,8 +238,12 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		} else {
 
 			PartTree partTree = new PartTree(queryMethod.getName(), repositoryInformation.getDomainType());
-			query = new QueryInteraction(queryCreator.createQuery(partTree, queryMethod, source),
+			AotStringQuery aotStringQuery = queryCreator.createQuery(partTree, queryMethod, source);
+			query = new QueryInteraction(aotStringQuery,
 					partTree.isCountProjection(), partTree.isDelete(), partTree.isExistsProjection());
+//			if(partTree.isLimiting()) {
+//				query.s
+//			}
 		}
 
 		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {

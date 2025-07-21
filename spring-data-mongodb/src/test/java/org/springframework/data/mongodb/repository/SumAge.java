@@ -20,7 +20,7 @@ import java.util.Objects;
 /**
  * @author Christoph Strobl
  */
-final class SumAge {
+public final class SumAge {
 
 	private final Long total;
 

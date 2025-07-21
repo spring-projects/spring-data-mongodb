@@ -23,6 +23,7 @@ import org.springframework.data.mongodb.repository.aot.Snippet.BuilderStyleBuild
 import org.springframework.data.mongodb.repository.aot.Snippet.BuilderStyleVariableBuilder.BuilderStyleVariableBuilderImpl;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
+import org.springframework.util.Assert;
 
 /**
  * @author Christoph Strobl
@@ -192,12 +193,17 @@ interface Snippet {
 
 			@Override
 			public BuilderStyleBuilder with(Snippet snippet) {
+
+				Assert.notNull(targetMethodName, "TargetMethodName must be set before calling this method");
+
 				new BuilderStyleSnippet(targetVariableName, targetMethodName, snippet).appendTo(targetBuilder);
 				return this;
 			}
 
 			@Override
 			public VariableSnippet variable() {
+
+				Assert.notNull(variableSnippet, "VariableSnippet must not be null");
 				return this.variableSnippet;
 			}
 		}

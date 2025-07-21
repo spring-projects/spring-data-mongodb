@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
-
 import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.annotation.Collation;
@@ -31,6 +32,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Pag
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
+import org.springframework.data.util.Lazy;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
@@ -100,10 +102,17 @@ class QueryBlocks {
 			} else if (queryMethod.isStreamQuery()) {
 				terminatingMethod = "stream()";
 			} else {
-				terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "one()" : "oneValue()";
+				if (query.getQuery().isLimited()) {
+					terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "first()"
+							: "firstValue()";
+				} else {
+					terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "one()"
+							: "oneValue()";
+				}
 			}
 
 			if (queryMethod.isPageQuery()) {
+
 				builder.addStatement("return new $T($L, $L).execute($L)", PagedExecution.class, context.localVariable("finder"),
 						context.getPageableParameterName(), query.name());
 			} else if (queryMethod.isSliceQuery()) {
@@ -113,8 +122,20 @@ class QueryBlocks {
 
 				String scrollPositionParameterName = context.getScrollPositionParameterName();
 
-				builder.addStatement("return $L.matching($L).scroll($L)", context.localVariable("finder"), query.name(),
-						scrollPositionParameterName);
+				if (scrollPositionParameterName != null) {
+
+					builder.addStatement("return $L.matching($L).scroll($L)", context.localVariable("finder"), query.name(),
+							scrollPositionParameterName);
+				} else {
+					String pageableParameterName = context.getPageableParameterName();
+					if (pageableParameterName != null) {
+						builder.addStatement("return $L.matching($L).scroll($L.toScrollPosition())",
+								context.localVariable("finder"), query.name(), pageableParameterName);
+					} else {
+						builder.addStatement("return $L.matching($L).scroll($T.initial())", context.localVariable("finder"),
+								query.name(), ScrollPosition.class);
+					}
+				}
 			} else {
 				if (query.isCount() && !ClassUtils.isAssignable(Long.class, context.getActualReturnType().getRawClass())) {
 
@@ -137,7 +158,7 @@ class QueryBlocks {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
-		private final String parameterNames;
+		private final Lazy<CodeBlock> queryParameters;
 
 		private QueryInteraction source;
 		private String queryVariableName;
@@ -146,14 +167,54 @@ class QueryBlocks {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
+			this.queryParameters = Lazy.of(this::queryParametersCodeBlock);
+		}
 
-			String parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
+		CodeBlock queryParametersCodeBlock() {
 
-			if (StringUtils.hasText(parameterNames)) {
-				this.parameterNames = ", " + parameterNames;
-			} else {
-				this.parameterNames = "";
+			List<String> allParameterNames = context.getAllParameterNames();
+
+			if (allParameterNames.isEmpty()) {
+				return CodeBlock.builder().build();
 			}
+
+			CodeBlock.Builder formatted = CodeBlock.builder();
+			boolean containsArrayParameter = false;
+			for (int i = 0; i < allParameterNames.size(); i++) {
+
+				String parameterName = allParameterNames.get(i);
+				Class<?> parameterType = context.getMethodParameter(parameterName).getParameterType();
+				if (source.getQuery().isRegexPlaceholderAt(i) && parameterType == String.class) {
+					String regexOptions = source.getQuery().getRegexOptions(i);
+
+					if (StringUtils.hasText(regexOptions)) {
+						formatted.add(CodeBlock.of("toRegex($L)", parameterName));
+					} else {
+						formatted.add(CodeBlock.of("toRegex($L, $S)", parameterName, regexOptions));
+					}
+				} else {
+					formatted.add(CodeBlock.of("$L", parameterName));
+				}
+
+				if (i + 1 < allParameterNames.size()) {
+					formatted.add(", ");
+				}
+
+				if (!containsArrayParameter && parameterType != null && parameterType.isArray()) {
+					containsArrayParameter = true;
+				}
+			}
+
+			// wrap single array argument to avoid problems with vargs when calling method
+			if (containsArrayParameter && allParameterNames.size() == 1) {
+				return CodeBlock.of("new $T[] { $L }", Object.class, formatted.build());
+			}
+
+			return formatted.build();
+		}
+
+		public CodeBlock getQueryParameters() {
+			return queryParameters.get();
 		}
 
 		QueryCodeBlockBuilder filter(QueryInteraction query) {
@@ -177,24 +238,26 @@ class QueryBlocks {
 			if (StringUtils.hasText(source.getQuery().getFieldsString())) {
 
 				VariableSnippet fields = Snippet.declare(builder).variable(Document.class, context.localVariable("fields"))
-						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), parameterNames));
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), queryParameters.get()));
 				builder.addStatement("$L.setFieldsObject($L)", queryVariableName, fields.getVariableName());
+			}
+
+			if (StringUtils.hasText(source.getQuery().getSortString())) {
+
+				VariableSnippet sort = Snippet.declare(builder).variable(Document.class, context.localVariable("sort"))
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), getQueryParameters()));
+				builder.addStatement("$L.setSortObject($L)", queryVariableName, sort.getVariableName());
 			}
 
 			String sortParameter = context.getSortParameterName();
 			if (StringUtils.hasText(sortParameter)) {
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
-			} else if (StringUtils.hasText(source.getQuery().getSortString())) {
-
-				VariableSnippet sort = Snippet.declare(builder).variable(Document.class, context.localVariable("sort"))
-						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), parameterNames));
-				builder.addStatement("$L.setSortObject($L)", queryVariableName, sort.getVariableName());
 			}
 
 			String limitParameter = context.getLimitParameterName();
 			if (StringUtils.hasText(limitParameter)) {
 				builder.addStatement("$L.limit($L)", queryVariableName, limitParameter);
-			} else if (context.getPageableParameterName() == null && source.getQuery().isLimited()) {
+			} else if (source.getQuery().isLimited()) {
 				builder.addStatement("$L.limit($L)", queryVariableName, source.getQuery().getLimit());
 			}
 
@@ -241,9 +304,15 @@ class QueryBlocks {
 								org.springframework.data.mongodb.core.query.Collation.class, collationString);
 					} else {
 
-						builder.addStatement(
-								"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S$L)))",
-								queryVariableName, collationString, parameterNames);
+						if (getQueryParameters().isEmpty()) {
+							builder.addStatement(
+									"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S)))",
+									queryVariableName, collationString);
+						} else {
+							builder.addStatement(
+									"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S, $L)))",
+									queryVariableName, collationString, getQueryParameters());
+						}
 					}
 				}
 			}
@@ -267,10 +336,13 @@ class QueryBlocks {
 				return CodeBlock.of("new $T(new $T())", BasicQuery.class, Document.class);
 			} else if (MongoCodeBlocks.containsPlaceholder(source)) {
 				Builder builder = CodeBlock.builder();
-				builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S$L)", source, parameterNames);
+				if (getQueryParameters().isEmpty()) {
+					builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S)", source);
+				} else {
+					builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", source, getQueryParameters());
+				}
 				return builder.build();
-			}
-			else {
+			} else {
 				return CodeBlock.of("new $T(parse($S))", BasicQuery.class, source);
 			}
 		}

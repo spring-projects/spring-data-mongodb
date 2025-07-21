@@ -22,13 +22,13 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
-
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -80,12 +80,7 @@ class AggregationBlocks {
 
 			builder.add("\n");
 
-			Class<?> outputType = queryMethod.getReturnedObjectType();
-			if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
-				outputType = Document.class;
-			} else if (ClassUtils.isAssignable(AggregationResults.class, outputType)) {
-				outputType = queryMethod.getReturnType().getComponentType().getType();
-			}
+			Class<?> outputType = getOutputType(queryMethod);
 
 			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
 				builder.addStatement("$L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
@@ -146,7 +141,6 @@ class AggregationBlocks {
 						builder.addStatement("return $L.aggregateStream($L, $T.class)", mongoOpsRef, aggregationVariableName,
 								outputType);
 					} else {
-
 						builder.addStatement("return $L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
 								aggregationVariableName, outputType);
 					}
@@ -155,6 +149,17 @@ class AggregationBlocks {
 
 			return builder.build();
 		}
+
+	}
+
+	private static Class<?> getOutputType(MongoQueryMethod queryMethod) {
+		Class<?> outputType = queryMethod.getReturnedObjectType();
+		if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
+			outputType = Document.class;
+		} else if (ClassUtils.isAssignable(AggregationResults.class, outputType) && queryMethod.getReturnType().getComponentType() != null) {
+			outputType = queryMethod.getReturnType().getComponentType().getType();
+		}
+		return outputType;
 	}
 
 	@NullUnmarked
@@ -173,13 +178,7 @@ class AggregationBlocks {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
-			String parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
-
-			if (StringUtils.hasText(parameterNames)) {
-				this.parameterNames = ", " + parameterNames;
-			} else {
-				this.parameterNames = "";
-			}
+			this.parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
 		}
 
 		AggregationCodeBlockBuilder stages(AggregationInteraction aggregation) {
@@ -231,7 +230,8 @@ class AggregationBlocks {
 			builder.add(aggregationStages(context.localVariable("stages"), source.stages()));
 
 			if (StringUtils.hasText(sortParameter)) {
-				builder.add(sortingStage(sortParameter));
+				Class<?> outputType = getOutputType(queryMethod);
+				builder.add(sortingStage(sortParameter, outputType));
 			}
 
 			if (StringUtils.hasText(limitParameter)) {
@@ -244,6 +244,7 @@ class AggregationBlocks {
 
 			builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineVariableName,
 					context.localVariable("stages"));
+
 			return builder.build();
 		}
 
@@ -312,7 +313,7 @@ class AggregationBlocks {
 			return builder.build();
 		}
 
-		private CodeBlock sortingStage(String sortProvider) {
+		private CodeBlock sortingStage(String sortProvider, Class<?> outputType) {
 
 			Builder builder = CodeBlock.builder();
 
@@ -322,8 +323,17 @@ class AggregationBlocks {
 			builder.addStatement("$1L.append($2L.getProperty(), $2L.isAscending() ? 1 : -1);",
 					context.localVariable("sortDocument"), context.localVariable("order"));
 			builder.endControlFlow();
-			builder.addStatement("stages.add(new $T($S, $L))", Document.class, "$sort",
-					context.localVariable("sortDocument"));
+
+			if (outputType == Document.class || MongoSimpleTypes.HOLDER.isSimpleType(outputType)
+					|| ClassUtils.isAssignable(context.getRepositoryInformation().getDomainType(), outputType)) {
+				builder.addStatement("$L.add(new $T($S, $L))", context.localVariable("stages"), Document.class, "$sort",
+						context.localVariable("sortDocument"));
+			} else {
+				builder.addStatement("$L.add(($T) _ctx -> new $T($S, _ctx.getMappedObject($L, $T.class)))",
+						context.localVariable("stages"), AggregationOperation.class, Document.class, "$sort",
+						context.localVariable("sortDocument"), outputType);
+			}
+
 			builder.endControlFlow();
 
 			return builder.build();
@@ -333,7 +343,7 @@ class AggregationBlocks {
 
 			Builder builder = CodeBlock.builder();
 
-			builder.add(sortingStage(pageableProvider + ".getSort()"));
+			builder.add(sortingStage(pageableProvider + ".getSort()", getOutputType(queryMethod)));
 
 			builder.beginControlFlow("if ($L.isPaged())", pageableProvider);
 			builder.beginControlFlow("if ($L.getOffset() > 0)", pageableProvider);

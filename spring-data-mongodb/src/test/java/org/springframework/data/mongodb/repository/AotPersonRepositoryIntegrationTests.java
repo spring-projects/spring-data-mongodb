@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.repository;
 
 import org.junit.jupiter.api.Disabled;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +34,6 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Mark Paluch
  */
 @ContextConfiguration(classes = AotPersonRepositoryIntegrationTests.Config.class)
-@Disabled("Several mismatches, some class-loader visibility issues and some behavioral differences remain to be fixed")
 class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
 
 	@Configuration
@@ -59,6 +58,36 @@ class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegr
 			return factory.getRepository(PersonRepository.class, RepositoryComposition.RepositoryFragments.just(aotFragment));
 		}
 
+	}
+
+	@Test // DATAMONGO-1608
+	@Disabled
+	void findByFirstnameLikeWithNull() {
+		super.findByFirstnameLikeWithNull();
+	}
+
+	@Test // GH-3395
+	@Disabled
+	void caseInSensitiveInClauseQuotesExpressions() {
+		super.caseInSensitiveInClauseQuotesExpressions();
+	}
+
+	@Test // DATAMONGO-1608
+	@Disabled
+	void findByFirstNameIgnoreCaseWithNull() {
+		super.findByFirstNameIgnoreCaseWithNull();
+	}
+
+	@Test // GH-3395
+	@Disabled
+	void caseSensitiveInClauseIgnoresExpressions() {
+		super.caseSensitiveInClauseIgnoresExpressions();
+	}
+
+	@Test // GH-3395, GH-4404
+	@Disabled
+	void caseInSensitiveInClause() {
+		super.caseInSensitiveInClause();
 	}
 
 }

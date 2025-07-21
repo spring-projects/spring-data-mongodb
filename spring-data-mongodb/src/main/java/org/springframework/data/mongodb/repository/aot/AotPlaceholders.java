@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.aot;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -52,7 +53,7 @@ class AotPlaceholders {
 	 * @param type
 	 * @return
 	 */
-	public static Shape geoJson(int index, String type) {
+	static Shape geoJson(int index, String type) {
 		return new GeoJsonPlaceholder(index, type);
 	}
 
@@ -62,7 +63,7 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	public static Point point(int index) {
+	static Point point(int index) {
 		return new PointPlaceholder(index);
 	}
 
@@ -72,7 +73,7 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	public static Shape circle(int index) {
+	static Shape circle(int index) {
 		return new CirclePlaceholder(index);
 	}
 
@@ -82,7 +83,7 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	public static Shape box(int index) {
+	static Shape box(int index) {
 		return new BoxPlaceholder(index);
 	}
 
@@ -92,7 +93,7 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	public static Shape sphere(int index) {
+	static Shape sphere(int index) {
 		return new SpherePlaceholder(index);
 	}
 
@@ -102,8 +103,12 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	public static Shape polygon(int index) {
+	static Shape polygon(int index) {
 		return new PolygonPlaceholder(index);
+	}
+
+	static RegexPlaceholder regex(int index, @Nullable String options) {
+		return new RegexPlaceholder(index, options);
 	}
 
 	/**
@@ -112,10 +117,9 @@ class AotPlaceholders {
 	 * @since 5.0
 	 * @author Christoph Strobl
 	 */
-	public interface Placeholder {
+	interface Placeholder {
 
 		String getValue();
-
 	}
 
 	/**
@@ -139,7 +143,7 @@ class AotPlaceholders {
 
 		private final int index;
 
-		public PointPlaceholder(int index) {
+		PointPlaceholder(int index) {
 			super(Double.NaN, Double.NaN);
 			this.index = index;
 		}
@@ -184,7 +188,7 @@ class AotPlaceholders {
 
 		private final int index;
 
-		public CirclePlaceholder(int index) {
+		CirclePlaceholder(int index) {
 			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
 			this.index = index;
 		}
@@ -205,7 +209,7 @@ class AotPlaceholders {
 
 		private final int index;
 
-		public BoxPlaceholder(int index) {
+		BoxPlaceholder(int index) {
 			super(new PointPlaceholder(index), new PointPlaceholder(index));
 			this.index = index;
 		}
@@ -226,7 +230,7 @@ class AotPlaceholders {
 
 		private final int index;
 
-		public SpherePlaceholder(int index) {
+		SpherePlaceholder(int index) {
 			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
 			this.index = index;
 		}
@@ -247,7 +251,7 @@ class AotPlaceholders {
 
 		private final int index;
 
-		public PolygonPlaceholder(int index) {
+		PolygonPlaceholder(int index) {
 			super(new PointPlaceholder(index), new PointPlaceholder(index), new PointPlaceholder(index),
 					new PointPlaceholder(index));
 			this.index = index;
@@ -263,6 +267,31 @@ class AotPlaceholders {
 			return getValue();
 		}
 
+	}
+
+	static class RegexPlaceholder implements Placeholder {
+
+		private final int index;
+		private final @Nullable String options;
+
+		RegexPlaceholder(int index, @Nullable String options) {
+			this.index = index;
+			this.options = options;
+		}
+
+		@Nullable String regexOptions() {
+			return options;
+		}
+
+		@Override
+		public String getValue() {
+			return "?" + index;
+		}
+
+		@Override
+		public String toString() {
+			return getValue();
+		}
 	}
 
 }

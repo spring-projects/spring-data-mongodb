@@ -27,13 +27,17 @@ import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.test.tools.TestCompiler;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
+import org.springframework.data.util.Lazy;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -124,6 +128,8 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 
 		return new RepositoryFactoryBeanSupport.FragmentCreationContext() {
 
+			final Lazy<ProjectionFactory> projectionFactory = Lazy.of(SpelAwareProxyProjectionFactory::new);
+
 			@Override
 			public RepositoryMetadata getRepositoryMetadata() {
 				return repositoryContext.getRepositoryInformation();
@@ -131,12 +137,15 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 
 			@Override
 			public ValueExpressionDelegate getValueExpressionDelegate() {
-				return ValueExpressionDelegate.create();
+
+				QueryMethodValueEvaluationContextAccessor queryMethodValueEvaluationContextAccessor = new QueryMethodValueEvaluationContextAccessor(
+						new StandardEnvironment(), repositoryContext.getBeanFactory());
+				return new ValueExpressionDelegate(queryMethodValueEvaluationContextAccessor, ValueExpressionParser.create());
 			}
 
 			@Override
 			public ProjectionFactory getProjectionFactory() {
-				return new SpelAwareProxyProjectionFactory();
+				return projectionFactory.get();
 			}
 		};
 	}
