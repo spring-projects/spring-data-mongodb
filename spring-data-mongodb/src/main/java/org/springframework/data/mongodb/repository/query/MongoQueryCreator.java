@@ -205,11 +205,11 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case STARTING_WITH:
 			case ENDING_WITH:
 			case CONTAINING:
-				return createContainingCriteria(part, property, criteria, parameters);
+				return createContainingCriteria(part, property, criteria, parameters.next());
 			case NOT_LIKE:
-				return createContainingCriteria(part, property, criteria.not(), parameters);
+				return createContainingCriteria(part, property, criteria.not(), parameters.next());
 			case NOT_CONTAINING:
-				return createContainingCriteria(part, property, criteria.not(), parameters);
+				return createContainingCriteria(part, property, criteria.not(), parameters.next());
 			case REGEX:
 				return regex(criteria, parameters.next());
 			case EXISTS:
@@ -344,18 +344,17 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param part
 	 * @param property
 	 * @param criteria
-	 * @param parameters
+	 * @param parameter
 	 * @return
 	 */
-	private Criteria createContainingCriteria(Part part, MongoPersistentProperty property, Criteria criteria,
-			Iterator<Object> parameters) {
+	protected Criteria createContainingCriteria(Part part, MongoPersistentProperty property, Criteria criteria,
+			Object parameter) {
 
 		if (property.isCollectionLike()) {
-			Object next = parameters.next();
-			return in(criteria, part, next);
+			return in(criteria, part, parameter);
 		}
 
-		return addAppropriateLikeRegexTo(criteria, part, parameters.next());
+		return addAppropriateLikeRegexTo(criteria, part, parameter);
 	}
 
 	/**

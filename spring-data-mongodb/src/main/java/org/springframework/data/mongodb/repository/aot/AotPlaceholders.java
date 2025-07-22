@@ -16,7 +16,9 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
+import kotlin.text.Regex;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -104,6 +106,10 @@ class AotPlaceholders {
 	 */
 	public static Shape polygon(int index) {
 		return new PolygonPlaceholder(index);
+	}
+
+	public static RegexPlaceholder regex(int index) {
+		return new RegexPlaceholder(index);
 	}
 
 	/**
@@ -263,6 +269,25 @@ class AotPlaceholders {
 			return getValue();
 		}
 
+	}
+
+	static class RegexPlaceholder implements Placeholder {
+
+		private final int index;
+
+		public RegexPlaceholder(int index) {
+			this.index = index;
+		}
+
+		@Override
+		public String getValue() {
+			return "?" + index;
+		}
+
+		@Override
+		public String toString() {
+			return getValue();
+		}
 	}
 
 }

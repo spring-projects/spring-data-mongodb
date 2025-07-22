@@ -19,7 +19,6 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
-
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -100,7 +99,13 @@ class QueryBlocks {
 			} else if (queryMethod.isStreamQuery()) {
 				terminatingMethod = "stream()";
 			} else {
-				terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "one()" : "oneValue()";
+				if (query.getQuery().isLimited()) {
+					terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "first()"
+							: "firstValue()";
+				} else {
+					terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "one()"
+							: "oneValue()";
+				}
 			}
 
 			if (queryMethod.isPageQuery()) {
@@ -182,14 +187,16 @@ class QueryBlocks {
 				builder.addStatement("$L.setFieldsObject($L)", queryVariableName, fields.getVariableName());
 			}
 
-			String sortParameter = context.getSortParameterName();
-			if (StringUtils.hasText(sortParameter)) {
-				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
-			} else if (StringUtils.hasText(source.getQuery().getSortString())) {
+			if (StringUtils.hasText(source.getQuery().getSortString())) {
 
 				VariableSnippet sort = Snippet.declare(builder).variable(Document.class, context.localVariable("sort"))
 						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), parameterNames));
 				builder.addStatement("$L.setSortObject($L)", queryVariableName, sort.getVariableName());
+			}
+
+			String sortParameter = context.getSortParameterName();
+			if (StringUtils.hasText(sortParameter)) {
+				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
 			}
 
 			String limitParameter = context.getLimitParameterName();
@@ -270,8 +277,7 @@ class QueryBlocks {
 				Builder builder = CodeBlock.builder();
 				builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S$L)", source, parameterNames);
 				return builder.build();
-			}
-			else {
+			} else {
 				return CodeBlock.of("new $T(parse($S))", BasicQuery.class, source);
 			}
 		}

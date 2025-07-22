@@ -200,8 +200,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 	@Test // DATAMONGO-1608
 	void findByFirstnameLikeWithNull() {
-
-		assertThatIllegalArgumentException().isThrownBy(() -> repository.findByFirstnameLike(null));
+		assertThatIllegalArgumentException().isThrownBy(() -> repository.findByFirstnameLike((String)null));
 	}
 
 	@Test
@@ -752,7 +751,6 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 	@Test // DATAMONGO-1608
 	void findByFirstNameIgnoreCaseWithNull() {
-
 		assertThatIllegalArgumentException().isThrownBy(() -> repository.findByFirstnameIgnoreCase(null));
 	}
 
@@ -1662,7 +1660,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 	@Test // GH-3656
 	@DirtiesState
-	void resultProjectionWithOptionalIsExcecutedCorrectly() {
+	void resultProjectionWithOptionalIsExecutedCorrectly() {
 
 		carter.setAddress(new Address("batman", "robin", "gotham"));
 		repository.save(carter);

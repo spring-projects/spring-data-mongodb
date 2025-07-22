@@ -19,11 +19,11 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Score;
@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.mongodb.repository.aot.AotPlaceholders.Placeholder;
+import org.springframework.data.mongodb.repository.aot.AotPlaceholders.RegexPlaceholder;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
@@ -117,6 +118,17 @@ class AotQueryCreator {
 		protected Criteria exists(Criteria criteria, Object param) {
 			return param instanceof Placeholder p ? criteria.raw("$exists", p) : super.exists(criteria, param);
 		}
+
+		@Override
+		protected Criteria createContainingCriteria(Part part, MongoPersistentProperty property, Criteria criteria,
+				Object param) {
+
+			if (param instanceof RegexPlaceholder) {
+				return criteria.raw("$regex", param);
+			}
+
+			return super.createContainingCriteria(part, property, criteria, param);
+		}
 	}
 
 	static class PlaceholderConvertingParameterAccessor extends ConvertingParameterAccessor {
@@ -176,6 +188,8 @@ class AotQueryCreator {
 						placeholders.add(parameter.getIndex(), AotPlaceholders.sphere(parameter.getIndex()));
 					} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
 						placeholders.add(parameter.getIndex(), AotPlaceholders.polygon(parameter.getIndex()));
+					} else if (ClassUtils.isAssignable(Pattern.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), AotPlaceholders.regex(parameter.getIndex()));
 					} else {
 						placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
 					}
