@@ -231,10 +231,6 @@ public class MongoAotRepositoryFragmentSupport {
 	}
 
 	protected AggregationPipeline createPipeline(List<Object> rawStages) {
-		return createPipeline(rawStages, null);
-	}
-
-	protected AggregationPipeline createPipeline(List<Object> rawStages, @Nullable Class<?> projection) {
 
 		if (rawStages.isEmpty()) {
 			return new AggregationPipeline(List.of());
@@ -244,30 +240,23 @@ public class MongoAotRepositoryFragmentSupport {
 		List<AggregationOperation> stages = new ArrayList<>(size);
 
 		Object firstElement = CollectionUtils.firstElement(rawStages);
-		stages.add(rawToAggregationOperation(firstElement, true, null));
+		stages.add(rawToAggregationOperation(firstElement, true));
 
 		if (size == 1) {
 			return new AggregationPipeline(stages);
 		}
 
-		for (int i = 1; i < size - 1; i++) {
-			stages.add(rawToAggregationOperation(firstElement, false, null));
+		for (int i = 1; i < size; i++) {
+			stages.add(rawToAggregationOperation(rawStages.get(i), false));
 		}
-
-		Object lastElement = CollectionUtils.lastElement(rawStages);
-		stages.add(rawToAggregationOperation(lastElement, true, projection));
 
 		return new AggregationPipeline(stages);
 	}
 
-	private static AggregationOperation rawToAggregationOperation(Object rawStage, boolean requiresMapping,
-			@Nullable Class<?> type) {
+	private static AggregationOperation rawToAggregationOperation(Object rawStage, boolean requiresMapping) {
 
 		if (rawStage instanceof Document stageDocument) {
 			if (requiresMapping) {
-				if (type != null) {
-					return (ctx) -> ctx.getMappedObject(stageDocument, type);
-				}
 				return (ctx) -> ctx.getMappedObject(stageDocument);
 			} else {
 				return (ctx) -> stageDocument;

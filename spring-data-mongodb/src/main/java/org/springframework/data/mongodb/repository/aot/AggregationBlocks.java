@@ -22,13 +22,13 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
-
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -42,7 +42,6 @@ import org.springframework.data.repository.aot.generate.AotQueryMethodGeneration
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
-import org.springframework.lang.NonNull;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -152,7 +151,6 @@ class AggregationBlocks {
 			return builder.build();
 		}
 
-
 	}
 
 	private static Class<?> getOutputType(MongoQueryMethod queryMethod) {
@@ -239,7 +237,8 @@ class AggregationBlocks {
 			builder.add(aggregationStages(context.localVariable("stages"), source.stages()));
 
 			if (StringUtils.hasText(sortParameter)) {
-				builder.add(sortingStage(sortParameter));
+				Class<?> outputType = getOutputType(queryMethod);
+				builder.add(sortingStage(sortParameter, outputType));
 			}
 
 			if (StringUtils.hasText(limitParameter)) {
@@ -250,16 +249,8 @@ class AggregationBlocks {
 				builder.add(pagingStage(pageableParameter, queryMethod.isSliceQuery()));
 			}
 
-			Class<?> outputType = getOutputType(queryMethod);
-			if(outputType.equals(Document.class) || outputType.equals(context.getRepositoryInformation().getDomainType())) {
-				builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineVariableName,
+			builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineVariableName,
 					context.localVariable("stages"));
-			} else {
-				builder.addStatement("$T $L = createPipeline($L, $T.class)", AggregationPipeline.class, pipelineVariableName,
-					context.localVariable("stages"), outputType);
-			}
-
-
 
 			return builder.build();
 		}
@@ -329,7 +320,7 @@ class AggregationBlocks {
 			return builder.build();
 		}
 
-		private CodeBlock sortingStage(String sortProvider) {
+		private CodeBlock sortingStage(String sortProvider, Class<?> outputType) {
 
 			Builder builder = CodeBlock.builder();
 
@@ -339,8 +330,17 @@ class AggregationBlocks {
 			builder.addStatement("$1L.append($2L.getProperty(), $2L.isAscending() ? 1 : -1);",
 					context.localVariable("sortDocument"), context.localVariable("order"));
 			builder.endControlFlow();
-			builder.addStatement("stages.add(new $T($S, $L))", Document.class, "$sort",
-					context.localVariable("sortDocument"));
+
+			if (outputType == Document.class || MongoSimpleTypes.HOLDER.isSimpleType(outputType)
+					|| ClassUtils.isAssignable(context.getRepositoryInformation().getDomainType(), outputType)) {
+				builder.addStatement("$L.add(new $T($S, $L))", context.localVariable("stages"), Document.class, "$sort",
+						context.localVariable("sortDocument"));
+			} else {
+				builder.addStatement("$L.add(($T) _ctx -> new $T($S, _ctx.getMappedObject($L, $T.class)))",
+						context.localVariable("stages"), AggregationOperation.class, Document.class, "$sort",
+						context.localVariable("sortDocument"), outputType);
+			}
+
 			builder.endControlFlow();
 
 			return builder.build();
@@ -350,7 +350,7 @@ class AggregationBlocks {
 
 			Builder builder = CodeBlock.builder();
 
-			builder.add(sortingStage(pageableProvider + ".getSort()"));
+			builder.add(sortingStage(pageableProvider + ".getSort()", getOutputType(queryMethod)));
 
 			builder.beginControlFlow("if ($L.isPaged())", pageableProvider);
 			builder.beginControlFlow("if ($L.getOffset() > 0)", pageableProvider);
