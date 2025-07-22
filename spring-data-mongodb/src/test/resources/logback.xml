@@ -21,7 +21,7 @@
 
 	<!-- AOT Code Generation -->
 	<logger name="org.springframework.data.repository.aot.generate.RepositoryContributor"
-	        level="warn"/>
+	        level="trace"/>
 
 	<logger name="org.springframework.data.mongodb.core.MongoTemplate" level="warn"/>
 	<root level="error">
