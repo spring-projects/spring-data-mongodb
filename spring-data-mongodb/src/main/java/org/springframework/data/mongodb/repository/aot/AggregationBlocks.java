@@ -141,7 +141,6 @@ class AggregationBlocks {
 						builder.addStatement("return $L.aggregateStream($L, $T.class)", mongoOpsRef, aggregationVariableName,
 								outputType);
 					} else {
-
 						builder.addStatement("return $L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
 								aggregationVariableName, outputType);
 					}

@@ -127,7 +127,6 @@ class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegr
 	}
 
 	@Test // GH-4308
-	@Disabled
 	void appliesScrollPositionWithProjectionCorrectly() {
 
 		Window<PersonSummaryDto> page = repository.findCursorProjectionByLastnameLike(Pattern.compile(".*a.*"),
@@ -161,12 +160,6 @@ class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegr
 	@Disabled
 	void caseInSensitiveInClauseQuotesExpressions() {
 		super.caseInSensitiveInClauseQuotesExpressions();
-	}
-
-	@Test // GH-4839
-	@Disabled
-	void annotatedAggregationWithAggregationResultAsClosedInterfaceProjection() {
-		super.annotatedAggregationWithAggregationResultAsClosedInterfaceProjection();
 	}
 
 	@Test // DATAMONGO-1608

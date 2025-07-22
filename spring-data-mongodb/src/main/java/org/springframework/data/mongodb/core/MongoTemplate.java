@@ -111,9 +111,11 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.projection.EntityProjection;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Optionals;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -2272,8 +2274,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	<T, O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<T> outputType,
 			QueryResultConverter<? super T, ? extends O> resultConverter, AggregationOperationContext context) {
 
-		DocumentCallback<O> callback = new QueryResultConverterCallback<>(resultConverter,
+		final DocumentCallback<O> callback;
+		if(aggregation instanceof TypedAggregation<?> ta && outputType.isInterface()) {
+			EntityProjection<T, ?> projection = operations.introspectProjection(outputType, ta.getInputType());
+			ProjectingReadCallback cb = new ProjectingReadCallback(mongoConverter, projection, collectionName);
+			callback = new QueryResultConverterCallback<>(resultConverter,
+				cb);
+		} else {
+
+			callback = new QueryResultConverterCallback<>(resultConverter,
 				new ReadDocumentCallback<>(mongoConverter, outputType, collectionName));
+		}
 
 		AggregationOptions options = aggregation.getOptions();
 		AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);

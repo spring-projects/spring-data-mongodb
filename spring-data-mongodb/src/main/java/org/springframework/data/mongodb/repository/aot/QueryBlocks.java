@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
 import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.annotation.Collation;
@@ -119,8 +120,20 @@ class QueryBlocks {
 
 				String scrollPositionParameterName = context.getScrollPositionParameterName();
 
-				builder.addStatement("return $L.matching($L).scroll($L)", context.localVariable("finder"), query.name(),
-						scrollPositionParameterName);
+				if (scrollPositionParameterName != null) {
+
+					builder.addStatement("return $L.matching($L).scroll($L)", context.localVariable("finder"), query.name(),
+							scrollPositionParameterName);
+				} else {
+					String pageableParameterName = context.getPageableParameterName();
+					if (pageableParameterName != null) {
+						builder.addStatement("return $L.matching($L).scroll($L.toScrollPosition())",
+								context.localVariable("finder"), query.name(), pageableParameterName);
+					} else {
+						builder.addStatement("return $L.matching($L).scroll($T.initial())", context.localVariable("finder"),
+								query.name(), ScrollPosition.class);
+					}
+				}
 			} else {
 				if (query.isCount() && !ClassUtils.isAssignable(Long.class, context.getActualReturnType().getRawClass())) {
 
