@@ -19,4 +19,9 @@
 		</property>
 	</bean>
 
+	<bean class="org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean">
+		<constructor-arg value="org.springframework.data.mongodb.repository.UserRepository"/>
+		<property name="mongoOperations" ref="mongoTemplate"/>
+	</bean>
+
 </beans>

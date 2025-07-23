@@ -77,6 +77,7 @@ public class Person extends Contact {
 	User unwrappedUser;
 
 	@DocumentReference User spiritAnimal;
+	@DocumentReference(lazy = true) User lazySpiritAnimal;
 
 	int visits;
 
@@ -323,6 +324,14 @@ public class Person extends Contact {
 
 	public void setSpiritAnimal(User spiritAnimal) {
 		this.spiritAnimal = spiritAnimal;
+	}
+
+	public User getLazySpiritAnimal() {
+		return lazySpiritAnimal;
+	}
+
+	public void setLazySpiritAnimal(User lazySpiritAnimal) {
+		this.lazySpiritAnimal = lazySpiritAnimal;
 	}
 
 	@Override

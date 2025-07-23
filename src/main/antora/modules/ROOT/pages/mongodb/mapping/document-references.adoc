@@ -47,10 +47,12 @@ Required properties that are also defined as lazy loading ``DBRef`` and used as 
 
 TIP: Lazily loaded ``DBRef``s can be hard to debug.
 Make sure tooling does not accidentally trigger proxy resolution by e.g. calling `toString()` or some inline debug rendering invoking property getters.
-Please consider to enable _trace_ logging for `org.springframework.data.mongodb.core.convert.DefaultDbRefResolver` to gain insight on `DBRef` resolution.
+Please consider to enable _trace_ logging for `org.springframework.data.mongodb.core.convert.DefaultDbRefResolver` to gain insight on `DBRef` resolution. +
+Though technically possible, avoid saving back individual lazily loaded entities obtained via properties of the referencing root.
 
 CAUTION: Lazy loading may require class proxies, that in turn, might need access to jdk internals, that are not open, starting with Java 16+, due to https://openjdk.java.net/jeps/396[JEP 396: Strongly Encapsulate JDK Internals by Default].
-For those cases please consider falling back to an interface type (eg. switch from `ArrayList` to `List`) or provide the required `--add-opens` argument.
+For those cases please consider falling back to an interface type (eg. switch from `ArrayList` to `List`) or provide the required `--add-opens` argument. +
+
 
 [[mapping-usage.document-references]]
 == Using Document References
@@ -500,6 +502,7 @@ A few more general remarks:
 * Do you use cyclic references?
 Ask your self if you need them.
 * Lazy document references are hard to debug.
-Make sure tooling does not accidentally trigger proxy resolution by e.g. calling `toString()`.
+Make sure tooling does not accidentally trigger proxy resolution by e.g. calling `toString()`. +
+Though technically possible, avoid saving back individual lazily loaded entities obtained via properties of the referencing root.
 * There is no support for reading document references using reactive infrastructure.
 ====
