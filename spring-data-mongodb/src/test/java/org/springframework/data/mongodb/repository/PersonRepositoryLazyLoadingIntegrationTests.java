@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.assertProxyIsResolved;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,12 +38,14 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @ContextConfiguration(locations = "PersonRepositoryIntegrationTests-context.xml")
 @ExtendWith(SpringExtension.class)
 public class PersonRepositoryLazyLoadingIntegrationTests {
 
 	@Autowired PersonRepository repository;
+	@Autowired UserRepository userRepository;
 	@Autowired MongoOperations operations;
 
 	@BeforeEach
@@ -123,4 +126,47 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		assertProxyIsResolved(coworker, true);
 		assertThat(coworker.getUsername()).isEqualTo(thomas.getUsername());
 	}
+
+	@Test // GH-5031
+	void allowsSavingEntityLoadedViaLazyDBRef() {
+
+		User thomas = new User();
+		thomas.id = "tom";
+		thomas.username = "Thomas";
+		userRepository.save(thomas);
+
+		Person oliver = new Person();
+		oliver.id = "ollie";
+		oliver.setFirstname("Oliver");
+		oliver.coworker = thomas;
+		repository.save(oliver);
+
+		Person loaded = repository.findById(oliver.id).get();
+		User coworker = loaded.getCoworker();
+		assertThat(coworker.getUsername()).isEqualTo(thomas.getUsername());
+
+		assertThatNoException().isThrownBy(() -> userRepository.save(coworker));
+	}
+
+	@Test // GH-5031
+	void allowsSavingEntityLoadedViaLazyDocumentReference() {
+
+		User thomas = new User();
+		thomas.id = "tom";
+		thomas.username = "Thomas";
+		userRepository.save(thomas);
+
+		Person oliver = new Person();
+		oliver.id = "ollie";
+		oliver.setFirstname("Oliver");
+		oliver.lazySpiritAnimal = thomas;
+		repository.save(oliver);
+
+		Person loaded = repository.findById(oliver.id).get();
+		User spiritAnimal = loaded.getLazySpiritAnimal();
+		assertThat(spiritAnimal.getUsername()).isEqualTo(thomas.getUsername());
+
+		assertThatNoException().isThrownBy(() -> userRepository.save(spiritAnimal));
+	}
+
 }

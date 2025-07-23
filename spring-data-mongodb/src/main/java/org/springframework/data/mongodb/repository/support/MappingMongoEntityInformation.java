@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -105,6 +106,13 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 		}
 
 		return fallbackIdType;
+	}
+
+	@Override
+	public boolean isNew(T entity) {
+
+		T unwrapped = entity instanceof LazyLoadingProxy proxy ? (T) proxy.getTarget() : entity;
+		return super.isNew(unwrapped);
 	}
 
 	@Override
