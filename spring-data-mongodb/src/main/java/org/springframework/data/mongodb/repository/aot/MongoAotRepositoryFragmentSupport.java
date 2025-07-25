@@ -17,11 +17,14 @@ package org.springframework.data.mongodb.repository.aot;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
+import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
@@ -44,6 +47,8 @@ import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.MongoRegexCreator;
+import org.springframework.data.mongodb.core.query.MongoRegexCreator.MatchMode;
 import org.springframework.data.mongodb.repository.query.MongoParameters;
 import org.springframework.data.mongodb.repository.query.MongoParametersParameterAccessor;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
@@ -222,6 +227,23 @@ public class MongoAotRepositoryFragmentSupport {
 		}
 		throw new IllegalArgumentException(
 				"Unsupported collation source [%s]".formatted(ObjectUtils.nullSafeClassName(source)));
+	}
+
+	protected Object likeExpression(Object source, String options) {
+
+		if (source instanceof String sv) {
+			return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(sv, MatchMode.LIKE), options);
+		}
+		if (source instanceof Pattern pattern) {
+			return pattern;
+		}
+		if (source instanceof Collection<?> collection) {
+			return collection.stream().map(it -> likeExpression(it, options)).toList();
+		}
+		if (ObjectUtils.isArray(source)) {
+			return likeExpression(List.of(source), options);
+		}
+		return source;
 	}
 
 	protected BasicQuery createQuery(Method method, String queryString, Object... parameters) {

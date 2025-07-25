@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import kotlin.text.Regex;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -108,8 +109,8 @@ class AotPlaceholders {
 		return new PolygonPlaceholder(index);
 	}
 
-	public static RegexPlaceholder regex(int index) {
-		return new RegexPlaceholder(index);
+	public static RegexPlaceholder regex(int index, @Nullable String options) {
+		return new RegexPlaceholder(index, options);
 	}
 
 	/**
@@ -121,7 +122,6 @@ class AotPlaceholders {
 	public interface Placeholder {
 
 		String getValue();
-
 	}
 
 	/**
@@ -274,9 +274,14 @@ class AotPlaceholders {
 	static class RegexPlaceholder implements Placeholder {
 
 		private final int index;
-
-		public RegexPlaceholder(int index) {
+		private final String options;
+		public RegexPlaceholder(int index, String options) {
 			this.index = index;
+			this.options = options;
+		}
+
+		public @Nullable String regexOptions() {
+			return options != null ? "\"%s\"".formatted(options)  : null;
 		}
 
 		@Override

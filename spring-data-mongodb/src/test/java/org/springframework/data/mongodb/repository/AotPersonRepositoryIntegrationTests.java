@@ -47,8 +47,6 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Mark Paluch
  */
 @ContextConfiguration(classes = AotPersonRepositoryIntegrationTests.Config.class)
-// @Disabled("Several mismatches, some class-loader visibility issues and some behavioral differences remain to be
-// fixed")
 class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
 
 	@Configuration
@@ -73,81 +71,6 @@ class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegr
 			return factory.getRepository(PersonRepository.class, RepositoryComposition.RepositoryFragments.just(aotFragment));
 		}
 
-	}
-
-	@Test // GH-4397
-	@Override
-	void executesFinderCorrectlyWithSortAndLimit() {
-
-		List<Person> page = repository.findByLastnameLike(Pattern.compile(".*a.*"),
-				Sort.by(Direction.ASC, "lastname", "firstname"), Limit.of(2));
-
-		assertThat(page).containsExactly(carter, stefan);
-	}
-
-	@Test
-	@Override
-	void findsPersonsByFirstnameLike() {
-
-		List<Person> result = repository.findByFirstnameLike(Pattern.compile("Bo.*"));
-		assertThat(result).hasSize(1).contains(boyd);
-	}
-
-	@Test // DATAMONGO-1424
-	@Override
-	void findsPersonsByFirstnameNotLike() {
-
-		List<Person> result = repository.findByFirstnameNotLike(Pattern.compile("Bo.*"));
-		assertThat(result).hasSize((int) (repository.count() - 1));
-		assertThat(result).doesNotContain(boyd);
-	}
-
-	@Test // GH-4308
-	@Override
-	void appliesScrollPositionCorrectly() {
-
-		Window<Person> page = repository.findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc(Pattern.compile(".*a.*"),
-				ScrollPosition.keyset());
-
-		assertThat(page.isLast()).isFalse();
-		assertThat(page.size()).isEqualTo(2);
-		assertThat(page).contains(carter);
-	}
-
-	@Test // GH-4397
-	@Override
-	void appliesLimitToScrollingCorrectly() {
-
-		Window<Person> page = repository.findByLastnameLikeOrderByLastnameAscFirstnameAsc(Pattern.compile(".*a.*"),
-				ScrollPosition.keyset(), Limit.of(2));
-
-		assertThat(page.isLast()).isFalse();
-		assertThat(page.size()).isEqualTo(2);
-		assertThat(page).contains(carter);
-	}
-
-	@Test // GH-4308
-	void appliesScrollPositionWithProjectionCorrectly() {
-
-		Window<PersonSummaryDto> page = repository.findCursorProjectionByLastnameLike(Pattern.compile(".*a.*"),
-				PageRequest.of(0, 2, Sort.by(Direction.ASC, "lastname", "firstname")));
-
-		assertThat(page.isLast()).isFalse();
-		assertThat(page.size()).isEqualTo(2);
-
-		assertThat(page).element(0).isEqualTo(new PersonSummaryDto(carter.getFirstname(), carter.getLastname()));
-	}
-
-	@Test // DATADOC-236
-	@Override
-	void appliesStaticAndDynamicSorting() {
-		List<Person> result = repository.findByFirstnameLikeOrderByLastnameAsc(Pattern.compile(".*e.*"), Sort.by("age"));
-		assertThat(result).hasSize(5);
-		assertThat(result.get(0)).isEqualTo(carter);
-		assertThat(result.get(1)).isEqualTo(stefan);
-		assertThat(result.get(2)).isEqualTo(oliver);
-		assertThat(result.get(3)).isEqualTo(dave);
-		assertThat(result.get(4)).isEqualTo(leroi);
 	}
 
 	@Test // DATAMONGO-1608
@@ -179,18 +102,6 @@ class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegr
 	@Disabled
 	void resultProjectionWithOptionalIsExecutedCorrectly() {
 		super.resultProjectionWithOptionalIsExecutedCorrectly();
-	}
-
-	@Test
-	@Override
-	void executesPagedFinderCorrectly() {
-
-		Page<Person> page = repository.findByLastnameLike(Pattern.compile(".*a.*"),
-				PageRequest.of(0, 2, Direction.ASC, "lastname", "firstname"));
-		assertThat(page.isFirst()).isTrue();
-		assertThat(page.isLast()).isFalse();
-		assertThat(page.getNumberOfElements()).isEqualTo(2);
-		assertThat(page).contains(carter, stefan);
 	}
 
 	@Test // DATAMONGO-990

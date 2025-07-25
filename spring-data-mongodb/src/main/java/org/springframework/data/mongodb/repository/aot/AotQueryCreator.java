@@ -56,6 +56,8 @@ import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.Part;
+import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
+import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
@@ -82,14 +84,14 @@ class AotQueryCreator {
 				? mqm.isSearchQuery() || source.isAnnotationPresent(VectorSearch.class)
 				: source.isAnnotationPresent(VectorSearch.class);
 
-		Query query = new AotMongoQueryCreator(partTree,
-				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(queryMethod)), mappingContext,
-				geoNear, searchQuery).createQuery();
+		PlaceholderParameterAccessor placeholderAccessor = new PlaceholderParameterAccessor(partTree, queryMethod);
+		Query query = new AotMongoQueryCreator(partTree, new PlaceholderConvertingParameterAccessor(placeholderAccessor),
+				mappingContext, geoNear, searchQuery).createQuery();
 
 		if (partTree.isLimiting()) {
 			query.limit(partTree.getMaxResults());
 		}
-		return new AotStringQuery(query);
+		return new AotStringQuery(query, placeholderAccessor.getPlaceholders());
 	}
 
 	static class AotMongoQueryCreator extends MongoQueryCreator {
@@ -122,6 +124,14 @@ class AotQueryCreator {
 		@Override
 		protected Criteria createContainingCriteria(Part part, MongoPersistentProperty property, Criteria criteria,
 				Object param) {
+
+			if (part.getType().equals(Type.LIKE)) {
+				return criteria.is(param);
+			}
+
+			if(part.getType().equals(Type.NOT_LIKE)) {
+				return criteria.raw("$not", param);
+			}
 
 			if (param instanceof RegexPlaceholder) {
 				return criteria.raw("$regex", param);
@@ -169,12 +179,34 @@ class AotQueryCreator {
 
 		private final List<Object> placeholders;
 
-		public PlaceholderParameterAccessor(QueryMethod queryMethod) {
+		@Nullable Part getPartForIndex(PartTree partTree, Parameter parameter) {
+			if(!parameter.isBindable()) {
+				return null;
+			}
+
+			List<Part> parts = partTree.getParts().stream().toList();
+			int counter  = 0;
+			for (Part part : parts) {
+				if(counter == parameter.getIndex()) {
+					return part;
+				}
+				counter += part.getNumberOfArguments();
+			}
+			return null;
+		}
+
+		public PlaceholderParameterAccessor(PartTree partTree, QueryMethod queryMethod) {
+			
+
 			if (queryMethod.getParameters().getNumberOfParameters() == 0) {
 				placeholders = List.of();
 			} else {
+
+
 				placeholders = new ArrayList<>();
 				Parameters<?, ?> parameters = queryMethod.getParameters();
+
+
 				for (Parameter parameter : parameters.toList()) {
 					if (ClassUtils.isAssignable(GeoJson.class, parameter.getType())) {
 						placeholders.add(parameter.getIndex(), AotPlaceholders.geoJson(parameter.getIndex(), ""));
@@ -189,9 +221,14 @@ class AotQueryCreator {
 					} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
 						placeholders.add(parameter.getIndex(), AotPlaceholders.polygon(parameter.getIndex()));
 					} else if (ClassUtils.isAssignable(Pattern.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.regex(parameter.getIndex()));
+						placeholders.add(parameter.getIndex(), AotPlaceholders.regex(parameter.getIndex(), null));
 					} else {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
+						Part partForIndex = getPartForIndex(partTree, parameter);
+						if(partForIndex != null && (partForIndex.getType().equals(Type.LIKE) || partForIndex.getType().equals(Type.NOT_LIKE))) {
+							placeholders.add(parameter.getIndex(), AotPlaceholders.regex(parameter.getIndex(), partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS) || partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.WHEN_POSSIBLE) ? "i": null));
+						} else {
+							placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
+						}
 					}
 				}
 			}
@@ -277,6 +314,10 @@ class AotQueryCreator {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public Iterator<Object> iterator() {
 			return ((List) placeholders).iterator();
+		}
+
+		public List<Object> getPlaceholders() {
+			return placeholders;
 		}
 	}
 

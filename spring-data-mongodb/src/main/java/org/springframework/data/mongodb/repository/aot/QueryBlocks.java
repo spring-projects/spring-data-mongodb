@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
@@ -31,6 +33,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Pag
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
+import org.springframework.data.util.Lazy;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
@@ -156,7 +159,7 @@ class QueryBlocks {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
-		private final String parameterNames;
+		private final Lazy<String> parameterNames;
 
 		private QueryInteraction source;
 		private String queryVariableName;
@@ -166,13 +169,26 @@ class QueryBlocks {
 			this.context = context;
 			this.queryMethod = queryMethod;
 
-			String parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
+			this.parameterNames = Lazy.of(() -> {
+				List<String> allParameterNames = context.getAllParameterNames();
+				List<String> formatted = new ArrayList<>(allParameterNames.size());
+				for (int i = 0; i < allParameterNames.size(); i++) {
 
-			if (StringUtils.hasText(parameterNames)) {
-				this.parameterNames = ", " + parameterNames;
-			} else {
-				this.parameterNames = "";
-			}
+					String parameterName = allParameterNames.get(i);
+					if (source.getQuery().isRegexPlaceholderAt(i) && context.getMethodParameter(parameterName).getParameterType() == String.class) {
+						parameterName = "%s(%s, %s)".formatted("likeExpression", parameterName, source.getQuery().getRegexOptions(i));
+					}
+					formatted.add(parameterName);
+
+				}
+				String parameterNames = StringUtils.collectionToDelimitedString(formatted, ", ");
+
+				if (StringUtils.hasText(parameterNames)) {
+					return ", " + parameterNames;
+				} else {
+					return "";
+				}
+			});
 		}
 
 		QueryCodeBlockBuilder filter(QueryInteraction query) {
@@ -196,14 +212,14 @@ class QueryBlocks {
 			if (StringUtils.hasText(source.getQuery().getFieldsString())) {
 
 				VariableSnippet fields = Snippet.declare(builder).variable(Document.class, context.localVariable("fields"))
-						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), parameterNames));
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), parameterNames.get()));
 				builder.addStatement("$L.setFieldsObject($L)", queryVariableName, fields.getVariableName());
 			}
 
 			if (StringUtils.hasText(source.getQuery().getSortString())) {
 
 				VariableSnippet sort = Snippet.declare(builder).variable(Document.class, context.localVariable("sort"))
-						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), parameterNames));
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), parameterNames.get()));
 				builder.addStatement("$L.setSortObject($L)", queryVariableName, sort.getVariableName());
 			}
 
@@ -264,7 +280,7 @@ class QueryBlocks {
 
 						builder.addStatement(
 								"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S$L)))",
-								queryVariableName, collationString, parameterNames);
+								queryVariableName, collationString, parameterNames.get());
 					}
 				}
 			}
@@ -288,7 +304,7 @@ class QueryBlocks {
 				return CodeBlock.of("new $T(new $T())", BasicQuery.class, Document.class);
 			} else if (MongoCodeBlocks.containsPlaceholder(source)) {
 				Builder builder = CodeBlock.builder();
-				builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S$L)", source, parameterNames);
+				builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S$L)", source, parameterNames.get());
 				return builder.build();
 			} else {
 				return CodeBlock.of("new $T(parse($S))", BasicQuery.class, source);

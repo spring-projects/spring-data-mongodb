@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -26,6 +28,8 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.aot.AotPlaceholders.Placeholder;
+import org.springframework.data.mongodb.repository.aot.AotPlaceholders.RegexPlaceholder;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.ReadConcern;
@@ -44,8 +48,11 @@ class AotStringQuery extends Query {
 	private @Nullable String sort;
 	private @Nullable String fields;
 
-	public AotStringQuery(Query query) {
+	private List<Object> placeholders = new ArrayList<>();
+
+	public AotStringQuery(Query query, List<Object> placeholders) {
 		this.delegate = query;
+		this.placeholders = placeholders;
 	}
 
 	public AotStringQuery(String query) {
@@ -70,6 +77,22 @@ class AotStringQuery extends Query {
 	public Query sort(String sort) {
 		this.sort = sort;
 		return this;
+	}
+
+	boolean isRegexPlaceholderAt(int index) {
+		if(this.placeholders.isEmpty()) {
+			return false;
+		}
+
+		return this.placeholders.get(index) instanceof RegexPlaceholder;
+	}
+
+	String getRegexOptions(int index) {
+		if(this.placeholders.isEmpty()) {
+			return null;
+		}
+
+		return this.placeholders.get(index) instanceof RegexPlaceholder rgp ? rgp.regexOptions() :  null;
 	}
 
 	@Override

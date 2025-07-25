@@ -425,7 +425,6 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 			streamable = streamable.map(it -> {
 				if (it instanceof String sv) {
-
 					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(sv, matchMode), regexOptions);
 				}
 				return it;
