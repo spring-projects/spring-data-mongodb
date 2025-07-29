@@ -172,18 +172,29 @@ class QueryBlocks {
 			this.parameterNames = Lazy.of(() -> {
 				List<String> allParameterNames = context.getAllParameterNames();
 				List<String> formatted = new ArrayList<>(allParameterNames.size());
+				boolean containsArrayParameter = false;
 				for (int i = 0; i < allParameterNames.size(); i++) {
 
 					String parameterName = allParameterNames.get(i);
-					if (source.getQuery().isRegexPlaceholderAt(i) && context.getMethodParameter(parameterName).getParameterType() == String.class) {
+					Class<?> parameterType = context.getMethodParameter(parameterName).getParameterType();
+					if (source.getQuery().isRegexPlaceholderAt(i) && parameterType == String.class) {
 						parameterName = "%s(%s, %s)".formatted("likeExpression", parameterName, source.getQuery().getRegexOptions(i));
 					}
 					formatted.add(parameterName);
 
+
+					if(parameterType != null && parameterType.isArray()) {
+						containsArrayParameter = true;
+					}
 				}
+
+
 				String parameterNames = StringUtils.collectionToDelimitedString(formatted, ", ");
 
 				if (StringUtils.hasText(parameterNames)) {
+					if(containsArrayParameter && formatted.size() == 1) {
+						return ", new java.lang.Object[] {" + parameterNames + "}";
+					}
 					return ", " + parameterNames;
 				} else {
 					return "";

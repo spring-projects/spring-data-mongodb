@@ -15,29 +15,16 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-import java.util.regex.Pattern;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.ScrollPosition;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.TestMongoConfiguration;
 import org.springframework.data.mongodb.repository.aot.AotFragmentTestConfigurationSupport;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
-import org.springframework.data.mongodb.test.util.DirtiesStateExtension.DirtiesState;
 import org.springframework.data.repository.core.support.RepositoryComposition;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -95,13 +82,6 @@ class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegr
 	@Disabled
 	void caseSensitiveInClauseIgnoresExpressions() {
 		super.caseSensitiveInClauseIgnoresExpressions();
-	}
-
-	@Test // GH-3656
-	@DirtiesState
-	@Disabled
-	void resultProjectionWithOptionalIsExecutedCorrectly() {
-		super.resultProjectionWithOptionalIsExecutedCorrectly();
 	}
 
 	@Test // DATAMONGO-990
