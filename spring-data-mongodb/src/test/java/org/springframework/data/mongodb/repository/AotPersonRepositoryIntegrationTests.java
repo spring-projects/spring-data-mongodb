@@ -84,12 +84,6 @@ class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegr
 		super.caseSensitiveInClauseIgnoresExpressions();
 	}
 
-	@Test // DATAMONGO-990
-	@Disabled
-	void shouldFindByFirstnameAndCurrentUserWithCustomQuery() {
-		super.shouldFindByFirstnameAndCurrentUserWithCustomQuery();
-	}
-
 	@Test // GH-3395, GH-4404
 	@Disabled
 	void caseInSensitiveInClause() {
