@@ -178,10 +178,14 @@ class QueryBlocks {
 					String parameterName = allParameterNames.get(i);
 					Class<?> parameterType = context.getMethodParameter(parameterName).getParameterType();
 					if (source.getQuery().isRegexPlaceholderAt(i) && parameterType == String.class) {
-						parameterName = "%s(%s, %s)".formatted("likeExpression", parameterName, source.getQuery().getRegexOptions(i));
+						String regexOptions = source.getQuery().getRegexOptions(i);
+						if(StringUtils.hasText(regexOptions)) {
+							parameterName = "%s(%s)".formatted("toRegex", parameterName);
+						} else {
+							parameterName = "%s(%s, %s)".formatted("toRegex", parameterName, regexOptions);
+						}
 					}
 					formatted.add(parameterName);
-
 
 					if(parameterType != null && parameterType.isArray()) {
 						containsArrayParameter = true;

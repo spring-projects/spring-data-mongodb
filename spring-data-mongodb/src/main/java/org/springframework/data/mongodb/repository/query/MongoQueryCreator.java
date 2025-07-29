@@ -374,6 +374,10 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 					"Argument for creating $regex pattern for property '%s' must not be null", part.getProperty().getSegment()));
 		}
 
+		if(value instanceof Pattern pattern) {
+			return criteria.regex(pattern);
+		}
+
 		return criteria.regex(toLikeRegex(value.toString(), part), toRegexOptions(part));
 	}
 

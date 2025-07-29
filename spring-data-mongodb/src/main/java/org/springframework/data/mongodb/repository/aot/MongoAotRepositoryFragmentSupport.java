@@ -229,7 +229,11 @@ public class MongoAotRepositoryFragmentSupport {
 				"Unsupported collation source [%s]".formatted(ObjectUtils.nullSafeClassName(source)));
 	}
 
-	protected Object likeExpression(Object source, String options) {
+	protected Object toRegex(Object source) {
+		return toRegex(source, null);
+	}
+
+	protected Object toRegex(Object source, String options) {
 
 		if (source instanceof String sv) {
 			return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(sv, MatchMode.LIKE), options);
@@ -238,10 +242,10 @@ public class MongoAotRepositoryFragmentSupport {
 			return pattern;
 		}
 		if (source instanceof Collection<?> collection) {
-			return collection.stream().map(it -> likeExpression(it, options)).toList();
+			return collection.stream().map(it -> toRegex(it, options)).toList();
 		}
 		if (ObjectUtils.isArray(source)) {
-			return likeExpression(List.of(source), options);
+			return toRegex(List.of(source), options);
 		}
 		return source;
 	}

@@ -72,15 +72,25 @@ These are typically all query methods that are not backed by an xref:repositorie
 * Methods annotated with `@Aggregation`, `@Update`, and `@VectorSearch`
 * `@Hint`, `@Meta`, and `@ReadPreference` support
 * `Page`, `Slice`, and `Optional` return types
-* DTO Projections
+* DTO & Interface Projections
 
 **Limitations**
 
 * `@Meta.allowDiskUse` and `flags` are not evaluated.
 * Limited `Collation` detection.
+* No support for in-clauses with pattern matching / case insensitivity
 
 **Excluded methods**
 
 * `CrudRepository` and other base interface methods
 * Querydsl and Query by Example methods
 * Query Methods obtaining MQL from a file
+
+[TIP]
+====
+Consider using `Pattern` instead of `String` as parameter type when working with derived queries using the `LIKE` keyword.
+[source,java]
+----
+List<Person> findByLastnameLike(Pattern lastname);
+----
+====

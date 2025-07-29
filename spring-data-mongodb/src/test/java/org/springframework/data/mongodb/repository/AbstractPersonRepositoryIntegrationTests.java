@@ -198,6 +198,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result).hasSize(1).contains(boyd);
 	}
 
+	@Test // GH-5027
+	void findsPersonsByFirstnameLikeWithPattern() {
+
+		List<Person> result = repository.findByFirstnameLike(Pattern.compile("Bo.*"));
+		assertThat(result).hasSize(1).contains(boyd);
+	}
+
 	@Test // DATAMONGO-1608
 	void findByFirstnameLikeWithNull() {
 		assertThatIllegalArgumentException().isThrownBy(() -> repository.findByFirstnameLike((String)null));
@@ -1298,6 +1305,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	void findsPersonsByFirstnameNotLike() {
 
 		List<Person> result = repository.findByFirstnameNotLike("Bo*");
+		assertThat(result).hasSize((int) (repository.count() - 1));
+		assertThat(result).doesNotContain(boyd);
+	}
+
+	@Test // GH-5027
+	void findsPersonsByFirstnameNotLikeWithPattern() {
+
+		List<Person> result = repository.findByFirstnameNotLike(Pattern.compile("Bo.*"));
 		assertThat(result).hasSize((int) (repository.count() - 1));
 		assertThat(result).doesNotContain(boyd);
 	}
