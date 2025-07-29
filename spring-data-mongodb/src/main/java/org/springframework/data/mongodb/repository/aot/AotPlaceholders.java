@@ -16,9 +16,7 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import java.util.List;
-import java.util.regex.Pattern;
 
-import kotlin.text.Regex;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -275,13 +273,14 @@ class AotPlaceholders {
 
 		private final int index;
 		private final String options;
+
 		public RegexPlaceholder(int index, String options) {
 			this.index = index;
 			this.options = options;
 		}
 
 		public @Nullable String regexOptions() {
-			return options != null ? "\"%s\"".formatted(options)  : null;
+			return options;
 		}
 
 		@Override

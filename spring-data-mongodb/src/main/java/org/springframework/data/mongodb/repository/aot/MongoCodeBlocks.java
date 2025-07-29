@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.aot.AggregationBlocks.AggregationCodeBlockBuilder;
@@ -164,20 +163,27 @@ class MongoCodeBlocks {
 	}
 
 	static CodeBlock asDocument(String source, String argNames) {
+		return asDocument(source, CodeBlock.of("$L", argNames));
+	}
+
+	static CodeBlock asDocument(String source, CodeBlock arguments) {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
 			builder.add("new $T()", Document.class);
 		} else if (containsPlaceholder(source)) {
-			builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S$L)", source, argNames);
+			if (arguments.isEmpty()) {
+				builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S)", source);
+			} else {
+				builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", source, arguments);
+			}
 		} else {
 			builder.add("parse($S)", source);
 		}
 		return builder.build();
 	}
 
-	static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName,
-			String argNames) {
+	static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName, String argNames) {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -159,7 +158,7 @@ class QueryBlocks {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
-		private final Lazy<String> parameterNames;
+		private final Lazy<CodeBlock> queryParameters;
 
 		private QueryInteraction source;
 		private String queryVariableName;
@@ -168,42 +167,54 @@ class QueryBlocks {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
+			this.queryParameters = Lazy.of(this::queryParametersCodeBlock);
+		}
 
-			this.parameterNames = Lazy.of(() -> {
-				List<String> allParameterNames = context.getAllParameterNames();
-				List<String> formatted = new ArrayList<>(allParameterNames.size());
-				boolean containsArrayParameter = false;
-				for (int i = 0; i < allParameterNames.size(); i++) {
+		CodeBlock queryParametersCodeBlock() {
 
-					String parameterName = allParameterNames.get(i);
-					Class<?> parameterType = context.getMethodParameter(parameterName).getParameterType();
-					if (source.getQuery().isRegexPlaceholderAt(i) && parameterType == String.class) {
-						String regexOptions = source.getQuery().getRegexOptions(i);
-						if(StringUtils.hasText(regexOptions)) {
-							parameterName = "%s(%s)".formatted("toRegex", parameterName);
-						} else {
-							parameterName = "%s(%s, %s)".formatted("toRegex", parameterName, regexOptions);
-						}
+			List<String> allParameterNames = context.getAllParameterNames();
+
+			if (allParameterNames.isEmpty()) {
+				return CodeBlock.builder().build();
+			}
+
+			CodeBlock.Builder formatted = CodeBlock.builder();
+			boolean containsArrayParameter = false;
+			for (int i = 0; i < allParameterNames.size(); i++) {
+
+				String parameterName = allParameterNames.get(i);
+				Class<?> parameterType = context.getMethodParameter(parameterName).getParameterType();
+				if (source.getQuery().isRegexPlaceholderAt(i) && parameterType == String.class) {
+					String regexOptions = source.getQuery().getRegexOptions(i);
+
+					if (StringUtils.hasText(regexOptions)) {
+						formatted.add(CodeBlock.of("toRegex($L)", parameterName));
+					} else {
+						formatted.add(CodeBlock.of("toRegex($L, $S)", parameterName, regexOptions));
 					}
-					formatted.add(parameterName);
-
-					if(parameterType != null && parameterType.isArray()) {
-						containsArrayParameter = true;
-					}
-				}
-
-
-				String parameterNames = StringUtils.collectionToDelimitedString(formatted, ", ");
-
-				if (StringUtils.hasText(parameterNames)) {
-					if(containsArrayParameter && formatted.size() == 1) {
-						return ", new java.lang.Object[] {" + parameterNames + "}";
-					}
-					return ", " + parameterNames;
 				} else {
-					return "";
+					formatted.add(CodeBlock.of("$L", parameterName));
 				}
-			});
+
+				if (i + 1 < allParameterNames.size()) {
+					formatted.add(", ");
+				}
+
+				if (!containsArrayParameter && parameterType != null && parameterType.isArray()) {
+					containsArrayParameter = true;
+				}
+			}
+
+			// wrap single array argument to avoid problems with vargs when calling method
+			if (containsArrayParameter && allParameterNames.size() == 1) {
+				return CodeBlock.of("new $T[] { $L }", Object.class, formatted.build());
+			}
+
+			return formatted.build();
+		}
+
+		public CodeBlock getQueryParameters() {
+			return queryParameters.get();
 		}
 
 		QueryCodeBlockBuilder filter(QueryInteraction query) {
@@ -227,14 +238,14 @@ class QueryBlocks {
 			if (StringUtils.hasText(source.getQuery().getFieldsString())) {
 
 				VariableSnippet fields = Snippet.declare(builder).variable(Document.class, context.localVariable("fields"))
-						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), parameterNames.get()));
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), queryParameters.get()));
 				builder.addStatement("$L.setFieldsObject($L)", queryVariableName, fields.getVariableName());
 			}
 
 			if (StringUtils.hasText(source.getQuery().getSortString())) {
 
 				VariableSnippet sort = Snippet.declare(builder).variable(Document.class, context.localVariable("sort"))
-						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), parameterNames.get()));
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), getQueryParameters()));
 				builder.addStatement("$L.setSortObject($L)", queryVariableName, sort.getVariableName());
 			}
 
@@ -293,9 +304,15 @@ class QueryBlocks {
 								org.springframework.data.mongodb.core.query.Collation.class, collationString);
 					} else {
 
-						builder.addStatement(
-								"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S$L)))",
-								queryVariableName, collationString, parameterNames.get());
+						if (getQueryParameters().isEmpty()) {
+							builder.addStatement(
+									"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S)))",
+									queryVariableName, collationString);
+						} else {
+							builder.addStatement(
+									"$L.collation(collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), $S, $L)))",
+									queryVariableName, collationString, getQueryParameters());
+						}
 					}
 				}
 			}
@@ -319,7 +336,11 @@ class QueryBlocks {
 				return CodeBlock.of("new $T(new $T())", BasicQuery.class, Document.class);
 			} else if (MongoCodeBlocks.containsPlaceholder(source)) {
 				Builder builder = CodeBlock.builder();
-				builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S$L)", source, parameterNames.get());
+				if (getQueryParameters().isEmpty()) {
+					builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S)", source);
+				} else {
+					builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", source, getQueryParameters());
+				}
 				return builder.build();
 			} else {
 				return CodeBlock.of("new $T(parse($S))", BasicQuery.class, source);
