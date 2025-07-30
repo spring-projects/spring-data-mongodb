@@ -216,7 +216,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 
-			builder.addStatement("class ExpressionMarker{}");
+//			builder.addStatement("class ExpressionMarker{}");
 			builder.add(finalContribution.contribute(context));
 
 			return builder.build();
@@ -241,9 +241,6 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			AotStringQuery aotStringQuery = queryCreator.createQuery(partTree, queryMethod, source);
 			query = new QueryInteraction(aotStringQuery,
 					partTree.isCountProjection(), partTree.isDelete(), partTree.isExistsProjection());
-//			if(partTree.isLimiting()) {
-//				query.s
-//			}
 		}
 
 		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {

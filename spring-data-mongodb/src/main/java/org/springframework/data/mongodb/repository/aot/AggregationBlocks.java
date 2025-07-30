@@ -304,7 +304,7 @@ class AggregationBlocks {
 
 				VariableSnippet stageSnippet = Snippet.declare(builder)
 						.variable(Document.class, context.localVariable("stage_%s".formatted(stageCounter)))
-						.of(MongoCodeBlocks.asDocument(stage, parameterNames));
+						.of(MongoCodeBlocks.asDocument(context.getExpressionMarker(), stage, parameterNames));
 				builder.addStatement("$L.add($L)", stageListVariableName, stageSnippet.getVariableName());
 
 				stageCounter++;
