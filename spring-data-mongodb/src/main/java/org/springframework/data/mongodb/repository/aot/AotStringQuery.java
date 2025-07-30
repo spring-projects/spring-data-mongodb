@@ -87,7 +87,7 @@ class AotStringQuery extends Query {
 		return this.placeholders.get(index) instanceof RegexPlaceholder;
 	}
 
-	String getRegexOptions(int index) {
+	@Nullable String getRegexOptions(int index) {
 		if(this.placeholders.isEmpty()) {
 			return null;
 		}

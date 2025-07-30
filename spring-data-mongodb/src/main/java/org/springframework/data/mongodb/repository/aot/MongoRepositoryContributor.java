@@ -93,6 +93,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		this.queryCreator = new AotQueryCreator(this.mappingContext);
 	}
 
+	@SuppressWarnings("NullAway")
 	private NamedQueries getNamedQueries(@Nullable RepositoryConfigurationSource configSource, ClassLoader classLoader) {
 
 		String location = configSource != null ? configSource.getNamedQueryLocation().orElse(null) : null;

@@ -156,7 +156,7 @@ class AggregationBlocks {
 		Class<?> outputType = queryMethod.getReturnedObjectType();
 		if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
 			outputType = Document.class;
-		} else if (ClassUtils.isAssignable(AggregationResults.class, outputType)) {
+		} else if (ClassUtils.isAssignable(AggregationResults.class, outputType) && queryMethod.getReturnType().getComponentType() != null) {
 			outputType = queryMethod.getReturnType().getComponentType().getType();
 		}
 		return outputType;

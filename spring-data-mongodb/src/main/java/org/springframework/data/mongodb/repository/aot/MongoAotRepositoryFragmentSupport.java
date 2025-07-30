@@ -233,7 +233,7 @@ public class MongoAotRepositoryFragmentSupport {
 		return toRegex(source, null);
 	}
 
-	protected Object toRegex(Object source, String options) {
+	protected Object toRegex(Object source, @Nullable String options) {
 
 		if (source instanceof String sv) {
 			return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(sv, MatchMode.LIKE), options);
@@ -256,6 +256,7 @@ public class MongoAotRepositoryFragmentSupport {
 		return new BasicQuery(queryDocument);
 	}
 
+	@SuppressWarnings("NullAway")
 	protected AggregationPipeline createPipeline(List<Object> rawStages) {
 
 		if (rawStages.isEmpty()) {

@@ -258,8 +258,9 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			Iterator<Object> parameters) {
 
 		Range<Distance> range = accessor.getDistanceRange();
-		Optional<Distance> distance = range.getUpperBound().getValue();
-		Optional<Distance> minDistance = range.getLowerBound().getValue();
+
+		Optional<Distance> distance = range != null ? range.getUpperBound().getValue() : Optional.empty();
+		Optional<Distance> minDistance = range != null ? range.getLowerBound().getValue() : Optional.empty();
 
 		Point point = accessor.getGeoNearLocation();
 		Point pointToUse = point == null ? nextAs(parameters, Point.class) : point;
