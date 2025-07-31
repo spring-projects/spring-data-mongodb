@@ -349,7 +349,7 @@ public class StringBasedAggregationUnitTests {
 
 	private interface SampleRepository extends Repository<Person, Long> {
 
-		@Meta(cursorBatchSize = 42, comment = "expensive-aggregation", allowDiskUse = true, maxExecutionTimeMs = 100)
+		@Meta(cursorBatchSize = 42, comment = "expensive-aggregation", allowDiskUse = "true", maxExecutionTimeMs = 100)
 		@Aggregation({ RAW_GROUP_BY_LASTNAME_STRING, RAW_SORT_STRING })
 		PersonAggregate plainStringAggregation();
 

@@ -27,6 +27,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.DiskUse;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Hint;
@@ -272,8 +273,9 @@ public class MongoQueryMethod extends QueryMethod {
 			}
 		}
 
-		if (meta.allowDiskUse()) {
-			metaAttributes.setAllowDiskUse(meta.allowDiskUse());
+		DiskUse diskUse = DiskUse.of(meta.allowDiskUse());
+		if (!diskUse.equals(DiskUse.DEFAULT)) {
+			metaAttributes.setAllowDiskUse(diskUse.equals(DiskUse.ALLOW));
 		}
 
 		return metaAttributes;

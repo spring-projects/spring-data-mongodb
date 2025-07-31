@@ -74,6 +74,6 @@ public @interface Meta {
 	 * @since 3.0
 	 * @see Aggregation
 	 */
-	boolean allowDiskUse() default false;
+	String allowDiskUse() default "";
 
 }
