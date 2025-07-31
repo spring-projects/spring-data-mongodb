@@ -162,7 +162,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 						getOrDefault(port, "" + ServerAddress.defaultPort())));
 
 		Builder builder = MongoClientSettings.builder().applyConnectionString(connectionString);
-		builder.uuidRepresentation(UuidRepresentation.JAVA_LEGACY);
+		builder.uuidRepresentation(UuidRepresentation.STANDARD);
 
 		if (mongoClientSettings != null) {
 
@@ -291,7 +291,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 			applySettings(builder::retryWrites, computeSettingsValue(defaultSettings.getRetryWrites(),
 					mongoClientSettings.getRetryWrites(), connectionString.getRetryWritesValue()));
 			applySettings(builder::uuidRepresentation,
-					computeSettingsValue(null, mongoClientSettings.getUuidRepresentation(), UuidRepresentation.JAVA_LEGACY));
+					computeSettingsValue(null, mongoClientSettings.getUuidRepresentation(), UuidRepresentation.STANDARD));
 		}
 
 		if (!CollectionUtils.isEmpty(credential)) {

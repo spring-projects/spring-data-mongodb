@@ -119,9 +119,9 @@ See xref:mongodb/mapping/custom-conversions.adoc[Custom Conversions - Overriding
 | native
 | `{"bin" : { "$binary" : "AQIDBA==", "$type" : "00" }}`
 
-| `java.util.UUID` (Legacy UUID)
+| `java.util.UUID` (Standard UUID)
 | native
-| `{"uuid" : { "$binary" : "MEaf1CFQ6lSphaa3b9AtlA==", "$type" : "03" }}`
+| `{"uuid" : { "$binary" : "MEaf1CFQ6lSphaa3b9AtlA==", "$type" : "04" }}`
 
 | `Date`
 | native
