@@ -51,7 +51,7 @@ public class Meta {
 	private Map<String, Object> values = Collections.emptyMap();
 	private Set<CursorOption> flags = Collections.emptySet();
 	private @Nullable Integer cursorBatchSize;
-	private @Nullable Boolean allowDiskUse;
+	private DiskUse diskUse = DiskUse.DEFAULT;
 
 	public Meta() {}
 
@@ -66,7 +66,7 @@ public class Meta {
 		this.values = new LinkedHashMap<>(source.values);
 		this.flags = new LinkedHashSet<>(source.flags);
 		this.cursorBatchSize = source.cursorBatchSize;
-		this.allowDiskUse = source.allowDiskUse;
+		this.diskUse = source.diskUse;
 	}
 
 	/**
@@ -230,7 +230,7 @@ public class Meta {
 	 */
 	@Nullable
 	public Boolean getAllowDiskUse() {
-		return allowDiskUse;
+		return diskUse.equals(DiskUse.DEFAULT) ? null : diskUse.equals(DiskUse.ALLOW);
 	}
 
 	/**
@@ -244,14 +244,18 @@ public class Meta {
 	 * @since 3.0
 	 */
 	public void setAllowDiskUse(@Nullable Boolean allowDiskUse) {
-		this.allowDiskUse = allowDiskUse;
+		setDiskUse(DiskUse.of(allowDiskUse));
+	}
+
+	public void setDiskUse(DiskUse diskUse) {
+		this.diskUse = diskUse;
 	}
 
 	/**
 	 * @return
 	 */
 	public boolean hasValues() {
-		return !this.values.isEmpty() || !this.flags.isEmpty() || this.cursorBatchSize != null || this.allowDiskUse != null;
+		return !this.values.isEmpty() || !this.flags.isEmpty() || this.cursorBatchSize != null || !this.diskUse.equals(DiskUse.DEFAULT);
 	}
 
 	/**
