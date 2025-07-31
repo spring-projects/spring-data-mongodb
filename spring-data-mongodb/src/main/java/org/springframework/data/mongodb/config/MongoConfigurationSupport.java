@@ -226,7 +226,7 @@ public abstract class MongoConfigurationSupport {
 	protected MongoClientSettings mongoClientSettings() {
 
 		MongoClientSettings.Builder builder = MongoClientSettings.builder();
-		builder.uuidRepresentation(UuidRepresentation.JAVA_LEGACY);
+		builder.uuidRepresentation(UuidRepresentation.STANDARD);
 		configureClientSettings(builder);
 		return builder.build();
 	}
