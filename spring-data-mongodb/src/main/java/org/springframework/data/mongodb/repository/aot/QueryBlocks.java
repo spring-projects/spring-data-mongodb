@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQue
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.DiskUse;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
@@ -291,6 +292,12 @@ class QueryBlocks {
 				String comment = metaAnnotation.getString("comment");
 				if (StringUtils.hasText(comment)) {
 					builder.addStatement("$L.comment($S)", queryVariableName, comment);
+				}
+
+				String allowDiskUse = metaAnnotation.getString("allowDiskUse");
+				if (StringUtils.hasText(allowDiskUse)) {
+					DiskUse diskUse = DiskUse.of(allowDiskUse);
+					builder.addStatement("$L.diskUse($T.$L)", queryVariableName, DiskUse.class, diskUse.name());
 				}
 			}
 

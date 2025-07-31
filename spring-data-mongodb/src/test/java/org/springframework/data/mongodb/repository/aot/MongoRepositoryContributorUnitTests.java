@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import example.aot.User;
 import example.aot.UserRepository;
@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.aot.generate.GeneratedFiles;
 import org.springframework.aot.test.generate.TestGenerationContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +41,8 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
  * Unit tests for the {@link UserRepository} fragment sources via {@link MongoRepositoryContributor}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
-
 @SpringJUnitConfig(classes = MongoRepositoryContributorUnitTests.MongoRepositoryContributorConfiguration.class)
 class MongoRepositoryContributorUnitTests {
 
@@ -63,7 +62,7 @@ class MongoRepositoryContributorUnitTests {
 
 	@Autowired TestGenerationContext generationContext;
 
-	@Test // GH-4970
+	@Test // GH-4970, GH-4667
 	void shouldConsiderMetaAnnotation() throws IOException {
 
 		InputStreamSource aotFragment = generationContext.getGeneratedFiles().getGeneratedFile(GeneratedFiles.Kind.SOURCE,
@@ -74,6 +73,7 @@ class MongoRepositoryContributorUnitTests {
 		assertThat(content).contains("filterQuery.maxTimeMsec(555)");
 		assertThat(content).contains("filterQuery.cursorBatchSize(1234)");
 		assertThat(content).contains("filterQuery.comment(\"foo\")");
+		assertThat(content).contains("filterQuery.diskUse(DiskUse.DENY)");
 	}
 
 	interface MetaUserRepository extends CrudRepository<User, String> {
@@ -81,7 +81,7 @@ class MongoRepositoryContributorUnitTests {
 		@Meta
 		User findAllByLastname(String lastname);
 
-		@Meta(cursorBatchSize = 1234, comment = "foo", maxExecutionTimeMs = 555)
+		@Meta(cursorBatchSize = 1234, comment = "foo", maxExecutionTimeMs = 555, allowDiskUse = "false")
 		User findWithMetaAllByLastname(String lastname);
 	}
 
