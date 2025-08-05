@@ -291,7 +291,8 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 			applySettings(builder::retryWrites, computeSettingsValue(defaultSettings.getRetryWrites(),
 					mongoClientSettings.getRetryWrites(), connectionString.getRetryWritesValue()));
 			applySettings(builder::uuidRepresentation,
-					computeSettingsValue(null, mongoClientSettings.getUuidRepresentation(), UuidRepresentation.STANDARD));
+					computeSettingsValue(null, mongoClientSettings.getUuidRepresentation(),
+							connectionString.getUuidRepresentation()));
 		}
 
 		if (!CollectionUtils.isEmpty(credential)) {
@@ -315,13 +316,15 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 		settingsBuilder.accept(value);
 	}
 
-	private <S, T> @Nullable T computeSettingsValue(Function<S, T> function, S defaultValueHolder, S settingsValueHolder,
+	private <S extends @Nullable Object, T extends @Nullable Object> @Nullable T computeSettingsValue(
+			Function<S, T> function, S defaultValueHolder, S settingsValueHolder,
 			@Nullable T connectionStringValue) {
 		return computeSettingsValue(function.apply(defaultValueHolder), function.apply(settingsValueHolder),
 				connectionStringValue);
 	}
 
-	private <T> @Nullable T computeSettingsValue(@Nullable T defaultValue, T fromSettings, @Nullable T fromConnectionString) {
+	private <T extends @Nullable Object> @Nullable T computeSettingsValue(@Nullable T defaultValue,
+			@Nullable T fromSettings, @Nullable T fromConnectionString) {
 
 		boolean fromSettingsIsDefault = ObjectUtils.nullSafeEquals(defaultValue, fromSettings);
 		boolean fromConnectionStringIsDefault = ObjectUtils.nullSafeEquals(defaultValue, fromConnectionString);
