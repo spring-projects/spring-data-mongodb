@@ -5,8 +5,15 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<mongo:auditing mapping-context-ref="customMappingContext" />
-	
-	<bean id="customMappingContext" class="org.springframework.data.mongodb.core.mapping.MongoMappingContext" />
+	<mongo:auditing mapping-context-ref="mongoMappingContext"/>
+
+	<mongo:db-factory dbname="repositories"/>
+
+	<mongo:mapping-converter auto-index-creation="true"/>
+
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg ref="mongoDbFactory"/>
+		<constructor-arg ref="mappingConverter"/>
+	</bean>
 
 </beans>

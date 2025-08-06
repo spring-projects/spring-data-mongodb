@@ -83,7 +83,7 @@ public interface MongoPersistentEntity<T> extends MutablePersistentEntity<T, Mon
 	/**
 	 * Get the entities shard key if defined.
 	 *
-	 * @return {@link ShardKey#none()} if not not set.
+	 * @return {@link ShardKey#none()} if not set.
 	 * @since 3.0
 	 */
 	ShardKey getShardKey();

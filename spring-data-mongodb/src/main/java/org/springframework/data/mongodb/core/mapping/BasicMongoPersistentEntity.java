@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.expression.ValueExpression;
@@ -33,6 +34,7 @@ import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
@@ -186,6 +188,16 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		verifyFieldUniqueness();
 		verifyFieldTypes();
+	}
+
+	@Override
+	public boolean isNew(Object bean) {
+		return super.isNew(Wrapped.getTargetObject(bean));
+	}
+
+	@Override
+	public <B> PersistentPropertyAccessor<B> getPropertyAccessor(B bean) {
+		return super.getPropertyAccessor(Wrapped.getTargetObject(bean));
 	}
 
 	@Override
