@@ -44,11 +44,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceCreator;
-import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
@@ -487,11 +487,11 @@ class DbRefMappingMongoConverterUnitTests {
 
 		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, object);
 
-		PersistentPropertyAccessor accessor = propertyEntity.getPropertyAccessor(result.dbRefToConcreteType);
+		DirectFieldAccessor accessor = new DirectFieldAccessor(result.dbRefToConcreteType);
 		MongoPersistentProperty idProperty = mappingContext.getRequiredPersistentEntity(LazyDbRefTarget.class)
 				.getIdProperty();
 
-		assertThat(accessor.getProperty(idProperty)).isNotNull();
+		assertThat(accessor.getPropertyValue(idProperty.getName())).isNotNull();
 		assertProxyIsResolved(result.dbRefToConcreteType, false);
 	}
 

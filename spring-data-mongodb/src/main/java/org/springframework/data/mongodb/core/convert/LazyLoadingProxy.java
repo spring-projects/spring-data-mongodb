@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.data.mongodb.core.mapping.Wrapped;
+
 import com.mongodb.DBRef;
 
 /**
@@ -28,7 +30,7 @@ import com.mongodb.DBRef;
  * @since 1.5
  * @see LazyLoadingProxyFactory
  */
-public interface LazyLoadingProxy {
+public interface LazyLoadingProxy extends Wrapped {
 
 	/**
 	 * Initializes the proxy and returns the wrapped value.
@@ -36,6 +38,7 @@ public interface LazyLoadingProxy {
 	 * @return
 	 * @since 1.5
 	 */
+	@Override
 	Object getTarget();
 
 	/**

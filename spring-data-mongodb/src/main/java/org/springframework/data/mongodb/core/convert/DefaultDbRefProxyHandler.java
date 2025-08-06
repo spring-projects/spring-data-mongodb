@@ -19,11 +19,13 @@ import java.util.function.Function;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.Wrapped;
 
 import com.mongodb.DBRef;
 
@@ -32,23 +34,9 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-class DefaultDbRefProxyHandler implements DbRefProxyHandler {
-
-	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private final ValueResolver resolver;
-	private final Function<Object, ValueExpressionEvaluator> evaluatorFactory;
-
-	/**
-	 * @param mappingContext must not be {@literal null}.
-	 * @param resolver must not be {@literal null}.
-	 */
-	public DefaultDbRefProxyHandler(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			ValueResolver resolver, Function<Object, ValueExpressionEvaluator> evaluatorFactory) {
-
-		this.mappingContext = mappingContext;
-		this.resolver = resolver;
-		this.evaluatorFactory = evaluatorFactory;
-	}
+record DefaultDbRefProxyHandler(
+		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, ValueResolver resolver,
+		Function<Object, ValueExpressionEvaluator> evaluatorFactory) implements DbRefProxyHandler {
 
 	@Override
 	public Object populateId(MongoPersistentProperty property, @Nullable DBRef source, Object proxy) {
@@ -65,11 +53,12 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 		}
 
 		ValueExpressionEvaluator evaluator = evaluatorFactory.apply(proxy);
-		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(proxy);
+		PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor((Wrapped) () -> proxy);
 
 		Document object = new Document(idProperty.getFieldName(), source.getId());
 		ObjectPath objectPath = ObjectPath.ROOT.push(proxy, entity, null);
-		accessor.setProperty(idProperty, resolver.getValueInternal(idProperty, object, evaluator, objectPath));
+		accessor.setProperty(idProperty,
+				resolver.getValueInternal(idProperty, object, evaluator, objectPath));
 
 		return proxy;
 	}
