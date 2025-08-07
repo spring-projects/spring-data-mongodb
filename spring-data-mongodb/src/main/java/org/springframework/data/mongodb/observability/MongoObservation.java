@@ -15,11 +15,18 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import io.micrometer.common.KeyValue;
+import static org.springframework.data.mongodb.observability.MongoKeyName.*;
+
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.ObservationDocumentation;
+
 import org.springframework.lang.Nullable;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+
+import com.mongodb.ConnectionString;
+import com.mongodb.ServerAddress;
+import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.event.CommandEvent;
 
 /**
  * A MongoDB-based {@link io.micrometer.observation.Observation}.
@@ -42,7 +49,7 @@ enum MongoObservation implements ObservationDocumentation {
 
 		@Override
 		public KeyName[] getLowCardinalityKeyNames() {
-			return LowCardinalityCommandKeyNames.values();
+			return LowCardinality.getKeyNames();
 		}
 
 		@Override
@@ -53,137 +60,63 @@ enum MongoObservation implements ObservationDocumentation {
 	};
 
 	/**
-	 * Enums related to low cardinality key names for MongoDB commands.
+	 * Contributors for low cardinality key names.
 	 */
-	enum LowCardinalityCommandKeyNames implements KeyName {
+	static class LowCardinality {
 
-		/**
-		 * MongoDB database system.
-		 */
-		DB_SYSTEM {
-			@Override
-			public String asString() {
-				return "db.system";
-			}
-		},
+		static MongoKeyValue DB_SYSTEM = just("db.system", "mongodb");
+		static MongoKeyName<MongoHandlerContext> MONGODB_COMMAND = MongoKeyName.requiredString("db.operation",
+				MongoHandlerContext::getCommandName);
 
-		/**
-		 * MongoDB connection string.
-		 */
-		DB_CONNECTION_STRING {
-			@Override
-			public String asString() {
-				return "db.connection_string";
-			}
-		},
+		static MongoKeyName<MongoHandlerContext> DB_NAME = MongoKeyName.requiredString("db.name",
+				MongoHandlerContext::getDatabaseName);
 
-		/**
-		 * Network transport.
-		 */
-		NET_TRANSPORT {
-			@Override
-			public String asString() {
-				return "net.transport";
-			}
-		},
-
-		/**
-		 * Name of the database host.
-		 */
-		NET_PEER_NAME {
-			@Override
-			public String asString() {
-				return "net.peer.name";
-			}
-		},
-
-		/**
-		 * Logical remote port number.
-		 */
-		NET_PEER_PORT {
-			@Override
-			public String asString() {
-				return "net.peer.port";
-			}
-		},
-
-		/**
-		 * Mongo peer address.
-		 */
-		NET_SOCK_PEER_ADDR {
-			@Override
-			public String asString() {
-				return "net.sock.peer.addr";
-			}
-		},
-
-		/**
-		 * Mongo peer port.
-		 */
-		NET_SOCK_PEER_PORT {
-			@Override
-			public String asString() {
-				return "net.sock.peer.port";
-			}
-		},
-
-		/**
-		 * MongoDB user.
-		 */
-		DB_USER {
-			@Override
-			public String asString() {
-				return "db.user";
-			}
-		},
-
-		/**
-		 * MongoDB database name.
-		 */
-		DB_NAME {
-			@Override
-			public String asString() {
-				return "db.name";
-			}
-		},
-
-		/**
-		 * MongoDB collection name.
-		 */
-		MONGODB_COLLECTION {
-			@Override
-			public String asString() {
-				return "db.mongodb.collection";
-			}
-		},
+		static MongoKeyName<MongoHandlerContext> MONGODB_COLLECTION = MongoKeyName.requiredString("db.mongodb.collection",
+				MongoHandlerContext::getCollectionName);
 
 		/**
 		 * MongoDB cluster identifier.
 		 */
-		MONGODB_CLUSTER_ID {
-			@Override
-			public String asString() {
-				return "spring.data.mongodb.cluster_id";
-			}
-		},
+		static MongoKeyName<ConnectionDescription> MONGODB_CLUSTER_ID = MongoKeyName.required(
+				"spring.data.mongodb.cluster_id", it -> it.getConnectionId().getServerId().getClusterId().getValue(),
+				StringUtils::hasText);
+
+		static MongoKeyValue NET_TRANSPORT_TCP_IP = just("net.transport", "IP.TCP");
+		static MongoKeyName<ServerAddress> NET_PEER_NAME = MongoKeyName.required("net.peer.name", ServerAddress::getHost);
+		static MongoKeyName<ServerAddress> NET_PEER_PORT = MongoKeyName.required("net.peer.port", ServerAddress::getPort);
+
+		static MongoKeyName<ConnectionString> DB_CONNECTION_STRING = MongoKeyName.requiredString("db.connection_string",
+				Object::toString);
+		static MongoKeyName<ConnectionString> DB_USER = MongoKeyName.requiredString("db.user",
+				ConnectionString::getUsername);
 
 		/**
-		 * MongoDB command value.
+		 * Observe low cardinality key values for the given {@link MongoHandlerContext}.
+		 *
+		 * @param context the context to contribute from, can be {@literal null} if no context is available.
+		 * @return the key value contributor providing low cardinality key names.
 		 */
-		MONGODB_COMMAND {
-			@Override
-			public String asString() {
-				return "db.operation";
-			}
-		};
+		public static Observer observe(@Nullable MongoHandlerContext context) {
+
+			return Observer.fromContext(context, it -> {
+
+				it.contribute(DB_SYSTEM).contribute(MONGODB_COMMAND, DB_NAME, MONGODB_COLLECTION);
+
+				it.nested(MongoHandlerContext::getConnectionString).contribute(DB_CONNECTION_STRING, DB_USER);
+				it.nested(MongoHandlerContext::getCommandStartedEvent) //
+						.nested(CommandEvent::getConnectionDescription).contribute(MONGODB_CLUSTER_ID) //
+						.nested(ConnectionDescription::getServerAddress) //
+						.contribute(NET_TRANSPORT_TCP_IP).contribute(NET_PEER_NAME, NET_PEER_PORT);
+			});
+		}
 
 		/**
-		 * Creates a key value for the given key name.
-		 * @param value value for key, if value is null or empty {@link KeyValue#NONE_VALUE} will be used
-		 * @return key value
+		 * Returns the key names for low cardinality keys.
+		 *
+		 * @return the key names for low cardinality keys.
 		 */
-		public KeyValue withOptionalValue(@Nullable String value) {
-			return withValue(ObjectUtils.isEmpty(value) ? KeyValue.NONE_VALUE : value);
+		public static KeyName[] getKeyNames() {
+			return observe(null).toKeyNames();
 		}
 	}
 

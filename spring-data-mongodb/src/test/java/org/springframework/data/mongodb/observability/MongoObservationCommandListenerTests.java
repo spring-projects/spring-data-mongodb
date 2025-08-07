@@ -31,7 +31,6 @@ import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.RequestContext;
@@ -167,10 +166,10 @@ class MongoObservationCommandListenerTests {
 		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "insert", null, null, 0));
 
 		assertThat(meterRegistry).hasTimerWithNameAndTags(MongoObservation.MONGODB_COMMAND_OBSERVATION.getName(),
-				KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user"),
-						LowCardinalityCommandKeyNames.DB_NAME.withValue("database"),
-						LowCardinalityCommandKeyNames.MONGODB_COMMAND.withValue("insert"),
-						LowCardinalityCommandKeyNames.DB_SYSTEM.withValue("mongodb")).and("error", "none"));
+				KeyValues.of(MongoObservation.LowCardinality.MONGODB_COLLECTION.withValue("user"),
+						MongoObservation.LowCardinality.DB_NAME.withValue("database"),
+						MongoObservation.LowCardinality.MONGODB_COMMAND.withValue("insert"),
+						MongoObservation.LowCardinality.DB_SYSTEM.withValue("mongodb")).and("error", "none"));
 	}
 
 	@Test
@@ -260,7 +259,7 @@ class MongoObservationCommandListenerTests {
 
 		assertThat(meterRegistry) //
 				.hasTimerWithNameAndTags(MongoObservation.MONGODB_COMMAND_OBSERVATION.getName(),
-						KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user")));
+						KeyValues.of(MongoObservation.LowCardinality.MONGODB_COLLECTION.withValue("user")));
 	}
 
 }
