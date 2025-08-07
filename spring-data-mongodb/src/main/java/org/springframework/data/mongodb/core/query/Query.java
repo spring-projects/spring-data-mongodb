@@ -582,8 +582,13 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 */
 	@Contract("_ -> this")
 	public Query allowDiskUse(boolean allowDiskUse) {
+		return diskUse(DiskUse.of(allowDiskUse));
+	}
 
-		meta.setAllowDiskUse(allowDiskUse);
+	@Contract("_ -> this")
+	public Query diskUse(DiskUse diskUse) {
+
+		meta.setDiskUse(diskUse);
 		return this;
 	}
 

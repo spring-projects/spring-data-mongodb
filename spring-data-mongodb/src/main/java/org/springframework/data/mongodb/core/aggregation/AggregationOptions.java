@@ -23,6 +23,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.DiskUse;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
@@ -60,7 +61,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	private static final String MAX_TIME = "maxTimeMS";
 	private static final String HINT = "hint";
 
-	private final Optional<Boolean> allowDiskUse;
+	private final DiskUse diskUse;
 	private final boolean explain;
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
@@ -85,6 +86,15 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		this(allowDiskUse, explain, cursor, null);
 	}
 
+	public AggregationOptions(DiskUse diskUse, boolean explain, @Nullable Document cursor) {
+		this(diskUse, explain, cursor, null);
+	}
+
+	public AggregationOptions(DiskUse allowDiskUse, boolean explain, @Nullable Document cursor,
+		@Nullable Collation collation) {
+		this(allowDiskUse, explain, cursor, collation, null);
+	}
+
 	/**
 	 * Creates a new {@link AggregationOptions}.
 	 *
@@ -97,7 +107,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation) {
-		this(allowDiskUse, explain, cursor, collation, null, null);
+		this(DiskUse.of(allowDiskUse), explain, cursor, collation, null, null);
 	}
 
 	/**
@@ -113,13 +123,18 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation, @Nullable String comment) {
+		this(allowDiskUse ? DiskUse.ALLOW : DiskUse.DENY, explain, cursor, collation, comment, null);
+	}
+
+	public AggregationOptions(DiskUse allowDiskUse, boolean explain, @Nullable Document cursor,
+		@Nullable Collation collation, @Nullable String comment) {
 		this(allowDiskUse, explain, cursor, collation, comment, null);
 	}
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
 	 *
-	 * @param allowDiskUse whether to off-load intensive sort-operations to disk.
+	 * @param diskUse whether to off-load intensive sort-operations to disk.
 	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
 	 * @param cursor can be {@literal null}, used to pass additional options (such as {@code batchSize}) to the
 	 *          aggregation.
@@ -128,10 +143,10 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 * @param hint can be {@literal null}, used to provide an index that would be forcibly used by query optimizer.
 	 * @since 3.1
 	 */
-	private AggregationOptions(@Nullable Boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+	private AggregationOptions(DiskUse diskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation, @Nullable String comment, @Nullable Object hint) {
 
-		this.allowDiskUse = Optional.ofNullable(allowDiskUse);
+		this.diskUse = diskUse;
 		this.explain = explain;
 		this.cursor = Optional.ofNullable(cursor);
 		this.collation = Optional.ofNullable(collation);
@@ -172,7 +187,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		String comment = document.getString(COMMENT);
 		Document hint = document.get(HINT, Document.class);
 
-		AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment, hint);
+		AggregationOptions options = new AggregationOptions(DiskUse.of(allowDiskUse) , explain, cursor, collation, comment, hint);
 		if (document.containsKey(MAX_TIME)) {
 			options.maxTime = Duration.ofMillis(document.getLong(MAX_TIME));
 		}
@@ -196,7 +211,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 * @return {@literal true} if enabled; {@literal false} otherwise (or if not set).
 	 */
 	public boolean isAllowDiskUse() {
-		return allowDiskUse.orElse(false);
+		return diskUse.equals(DiskUse.ALLOW);
 	}
 
 	/**
@@ -206,7 +221,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 * @since 4.2.5
 	 */
 	public boolean isAllowDiskUseSet() {
-		return allowDiskUse.isPresent();
+		return !diskUse.equals(DiskUse.DEFAULT);
 	}
 
 	/**
@@ -427,7 +442,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 */
 	public static class Builder {
 
-		private @Nullable Boolean allowDiskUse;
+		private @Nullable DiskUse diskUse = DiskUse.DEFAULT;
 		private boolean explain;
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
@@ -447,8 +462,19 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 */
 		@Contract("_ -> this")
 		public Builder allowDiskUse(boolean allowDiskUse) {
+			return diskUse(DiskUse.of(allowDiskUse));
+		}
 
-			this.allowDiskUse = allowDiskUse;
+		/**
+		 * Defines whether to off-load intensive sort-operations to disk.
+		 *
+		 * @param diskUse use {@literal true} to allow disk use during the aggregation.
+		 * @return this.
+		 */
+		@Contract("_ -> this")
+		public Builder diskUse(DiskUse diskUse) {
+
+			this.diskUse = diskUse;
 			return this;
 		}
 
@@ -655,7 +681,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		@Contract("-> new")
 		public AggregationOptions build() {
 
-			AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment, hint);
+			AggregationOptions options = new AggregationOptions(diskUse, explain, cursor, collation, comment, hint);
 			if (maxTime != null) {
 				options.maxTime = maxTime;
 			}
