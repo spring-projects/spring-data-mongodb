@@ -15,16 +15,12 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import com.mongodb.ConnectionString;
-import com.mongodb.ServerAddress;
-import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ConnectionId;
-import com.mongodb.event.CommandStartedEvent;
 import io.micrometer.common.KeyValues;
+
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
-import static org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames.*;
+import com.mongodb.event.CommandStartedEvent;
 
 /**
  * Default {@link MongoHandlerObservationConvention} implementation.
@@ -43,44 +39,7 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 			throw new IllegalStateException("not command started event present");
 		}
 
-		ConnectionString connectionString = context.getConnectionString();
-		String connectionStringValue = connectionString != null ? connectionString.getConnectionString() : null;
-		String username = connectionString != null ? connectionString.getUsername() : null;
-
-		String transport = null,  peerName = null, peerPort =null,  clusterId = null;
-		ConnectionDescription connectionDescription = context.getCommandStartedEvent().getConnectionDescription();
-		if (connectionDescription != null) {
-			ServerAddress serverAddress = connectionDescription.getServerAddress();
-
-			if (serverAddress != null) {
-				transport = "IP.TCP";
-				peerName = serverAddress.getHost();
-				peerPort = String.valueOf(serverAddress.getPort());
-			}
-
-			ConnectionId connectionId = connectionDescription.getConnectionId();
-			if (connectionId != null) {
-				clusterId = connectionId.getServerId().getClusterId().getValue();
-			}
-		}
-
-		return KeyValues.of(
-				DB_SYSTEM.withValue("mongodb"),
-				MONGODB_COMMAND.withValue(context.getCommandName()),
-				DB_CONNECTION_STRING.withOptionalValue(connectionStringValue),
-				DB_USER.withOptionalValue(username),
-				DB_NAME.withOptionalValue(context.getDatabaseName()),
-				MONGODB_COLLECTION.withOptionalValue(context.getCollectionName()),
-				NET_TRANSPORT.withOptionalValue(transport),
-				NET_PEER_NAME.withOptionalValue(peerName),
-				NET_PEER_PORT.withOptionalValue(peerPort),
-				MONGODB_CLUSTER_ID.withOptionalValue(clusterId)
-		);
-	}
-
-	@Override
-	public KeyValues getHighCardinalityKeyValues(MongoHandlerContext context) {
-		return KeyValues.empty();
+		return MongoObservation.LowCardinality.observe(context).toKeyValues();
 	}
 
 	@Override
