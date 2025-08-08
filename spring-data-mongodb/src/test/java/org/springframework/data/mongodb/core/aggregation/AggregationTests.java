@@ -15,10 +15,31 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.domain.Sort.Direction.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.DEFAULT_CONTEXT;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.bind;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucket;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucketAuto;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.count;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.facet;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.lookup;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregationOptions;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.out;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.previousOperation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.replaceRoot;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.sample;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.skip;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatIllegalArgumentException;
 
 import java.io.BufferedInputStream;
 import java.text.ParseException;
@@ -46,7 +67,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
@@ -554,7 +574,7 @@ public class AggregationTests {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-
+		
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
@@ -1579,7 +1599,8 @@ public class AggregationTests {
 		createUsersWithReferencedPersons();
 
 		TypedAggregation<User> agg = newAggregation(User.class, //
-				lookup().from("person").localField("_id").foreignField("firstname").pipeline(match(where("firstname").is("u1"))).as("linkedPerson"), //
+				lookup().from("person").localField("_id").foreignField("firstname").pipeline(match(where("firstname").is("u1")))
+						.as("linkedPerson"), //
 				sort(ASC, "id"));
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
@@ -1598,8 +1619,10 @@ public class AggregationTests {
 		createUsersWithReferencedPersons();
 
 		TypedAggregation<User> agg = newAggregation(User.class, //
-				lookup().from("person").localField("_id").foreignField("firstname").let(Let.ExpressionVariable.newVariable("the_id").forField("_id")).pipeline(
-						match(ctx -> new Document("$expr", new Document("$eq", List.of("$$the_id", "u1"))))).as("linkedPerson"),
+				lookup().from("person").localField("_id").foreignField("firstname")
+						.let(Let.ExpressionVariable.newVariable("the_id").forField("_id"))
+						.pipeline(match(ctx -> new Document("$expr", new Document("$eq", List.of("$$the_id", "u1")))))
+						.as("linkedPerson"),
 				sort(ASC, "id"));
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
@@ -1956,9 +1979,8 @@ public class AggregationTests {
 		mongoTemplate.insert(objectToSave);
 		mongoTemplate.insert(objectToSave2);
 
-		Aggregation agg = Aggregation.newAggregation(
-				project().and(ArithmeticOperators.valueOf("x").percentile(0.9, 0.4).and("y").and("xField"))
-				.as("percentileValues"));
+		Aggregation agg = Aggregation.newAggregation(project()
+				.and(ArithmeticOperators.valueOf("x").percentile(0.9, 0.4).and("y").and("xField")).as("percentileValues"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, DATAMONGO788.class, Document.class);
 
@@ -1979,8 +2001,7 @@ public class AggregationTests {
 		mongoTemplate.insert(objectToSave2);
 
 		Aggregation agg = Aggregation.newAggregation(
-				project().and(ArithmeticOperators.valueOf("x").median().and("y").and("xField"))
-				.as("medianValue"));
+				project().and(ArithmeticOperators.valueOf("x").median().and("y").and("xField")).as("medianValue"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, DATAMONGO788.class, Document.class);
 
@@ -2086,7 +2107,8 @@ public class AggregationTests {
 		mongoTemplate.save(widget);
 
 		Criteria criteria = Criteria.where("users").elemMatch(Criteria.where("id").is("4ee921aca44fd11b3254e001"));
-		AggregationResults<Widget> aggregate = mongoTemplate.aggregate(newAggregation(match(criteria)), Widget.class, Widget.class);
+		AggregationResults<Widget> aggregate = mongoTemplate.aggregate(newAggregation(match(criteria)), Widget.class,
+				Widget.class);
 		assertThat(aggregate.getMappedResults()).contains(widget);
 	}
 
@@ -2097,9 +2119,7 @@ public class AggregationTests {
 		Item item2 = Item.builder().itemId("1").tags(Arrays.asList("a", "c")).build();
 		mongoTemplate.insert(Arrays.asList(item1, item2), Item.class);
 
-		TypedAggregation<Item> aggregation = newAggregation(Item.class,
-				match(where("itemId").is("1")),
-				unwind("tags"),
+		TypedAggregation<Item> aggregation = newAggregation(Item.class, match(where("itemId").is("1")), unwind("tags"),
 				match(where("itemId").is("1").and("tags").is("c")));
 		AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, Document.class);
 		List<Document> mappedResults = results.getMappedResults();
@@ -2114,9 +2134,7 @@ public class AggregationTests {
 		Item item2 = Item.builder().itemId("1").tags(Arrays.asList("a", "c")).build();
 		mongoTemplate.insert(Arrays.asList(item1, item2), Item.class);
 
-		TypedAggregation<Item> aggregation = newAggregation(Item.class,
-				match(where("itemId").is("1")),
-				unwind("tags"),
+		TypedAggregation<Item> aggregation = newAggregation(Item.class, match(where("itemId").is("1")), unwind("tags"),
 				project().and("itemId").as("itemId").and("tags").as("tags"),
 				match(where("itemId").is("1").and("tags").is("c")));
 
@@ -3096,5 +3114,30 @@ public class AggregationTests {
 		public String toString() {
 			return "AggregationTests.UserRef(id=" + this.getId() + ", name=" + this.getName() + ")";
 		}
+	}
+
+	@Test
+	void xxx() {
+
+		MyOhMy source = new MyOhMy();
+		source.id = "id-1";
+		source.firstname = "iwi";
+		source.lastname = "wang";
+
+		mongoTemplate.save(source);
+
+		TypedAggregation<MyOhMy> agg = newAggregation(MyOhMy.class, project("firstname"));
+		AggregationResults<MyMyOh> aggregate = mongoTemplate.aggregate(agg, MyMyOh.class);
+		assertThat(aggregate.getMappedResults()).hasOnlyElementsOfType(MyMyOh.class);
+	}
+
+	static class MyOhMy {
+		@Id String id;
+		String firstname;
+		String lastname;
+	}
+
+	interface MyMyOh {
+		String getFirstname();
 	}
 }

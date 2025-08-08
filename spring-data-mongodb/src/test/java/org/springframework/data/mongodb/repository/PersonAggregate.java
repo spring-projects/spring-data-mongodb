@@ -28,7 +28,7 @@ import org.springframework.data.annotation.PersistenceCreator;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-final class PersonAggregate {
+public final class PersonAggregate {
 
 	@Id private final String lastname;
 	private final Set<String> names;

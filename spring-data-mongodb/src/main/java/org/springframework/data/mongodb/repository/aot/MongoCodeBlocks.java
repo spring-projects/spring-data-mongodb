@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.aot.AggregationBlocks.AggregationCodeBlockBuilder;
@@ -33,6 +32,7 @@ import org.springframework.data.mongodb.repository.aot.UpdateBlocks.UpdateCodeBl
 import org.springframework.data.mongodb.repository.aot.UpdateBlocks.UpdateExecutionCodeBlockBuilder;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
+import org.springframework.data.repository.aot.generate.ExpressionMarker;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.util.NumberUtils;
@@ -163,21 +163,28 @@ class MongoCodeBlocks {
 		return new GeoNearExecutionCodeBlockBuilder(context);
 	}
 
-	static CodeBlock asDocument(String source, String argNames) {
+	static CodeBlock asDocument(ExpressionMarker expressionMarker, String source, String argNames) {
+		return asDocument(expressionMarker, source, CodeBlock.of("$L", argNames));
+	}
+
+	static CodeBlock asDocument(ExpressionMarker expressionMarker, String source, CodeBlock arguments) {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
 			builder.add("new $T()", Document.class);
 		} else if (containsPlaceholder(source)) {
-			builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S$L);\n", source, argNames);
+			if (arguments.isEmpty()) {
+				builder.add("bindParameters($L, $S)", expressionMarker.enclosingMethod(), source);
+			} else {
+				builder.add("bindParameters($L, $S, $L)", expressionMarker.enclosingMethod(), source, arguments);
+			}
 		} else {
 			builder.add("parse($S)", source);
 		}
 		return builder.build();
 	}
 
-	static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName,
-			String argNames) {
+	static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName, String argNames) {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
@@ -207,7 +214,7 @@ class MongoCodeBlocks {
 			}
 
 			Builder builder = CodeBlock.builder();
-			builder.add("($T) evaluate(ExpressionMarker.class.getEnclosingMethod(), $S$L)", targetType, value,
+			builder.add("($T) evaluate($L, $S$L)", targetType, context.getExpressionMarker().enclosingMethod(), value,
 					parameterNames);
 			return builder.build();
 		}

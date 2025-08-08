@@ -202,7 +202,7 @@ public interface MongoQueryExecution {
 			}
 
 			Range<Distance> distances = accessor.getDistanceRange();
-			Assert.notNull(nearLocation, "[query.distance] must not be null");
+			Assert.notNull(distances, "[query.distances] must not be null");
 
 			distances.getLowerBound().getValue().ifPresent(it -> nearQuery.minDistance(it).in(it.getMetric()));
 			distances.getUpperBound().getValue().ifPresent(it -> nearQuery.maxDistance(it).in(it.getMetric()));

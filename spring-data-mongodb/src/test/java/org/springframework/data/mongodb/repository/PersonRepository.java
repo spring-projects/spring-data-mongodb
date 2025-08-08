@@ -98,6 +98,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByFirstnameLike(@Nullable String firstname);
+	List<Person> findByFirstnameLike(Pattern firstname);
 
 	List<Person> findByFirstnameNotContains(String firstname);
 
@@ -108,8 +109,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByFirstnameNotLike(String firstname);
+	List<Person> findByFirstnameNotLike(Pattern firstname);
 
 	List<Person> findByFirstnameLikeOrderByLastnameAsc(String firstname, Sort sort);
+	List<Person> findByFirstnameLikeOrderByLastnameAsc(Pattern firstname, Sort sort);
 
 	List<Person> findBySkillsContains(List<String> skills);
 
@@ -128,8 +131,13 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	Window<Person> findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
 			ScrollPosition scrollPosition);
 
+	Window<Person> findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc(Pattern lastname,
+		ScrollPosition scrollPosition);
+
 	Window<Person> findByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
 			ScrollPosition scrollPosition, Limit limit);
+	Window<Person> findByLastnameLikeOrderByLastnameAscFirstnameAsc(Pattern lastname,
+		ScrollPosition scrollPosition, Limit limit);
 
 	/**
 	 * Returns a scroll of {@link Person}s applying projections with a lastname matching the given one (*-wildcards
@@ -140,6 +148,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	Window<PersonSummaryDto> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
+	Window<PersonSummaryDto> findCursorProjectionByLastnameLike(Pattern lastname, Pageable pageable);
 
 	/**
 	 * Returns a page of {@link Person}s with a lastname matching the given one (*-wildcards supported).
@@ -149,8 +158,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	Page<Person> findByLastnameLike(String lastname, Pageable pageable);
+	Page<Person> findByLastnameLike(Pattern lastname, Pageable pageable);
 
 	List<Person> findByLastnameLike(String lastname, Sort sort, Limit limit);
+	List<Person> findByLastnameLike(Pattern lastname, Sort sort, Limit limit);
 
 	@Query("{ 'lastname' : { '$regex' : '?0', '$options' : 'i'}}")
 	Page<Person> findByLastnameLikeWithPageable(String lastname, Pageable pageable);

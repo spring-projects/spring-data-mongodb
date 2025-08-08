@@ -205,11 +205,11 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case STARTING_WITH:
 			case ENDING_WITH:
 			case CONTAINING:
-				return createContainingCriteria(part, property, criteria, parameters);
+				return createContainingCriteria(part, property, criteria, parameters.next());
 			case NOT_LIKE:
-				return createContainingCriteria(part, property, criteria.not(), parameters);
+				return createContainingCriteria(part, property, criteria.not(), parameters.next());
 			case NOT_CONTAINING:
-				return createContainingCriteria(part, property, criteria.not(), parameters);
+				return createContainingCriteria(part, property, criteria.not(), parameters.next());
 			case REGEX:
 				return regex(criteria, parameters.next());
 			case EXISTS:
@@ -258,8 +258,9 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			Iterator<Object> parameters) {
 
 		Range<Distance> range = accessor.getDistanceRange();
-		Optional<Distance> distance = range.getUpperBound().getValue();
-		Optional<Distance> minDistance = range.getLowerBound().getValue();
+
+		Optional<Distance> distance = range != null ? range.getUpperBound().getValue() : Optional.empty();
+		Optional<Distance> minDistance = range != null ? range.getLowerBound().getValue() : Optional.empty();
 
 		Point point = accessor.getGeoNearLocation();
 		Point pointToUse = point == null ? nextAs(parameters, Point.class) : point;
@@ -344,18 +345,17 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param part
 	 * @param property
 	 * @param criteria
-	 * @param parameters
+	 * @param parameter
 	 * @return
 	 */
-	private Criteria createContainingCriteria(Part part, MongoPersistentProperty property, Criteria criteria,
-			Iterator<Object> parameters) {
+	protected Criteria createContainingCriteria(Part part, MongoPersistentProperty property, Criteria criteria,
+			Object parameter) {
 
 		if (property.isCollectionLike()) {
-			Object next = parameters.next();
-			return in(criteria, part, next);
+			return in(criteria, part, parameter);
 		}
 
-		return addAppropriateLikeRegexTo(criteria, part, parameters.next());
+		return addAppropriateLikeRegexTo(criteria, part, parameter);
 	}
 
 	/**
@@ -373,6 +373,10 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 			throw new IllegalArgumentException(String.format(
 					"Argument for creating $regex pattern for property '%s' must not be null", part.getProperty().getSegment()));
+		}
+
+		if(value instanceof Pattern pattern) {
+			return criteria.regex(pattern);
 		}
 
 		return criteria.regex(toLikeRegex(value.toString(), part), toRegexOptions(part));
@@ -426,7 +430,6 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 			streamable = streamable.map(it -> {
 				if (it instanceof String sv) {
-
 					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(sv, matchMode), regexOptions);
 				}
 				return it;
