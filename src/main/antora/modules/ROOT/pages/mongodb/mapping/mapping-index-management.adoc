@@ -51,6 +51,8 @@ class MyListener{
     MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
         .getConverter().getMappingContext();
 
+    IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
     // consider only entities that are annotated with @Document
     mappingContext.getPersistentEntities()
                             .stream()
@@ -123,8 +125,10 @@ public class Person {
 [source,java]
 ----
 @Document
-@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
-@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
+@CompoundIndexes({
+    @CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}"),
+    @CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
+})
 public class Person {
 
   String firstname;
