@@ -28,6 +28,7 @@ import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -68,6 +69,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	private static final Log logger = LogFactory.getLog(MongoRepositoryContributor.class);
 
 	private final AotQueryCreator queryCreator;
+	private final SimpleTypeHolder simpleTypeHolder;
 	private final MongoMappingContext mappingContext;
 	private final NamedQueries namedQueries;
 
@@ -85,8 +87,10 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		MongoCustomConversions mongoCustomConversions = MongoCustomConversions
 				.create(MongoCustomConversions.MongoConverterConfigurationAdapter::useNativeDriverJavaTimeCodecs);
 
+		this.simpleTypeHolder = mongoCustomConversions.getSimpleTypeHolder();
+
 		this.mappingContext = new MongoMappingContext();
-		this.mappingContext.setSimpleTypeHolder(mongoCustomConversions.getSimpleTypeHolder());
+		this.mappingContext.setSimpleTypeHolder(this.simpleTypeHolder);
 		this.mappingContext.setAutoIndexCreation(false);
 		this.mappingContext.afterPropertiesSet();
 
@@ -150,7 +154,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		if (queryMethod.hasAnnotatedAggregation()) {
 			AggregationInteraction aggregation = new AggregationInteraction(queryMethod.getAnnotatedAggregation());
 			queryMetadata = aggregation;
-			contribution = aggregationMethodContributor(queryMethod, aggregation);
+			contribution = aggregationMethodContributor(queryMethod, simpleTypeHolder, aggregation);
 		} else {
 
 			QueryInteraction query = createStringQuery(getRepositoryInformation(), queryMethod,
@@ -193,7 +197,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 					if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
 						AggregationUpdateInteraction update = new AggregationUpdateInteraction(query, updateSource.pipeline());
 						queryMetadata = update;
-						contribution = aggregationUpdateMethodContributor(queryMethod, update);
+						contribution = aggregationUpdateMethodContributor(queryMethod, simpleTypeHolder, update);
 					}
 				}
 			} else {
@@ -210,17 +214,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			return MethodContributor.forQueryMethod(queryMethod).metadataOnly(queryMetadata);
 		}
 
-		MethodContributor.RepositoryMethodContribution finalContribution = contribution;
-
-		return MethodContributor.forQueryMethod(queryMethod).withMetadata(queryMetadata).contribute(context -> {
-
-			CodeBlock.Builder builder = CodeBlock.builder();
-
-//			builder.addStatement("class ExpressionMarker{}");
-			builder.add(finalContribution.contribute(context));
-
-			return builder.build();
-		});
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(queryMetadata).contribute(contribution);
 	}
 
 	@SuppressWarnings("NullAway")
@@ -289,6 +283,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	static MethodContributor.RepositoryMethodContribution aggregationMethodContributor(MongoQueryMethod queryMethod,
+			SimpleTypeHolder simpleTypeHolder,
 			AggregationInteraction aggregation) {
 
 		return context -> {
@@ -297,9 +292,10 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			String variableName = context.localVariable("aggregation");
 
-			builder.add(aggregationBlockBuilder(context, queryMethod).stages(aggregation)
+			builder.add(aggregationBlockBuilder(context, simpleTypeHolder, queryMethod).stages(aggregation)
 					.usingAggregationVariableName(variableName).build());
-			builder.add(aggregationExecutionBlockBuilder(context, queryMethod).referencing(variableName).build());
+			builder.add(
+					aggregationExecutionBlockBuilder(context, simpleTypeHolder, queryMethod).referencing(variableName).build());
 
 			return builder.build();
 		};
@@ -351,6 +347,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	static MethodContributor.RepositoryMethodContribution aggregationUpdateMethodContributor(MongoQueryMethod queryMethod,
+			SimpleTypeHolder simpleTypeHolder,
 			AggregationUpdateInteraction update) {
 
 		return context -> {
@@ -364,7 +361,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			// update definition
 			String updateVariableName = context.localVariable("updateDefinition");
-			builder.add(aggregationBlockBuilder(context, queryMethod).stages(update)
+			builder.add(aggregationBlockBuilder(context, simpleTypeHolder, queryMethod).stages(update)
 					.usingAggregationVariableName(updateVariableName).pipelineOnly(true).build());
 
 			builder.addStatement("$T $L = $T.from($L.getOperations())", AggregationUpdate.class,

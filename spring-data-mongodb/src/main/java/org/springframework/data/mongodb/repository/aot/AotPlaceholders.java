@@ -279,7 +279,8 @@ class AotPlaceholders {
 			this.options = options;
 		}
 
-		@Nullable String regexOptions() {
+		@Nullable
+		String regexOptions() {
 			return options;
 		}
 

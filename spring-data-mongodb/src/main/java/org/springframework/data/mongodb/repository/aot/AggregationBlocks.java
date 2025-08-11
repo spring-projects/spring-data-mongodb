@@ -22,10 +22,12 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
+
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -33,7 +35,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReadPreference;
@@ -58,12 +59,15 @@ class AggregationBlocks {
 	static class AggregationExecutionCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
+		private final SimpleTypeHolder simpleTypeHolder;
 		private final MongoQueryMethod queryMethod;
 		private String aggregationVariableName;
 
-		AggregationExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		AggregationExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, SimpleTypeHolder simpleTypeHolder,
+				MongoQueryMethod queryMethod) {
 
 			this.context = context;
+			this.simpleTypeHolder = simpleTypeHolder;
 			this.queryMethod = queryMethod;
 		}
 
@@ -80,7 +84,7 @@ class AggregationBlocks {
 
 			builder.add("\n");
 
-			Class<?> outputType = getOutputType(queryMethod);
+			Class<?> outputType = getOutputType(simpleTypeHolder, queryMethod);
 
 			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
 				builder.addStatement("$L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
@@ -152,13 +156,19 @@ class AggregationBlocks {
 
 	}
 
-	private static Class<?> getOutputType(MongoQueryMethod queryMethod) {
+	private static Class<?> getOutputType(SimpleTypeHolder simpleTypeHolder, MongoQueryMethod queryMethod) {
+
 		Class<?> outputType = queryMethod.getReturnedObjectType();
-		if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
-			outputType = Document.class;
-		} else if (ClassUtils.isAssignable(AggregationResults.class, outputType) && queryMethod.getReturnType().getComponentType() != null) {
-			outputType = queryMethod.getReturnType().getComponentType().getType();
+
+		if (simpleTypeHolder.isSimpleType(outputType)) {
+			return Document.class;
 		}
+
+		if (ClassUtils.isAssignable(AggregationResults.class, outputType)
+				&& queryMethod.getReturnType().getComponentType() != null) {
+			return queryMethod.getReturnType().getComponentType().getType();
+		}
+
 		return outputType;
 	}
 
@@ -166,6 +176,7 @@ class AggregationBlocks {
 	static class AggregationCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
+		private final SimpleTypeHolder simpleTypeHolder;
 		private final MongoQueryMethod queryMethod;
 		private final String parameterNames;
 
@@ -174,9 +185,11 @@ class AggregationBlocks {
 		private String aggregationVariableName;
 		private boolean pipelineOnly;
 
-		AggregationCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		AggregationCodeBlockBuilder(AotQueryMethodGenerationContext context, SimpleTypeHolder simpleTypeHolder,
+				MongoQueryMethod queryMethod) {
 
 			this.context = context;
+			this.simpleTypeHolder = simpleTypeHolder;
 			this.queryMethod = queryMethod;
 			this.parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
 		}
@@ -230,7 +243,7 @@ class AggregationBlocks {
 			builder.add(aggregationStages(context.localVariable("stages"), source.stages()));
 
 			if (StringUtils.hasText(sortParameter)) {
-				Class<?> outputType = getOutputType(queryMethod);
+				Class<?> outputType = getOutputType(simpleTypeHolder, queryMethod);
 				builder.add(sortingStage(sortParameter, outputType));
 			}
 
@@ -324,7 +337,7 @@ class AggregationBlocks {
 					context.localVariable("sortDocument"), context.localVariable("order"));
 			builder.endControlFlow();
 
-			if (outputType == Document.class || MongoSimpleTypes.HOLDER.isSimpleType(outputType)
+			if (outputType == Document.class || simpleTypeHolder.isSimpleType(outputType)
 					|| ClassUtils.isAssignable(context.getRepositoryInformation().getDomainType(), outputType)) {
 				builder.addStatement("$L.add(new $T($S, $L))", context.localVariable("stages"), Document.class, "$sort",
 						context.localVariable("sortDocument"));
@@ -343,7 +356,7 @@ class AggregationBlocks {
 
 			Builder builder = CodeBlock.builder();
 
-			builder.add(sortingStage(pageableProvider + ".getSort()", getOutputType(queryMethod)));
+			builder.add(sortingStage(pageableProvider + ".getSort()", getOutputType(simpleTypeHolder, queryMethod)));
 
 			builder.beginControlFlow("if ($L.isPaged())", pageableProvider);
 			builder.beginControlFlow("if ($L.getOffset() > 0)", pageableProvider);

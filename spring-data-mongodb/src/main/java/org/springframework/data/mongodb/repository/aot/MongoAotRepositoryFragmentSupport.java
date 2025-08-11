@@ -189,7 +189,6 @@ public class MongoAotRepositoryFragmentSupport {
 					criteria.lt(value);
 				}
 			}
-
 		};
 	}
 

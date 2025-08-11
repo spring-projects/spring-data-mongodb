@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.aot.AggregationBlocks.AggregationCodeBlockBuilder;
 import org.springframework.data.mongodb.repository.aot.AggregationBlocks.AggregationExecutionCodeBlockBuilder;
@@ -118,24 +119,28 @@ class MongoCodeBlocks {
 	 * Builder for generating aggregation (pipeline) parsing {@link CodeBlock}.
 	 *
 	 * @param context
+	 * @param simpleTypeHolder
 	 * @param queryMethod
 	 * @return
 	 */
 	static AggregationCodeBlockBuilder aggregationBlockBuilder(AotQueryMethodGenerationContext context,
+			SimpleTypeHolder simpleTypeHolder,
 			MongoQueryMethod queryMethod) {
-		return new AggregationCodeBlockBuilder(context, queryMethod);
+		return new AggregationCodeBlockBuilder(context, simpleTypeHolder, queryMethod);
 	}
 
 	/**
 	 * Builder for generating aggregation execution {@link CodeBlock}.
 	 *
 	 * @param context
+	 * @param simpleTypeHolder
 	 * @param queryMethod
 	 * @return
 	 */
 	static AggregationExecutionCodeBlockBuilder aggregationExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+			SimpleTypeHolder simpleTypeHolder,
 			MongoQueryMethod queryMethod) {
-		return new AggregationExecutionCodeBlockBuilder(context, queryMethod);
+		return new AggregationExecutionCodeBlockBuilder(context, simpleTypeHolder, queryMethod);
 	}
 
 	/**

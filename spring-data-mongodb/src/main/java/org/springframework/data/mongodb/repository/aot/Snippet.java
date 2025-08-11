@@ -195,7 +195,6 @@ interface Snippet {
 			public BuilderStyleBuilder with(Snippet snippet) {
 
 				Assert.notNull(targetMethodName, "TargetMethodName must be set before calling this method");
-
 				new BuilderStyleSnippet(targetVariableName, targetMethodName, snippet).appendTo(targetBuilder);
 				return this;
 			}

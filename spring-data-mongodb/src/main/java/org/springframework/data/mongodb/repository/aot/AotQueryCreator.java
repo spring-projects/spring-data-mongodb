@@ -68,13 +68,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @since 5.0
  */
-class AotQueryCreator {
-
-	private final MappingContext<?, MongoPersistentProperty> mappingContext;
-
-	public AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext) {
-		this.mappingContext = mappingContext;
-	}
+record AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext) {
 
 	@SuppressWarnings("NullAway")
 	AotStringQuery createQuery(PartTree partTree, QueryMethod queryMethod, Method source) {
@@ -129,7 +123,7 @@ class AotQueryCreator {
 				return criteria.is(param);
 			}
 
-			if(part.getType().equals(Type.NOT_LIKE)) {
+			if (part.getType().equals(Type.NOT_LIKE)) {
 				return criteria.raw("$not", param);
 			}
 
@@ -179,15 +173,16 @@ class AotQueryCreator {
 
 		private final List<Object> placeholders;
 
-		@Nullable Part getPartForIndex(PartTree partTree, Parameter parameter) {
-			if(!parameter.isBindable()) {
+		@Nullable
+		Part getPartForIndex(PartTree partTree, Parameter parameter) {
+			if (!parameter.isBindable()) {
 				return null;
 			}
 
 			List<Part> parts = partTree.getParts().stream().toList();
-			int counter  = 0;
+			int counter = 0;
 			for (Part part : parts) {
-				if(counter == parameter.getIndex()) {
+				if (counter == parameter.getIndex()) {
 					return part;
 				}
 				counter += part.getNumberOfArguments();
@@ -196,16 +191,13 @@ class AotQueryCreator {
 		}
 
 		public PlaceholderParameterAccessor(PartTree partTree, QueryMethod queryMethod) {
-			
 
 			if (queryMethod.getParameters().getNumberOfParameters() == 0) {
 				placeholders = List.of();
 			} else {
 
-
 				placeholders = new ArrayList<>();
 				Parameters<?, ?> parameters = queryMethod.getParameters();
-
 
 				for (Parameter parameter : parameters.toList()) {
 					if (ClassUtils.isAssignable(GeoJson.class, parameter.getType())) {
@@ -224,8 +216,15 @@ class AotQueryCreator {
 						placeholders.add(parameter.getIndex(), AotPlaceholders.regex(parameter.getIndex(), null));
 					} else {
 						Part partForIndex = getPartForIndex(partTree, parameter);
-						if(partForIndex != null && (partForIndex.getType().equals(Type.LIKE) || partForIndex.getType().equals(Type.NOT_LIKE))) {
-							placeholders.add(parameter.getIndex(), AotPlaceholders.regex(parameter.getIndex(), partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS) || partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.WHEN_POSSIBLE) ? "i": null));
+						if (partForIndex != null
+								&& (partForIndex.getType().equals(Type.LIKE) || partForIndex.getType().equals(Type.NOT_LIKE))) {
+							placeholders
+									.add(parameter.getIndex(),
+											AotPlaceholders
+													.regex(parameter.getIndex(),
+															partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS)
+																	|| partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.WHEN_POSSIBLE) ? "i"
+																			: null));
 						} else {
 							placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
 						}

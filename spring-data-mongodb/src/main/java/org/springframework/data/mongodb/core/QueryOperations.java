@@ -377,7 +377,7 @@ class QueryOperations {
 				mappedFields = queryMapper.getMappedFields(fields, entity);
 			} else {
 				mappedFields = propertyOperations.computeMappedFieldsForProjection(projection, fields);
-				if(projection.getMappedType().getType().isInterface()) {
+				if (projection.getMappedType().getType().isInterface()) {
 					mappedFields = queryMapper.getMappedFields(mappedFields, entity);
 				}
 				mappedFields = queryMapper.addMetaAttributes(mappedFields, entity);

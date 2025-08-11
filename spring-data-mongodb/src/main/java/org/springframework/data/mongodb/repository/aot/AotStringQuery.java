@@ -28,7 +28,6 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.aot.AotPlaceholders.Placeholder;
 import org.springframework.data.mongodb.repository.aot.AotPlaceholders.RegexPlaceholder;
 import org.springframework.util.StringUtils;
 
@@ -80,19 +79,20 @@ class AotStringQuery extends Query {
 	}
 
 	boolean isRegexPlaceholderAt(int index) {
-		if(this.placeholders.isEmpty()) {
+		if (this.placeholders.isEmpty()) {
 			return false;
 		}
 
 		return this.placeholders.get(index) instanceof RegexPlaceholder;
 	}
 
-	@Nullable String getRegexOptions(int index) {
-		if(this.placeholders.isEmpty()) {
+	@Nullable
+	String getRegexOptions(int index) {
+		if (this.placeholders.isEmpty()) {
 			return null;
 		}
 
-		return this.placeholders.get(index) instanceof RegexPlaceholder rgp ? rgp.regexOptions() :  null;
+		return this.placeholders.get(index) instanceof RegexPlaceholder rgp ? rgp.regexOptions() : null;
 	}
 
 	@Override

@@ -15,31 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.domain.Sort.Direction.ASC;
-import static org.springframework.data.domain.Sort.Direction.DESC;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.DEFAULT_CONTEXT;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.bind;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucket;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucketAuto;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.count;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.facet;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.lookup;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregationOptions;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.out;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.previousOperation;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.replaceRoot;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.sample;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.skip;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThatIllegalArgumentException;
+import static org.springframework.data.domain.Sort.Direction.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.io.BufferedInputStream;
 import java.text.ParseException;
@@ -67,6 +46,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
@@ -574,7 +554,7 @@ public class AggregationTests {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		
+
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
@@ -3116,8 +3096,8 @@ public class AggregationTests {
 		}
 	}
 
-	@Test
-	void xxx() {
+	@Test // GH-5027
+	void shouldAggregateAsInterface() {
 
 		MyOhMy source = new MyOhMy();
 		source.id = "id-1";
@@ -3127,8 +3107,8 @@ public class AggregationTests {
 		mongoTemplate.save(source);
 
 		TypedAggregation<MyOhMy> agg = newAggregation(MyOhMy.class, project("firstname"));
-		AggregationResults<MyMyOh> aggregate = mongoTemplate.aggregate(agg, MyMyOh.class);
-		assertThat(aggregate.getMappedResults()).hasOnlyElementsOfType(MyMyOh.class);
+		AggregationResults<MyMyOhInterface> aggregate = mongoTemplate.aggregate(agg, MyMyOhInterface.class);
+		assertThat(aggregate.getMappedResults()).hasOnlyElementsOfType(MyMyOhInterface.class);
 	}
 
 	static class MyOhMy {
@@ -3137,7 +3117,7 @@ public class AggregationTests {
 		String lastname;
 	}
 
-	interface MyMyOh {
+	interface MyMyOhInterface {
 		String getFirstname();
 	}
 }
