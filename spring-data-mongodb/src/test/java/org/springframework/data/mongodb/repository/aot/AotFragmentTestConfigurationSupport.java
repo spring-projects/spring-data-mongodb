@@ -74,10 +74,11 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 
 		repositoryContext.setBeanFactory(beanFactory);
 		new MongoRepositoryContributor(repositoryContext).contribute(generationContext);
+		generationContext.writeGeneratedContent();
 
 		AbstractBeanDefinition aotGeneratedRepository = BeanDefinitionBuilder
 				.genericBeanDefinition(
-						repositoryInterface.getPackageName() + "." + repositoryInterface.getSimpleName() + "Impl__Aot") //
+						repositoryInterface.getPackageName() + "." + repositoryInterface.getSimpleName() + "Impl__AotRepository") //
 				.addConstructorArgValue(new RuntimeBeanReference(MongoOperations.class)) //
 				.addConstructorArgValue(getCreationContext(repositoryContext)).getBeanDefinition();
 

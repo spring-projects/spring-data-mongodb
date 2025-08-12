@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import example.aot.User;
 import example.aot.UserRepository;
@@ -30,7 +30,6 @@ import javax.lang.model.element.Modifier;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -57,7 +56,6 @@ import org.springframework.data.repository.aot.generate.AotRepositoryFragmentMet
 import org.springframework.data.repository.aot.generate.MethodContributor;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.javapoet.ClassName;
 import org.springframework.javapoet.FieldSpec;
 import org.springframework.javapoet.MethodSpec;
 
@@ -405,7 +403,7 @@ class QueryMethodContributionUnitTests {
 			Assertions.fail("No contribution for method %s.%s(%s)".formatted(repository.getSimpleName(), methodName,
 					Arrays.stream(args).map(Class::getSimpleName).toList()));
 		}
-		AotRepositoryFragmentMetadata metadata = new AotRepositoryFragmentMetadata(ClassName.get(repository));
+		AotRepositoryFragmentMetadata metadata = new AotRepositoryFragmentMetadata();
 		metadata.addField(
 				FieldSpec.builder(MongoOperations.class, "mongoOperations", Modifier.PRIVATE, Modifier.FINAL).build());
 

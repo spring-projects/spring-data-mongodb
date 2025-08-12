@@ -67,7 +67,7 @@ class MongoRepositoryContributorUnitTests {
 	void shouldConsiderMetaAnnotation() throws IOException {
 
 		InputStreamSource aotFragment = generationContext.getGeneratedFiles().getGeneratedFile(GeneratedFiles.Kind.SOURCE,
-				MetaUserRepository.class.getPackageName().replace('.', '/') + "/MetaUserRepositoryImpl__Aot.java");
+				MetaUserRepository.class.getPackageName().replace('.', '/') + "/MetaUserRepositoryImpl__AotRepository.java");
 
 		String content = new InputStreamResource(aotFragment).getContentAsString(StandardCharsets.UTF_8);
 

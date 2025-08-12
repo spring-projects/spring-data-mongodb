@@ -103,6 +103,7 @@ class AotContributionIntegrationTests {
 
 		TestGenerationContext generationContext = new TestGenerationContext();
 		generator.processAheadOfTime(context, generationContext);
+		generationContext.writeGeneratedContent();
 		return generationContext;
 	}
 
