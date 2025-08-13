@@ -69,10 +69,16 @@ public @interface Meta {
 
 	/**
 	 * When set to {@literal true}, aggregation stages can write data to disk.
+	 * Valid arguments are:
+	 * <dl>
+	 *     <dt>""</dt><dd>DiskUse#DEFAULT</dd>
+	 *     <dt>true|allow</dt><dd>DiskUse#ALLOW</dd>
+	 *     <dt>false|deny</dt><dd>DiskUse#DENY</dd>
+	 * </dl>
 	 *
 	 * @return {@literal false} by default.
 	 * @since 3.0
-	 * @see Aggregation
+	 * @see org.springframework.data.mongodb.core.query.DiskUse
 	 */
 	String allowDiskUse() default "";
 

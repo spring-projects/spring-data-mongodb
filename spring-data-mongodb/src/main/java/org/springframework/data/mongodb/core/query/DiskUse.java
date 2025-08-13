@@ -19,23 +19,60 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
+ * Disk use indicates if the MongoDB server is allowed to write temporary files to disk during query/aggregation
+ * execution. MongoDB 6.0 server (and later) default for {@literal allowDiskUseByDefault} is {@literal true} on server
+ * side.
+ *
  * @author Christoph Strobl
+ * @since 5.0
  */
 public enum DiskUse {
 
-	DEFAULT, ALLOW, DENY;
+	/**
+	 * Go with the server default value and do not specify any override.
+	 */
+	DEFAULT,
 
+	/**
+	 * Override server default value and explicitly allow disk writes.
+	 */
+	ALLOW,
+
+	/**
+	 * Override server default value and explicitly deny disk writes.
+	 */
+	DENY;
+
+	/**
+	 * Obtain the {@link DiskUse} corresponding to the given Boolean flag. {@literal null} is considered {@link #DEFAULT},
+	 * {@literal true} as {@link #ALLOW}, {@literal false} as {@link #DENY}.
+	 *
+	 * @param value can be {@literal null}.
+	 * @return the {@link DiskUse} corresponding to the given value.
+	 */
 	public static DiskUse of(@Nullable Boolean value) {
 		return value != null ? (value ? ALLOW : DENY) : DEFAULT;
 	}
 
-	public static DiskUse of(String value) {
+	/**
+	 * Obtain the {@link DiskUse} referred to by the given value. Considers {@literal null} or empty Strings as
+	 * {@link #DEFAULT}, {@literal true} as {@link #ALLOW}, {@literal false} as {@link #DENY} and delegates other values
+	 * to {@link #valueOf(String)}.
+	 *
+	 * @param value can be {@literal null}.
+	 * @return the {@link DiskUse} corresponding to the given value.
+	 * @throws IllegalArgumentException if not matching {@link DiskUse} found.
+	 */
+	public static DiskUse of(@Nullable String value) {
+
 		if (!StringUtils.hasText(value)) {
 			return DEFAULT;
 		}
-		if (value.toLowerCase().equalsIgnoreCase("true")) {
-			return ALLOW;
-		}
-		return valueOf(value.toUpperCase());
+
+		return switch (value) {
+			case "true" -> ALLOW;
+			case "false" -> DENY;
+			default -> valueOf(value.toUpperCase());
+		};
 	}
 }
