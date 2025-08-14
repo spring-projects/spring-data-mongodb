@@ -28,7 +28,7 @@ class MyListener {
   public void initIndicesAfterStartup() {
 
     MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
-                .getConverter().getMappingContext();
+      .getConverter().getMappingContext();
 
     IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
 
@@ -43,25 +43,25 @@ class MyListener {
 ====
 [source,java]
 ----
-class MyListener{
+class MyListener {
 
   @EventListener(ContextRefreshedEvent.class)
   public void initIndicesAfterStartup() {
 
-    MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
-        .getConverter().getMappingContext();
+    MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate.
+      getConverter().getMappingContext();
 
     IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
 
-    // consider only entities that are annotated with @Document
+      // consider only entities that are annotated with @Document
     mappingContext.getPersistentEntities()
-                            .stream()
-                            .filter(it -> it.isAnnotationPresent(Document.class))
-                            .forEach(it -> {
+      .stream()
+      .filter(it -> it.isAnnotationPresent(Document.class))
+      .forEach(it -> {
 
-    IndexOperations indexOps = mongoTemplate.indexOps(it.getType());
-    resolver.resolveIndexFor(it.getType()).forEach(indexOps::ensureIndex);
-    });
+        IndexOperations indexOps = mongoTemplate.indexOps(it.getType());
+        resolver.resolveIndexFor(it.getType()).forEach(indexOps::ensureIndex);
+      });
   }
 }
 ----
