@@ -30,6 +30,7 @@ import org.springframework.lang.Nullable;
  * observability systems.
  *
  * @author Mark Paluch
+ * @since 4.4.9
  */
 class Observer {
 
@@ -40,7 +41,7 @@ class Observer {
 	 *
 	 * @return a new {@link Observer}.
 	 */
-	public static Observer create() {
+	static Observer create() {
 		return new Observer();
 	}
 
@@ -53,7 +54,7 @@ class Observer {
 	 * @return the stateful {@link Observer}.
 	 * @param <C> context type.
 	 */
-	public static <C> Observer fromContext(@Nullable C context, Consumer<? super ContextualObserver<C>> consumer) {
+	static <C> Observer fromContext(@Nullable C context, Consumer<? super ContextualObserver<C>> consumer) {
 
 		Observer contributor = create();
 
@@ -68,7 +69,7 @@ class Observer {
 	 * @param keyValue
 	 * @return
 	 */
-	public Observer contribute(MongoKeyName.MongoKeyValue keyValue) {
+	Observer contribute(MongoKeyName.MongoKeyValue keyValue) {
 
 		keyValues.add(keyValue);
 
@@ -83,7 +84,7 @@ class Observer {
 	 * @return the nested contextual {@link ContextualObserver} that can contribute key-value tuples.
 	 * @param <C>
 	 */
-	public <C> ContextualObserver<C> contextual(@Nullable C context) {
+	<C> ContextualObserver<C> contextual(@Nullable C context) {
 
 		if (context == null) {
 			return new EmptyContextualObserver<>(keyValues);
@@ -92,15 +93,11 @@ class Observer {
 		return new DefaultContextualObserver<>(context, keyValues);
 	}
 
-	public <T> ContextualObserver<T> empty(Class<T> targetType) {
-		return new EmptyContextualObserver<>(this.keyValues);
-	}
-
-	public KeyValues toKeyValues() {
+	KeyValues toKeyValues() {
 		return KeyValues.of(keyValues);
 	}
 
-	public KeyName[] toKeyNames() {
+	KeyName[] toKeyNames() {
 
 		KeyName[] keyNames = new KeyName[keyValues.size()];
 
