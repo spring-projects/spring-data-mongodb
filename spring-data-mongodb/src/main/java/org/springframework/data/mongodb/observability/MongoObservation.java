@@ -15,11 +15,17 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import static org.springframework.data.mongodb.observability.MongoKeyName.*;
+import static org.springframework.data.mongodb.observability.MongoKeyName.MongoKeyValue;
+import static org.springframework.data.mongodb.observability.MongoKeyName.just;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.ObservationDocumentation;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
+
+import org.springframework.lang.Contract;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -86,7 +92,7 @@ enum MongoObservation implements ObservationDocumentation {
 		static MongoKeyName<ServerAddress> NET_PEER_PORT = MongoKeyName.required("net.peer.port", ServerAddress::getPort);
 
 		static MongoKeyName<ConnectionString> DB_CONNECTION_STRING = MongoKeyName.requiredString("db.connection_string",
-				Object::toString);
+				MongoObservation::connectionString);
 		static MongoKeyName<ConnectionString> DB_USER = MongoKeyName.requiredString("db.user",
 				ConnectionString::getUsername);
 
@@ -96,7 +102,7 @@ enum MongoObservation implements ObservationDocumentation {
 		 * @param context the context to contribute from, can be {@literal null} if no context is available.
 		 * @return the key value contributor providing low cardinality key names.
 		 */
-		public static Observer observe(@Nullable MongoHandlerContext context) {
+		static Observer observe(@Nullable MongoHandlerContext context) {
 
 			return Observer.fromContext(context, it -> {
 
@@ -115,9 +121,51 @@ enum MongoObservation implements ObservationDocumentation {
 		 *
 		 * @return the key names for low cardinality keys.
 		 */
-		public static KeyName[] getKeyNames() {
+		static KeyName[] getKeyNames() {
 			return observe(null).toKeyNames();
 		}
 	}
 
+	@Contract("null -> null")
+	static @Nullable String connectionString(@Nullable ConnectionString connectionString) {
+
+		if (connectionString == null) {
+			return null;
+		}
+
+		if (!StringUtils.hasText(connectionString.getUsername()) && connectionString.getPassword() == null) {
+			return connectionString.toString();
+		}
+
+		String target = renderPart(connectionString.toString(), "//", connectionString.getUsername());
+
+		if (connectionString.getPassword() != null) {
+
+			String rendered = renderPart(target, ":", new String(connectionString.getPassword()));
+			if (!rendered.equals(target)) {
+				target = rendered;
+			} else {
+				String protocol = connectionString.isSrvProtocol() ? "mongodb+srv" : "mongodb";
+				target = "%s://*****:*****@%s".formatted(protocol,
+						StringUtils.collectionToCommaDelimitedString(connectionString.getHosts()));
+			}
+		}
+
+		return target;
+	}
+
+	private static String renderPart(String source, String prefix, @Nullable String part) {
+
+		if (!StringUtils.hasText(part)) {
+			return source;
+		}
+
+		String intermediate = source.replaceFirst(prefix + Pattern.quote(part), "%s*****".formatted(prefix));
+		if (!intermediate.equals(source)) {
+			return intermediate;
+		}
+
+		String encoded = URLEncoder.encode(part, StandardCharsets.UTF_8);
+		return source.replaceFirst(prefix + Pattern.quote(encoded), "%s*****".formatted(prefix));
+	}
 }
