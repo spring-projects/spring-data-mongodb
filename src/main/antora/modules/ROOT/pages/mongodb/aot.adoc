@@ -76,7 +76,7 @@ These are typically all query methods that are not backed by an xref:repositorie
 
 **Limitations**
 
-* `@Meta.allowDiskUse` and `flags` are not evaluated.
+* `@Meta.flags` is not evaluated.
 * Limited `Collation` detection.
 * No support for in-clauses with pattern matching / case insensitivity
 

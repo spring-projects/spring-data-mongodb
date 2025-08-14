@@ -15,31 +15,35 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.Locale;
+
 import org.jspecify.annotations.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
  * Disk use indicates if the MongoDB server is allowed to write temporary files to disk during query/aggregation
- * execution. MongoDB 6.0 server (and later) default for {@literal allowDiskUseByDefault} is {@literal true} on server
- * side.
+ * execution. MongoDB 6.0 server (and later) default for {@literal allowDiskUseByDefault} is {@literal true} on the
+ * server side.
  *
  * @author Christoph Strobl
  * @since 5.0
+ * @see com.mongodb.client.FindIterable#allowDiskUse(Boolean)
+ * @see com.mongodb.reactivestreams.client.FindPublisher#allowDiskUse(Boolean)
  */
 public enum DiskUse {
 
 	/**
-	 * Go with the server default value and do not specify any override.
+	 * Use the server default value and do not specify any override.
 	 */
 	DEFAULT,
 
 	/**
-	 * Override server default value and explicitly allow disk writes.
+	 * Allow disk writes.
 	 */
 	ALLOW,
 
 	/**
-	 * Override server default value and explicitly deny disk writes.
+	 * Explicitly deny disk writes.
 	 */
 	DENY;
 
@@ -69,10 +73,10 @@ public enum DiskUse {
 			return DEFAULT;
 		}
 
-		return switch (value) {
+		return switch (value.toLowerCase(Locale.ROOT)) {
 			case "true" -> ALLOW;
 			case "false" -> DENY;
-			default -> valueOf(value.toUpperCase());
+			default -> valueOf(value.toUpperCase(Locale.ROOT));
 		};
 	}
 }

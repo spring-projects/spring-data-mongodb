@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
-import static org.springframework.util.ObjectUtils.nullSafeEquals;
-import static org.springframework.util.ObjectUtils.nullSafeHashCode;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
+import static org.springframework.util.ObjectUtils.*;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -32,6 +31,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.OffsetScrollPosition;
@@ -585,6 +585,17 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 		return diskUse(DiskUse.of(allowDiskUse));
 	}
 
+	/**
+	 * Configures writing to temporary files for aggregation stages and queries. When set to {@link DiskUse#ALLOW},
+	 * aggregation stages can write data to the {@code _tmp} subdirectory in the {@code dbPath} directory.
+	 * <p>
+	 * Note that the default value for {@literal allowDiskUseByDefault} is {@literal true} on the server side since
+	 * MongoDB 6.0.
+	 *
+	 * @param diskUse
+	 * @return this.
+	 * @since 5.0
+	 */
 	@Contract("_ -> this")
 	public Query diskUse(DiskUse diskUse) {
 

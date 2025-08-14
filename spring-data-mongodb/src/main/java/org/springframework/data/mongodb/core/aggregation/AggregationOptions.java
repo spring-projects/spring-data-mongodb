@@ -146,6 +146,8 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	private AggregationOptions(DiskUse diskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation, @Nullable String comment, @Nullable Object hint) {
 
+		Assert.notNull(diskUse, "DiskUse must not be null");
+
 		this.diskUse = diskUse;
 		this.explain = explain;
 		this.cursor = Optional.ofNullable(cursor);
@@ -442,7 +444,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 */
 	public static class Builder {
 
-		private @Nullable DiskUse diskUse = DiskUse.DEFAULT;
+		private DiskUse diskUse = DiskUse.DEFAULT;
 		private boolean explain;
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
@@ -470,9 +472,12 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 *
 		 * @param diskUse use {@literal true} to allow disk use during the aggregation.
 		 * @return this.
+		 * @since 5.0
 		 */
 		@Contract("_ -> this")
 		public Builder diskUse(DiskUse diskUse) {
+
+			Assert.notNull(diskUse, "DiskUse must not be null");
 
 			this.diskUse = diskUse;
 			return this;

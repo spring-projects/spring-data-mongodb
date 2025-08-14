@@ -672,7 +672,7 @@ Use the `@Meta` annotation to set those options via `maxExecutionTimeMs`, `comme
 ----
 interface PersonRepository extends CrudRepository<Person, String> {
 
-  @Meta(allowDiskUse = true)
+  @Meta(allowDiskUse = "true")
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
   List<PersonAggregate> groupByLastnameAndFirstnames();
 }
@@ -684,7 +684,7 @@ Or use `@Meta` to create your own annotation as shown in the sample below.
 ----
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
-@Meta(allowDiskUse = true)
+@Meta(allowDiskUse = "true")
 @interface AllowDiskUse { }
 
 interface PersonRepository extends CrudRepository<Person, String> {

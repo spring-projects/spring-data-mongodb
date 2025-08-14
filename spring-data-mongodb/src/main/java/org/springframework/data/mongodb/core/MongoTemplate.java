@@ -3558,7 +3558,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			Meta meta = query.getMeta();
 			HintFunction hintFunction = HintFunction.from(query.getHint());
-			if (skip <= 0 && limit <= 0 && ObjectUtils.isEmpty(sortObject) && hintFunction.isEmpty() && !meta.hasValues()
+			if (skip <= 0 && limit <= 0 && ObjectUtils.isEmpty(sortObject) && hintFunction.isEmpty() && meta.isEmpty()
 					&& query.getCollation().isEmpty()) {
 				return cursorToUse;
 			}

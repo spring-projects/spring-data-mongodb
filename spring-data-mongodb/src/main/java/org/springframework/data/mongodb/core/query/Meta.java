@@ -247,15 +247,33 @@ public class Meta {
 		setDiskUse(DiskUse.of(allowDiskUse));
 	}
 
+	/**
+	 * Sets the {@link DiskUse} to control whether temporary files are allowed to be written to disk during query.
+	 *
+	 * @param diskUse must not be {@literal null}.
+	 * @since 5.0
+	 */
 	public void setDiskUse(DiskUse diskUse) {
+
+		Assert.notNull(diskUse, "DiskUse must not be null");
+
 		this.diskUse = diskUse;
 	}
 
 	/**
-	 * @return
+	 * @return {@literal true} there is at least one values, flags, cursor batch size, or disk use set; {@literal false}
+	 *         otherwise.
 	 */
 	public boolean hasValues() {
-		return !this.values.isEmpty() || !this.flags.isEmpty() || this.cursorBatchSize != null || !this.diskUse.equals(DiskUse.DEFAULT);
+		return !isEmpty();
+	}
+
+	/**
+	 * @return {@literal true} if no values, flags, cursor batch size and disk use are set; {@literal false} otherwise.
+	 */
+	public boolean isEmpty() {
+		return this.values.isEmpty() && this.flags.isEmpty() && this.cursorBatchSize == null
+				&& this.diskUse.equals(DiskUse.DEFAULT);
 	}
 
 	/**
@@ -303,6 +321,8 @@ public class Meta {
 
 		int hash = ObjectUtils.nullSafeHashCode(this.values);
 		hash += ObjectUtils.nullSafeHashCode(this.flags);
+		hash += ObjectUtils.nullSafeHashCode(this.cursorBatchSize);
+		hash += ObjectUtils.nullSafeHashCode(this.diskUse);
 		return hash;
 	}
 
@@ -320,7 +340,16 @@ public class Meta {
 		if (!ObjectUtils.nullSafeEquals(this.values, other.values)) {
 			return false;
 		}
-		return ObjectUtils.nullSafeEquals(this.flags, other.flags);
+
+		if (!ObjectUtils.nullSafeEquals(this.flags, other.flags)) {
+			return false;
+		}
+
+		if (!ObjectUtils.nullSafeEquals(this.cursorBatchSize, other.cursorBatchSize)) {
+			return false;
+		}
+
+		return ObjectUtils.nullSafeEquals(this.diskUse, other.diskUse);
 	}
 
 	/**

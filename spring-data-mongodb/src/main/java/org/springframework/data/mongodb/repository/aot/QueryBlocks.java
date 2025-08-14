@@ -239,14 +239,16 @@ class QueryBlocks {
 			if (StringUtils.hasText(source.getQuery().getFieldsString())) {
 
 				VariableSnippet fields = Snippet.declare(builder).variable(Document.class, context.localVariable("fields"))
-						.of(MongoCodeBlocks.asDocument(context.getExpressionMarker(), source.getQuery().getFieldsString(), queryParameters.get()));
+						.of(MongoCodeBlocks.asDocument(context.getExpressionMarker(), source.getQuery().getFieldsString(),
+								queryParameters.get()));
 				builder.addStatement("$L.setFieldsObject($L)", queryVariableName, fields.getVariableName());
 			}
 
 			if (StringUtils.hasText(source.getQuery().getSortString())) {
 
 				VariableSnippet sort = Snippet.declare(builder).variable(Document.class, context.localVariable("sort"))
-						.of(MongoCodeBlocks.asDocument(context.getExpressionMarker(), source.getQuery().getSortString(), getQueryParameters()));
+						.of(MongoCodeBlocks.asDocument(context.getExpressionMarker(), source.getQuery().getSortString(),
+								getQueryParameters()));
 				builder.addStatement("$L.setSortObject($L)", queryVariableName, sort.getVariableName());
 			}
 
@@ -312,13 +314,11 @@ class QueryBlocks {
 					} else {
 
 						if (getQueryParameters().isEmpty()) {
-							builder.addStatement(
-									"$L.collation(collationOf(evaluate($L, $S)))",
-									queryVariableName, context.getExpressionMarker().enclosingMethod(), collationString);
+							builder.addStatement("$L.collation(collationOf(evaluate($L, $S)))", queryVariableName,
+									context.getExpressionMarker().enclosingMethod(), collationString);
 						} else {
-							builder.addStatement(
-									"$L.collation(collationOf(evaluate($L, $S, $L)))",
-									queryVariableName, context.getExpressionMarker().enclosingMethod(), collationString, getQueryParameters());
+							builder.addStatement("$L.collation(collationOf(evaluate($L, $S, $L)))", queryVariableName,
+									context.getExpressionMarker().enclosingMethod(), collationString, getQueryParameters());
 						}
 					}
 				}
@@ -346,7 +346,8 @@ class QueryBlocks {
 				if (getQueryParameters().isEmpty()) {
 					builder.add("createQuery($L, $S)", context.getExpressionMarker().enclosingMethod(), source);
 				} else {
-					builder.add("createQuery($L, $S, $L)", context.getExpressionMarker().enclosingMethod(), source, getQueryParameters());
+					builder.add("createQuery($L, $S, $L)", context.getExpressionMarker().enclosingMethod(), source,
+							getQueryParameters());
 				}
 				return builder.build();
 			} else {
