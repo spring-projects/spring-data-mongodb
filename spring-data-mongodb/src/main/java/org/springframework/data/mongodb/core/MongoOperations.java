@@ -1426,8 +1426,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Id from MongoDB. If your Id property is a String then MongoDB ObjectId will be used to populate that string.
 	 * Otherwise, the conversion from ObjectId to your property type will be handled by Spring's BeanWrapper class that
 	 * leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
-	 * Type Conversion"</a> for more details. <br />
+	 * <a href="https://docs.spring.io/spring-framework/reference/core/validation/convert.html">Spring's Type
+	 * Conversion</a> for more details. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the
 	 * {@link #save(Object)} method.
 	 * <p>
@@ -1514,8 +1514,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
-	 * Type Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring-framework/reference/core/validation/convert.html">Spring's Type
+	 * Conversion</a> for more details.
 	 * <p>
 	 * A potential {@link org.springframework.data.annotation.Version} the property will be auto incremented. The
 	 * operation raises an error in case the document has been modified in between.
@@ -1540,7 +1540,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * <a href="https://docs.spring.io/spring-framework/reference/core/validation/convert.html">Spring's Type
 	 * Conversion</a> for more details.
 	 * <p>
 	 * A potential {@link org.springframework.data.annotation.Version} the property will be auto incremented. The

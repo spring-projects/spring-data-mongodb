@@ -120,7 +120,7 @@ Alternatively, you can also provide a `Document`.
 
 The MongoDB's driver uses `AsyncInputStream` and `AsyncOutputStream` interfaces to exchange binary streams.
 Spring Data MongoDB adapts these interfaces to `Publisher<DataBuffer>`.
-Read more about `DataBuffer` in https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html#databuffers[Spring's reference documentation].
+Read more about `DataBuffer` in {spring-framework-docs}/core/databuffer-codec.html[Spring's reference documentation].
 ====
 ======
 
