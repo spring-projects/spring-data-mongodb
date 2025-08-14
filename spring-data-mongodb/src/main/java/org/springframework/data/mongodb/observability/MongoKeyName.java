@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 the original author or authors.
+ * Copyright 2025-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import org.springframework.util.StringUtils;
  * {@link KeyValue} and {@link KeyName}.
  *
  * @author Mark Paluch
+ * @since 4.4.9
  */
 record MongoKeyName<C>(String name, boolean required, Function<C, @Nullable Object> valueFunction) implements KeyName {
 
@@ -44,7 +45,7 @@ record MongoKeyName<C>(String name, boolean required, Function<C, @Nullable Obje
 	 * @return
 	 * @param <C>
 	 */
-	public static <C> MongoKeyName<C> required(String name, Function<C, @Nullable Object> valueFunction) {
+	static <C> MongoKeyName<C> required(String name, Function<C, @Nullable Object> valueFunction) {
 		return required(name, valueFunction, Objects::nonNull);
 	}
 

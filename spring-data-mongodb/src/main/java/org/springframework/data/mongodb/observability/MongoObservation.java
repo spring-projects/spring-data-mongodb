@@ -15,16 +15,15 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import static org.springframework.data.mongodb.observability.MongoKeyName.*;
+import static org.springframework.data.mongodb.observability.MongoKeyName.MongoKeyValue;
+import static org.springframework.data.mongodb.observability.MongoKeyName.just;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.ObservationDocumentation;
 
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.util.StringUtils;
 
-import com.mongodb.ConnectionString;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandEvent;
@@ -86,24 +85,18 @@ enum MongoObservation implements ObservationDocumentation {
 		static MongoKeyName<ServerAddress> NET_PEER_NAME = MongoKeyName.required("net.peer.name", ServerAddress::getHost);
 		static MongoKeyName<ServerAddress> NET_PEER_PORT = MongoKeyName.required("net.peer.port", ServerAddress::getPort);
 
-		static MongoKeyName<ConnectionString> DB_CONNECTION_STRING = MongoKeyName.requiredString("db.connection_string",
-				Object::toString);
-		static MongoKeyName<ConnectionString> DB_USER = MongoKeyName.requiredString("db.user",
-				ConnectionString::getUsername);
-
 		/**
 		 * Observe low cardinality key values for the given {@link MongoHandlerContext}.
 		 *
 		 * @param context the context to contribute from, can be {@literal null} if no context is available.
 		 * @return the key value contributor providing low cardinality key names.
 		 */
-		public static Observer observe(@Nullable MongoHandlerContext context) {
+		static Observer observe(@Nullable MongoHandlerContext context) {
 
 			return Observer.fromContext(context, it -> {
 
 				it.contribute(DB_SYSTEM).contribute(MONGODB_COMMAND, DB_NAME, MONGODB_COLLECTION);
 
-				it.nested(MongoHandlerContext::getConnectionString).contribute(DB_CONNECTION_STRING, DB_USER);
 				it.nested(MongoHandlerContext::getCommandStartedEvent) //
 						.nested(CommandEvent::getConnectionDescription).contribute(MONGODB_CLUSTER_ID) //
 						.nested(ConnectionDescription::getServerAddress) //
@@ -116,9 +109,8 @@ enum MongoObservation implements ObservationDocumentation {
 		 *
 		 * @return the key names for low cardinality keys.
 		 */
-		public static KeyName[] getKeyNames() {
+		static KeyName[] getKeyNames() {
 			return observe(null).toKeyNames();
 		}
 	}
-
 }

@@ -81,13 +81,17 @@ public class ImperativeIntegrationTests extends SampleTestRunner {
 
 			for (FinishedSpan span : tracer.getFinishedSpans()) {
 
-				assertThat(span.getTags()).containsEntry("db.system", "mongodb").containsEntry("net.transport", "IP.TCP");
+				assertThat(span.getTags()) //
+					.containsEntry("db.system", "mongodb") //
+					.containsEntry("net.transport", "IP.TCP") //
+					.doesNotContainKey("db.connection_string") //
+					.doesNotContainKey("db.user");
 
 				if (MongoClientVersion.isVersion5orNewer()) {
-					assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
+					assertThat(span.getTags()).containsKeys("db.name", "db.operation",
 							"db.mongodb.collection", "net.peer.name", "net.peer.port");
 				} else {
-					assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
+					assertThat(span.getTags()).containsKeys("db.name", "db.operation",
 						"db.mongodb.collection", "net.peer.name", "net.peer.port", "net.sock.peer.addr", "net.sock.peer.port");
 				}
 			}
