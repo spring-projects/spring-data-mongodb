@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>3.5.3</version>
+		<version>3.5.4-SNAPSHOT</version>
 	</parent>
 
 	<modules>
@@ -26,7 +26,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>3.5.3</springdata.commons>
+		<springdata.commons>3.5.4-SNAPSHOT</springdata.commons>
 		<mongo>5.5.1</mongo>
 		<jmh.version>1.19</jmh.version>
 	</properties>
@@ -157,8 +157,20 @@
 
 
 	<repositories>
-		
-		
+		<repository>
+			<id>spring-snapshot</id>
+			<url>https://repo.spring.io/snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+		<repository>
+			<id>spring-milestone</id>
+			<url>https://repo.spring.io/milestone</url>
+		</repository>
 	</repositories>
 
 </project>
