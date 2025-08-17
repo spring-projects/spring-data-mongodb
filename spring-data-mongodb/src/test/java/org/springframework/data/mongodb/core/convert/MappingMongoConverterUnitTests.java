@@ -123,6 +123,7 @@ import com.mongodb.DBRef;
  * @author Roman Puchkovskiy
  * @author Heesu Jung
  * @author Julia Lee
+ * @author Hyunsang Han
  */
 @ExtendWith(MockitoExtension.class)
 class MappingMongoConverterUnitTests {
@@ -135,8 +136,10 @@ class MappingMongoConverterUnitTests {
 	@BeforeEach
 	void beforeEach() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(
-				Arrays.asList(new ByteBufferToDoubleHolderConverter()));
+		MongoCustomConversions conversions = MongoCustomConversions.create(config -> {
+			config.bigDecimal(MongoCustomConversions.BigDecimalRepresentation.DECIMAL128);
+			config.registerConverter(new ByteBufferToDoubleHolderConverter());
+		});
 
 		mappingContext = new MongoMappingContext();
 		mappingContext.setApplicationContext(context);
@@ -412,6 +415,30 @@ class MappingMongoConverterUnitTests {
 		assertThat(result.value).isEqualTo(BigDecimal.valueOf(2.5d));
 		assertThat(result.map.get("foo")).isEqualTo(BigDecimal.valueOf(2.5d));
 		assertThat(result.collection.get(0)).isEqualTo(BigDecimal.valueOf(2.5d));
+	}
+
+	@Test // GH-5037
+	void requiresExplicitBigDecimalRepresentationConfiguration() {
+
+		assertThatThrownBy(() -> {
+			MongoCustomConversions customConversions = new MongoCustomConversions(Collections.emptyList());
+			MappingMongoConverter converter = new MappingMongoConverter(mock(DbRefResolver.class), mappingContext);
+			converter.setCustomConversions(customConversions);
+		}).isInstanceOf(IllegalStateException.class)
+		  .hasMessageContaining("BigDecimal representation must be explicitly configured");
+	}
+
+	@Test // GH-5037
+	void worksWithExplicitBigDecimalRepresentationConfiguration() {
+
+		MongoCustomConversions customConversions = MongoCustomConversions.create(config -> {
+			config.bigDecimal(MongoCustomConversions.BigDecimalRepresentation.DECIMAL128);
+		});
+
+		MappingMongoConverter converter = new MappingMongoConverter(mock(DbRefResolver.class), mappingContext);
+		converter.setCustomConversions(customConversions);
+		assertThat(converter).isNotNull();
+		assertThat(converter.getCustomConversions()).isEqualTo(customConversions);
 	}
 
 	@Test
@@ -3405,6 +3432,26 @@ class MappingMongoConverterUnitTests {
 
 		assertThat(document).containsEntry("value", "2.5");
 		assertThat(document).containsEntry("map.foo", "2.5");
+	}
+
+	@Test // GH-5037
+	void requiresExplicitConfigurationForBothBigDecimalAndUuid() {
+
+		MongoCustomConversions conversions = MongoCustomConversions.create(
+			it -> it.registerConverter(new ByteBufferToDoubleHolderConverter())
+					.bigDecimal(MongoCustomConversions.BigDecimalRepresentation.DECIMAL128));
+
+		assertThat(conversions).isNotNull();
+
+		assertThatThrownBy(() -> {
+			new MongoCustomConversions();
+		}).isInstanceOf(IllegalStateException.class)
+		.hasMessageContaining("BigDecimal representation must be explicitly configured");
+
+		assertThatThrownBy(() -> {
+			MongoCustomConversions.create(it -> it.registerConverter(new ByteBufferToDoubleHolderConverter()));
+		}).isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("BigDecimal representation must be explicitly configured");
 	}
 
 	private MappingMongoConverter createConverter(
