@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Amine Jaoui
  * @since 1.10
  */
 public abstract class BucketOperationSupport<T extends BucketOperationSupport<T, B>, B extends OutputBuilder<B, T>>
@@ -415,12 +416,13 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 */
 		protected ExposedFields asExposedFields() {
 
+			// The _id is always present after the bucket operation
+			ExposedFields fields = ExposedFields.from(new ExposedField(Fields.UNDERSCORE_ID, true));
 			// The count field is included by default when the output is not specified.
 			if (isEmpty()) {
-				return ExposedFields.from(new ExposedField("count", true));
+				fields = fields.and(new ExposedField("count", true));
 			}
 
-			ExposedFields fields = ExposedFields.from();
 
 			for (Output output : outputs) {
 				fields = fields.and(output.getExposedField());
