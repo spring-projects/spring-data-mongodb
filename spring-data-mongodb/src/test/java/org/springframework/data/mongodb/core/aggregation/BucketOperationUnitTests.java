@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucket;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,7 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link BucketOperation}.
  *
  * @author Mark Paluch
+ * @author Amine Jaoui
  */
 public class BucketOperationUnitTests {
 
@@ -194,13 +197,24 @@ public class BucketOperationUnitTests {
 				.isEqualTo(Document.parse("{ total : { $multiply: [ {$add : [\"$netPrice\", \"$tax\"]}, 5] } }"));
 	}
 
-	@Test // DATAMONGO-1552
-	public void shouldExposeDefaultCountField() {
+	@Test // GH-5046
+	public void shouldExposeDefaultFields() {
 
 		BucketOperation operation = bucket("field");
 
-		assertThat(operation.getFields().exposesSingleFieldOnly()).isTrue();
+		assertThat(operation.getFields().exposesNoNonSyntheticFields()).isTrue();
+		assertThat(operation.getFields().getField(Fields.UNDERSCORE_ID)).isNotNull();
 		assertThat(operation.getFields().getField("count")).isNotNull();
+	}
+
+	@Test // GH-5046
+	public void shouldExposeIDWhenCustomOutputField() {
+
+		BucketOperation operation = bucket("field").andOutputCount().as("score");
+
+		assertThat(operation.getFields().getField(Fields.UNDERSCORE_ID)).isNotNull();
+		assertThat(operation.getFields().getField("score")).isNotNull();
+		assertThat(operation.getFields().getField("count")).isNull();
 	}
 
 	private static Document extractOutput(Document fromBucketClause) {

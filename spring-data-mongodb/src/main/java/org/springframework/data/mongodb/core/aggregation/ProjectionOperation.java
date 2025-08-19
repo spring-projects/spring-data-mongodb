@@ -47,6 +47,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Amine Jaoui
  * @since 1.3
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/project/">MongoDB Aggregation Framework:
  *      $project</a>
@@ -1402,14 +1403,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 					if (SystemVariable.isReferingToSystemVariable(field.getTarget())) {
 						return field.getTarget();
-					}
-
-					if (field.getTarget().equals(Fields.UNDERSCORE_ID)) {
-						try {
-							return context.getReference(field).getReferenceValue();
-						} catch (java.lang.IllegalArgumentException e) {
-							return Fields.UNDERSCORE_ID_REF;
-						}
 					}
 
 					// check whether referenced field exists in the context
