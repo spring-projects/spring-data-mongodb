@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.springframework.data.mongodb.core.DocumentTestUtils.getAsDocument;
+import static org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.addField;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.DEFAULT_CONTEXT;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucket;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
@@ -43,7 +44,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
-import org.springframework.data.mongodb.core.aggregation.ProjectionOperationUnitTests.BookWithFieldAnnotation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -61,6 +61,7 @@ import com.mongodb.client.model.Projections;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Julia Lee
+ * @author Amine Jaoui
  */
 public class AggregationUnitTests {
 
@@ -605,16 +606,20 @@ public class AggregationUnitTests {
 				"{\"attributeRecordArrays\": {\"$reduce\": {\"input\": \"$attributeRecordArrays\", \"initialValue\": [], \"in\": {\"$concatArrays\": [\"$$value\", \"$$this\"]}}}}"));
 	}
 
-	@Test // DATAMONGO-2644
-	void projectOnIdIsAlwaysValid() {
+	@Test // GH-5046
+	void projectOnBucketIntervalId() {
 
-		MongoMappingContext mappingContext = new MongoMappingContext();
-		Document target = new Aggregation(bucket("start"), project("_id")).toDocument("collection-1",
-				new TypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
-						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)),
-						FieldLookupPolicy.relaxed()));
-
+		Document target = new Aggregation(bucket("start"), project("_id")).toDocument("collection-1", DEFAULT_CONTEXT);
 		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : 1 }"));
+	}
+
+	@Test // GH-5046
+	void addFieldFromBucketIntervalId() {
+
+		Document target = new Aggregation(bucket("start"), addField("bucketLabel").withValueOf("_id").build())
+				.toDocument("collection-1", DEFAULT_CONTEXT);
+		assertThat(extractPipelineElement(target, 1, "$addFields"))
+				.isEqualTo(Document.parse(" { \"bucketLabel\" : \"$_id\" }"));
 	}
 
 	@Test // GH-3898
