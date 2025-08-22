@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import example.aot.User;
 import example.aot.UserRepository;
@@ -26,10 +26,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import javax.lang.model.element.Modifier;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -43,7 +42,6 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
@@ -52,11 +50,9 @@ import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
-import org.springframework.data.repository.aot.generate.AotRepositoryFragmentMetadata;
 import org.springframework.data.repository.aot.generate.MethodContributor;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.javapoet.FieldSpec;
 import org.springframework.javapoet.MethodSpec;
 
 /**
@@ -403,12 +399,9 @@ class QueryMethodContributionUnitTests {
 			Assertions.fail("No contribution for method %s.%s(%s)".formatted(repository.getSimpleName(), methodName,
 					Arrays.stream(args).map(Class::getSimpleName).toList()));
 		}
-		AotRepositoryFragmentMetadata metadata = new AotRepositoryFragmentMetadata();
-		metadata.addField(
-				FieldSpec.builder(MongoOperations.class, "mongoOperations", Modifier.PRIVATE, Modifier.FINAL).build());
-
 		TestQueryMethodGenerationContext methodContext = new TestQueryMethodGenerationContext(
-				repoContext.getRepositoryInformation(), method, methodContributor.getQueryMethod(), metadata);
+				repoContext.getRepositoryInformation(), method, methodContributor.getQueryMethod());
+
 		return methodContributor.contribute(methodContext);
 	}
 
@@ -425,9 +418,9 @@ class QueryMethodContributionUnitTests {
 
 	static class TestQueryMethodGenerationContext extends AotQueryMethodGenerationContext {
 
-		protected TestQueryMethodGenerationContext(RepositoryInformation repositoryInformation, Method method,
-				QueryMethod queryMethod, AotRepositoryFragmentMetadata targetTypeMetadata) {
-			super(repositoryInformation, method, queryMethod, targetTypeMetadata);
+		TestQueryMethodGenerationContext(RepositoryInformation repositoryInformation, Method method,
+				QueryMethod queryMethod) {
+			super(repositoryInformation, method, queryMethod);
 		}
 	}
 

@@ -132,8 +132,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	@Override
 	protected void customizeConstructor(AotRepositoryConstructorBuilder constructorBuilder) {
 
-		constructorBuilder.addParameter("operations", TypeName.get(MongoOperations.class));
-		constructorBuilder.addParameter("context", TypeName.get(RepositoryFactoryBeanSupport.FragmentCreationContext.class),
+		constructorBuilder.addParameter("operations", MongoOperations.class);
+		constructorBuilder.addParameter("context", RepositoryFactoryBeanSupport.FragmentCreationContext.class,
 				false);
 
 		constructorBuilder.customize((builder) -> {
