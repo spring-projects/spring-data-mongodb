@@ -27,15 +27,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.MappingException;
@@ -77,6 +78,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @author Dave Perryman
  * @author Stefan Tirea
+ * @author Sangbeen Moon
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -492,7 +494,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return new org.bson.Document(dotPath, 1);
 		}
 
-		Object keyDefToUse = ExpressionUtils.evaluate(keyDefinitionString, () -> getEvaluationContextForProperty(entity));
+		Object keyDefToUse = ExpressionUtils.evaluate(keyDefinitionString, () -> getValueEvaluationContextForProperty(entity));
 
 		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document document) ? document
 				: org.bson.Document.parse(ObjectUtils.nullSafeToString(keyDefToUse));
@@ -560,7 +562,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 
 			Duration timeout = computeIndexTimeout(index.expireAfter(),
-					() -> getEvaluationContextForProperty(persistentProperty.getOwner()));
+					getValueEvaluationContextForProperty(persistentProperty.getOwner()));
 			if (!timeout.isNegative()) {
 				indexDefinition.expire(timeout);
 			}
@@ -576,7 +578,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	private PartialIndexFilter evaluatePartialFilter(String filterExpression, @Nullable PersistentEntity<?, ?> entity) {
 
-		Object result = ExpressionUtils.evaluate(filterExpression, () -> getEvaluationContextForProperty(entity));
+		Object result = ExpressionUtils.evaluate(filterExpression, () -> getValueEvaluationContextForProperty(entity));
 
 		if (result instanceof org.bson.Document document) {
 			return PartialIndexFilter.of(document);
@@ -587,7 +589,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	private org.bson.Document evaluateWildcardProjection(String projectionExpression, @Nullable PersistentEntity<?, ?> entity) {
 
-		Object result = ExpressionUtils.evaluate(projectionExpression, () -> getEvaluationContextForProperty(entity));
+		Object result = ExpressionUtils.evaluate(projectionExpression, () -> getValueEvaluationContextForProperty(entity));
 
 		if (result instanceof org.bson.Document document) {
 			return document;
@@ -598,7 +600,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	private Collation evaluateCollation(String collationExpression, @Nullable PersistentEntity<?, ?> entity) {
 
-		Object result = ExpressionUtils.evaluate(collationExpression, () -> getEvaluationContextForProperty(entity));
+		Object result = ExpressionUtils.evaluate(collationExpression, () -> getValueEvaluationContextForProperty(entity));
 		if (result instanceof org.bson.Document document) {
 			return Collation.from(document);
 		}
@@ -649,24 +651,19 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	/**
-	 * Get the {@link EvaluationContext} for a given {@link PersistentEntity entity} the default one.
+	 * Get the {@link ValueEvaluationContext} for a given {@link PersistentEntity entity} the default one.
 	 *
 	 * @param persistentEntity can be {@literal null}
 	 * @return
 	 */
-	private EvaluationContext getEvaluationContextForProperty(@Nullable PersistentEntity<?, ?> persistentEntity) {
+	private ValueEvaluationContext getValueEvaluationContextForProperty(@Nullable PersistentEntity<?, ?> persistentEntity) {
 
-		if (persistentEntity == null || !(persistentEntity instanceof BasicMongoPersistentEntity)) {
-			return getEvaluationContext();
+		if (persistentEntity instanceof BasicMongoPersistentEntity<?> mongoEntity) {
+			return mongoEntity.getValueEvaluationContext(null);
 		}
 
-		EvaluationContext contextFromEntity = ((BasicMongoPersistentEntity<?>) persistentEntity).getEvaluationContext(null);
-
-		if (contextFromEntity != null && !EvaluationContextProvider.DEFAULT.equals(contextFromEntity)) {
-			return contextFromEntity;
-		}
-
-		return getEvaluationContext();
+		return ValueEvaluationContext.of(
+			new StandardEnvironment(), getEvaluationContext());
 	}
 
 	/**
@@ -718,7 +715,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		String nameToUse = "";
 		if (StringUtils.hasText(indexName)) {
 
-			Object result = ExpressionUtils.evaluate(indexName, () -> getEvaluationContextForProperty(entity));
+			Object result = ExpressionUtils.evaluate(indexName, () -> getValueEvaluationContextForProperty(entity));
 
 			if (result != null) {
 				nameToUse = ObjectUtils.nullSafeToString(result);
@@ -779,7 +776,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @since 2.2
 	 * @throws IllegalArgumentException for invalid duration values.
 	 */
-	private static Duration computeIndexTimeout(String timeoutValue, Supplier<EvaluationContext> evaluationContext) {
+	private static Duration computeIndexTimeout(String timeoutValue, ValueEvaluationContext evaluationContext) {
 		return DurationUtil.evaluate(timeoutValue, evaluationContext);
 	}
 

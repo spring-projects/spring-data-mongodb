@@ -32,6 +32,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
@@ -103,6 +105,23 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			Iterable<? extends IndexDefinition> definitions = indexResolver.resolveIndexFor(IndexOnLevelOne.class);
 
 			assertThat(definitions).isNotEmpty();
+		}
+
+		@Test // GH-4980
+		public void shouldSupportPropertyPlaceholderInExpireAfter() {
+			StandardEnvironment environment = new StandardEnvironment();
+			environment.getPropertySources().addFirst(new MapPropertySource("test", Map.of("ttl.timeout", "10m")));
+
+			MongoMappingContext mappingContext = new MongoMappingContext();
+			mappingContext.setEnvironment(environment);
+
+			MongoPersistentEntityIndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+			List<IndexDefinitionHolder> indexDefinitions = (List<IndexDefinitionHolder>) resolver
+					.resolveIndexFor(WithExpireAfterAsPropertyPlaceholder.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 600L);
 		}
 
 		@Test // DATAMONGO-899
@@ -430,6 +449,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class WithPartialFilter {
 			@Indexed(partialFilter = "{'value': {'$exists': true}}") String withPartialFilter;
+		}
+
+		@Document
+		class WithExpireAfterAsPropertyPlaceholder {
+			@Indexed(expireAfter = "${ttl.timeout}") String withTimeout;
 		}
 	}
 
