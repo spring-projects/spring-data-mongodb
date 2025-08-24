@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.util.spel;
 import java.util.function.Supplier;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
@@ -52,7 +53,7 @@ public final class ExpressionUtils {
 		return expression instanceof LiteralExpression ? null : expression;
 	}
 
-	public static @Nullable Object evaluate(String value, Supplier<EvaluationContext> evaluationContext) {
+	public static @Nullable Object evaluate(String value, Supplier<ValueEvaluationContext> evaluationContext) {
 
 		Expression expression = detectExpression(value);
 		if (expression == null) {
