@@ -37,10 +37,10 @@ import org.springframework.data.mongodb.core.query.Update.Position;
  * @author Alexey Plotnik
  * @author Mark Paluch
  */
-public class UpdateTests {
+class UpdateTests {
 
 	@Test
-	public void testSet() {
+	void testSet() {
 
 		Update u = new Update().set("directory", "/Users/Test/Desktop");
 		assertThat(u.getUpdateObject())
@@ -48,7 +48,7 @@ public class UpdateTests {
 	}
 
 	@Test
-	public void testSetSet() {
+	void testSetSet() {
 
 		Update u = new Update().set("directory", "/Users/Test/Desktop").set("size", 0);
 		assertThat(u.getUpdateObject())
@@ -56,14 +56,14 @@ public class UpdateTests {
 	}
 
 	@Test
-	public void testInc() {
+	void testInc() {
 
 		Update u = new Update().inc("size", 1);
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$inc\" : { \"size\" : 1}}"));
 	}
 
 	@Test
-	public void testIncInc() {
+	void testIncInc() {
 
 		Update u = new Update().inc("size").inc("count", 1);
 		assertThat(u.getUpdateObject())
@@ -71,7 +71,7 @@ public class UpdateTests {
 	}
 
 	@Test
-	public void testIncAndSet() {
+	void testIncAndSet() {
 
 		Update u = new Update().inc("size", 1).set("directory", "/Users/Test/Desktop");
 		assertThat(u.getUpdateObject()).isEqualTo(
@@ -79,21 +79,21 @@ public class UpdateTests {
 	}
 
 	@Test
-	public void testUnset() {
+	void testUnset() {
 
 		Update u = new Update().unset("directory");
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$unset\" : { \"directory\" : 1}}"));
 	}
 
 	@Test
-	public void testPush() {
+	void testPush() {
 
 		Update u = new Update().push("authors", Collections.singletonMap("name", "Sven"));
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
 	}
 
 	@Test
-	public void testAddToSet() {
+	void testAddToSet() {
 
 		Update u = new Update().addToSet("authors", Collections.singletonMap("name", "Sven"));
 		assertThat(u.getUpdateObject())
@@ -101,7 +101,7 @@ public class UpdateTests {
 	}
 
 	@Test
-	public void testPop() {
+	void testPop() {
 
 		Update u = new Update().pop("authors", Update.Position.FIRST);
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$pop\" : { \"authors\" : -1}}"));
@@ -111,14 +111,14 @@ public class UpdateTests {
 	}
 
 	@Test
-	public void testPull() {
+	void testPull() {
 
 		Update u = new Update().pull("authors", Collections.singletonMap("name", "Sven"));
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$pull\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
 	}
 
 	@Test
-	public void testPullAll() {
+	void testPullAll() {
 
 		Map<String, String> m1 = Collections.singletonMap("name", "Sven");
 		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
@@ -129,21 +129,21 @@ public class UpdateTests {
 	}
 
 	@Test
-	public void testRename() {
+	void testRename() {
 
 		Update u = new Update().rename("directory", "folder");
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$rename\" : { \"directory\" : \"folder\"}}"));
 	}
 
 	@Test
-	public void testBasicUpdateInc() {
+	void testBasicUpdateInc() {
 
 		Update u = new Update().inc("size", 1);
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$inc\" : { \"size\" : 1}}"));
 	}
 
 	@Test
-	public void testBasicUpdateIncAndSet() {
+	void testBasicUpdateIncAndSet() {
 
 		Update u = new BasicUpdate("{ \"$inc\" : { \"size\" : 1}}").set("directory", "/Users/Test/Desktop");
 		assertThat(u.getUpdateObject()).isEqualTo(
@@ -151,54 +151,54 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-630
-	public void testSetOnInsert() {
+	void testSetOnInsert() {
 
 		Update u = new Update().setOnInsert("size", 1);
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$setOnInsert\" : { \"size\" : 1}}"));
 	}
 
 	@Test // DATAMONGO-630
-	public void testSetOnInsertSetOnInsert() {
+	void testSetOnInsertSetOnInsert() {
 
 		Update u = new Update().setOnInsert("size", 1).setOnInsert("count", 1);
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$setOnInsert\" : { \"size\" : 1 , \"count\" : 1}}"));
 	}
 
 	@Test // DATAMONGO-852
-	public void testUpdateAffectsFieldShouldReturnTrueWhenMultiFieldOperationAddedForField() {
+	void testUpdateAffectsFieldShouldReturnTrueWhenMultiFieldOperationAddedForField() {
 
 		Update update = new Update().set("foo", "bar");
 		assertThat(update.modifies("foo")).isTrue();
 	}
 
 	@Test // DATAMONGO-852
-	public void testUpdateAffectsFieldShouldReturnFalseWhenMultiFieldOperationAddedForField() {
+	void testUpdateAffectsFieldShouldReturnFalseWhenMultiFieldOperationAddedForField() {
 
 		Update update = new Update().set("foo", "bar");
 		assertThat(update.modifies("oof")).isFalse();
 	}
 
 	@Test // DATAMONGO-852
-	public void testUpdateAffectsFieldShouldReturnTrueWhenSingleFieldOperationAddedForField() {
+	void testUpdateAffectsFieldShouldReturnTrueWhenSingleFieldOperationAddedForField() {
 
 		Update update = new Update().pullAll("foo", new Object[] { "bar" });
 		assertThat(update.modifies("foo")).isTrue();
 	}
 
 	@Test // DATAMONGO-852
-	public void testUpdateAffectsFieldShouldReturnFalseWhenSingleFieldOperationAddedForField() {
+	void testUpdateAffectsFieldShouldReturnFalseWhenSingleFieldOperationAddedForField() {
 
 		Update update = new Update().pullAll("foo", new Object[] { "bar" });
 		assertThat(update.modifies("oof")).isFalse();
 	}
 
 	@Test // DATAMONGO-852
-	public void testUpdateAffectsFieldShouldReturnFalseWhenCalledOnEmptyUpdate() {
+	void testUpdateAffectsFieldShouldReturnFalseWhenCalledOnEmptyUpdate() {
 		assertThat(new Update().modifies("foo")).isFalse();
 	}
 
 	@Test // DATAMONGO-852
-	public void testUpdateAffectsFieldShouldReturnTrueWhenUpdateWithKeyCreatedFromDocument() {
+	void testUpdateAffectsFieldShouldReturnTrueWhenUpdateWithKeyCreatedFromDocument() {
 
 		Update update = new Update().set("foo", "bar");
 		Update clone = Update.fromDocument(update.getUpdateObject());
@@ -207,7 +207,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-852
-	public void testUpdateAffectsFieldShouldReturnFalseWhenUpdateWithoutKeyCreatedFromDocument() {
+	void testUpdateAffectsFieldShouldReturnFalseWhenUpdateWithoutKeyCreatedFromDocument() {
 
 		Update update = new Update().set("foo", "bar");
 		Update clone = Update.fromDocument(update.getUpdateObject());
@@ -216,24 +216,24 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-853
-	public void testAddingMultiFieldOperationThrowsExceptionWhenCalledWithNullKey() {
+	void testAddingMultiFieldOperationThrowsExceptionWhenCalledWithNullKey() {
 		assertThatIllegalArgumentException().isThrownBy(
 				() -> new Update().addMultiFieldOperation("$op", null, "exprected to throw IllegalArgumentException."));
 	}
 
 	@Test // DATAMONGO-853
-	public void testAddingSingleFieldOperationThrowsExceptionWhenCalledWithNullKey() {
+	void testAddingSingleFieldOperationThrowsExceptionWhenCalledWithNullKey() {
 		assertThatIllegalArgumentException().isThrownBy(
 				() -> new Update().addMultiFieldOperation("$op", null, "exprected to throw IllegalArgumentException."));
 	}
 
 	@Test // DATAMONGO-853
-	public void testCreatingUpdateWithNullKeyThrowsException() {
+	void testCreatingUpdateWithNullKeyThrowsException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> Update.update(null, "value"));
 	}
 
 	@Test // DATAMONGO-953
-	public void testEquality() {
+	void testEquality() {
 		Update actualUpdate = new Update() //
 				.inc("size", 1) //
 				.set("nl", null) //
@@ -257,7 +257,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-953
-	public void testToString() {
+	void testToString() {
 
 		Update actualUpdate = new Update() //
 				.inc("size", 1) //
@@ -283,14 +283,14 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-944
-	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForSingleFieldWhenUsingDate() {
+	void getUpdateObjectShouldReturnCurrentDateCorrectlyForSingleFieldWhenUsingDate() {
 
 		Update update = new Update().currentDate("foo");
 		assertThat(update.getUpdateObject()).isEqualTo(new Document().append("$currentDate", new Document("foo", true)));
 	}
 
 	@Test // DATAMONGO-944
-	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForMultipleFieldsWhenUsingDate() {
+	void getUpdateObjectShouldReturnCurrentDateCorrectlyForMultipleFieldsWhenUsingDate() {
 
 		Update update = new Update().currentDate("foo").currentDate("bar");
 		assertThat(update.getUpdateObject())
@@ -298,7 +298,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-944
-	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForSingleFieldWhenUsingTimestamp() {
+	void getUpdateObjectShouldReturnCurrentDateCorrectlyForSingleFieldWhenUsingTimestamp() {
 
 		Update update = new Update().currentTimestamp("foo");
 		assertThat(update.getUpdateObject())
@@ -306,7 +306,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-944
-	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForMultipleFieldsWhenUsingTimestamp() {
+	void getUpdateObjectShouldReturnCurrentDateCorrectlyForMultipleFieldsWhenUsingTimestamp() {
 
 		Update update = new Update().currentTimestamp("foo").currentTimestamp("bar");
 		assertThat(update.getUpdateObject()).isEqualTo(new Document().append("$currentDate",
@@ -314,7 +314,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-944
-	public void getUpdateObjectShouldReturnCurrentDateCorrectlyWhenUsingMixedDateAndTimestamp() {
+	void getUpdateObjectShouldReturnCurrentDateCorrectlyWhenUsingMixedDateAndTimestamp() {
 
 		Update update = new Update().currentDate("foo").currentTimestamp("bar");
 		assertThat(update.getUpdateObject()).isEqualTo(new Document().append("$currentDate",
@@ -322,19 +322,19 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1002
-	public void toStringWorksForUpdateWithComplexObject() {
+	void toStringWorksForUpdateWithComplexObject() {
 
 		Update update = new Update().addToSet("key", new Date());
 		assertThat(update.toString()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1097
-	public void multiplyShouldThrowExceptionForNullMultiplier() {
+	void multiplyShouldThrowExceptionForNullMultiplier() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Update().multiply("key", null));
 	}
 
 	@Test // DATAMONGO-1097
-	public void multiplyShouldAddMultiplierAsItsDoubleValue() {
+	void multiplyShouldAddMultiplierAsItsDoubleValue() {
 
 		Update update = new Update().multiply("key", 10);
 
@@ -342,7 +342,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1101
-	public void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseAnd() {
+	void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseAnd() {
 
 		Update update = new Update().bitwise("key").and(10L);
 
@@ -351,7 +351,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1101
-	public void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseOr() {
+	void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseOr() {
 
 		Update update = new Update().bitwise("key").or(10L);
 
@@ -360,7 +360,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1101
-	public void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseXor() {
+	void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseXor() {
 
 		Update update = new Update().bitwise("key").xor(10L);
 
@@ -369,7 +369,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1346
-	public void registersMultiplePullAllClauses() {
+	void registersMultiplePullAllClauses() {
 
 		Update update = new Update();
 		update.pullAll("field1", new String[] { "foo" });
@@ -384,17 +384,17 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1404
-	public void maxShouldThrowExceptionForNullMultiplier() {
+	void maxShouldThrowExceptionForNullMultiplier() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Update().max("key", null));
 	}
 
 	@Test // DATAMONGO-1404
-	public void minShouldThrowExceptionForNullMultiplier() {
+	void minShouldThrowExceptionForNullMultiplier() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Update().min("key", null));
 	}
 
 	@Test // DATAMONGO-1404
-	public void getUpdateObjectShouldReturnCorrectRepresentationForMax() {
+	void getUpdateObjectShouldReturnCorrectRepresentationForMax() {
 
 		Update update = new Update().max("key", 10);
 
@@ -402,7 +402,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1404
-	public void getUpdateObjectShouldReturnCorrectRepresentationForMin() {
+	void getUpdateObjectShouldReturnCorrectRepresentationForMin() {
 
 		Update update = new Update().min("key", 10);
 
@@ -410,7 +410,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1404
-	public void shouldSuppressPreviousValueForMax() {
+	void shouldSuppressPreviousValueForMax() {
 
 		Update update = new Update().max("key", 10);
 		update.max("key", 99);
@@ -419,7 +419,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1404
-	public void shouldSuppressPreviousValueForMin() {
+	void shouldSuppressPreviousValueForMin() {
 
 		Update update = new Update().min("key", 10);
 		update.min("key", 99);
@@ -428,7 +428,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1404
-	public void getUpdateObjectShouldReturnCorrectDateRepresentationForMax() {
+	void getUpdateObjectShouldReturnCorrectDateRepresentationForMax() {
 
 		Date date = new Date();
 		Update update = new Update().max("key", date);
@@ -437,7 +437,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1404
-	public void getUpdateObjectShouldReturnCorrectDateRepresentationForMin() {
+	void getUpdateObjectShouldReturnCorrectDateRepresentationForMin() {
 
 		Date date = new Date();
 		Update update = new Update().min("key", date);
@@ -446,20 +446,20 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1777, DATAMONGO-2199
-	public void toStringShouldPrettyPrintModifiers() {
+	void toStringShouldPrettyPrintModifiers() {
 
 		assertThat(new Update().push("key").atPosition(Position.FIRST).value("Arya").toString()).isEqualTo(
 				"{ \"$push\" : { \"key\" : { \"$java\" : { \"$position\" : { \"$java\" : { \"$position\" : 0} }, \"$each\" : { \"$java\" : { \"$each\" : [ \"Arya\" ] } } } } } }");
 	}
 
 	@Test // DATAMONGO-1777, DATAMONGO-2198
-	public void toStringConsidersIsolated() {
+	void toStringConsidersIsolated() {
 
 		assertThat(new Update().set("key", "value").isolated().toString()).contains("\"$isolated\"");
 	}
 
 	@Test // DATAMONGO-1778
-	public void equalsShouldConsiderModifiers() {
+	void equalsShouldConsiderModifiers() {
 
 		Update update1 = new Update().inc("version", 1).push("someField").slice(-10).each("test");
 		Update update2 = new Update().inc("version", 1).push("someField").slice(-10).each("test");
@@ -470,7 +470,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1778
-	public void equalsShouldConsiderIsolated() {
+	void equalsShouldConsiderIsolated() {
 
 		Update update1 = new Update().inc("version", 1).isolated();
 		Update update2 = new Update().inc("version", 1).isolated();
@@ -479,7 +479,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1778
-	public void hashCodeShouldConsiderModifiers() {
+	void hashCodeShouldConsiderModifiers() {
 
 		Update update1 = new Update().inc("version", 1).push("someField").slice(-10).each("test");
 		Update update2 = new Update().inc("version", 1).push("someField").slice(-10).each("test");
@@ -490,7 +490,7 @@ public class UpdateTests {
 	}
 
 	@Test // DATAMONGO-1778
-	public void hashCodeShouldConsiderIsolated() {
+	void hashCodeShouldConsiderIsolated() {
 
 		Update update1 = new Update().inc("version", 1).isolated();
 		Update update2 = new Update().inc("version", 1).isolated();

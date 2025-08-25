@@ -107,7 +107,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $set} update modifier
+	 * Update using the {@literal $set} update modifier.
 	 *
 	 * @param key the field name.
 	 * @param value can be {@literal null}. In this case the property remains in the db with a {@literal null} value. To
@@ -122,7 +122,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $setOnInsert} update modifier
+	 * Update using the {@literal $setOnInsert} update modifier.
 	 *
 	 * @param key the field name.
 	 * @param value can be {@literal null}.
@@ -137,7 +137,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $unset} update modifier
+	 * Update using the {@literal $unset} update modifier.
 	 *
 	 * @param key the field name.
 	 * @return this.
@@ -191,9 +191,8 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using {@code $push} modifier. <br/>
-	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values as well as using
-	 * {@code $position}.
+	 * Update using {@code $push} modifier. Allows creation of {@code $push} command for single or multiple (using
+	 * {@code $each}) values as well as using {@code $position}.
 	 *
 	 * @param key the field name.
 	 * @return {@link PushOperatorBuilder} for given key
@@ -214,8 +213,8 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using {@code $addToSet} modifier. <br/>
-	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values
+	 * Update using {@code $addToSet} modifier. Allows creation of {@code $push} command for single or multiple (using
+	 * {@code $each}) values
 	 *
 	 * @param key the field name.
 	 * @return new instance of {@link AddToSetBuilder}.
@@ -227,7 +226,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $addToSet} update modifier
+	 * Update using the {@literal $addToSet} update modifier.
 	 *
 	 * @param key the field name.
 	 * @param value can be {@literal null}.
@@ -242,7 +241,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $pop} update modifier
+	 * Update using the {@literal $pop} update modifier.
 	 *
 	 * @param key the field name.
 	 * @param pos must not be {@literal null}.
@@ -256,7 +255,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $pull} update modifier
+	 * Update using the {@literal $pull} update modifier.
 	 *
 	 * @param key the field name.
 	 * @param value can be {@literal null}.
@@ -270,7 +269,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $pullAll} update modifier
+	 * Update using the {@literal $pullAll} update modifier.
 	 *
 	 * @param key the field name.
 	 * @param values must not be {@literal null}.
@@ -285,7 +284,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $rename} update modifier
+	 * Update using the {@literal $rename} update modifier.
 	 *
 	 * @param oldName must not be {@literal null}.
 	 * @param newName must not be {@literal null}.
@@ -398,8 +397,8 @@ public class Update implements UpdateDefinition {
 
 	/**
 	 * Prevents a write operation that affects <strong>multiple</strong> documents from yielding to other reads or writes
-	 * once the first document is written. <br />
-	 * Use with {@link org.springframework.data.mongodb.core.MongoOperations#updateMulti(Query, UpdateDefinition, Class)}.
+	 * once the first document is written. Use with
+	 * {@link org.springframework.data.mongodb.core.MongoOperations#updateMulti(Query, UpdateDefinition, Class)}.
 	 *
 	 * @return this.
 	 * @since 2.0
