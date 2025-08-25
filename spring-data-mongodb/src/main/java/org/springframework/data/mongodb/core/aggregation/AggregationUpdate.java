@@ -263,8 +263,10 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	}
 
 	@Override
-	public void inc(String key) {
+	public UpdateDefinition inc(String key) {
+
 		set(new SetOperation(key, ArithmeticOperators.valueOf(key).add(1)));
+		return this;
 	}
 
 	@Override

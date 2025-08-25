@@ -150,7 +150,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Update using the {@literal $inc} update modifier
+	 * Update using the {@literal $inc} update modifier.
 	 *
 	 * @param key the field name.
 	 * @param inc must not be {@literal null}.
@@ -163,14 +163,21 @@ public class Update implements UpdateDefinition {
 		return this;
 	}
 
+	/**
+	 * Update using the {@literal $inc} update modifier by one.
+	 *
+	 * @param key the field name.
+	 * @return this.
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/inc/">MongoDB Update operator: $inc</a>
+	 */
 	@Override
 	@Contract("_ -> this")
-	public void inc(String key) {
-		inc(key, 1L);
+	public Update inc(String key) {
+		return inc(key, 1L);
 	}
 
 	/**
-	 * Update using the {@literal $push} update modifier
+	 * Update using the {@literal $push} update modifier.
 	 *
 	 * @param key the field name.
 	 * @param value can be {@literal null}.

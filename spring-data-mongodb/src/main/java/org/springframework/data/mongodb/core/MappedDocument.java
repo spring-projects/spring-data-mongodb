@@ -135,8 +135,9 @@ public class MappedDocument {
 		}
 
 		@Override
-		public void inc(String version) {
+		public UpdateDefinition inc(String version) {
 			delegate.inc(version);
+			return this;
 		}
 
 		@Override

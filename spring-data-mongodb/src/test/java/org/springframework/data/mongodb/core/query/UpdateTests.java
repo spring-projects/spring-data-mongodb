@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.query.Update.Position;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Alexey Plotnik
+ * @author Mark Paluch
  */
 public class UpdateTests {
 
@@ -64,8 +65,9 @@ public class UpdateTests {
 	@Test
 	public void testIncInc() {
 
-		Update u = new Update().inc("size", 1).inc("count", 1);
-		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$inc\" : { \"size\" : 1 , \"count\" : 1}}"));
+		Update u = new Update().inc("size").inc("count", 1);
+		assertThat(u.getUpdateObject())
+				.isEqualTo(Document.parse("{ \"$inc\" : { \"size\" : NumberLong(1) , \"count\" : 1}}"));
 	}
 
 	@Test

@@ -54,8 +54,9 @@ public interface UpdateDefinition {
 	 * Increment the value of a given {@literal key} by {@code 1}.
 	 *
 	 * @param key must not be {@literal null}.
+	 * @return {@code this} update definition.
 	 */
-	void inc(String key);
+	UpdateDefinition inc(String key);
 
 	/**
 	 * Get the specification which elements to modify in an array field. {@link ArrayFilter} are passed directly to the

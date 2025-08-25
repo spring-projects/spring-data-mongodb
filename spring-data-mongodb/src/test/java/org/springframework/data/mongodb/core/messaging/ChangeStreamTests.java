@@ -38,8 +38,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
 import org.junitpioneer.jupiter.RetryingTest;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.CollectionOptions;
@@ -522,7 +522,7 @@ class ChangeStreamTests {
 		template.update(User.class).matching(query(where("id").is(jellyBelly.id)))
 				.apply(Update.update("address", new Address("candy ave"))).first();
 
-		template.update(User.class).matching(query(where("id").is(sugarSplashy.id))).apply(new Update().inc("age", 1))
+		template.update(User.class).matching(query(where("id").is(sugarSplashy.id))).apply(new Update().inc("age"))
 				.first();
 
 		template.update(User.class).matching(query(where("id").is(huffyFluffy.id)))
