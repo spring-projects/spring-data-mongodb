@@ -22,8 +22,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -165,7 +165,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <S extends T, R> R findBy(Predicate predicate,
+	public <S extends T, R extends @Nullable Object> R findBy(Predicate predicate,
 			Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
 
 		Assert.notNull(predicate, "Predicate must not be null");

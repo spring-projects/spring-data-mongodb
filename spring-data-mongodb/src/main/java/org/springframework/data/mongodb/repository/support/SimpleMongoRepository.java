@@ -341,7 +341,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	}
 
 	@Override
-	public <S extends T, R> R findBy(Example<S> example,
+	public <S extends T, R extends @Nullable Object> R findBy(Example<S> example,
 			Function<org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
 
 		Assert.notNull(example, "Sample must not be null");
