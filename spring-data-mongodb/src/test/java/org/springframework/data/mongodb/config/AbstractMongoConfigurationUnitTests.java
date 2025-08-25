@@ -45,6 +45,9 @@ import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import org.bson.UuidRepresentation;
+
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 
 /**
@@ -53,6 +56,7 @@ import com.mongodb.client.MongoClient;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Hyunsang Han
  */
 public class AbstractMongoConfigurationUnitTests {
 
@@ -114,6 +118,40 @@ public class AbstractMongoConfigurationUnitTests {
 		context.close();
 	}
 
+	@Test // GH-5037
+	public void requiresExplicitUuidRepresentationConfiguration() {
+
+		assertThatThrownBy(() -> {
+			AbstractMongoClientConfiguration config = new AbstractMongoClientConfiguration() {
+				@Override
+				protected String getDatabaseName() {
+					return "test";
+				}
+			};
+			config.mongoClientSettings();
+		}).isInstanceOf(IllegalStateException.class)
+		  .hasMessageContaining("UUID representation must be explicitly configured");
+	}
+
+	@Test // GH-5037
+	public void worksWithExplicitUuidRepresentationConfiguration() {
+
+		AbstractMongoClientConfiguration config = new AbstractMongoClientConfiguration() {
+			@Override
+			protected String getDatabaseName() {
+				return "test";
+			}
+
+			@Override
+			protected void configureClientSettings(MongoClientSettings.Builder builder) {
+				builder.uuidRepresentation(UuidRepresentation.STANDARD);
+			}
+		};
+
+		MongoClientSettings settings = config.mongoClientSettings();
+		assertThat(settings.getUuidRepresentation()).isEqualTo(UuidRepresentation.STANDARD);
+	}
+
 	@Test // DATAMONGO-725
 	public void shouldBeAbleToConfigureCustomTypeMapperViaJavaConfig() {
 
@@ -156,6 +194,11 @@ public class AbstractMongoConfigurationUnitTests {
 		@Override
 		protected String getDatabaseName() {
 			return "database";
+		}
+
+		@Override
+		protected void configureClientSettings(MongoClientSettings.Builder builder) {
+			builder.uuidRepresentation(UuidRepresentation.STANDARD);
 		}
 
 		@Override

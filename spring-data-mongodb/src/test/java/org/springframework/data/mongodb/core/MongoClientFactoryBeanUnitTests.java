@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
+import org.bson.UuidRepresentation;
+
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
@@ -29,6 +31,7 @@ import com.mongodb.ServerAddress;
  * Unit tests for {@link MongoClientFactoryBean}.
  *
  * @author Christoph Strobl
+ * @author Hyunsang Han
  */
 class MongoClientFactoryBeanUnitTests {
 
@@ -88,5 +91,27 @@ class MongoClientFactoryBeanUnitTests {
 		factoryBean.setHost("localhost");
 		factoryBean.setPort(27017);
 		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(factoryBean::createInstance);
+	}
+
+	@Test // GH-5037
+	void requiresExplicitUuidRepresentationConfiguration() {
+
+		MongoClientFactoryBean factoryBean = new MongoClientFactoryBean();
+		
+		assertThatThrownBy(factoryBean::computeClientSetting)
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("UUID representation must be explicitly configured");
+	}
+
+	@Test // GH-5037
+	void worksWithExplicitUuidRepresentationConfiguration() {
+
+		MongoClientFactoryBean factoryBean = new MongoClientFactoryBean();
+		factoryBean.setMongoClientSettings(
+				MongoClientSettings.builder().uuidRepresentation(UuidRepresentation.STANDARD).build());
+
+		MongoClientSettings settings = factoryBean.computeClientSetting();
+
+		assertThat(settings.getUuidRepresentation()).isEqualTo(UuidRepresentation.STANDARD);
 	}
 }

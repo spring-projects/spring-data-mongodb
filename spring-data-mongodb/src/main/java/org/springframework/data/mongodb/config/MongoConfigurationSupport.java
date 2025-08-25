@@ -46,6 +46,7 @@ import com.mongodb.MongoClientSettings.Builder;
  * Base class for Spring Data MongoDB to be extended for JavaConfiguration usage.
  *
  * @author Mark Paluch
+ * @author Hyunsang Han
  * @since 2.0
  */
 public abstract class MongoConfigurationSupport {
@@ -226,9 +227,15 @@ public abstract class MongoConfigurationSupport {
 	protected MongoClientSettings mongoClientSettings() {
 
 		MongoClientSettings.Builder builder = MongoClientSettings.builder();
-		builder.uuidRepresentation(UuidRepresentation.STANDARD);
 		configureClientSettings(builder);
-		return builder.build();
+		
+		MongoClientSettings settings = builder.build();
+		
+		if (settings.getUuidRepresentation() == null) {
+			throw new IllegalStateException("UUID representation must be explicitly configured.");
+		}
+		
+		return settings;
 	}
 
 	/**

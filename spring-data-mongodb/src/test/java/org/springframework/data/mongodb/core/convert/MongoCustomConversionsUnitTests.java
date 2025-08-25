@@ -27,20 +27,24 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.BigDecimalRepresentation;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.Foo;
 
 /**
  * Unit tests for {@link MongoCustomConversions}.
  *
  * @author Christoph Strobl
+ * @author Hyunsang Han
  */
 class MongoCustomConversionsUnitTests {
 
 	@Test // DATAMONGO-2349
 	void nonAnnotatedConverterForJavaTimeTypeShouldOnlyBeRegisteredAsReadingConverter() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(
-				Collections.singletonList(new DateToZonedDateTimeConverter()));
+		MongoCustomConversions conversions = MongoCustomConversions.create(config -> {
+			config.bigDecimal(BigDecimalRepresentation.DECIMAL128);
+			config.registerConverter(new DateToZonedDateTimeConverter());
+		});
 
 		assertThat(conversions.hasCustomReadTarget(Date.class, ZonedDateTime.class)).isTrue();
 		assertThat(conversions.hasCustomWriteTarget(Date.class)).isFalse();
@@ -56,7 +60,7 @@ class MongoCustomConversionsUnitTests {
 		when(owner.getType()).thenReturn(Foo.class);
 
 		MongoCustomConversions conversions = MongoCustomConversions.create(config -> {
-
+			config.bigDecimal(BigDecimalRepresentation.DECIMAL128);
 			config.configurePropertyConversions(
 					registry -> registry.registerConverter(Foo.class, "name", mock(PropertyValueConverter.class)));
 		});
@@ -68,10 +72,34 @@ class MongoCustomConversionsUnitTests {
 	void doesNotReturnConverterForNativeTimeTimeIfUsingDriverCodec() {
 
 		MongoCustomConversions conversions = MongoCustomConversions.create(config -> {
+			config.bigDecimal(BigDecimalRepresentation.DECIMAL128);
 			config.useNativeDriverJavaTimeCodecs();
 		});
 
 		assertThat(conversions.getCustomWriteTarget(Date.class)).isEmpty();
+	}
+
+	@Test // GH-5037
+	void requiresExplicitBigDecimalRepresentationConfiguration() {
+
+		assertThatThrownBy(() -> {
+			MongoCustomConversions.create(config -> {
+				config.useSpringDataJavaTimeCodecs();
+			});
+		}).isInstanceOf(IllegalStateException.class)
+		  .hasMessageContaining("BigDecimal representation must be explicitly configured");
+	}
+
+	@Test // GH-5037
+	void worksWithExplicitBigDecimalRepresentationConfiguration() {
+
+		MongoCustomConversions conversions = MongoCustomConversions.create(config -> {
+			config.bigDecimal(BigDecimalRepresentation.DECIMAL128);
+			config.useSpringDataJavaTimeCodecs();
+		});
+
+		assertThat(conversions).isNotNull();
+		assertThat(conversions.getSimpleTypeHolder()).isNotNull();
 	}
 
 	static class DateToZonedDateTimeConverter implements Converter<Date, ZonedDateTime> {

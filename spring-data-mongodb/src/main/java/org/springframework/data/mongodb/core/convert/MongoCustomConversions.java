@@ -61,6 +61,7 @@ import org.springframework.util.Assert;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Hyunsang Han
  * @since 2.0
  * @see org.springframework.data.convert.CustomConversions
  * @see org.springframework.data.mapping.model.SimpleTypeHolder
@@ -159,7 +160,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private static final Set<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = Set.of(LocalDate.class, LocalTime.class, LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
-		private BigDecimalRepresentation bigDecimals = BigDecimalRepresentation.DECIMAL128;
+		private @Nullable BigDecimalRepresentation bigDecimals;
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
@@ -313,8 +314,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		}
 
 		/**
-		 * Configures the representation to for {@link java.math.BigDecimal} and {@link java.math.BigInteger} values in
-		 * MongoDB. Defaults to {@link BigDecimalRepresentation#DECIMAL128}.
+		 * Configures the representation for {@link java.math.BigDecimal} and {@link java.math.BigInteger} values in
+		 * MongoDB. This configuration is required and must be explicitly set.
 		 *
 		 * @param representation the representation to use.
 		 * @return this.
@@ -373,6 +374,10 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			if (hasDefaultPropertyValueConversions()
 					&& propertyValueConversions instanceof SimplePropertyValueConversions svc) {
 				svc.init();
+			}
+
+			if (bigDecimals == null) {
+				throw new IllegalStateException("BigDecimal representation must be explicitly configured.");
 			}
 
 			List<Object> converters = new ArrayList<>(STORE_CONVERTERS.size() + 7);
