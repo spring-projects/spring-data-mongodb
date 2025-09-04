@@ -9,7 +9,11 @@
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/util https://www.springframework.org/schema/util/spring-util.xsd">
 
-	<mongo:db-factory dbname="repositories"/>
+	<mongo:mongo-client>
+		<mongo:client-settings uuid-representation="STANDARD"/>
+	</mongo:mongo-client>
+
+	<mongo:db-factory dbname="repositories" mongo-client-ref="mongoClient"/>
 
 	<mongo:mapping-converter auto-index-creation="true" />
 

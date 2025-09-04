@@ -23,9 +23,14 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Currency;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,6 +88,58 @@ abstract class MongoConverters {
 	private MongoConverters() {}
 
 	/**
+	 * Returns the {@code Date} to UTC converters to be registered.
+	 *
+	 * @return
+	 * @since 5.0
+	 */
+	static Collection<Object> getDateToUtcConverters() {
+
+		List<Object> converters = new ArrayList<>(3);
+
+		converters.add(DateToUtcLocalDateConverter.INSTANCE);
+		converters.add(DateToUtcLocalTimeConverter.INSTANCE);
+		converters.add(DateToUtcLocalDateTimeConverter.INSTANCE);
+
+		return converters;
+	}
+
+	/**
+	 * Returns the {@code Decimal128} converters to be registered.
+	 *
+	 * @return
+	 * @since 5.0
+	 */
+	static Collection<Object> getBigNumberDecimal128Converters() {
+
+		List<Object> converters = new ArrayList<>(3);
+
+		converters.add(BigDecimalToDecimal128Converter.INSTANCE);
+		converters.add(Decimal128ToBigDecimalConverter.INSTANCE);
+		converters.add(BigIntegerToDecimal128Converter.INSTANCE);
+
+		return converters;
+	}
+
+	/**
+	 * Returns the {@code String} converters to be registered for {@link BigInteger} and {@link BigDecimal}.
+	 *
+	 * @return
+	 * @since 5.0
+	 */
+	static Collection<Object> getBigNumberStringConverters() {
+
+		List<Object> converters = new ArrayList<>(4);
+
+		converters.add(BigDecimalToStringConverter.INSTANCE);
+		converters.add(StringToBigDecimalConverter.INSTANCE);
+		converters.add(BigIntegerToStringConverter.INSTANCE);
+		converters.add(StringToBigIntegerConverter.INSTANCE);
+
+		return converters;
+	}
+
+	/**
 	 * Returns the converters to be registered.
 	 *
 	 * @return
@@ -91,10 +148,6 @@ abstract class MongoConverters {
 	static Collection<Object> getConvertersToRegister() {
 
 		List<Object> converters = new ArrayList<>();
-
-		converters.add(BigDecimalToDecimal128Converter.INSTANCE);
-		converters.add(Decimal128ToBigDecimalConverter.INSTANCE);
-		converters.add(BigIntegerToDecimal128Converter.INSTANCE);
 
 		converters.add(URLToStringConverter.INSTANCE);
 		converters.add(StringToURLConverter.INSTANCE);
@@ -628,6 +681,37 @@ abstract class MongoConverters {
 		@Override
 		public Instant convert(BsonTimestamp source) {
 			return Instant.ofEpochSecond(source.getTime(), 0);
+		}
+	}
+
+	@ReadingConverter
+	private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {
+
+		INSTANCE;
+
+		@Override
+		public LocalDateTime convert(Date source) {
+			return LocalDateTime.ofInstant(Instant.ofEpochMilli(source.getTime()), ZoneId.of("UTC"));
+		}
+	}
+
+	@ReadingConverter
+	private enum DateToUtcLocalTimeConverter implements Converter<Date, LocalTime> {
+		INSTANCE;
+
+		@Override
+		public LocalTime convert(Date source) {
+			return DateToUtcLocalDateTimeConverter.INSTANCE.convert(source).toLocalTime();
+		}
+	}
+
+	@ReadingConverter
+	private enum DateToUtcLocalDateConverter implements Converter<Date, LocalDate> {
+		INSTANCE;
+
+		@Override
+		public LocalDate convert(Date source) {
+			return DateToUtcLocalDateTimeConverter.INSTANCE.convert(source).toLocalDate();
 		}
 	}
 }

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -33,6 +32,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
@@ -42,14 +42,9 @@ import org.springframework.data.convert.PropertyValueConversions;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.PropertyValueConverterRegistrar;
-import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.SimplePropertyValueConversions;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.lang.Contract;
@@ -68,7 +63,6 @@ import org.springframework.util.Assert;
  */
 public class MongoCustomConversions extends org.springframework.data.convert.CustomConversions {
 
-	private static final StoreConversions STORE_CONVERSIONS;
 	private static final List<Object> STORE_CONVERTERS;
 
 	static {
@@ -80,7 +74,6 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		converters.addAll(GeoConverters.getConvertersToRegister());
 
 		STORE_CONVERTERS = Collections.unmodifiableList(converters);
-		STORE_CONVERSIONS = StoreConversions.of(MongoSimpleTypes.HOLDER, STORE_CONVERTERS);
 	}
 
 	/**
@@ -156,7 +149,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * List of {@literal java.time} types having different representation when rendered via the native
 		 * {@link org.bson.codecs.Codec} than the Spring Data {@link Converter}.
 		 */
-		private static final Set<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = Set.of(LocalDate.class, LocalTime.class, LocalDateTime.class);
+		private static final Set<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = Set.of(LocalDate.class, LocalTime.class,
+				LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
 		private BigDecimalRepresentation bigDecimals = BigDecimalRepresentation.DECIMAL128;
@@ -326,6 +320,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			this.bigDecimals = representation;
 			return this;
 		}
+
 		/**
 		 * Optionally set the {@link PropertyValueConversions} to be applied during mapping.
 		 * <p>
@@ -375,72 +370,40 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				svc.init();
 			}
 
-			List<Object> converters = new ArrayList<>(STORE_CONVERTERS.size() + 7);
+			List<Object> storeConverters = new ArrayList<>(STORE_CONVERTERS.size() + 10);
 
 			if (bigDecimals == BigDecimalRepresentation.STRING) {
-
-				converters.add(BigDecimalToStringConverter.INSTANCE);
-				converters.add(StringToBigDecimalConverter.INSTANCE);
-				converters.add(BigIntegerToStringConverter.INSTANCE);
-				converters.add(StringToBigIntegerConverter.INSTANCE);
+				storeConverters.addAll(MongoConverters.getBigNumberStringConverters());
 			}
 
-			if (!useNativeDriverJavaTimeCodecs) {
-
-				converters.addAll(customConverters);
-				return new ConverterConfiguration(STORE_CONVERSIONS, converters, convertiblePair -> true,
-						this.propertyValueConversions);
+			if (bigDecimals == BigDecimalRepresentation.DECIMAL128) {
+				storeConverters.addAll(MongoConverters.getBigNumberDecimal128Converters());
 			}
 
-			/*
-			 * We need to have those converters using UTC as the default ones would go on with the systemDefault.
-			 */
-			converters.add(DateToUtcLocalDateConverter.INSTANCE);
-			converters.add(DateToUtcLocalTimeConverter.INSTANCE);
-			converters.add(DateToUtcLocalDateTimeConverter.INSTANCE);
-			converters.addAll(STORE_CONVERTERS);
+			if (useNativeDriverJavaTimeCodecs) {
 
-			StoreConversions storeConversions = StoreConversions
-					.of(new SimpleTypeHolder(JAVA_DRIVER_TIME_SIMPLE_TYPES, MongoSimpleTypes.HOLDER), converters);
+				/*
+				 * We need to have those converters using UTC as the default ones would go on with the systemDefault.
+				 */
+				storeConverters.addAll(MongoConverters.getDateToUtcConverters());
+				storeConverters.addAll(STORE_CONVERTERS);
 
-			return new ConverterConfiguration(storeConversions, this.customConverters, convertiblePair -> {
+				StoreConversions storeConversions = StoreConversions
+						.of(new SimpleTypeHolder(JAVA_DRIVER_TIME_SIMPLE_TYPES, MongoSimpleTypes.HOLDER), storeConverters);
 
-				// Avoid default registrations
+				return new ConverterConfiguration(storeConversions, this.customConverters, convertiblePair -> {
+
+					// Avoid default registrations
 
 				return !JAVA_DRIVER_TIME_SIMPLE_TYPES.contains(convertiblePair.getSourceType())
 						|| !Date.class.isAssignableFrom(convertiblePair.getTargetType());
 			}, this.propertyValueConversions);
-		}
 
-		@ReadingConverter
-		private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {
-
-			INSTANCE;
-
-			@Override
-			public LocalDateTime convert(Date source) {
-				return LocalDateTime.ofInstant(Instant.ofEpochMilli(source.getTime()), ZoneId.of("UTC"));
 			}
-		}
 
-		@ReadingConverter
-		private enum DateToUtcLocalTimeConverter implements Converter<Date, LocalTime> {
-			INSTANCE;
-
-			@Override
-			public LocalTime convert(Date source) {
-				return DateToUtcLocalDateTimeConverter.INSTANCE.convert(source).toLocalTime();
-			}
-		}
-
-		@ReadingConverter
-		private enum DateToUtcLocalDateConverter implements Converter<Date, LocalDate> {
-			INSTANCE;
-
-			@Override
-			public LocalDate convert(Date source) {
-				return DateToUtcLocalDateTimeConverter.INSTANCE.convert(source).toLocalDate();
-			}
+			storeConverters.addAll(STORE_CONVERTERS);
+			return new ConverterConfiguration(StoreConversions.of(MongoSimpleTypes.createSimpleTypeHolder(), storeConverters),
+					this.customConverters, convertiblePair -> true, this.propertyValueConversions);
 		}
 
 		private boolean hasDefaultPropertyValueConversions() {

@@ -62,22 +62,27 @@ public abstract class MongoSimpleTypes {
 			BsonTimestamp.class, Geometry.class, GeometryCollection.class, LineString.class, MultiLineString.class,
 			MultiPoint.class, MultiPolygon.class, Point.class, Polygon.class);
 
-	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true) {
+	public static final SimpleTypeHolder HOLDER = createSimpleTypeHolder();
 
-		@Override
-		public boolean isSimpleType(Class<?> type) {
+	public static SimpleTypeHolder createSimpleTypeHolder() {
 
-			if (type.isEnum()) {
-				return true;
+		return new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true) {
+
+			@Override
+			public boolean isSimpleType(Class<?> type) {
+
+				if (type.isEnum()) {
+					return true;
+				}
+
+				if (type.getName().startsWith("java.time")) {
+					return false;
+				}
+
+				return super.isSimpleType(type);
 			}
-
-			if (type.getName().startsWith("java.time")) {
-				return false;
-			}
-
-			return super.isSimpleType(type);
-		}
-	};
+		};
+	}
 
 	private MongoSimpleTypes() {}
 }

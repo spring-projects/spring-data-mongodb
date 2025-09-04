@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.bson.UuidRepresentation;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -226,7 +225,6 @@ public abstract class MongoConfigurationSupport {
 	protected MongoClientSettings mongoClientSettings() {
 
 		MongoClientSettings.Builder builder = MongoClientSettings.builder();
-		builder.uuidRepresentation(UuidRepresentation.STANDARD);
 		configureClientSettings(builder);
 		return builder.build();
 	}

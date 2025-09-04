@@ -3,10 +3,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
 	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/util https://www.springframework.org/schema/util/spring-util.xsd
 		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
 
 	<context:property-placeholder
@@ -15,9 +13,10 @@
 	<mongo:mongo-client host="${mongo.host}" port="${mongo.port}">
 
 		<mongo:client-settings socket-read-timeout="${mongo.socketTimeout}"
+		                       uuid-representation="STANDARD"
 							  />
 	</mongo:mongo-client>
-	
+
 	<mongo:db-factory dbname="database" mongo-client-ref="mongoClient"/>
 
 	<mongo:mongo-client id="mongoClientSsl">
@@ -26,8 +25,8 @@
 
 	<mongo:db-factory id="secondMongoDbFactory"
 					  dbname="database" />
-					  
-		<mongo:db-factory id="thirdMongoDbFactory"
+
+	<mongo:db-factory id="thirdMongoDbFactory"
 					  dbname="database" />
 
 	<mongo:mongo-client id="defaultMongo" host="localhost" port="27017"/>
@@ -56,9 +55,9 @@
 
 	<mongo:template id="mongoTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter"/>
 	<mongo:template id="anotherMongoTemplate" db-factory-ref="mongoDbFactory" write-concern="ACKNOWLEDGED" />
-	
+
 	<mongo:gridFsTemplate/>
 	<mongo:gridFsTemplate id="secondGridFsTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter"/>
 	<mongo:gridFsTemplate id="thirdGridFsTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter" bucket="bucketString"/>
-	
+
 </beans>
