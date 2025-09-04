@@ -119,7 +119,7 @@ See xref:mongodb/mapping/custom-conversions.adoc[Custom Conversions - Overriding
 | native
 | `{"bin" : { "$binary" : "AQIDBA==", "$type" : "00" }}`
 
-| `java.util.UUID` (Standard UUID)
+| `java.util.UUID` (According to UuidRepresentation)
 | native
 | `{"uuid" : { "$binary" : "MEaf1CFQ6lSphaa3b9AtlA==", "$type" : "04" }}`
 
@@ -164,13 +164,13 @@ calling `get()` before the actual conversion
 | `{"value" : "741" }`
 
 | `BigInteger`
-| converter +
-`NumberDecimal`, `String`
+| native +
+`NumberDecimal`, `String` (see `BigDecimalRepresentation`)
 | `{"value" : NumberDecimal(741) }`, `{"value" : "741" }`
 
 | `BigDecimal`
-| converter +
-`NumberDecimal`, `String`
+| native +
+`NumberDecimal`, `String` (see `BigDecimalRepresentation`)
 | `{"value" : NumberDecimal(741.99) }`, `{"value" : "741.99" }`
 
 | `URL`
@@ -200,25 +200,21 @@ calling `get()` before the actual conversion
 | `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
 
 | `Instant` +
-(Joda, JSR310-BackPort)
+(Java 8)
 | converter
 | `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
 
 | `LocalDate` +
-(Joda, Java 8, JSR310-BackPort)
-| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via xref:mongodb/mapping/mapping.adoc#mapping-configuration[MongoConverterConfigurationAdapter]]
+(Java 8)
+| converter / native (Java 8)footnote:[Uses UTC zone offset. Configure via xref:mongodb/mapping/mapping.adoc#mapping-configuration[MongoConverterConfigurationAdapter]]
 | `{"date" : ISODate("2019-11-12T00:00:00.000Z")}`
 
 | `LocalDateTime`, `LocalTime` +
-(Joda, Java 8, JSR310-BackPort)
-| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via xref:mongodb/mapping/mapping.adoc#mapping-configuration[MongoConverterConfigurationAdapter]]
+(Java 8)
+| converter / native (Java 8)footnote:[Uses UTC zone offset. Configure via xref:mongodb/mapping/mapping.adoc#mapping-configuration[MongoConverterConfigurationAdapter]]
 | `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
 
-| `DateTime` (Joda)
-| converter
-| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
-
-| `ZoneId` (Java 8, JSR310-BackPort)
+| `ZoneId` (Java 8)
 | converter
 | `{"zoneId" : "ECT - Europe/Paris"}`
 

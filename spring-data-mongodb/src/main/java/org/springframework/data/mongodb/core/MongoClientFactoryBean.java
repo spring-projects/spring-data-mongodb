@@ -23,8 +23,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.bson.UuidRepresentation;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -162,7 +162,6 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 						getOrDefault(port, "" + ServerAddress.defaultPort())));
 
 		Builder builder = MongoClientSettings.builder().applyConnectionString(connectionString);
-		builder.uuidRepresentation(UuidRepresentation.STANDARD);
 
 		if (mongoClientSettings != null) {
 
