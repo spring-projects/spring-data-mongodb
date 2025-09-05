@@ -31,8 +31,9 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
@@ -63,6 +64,7 @@ import org.springframework.util.Assert;
  */
 public class MongoCustomConversions extends org.springframework.data.convert.CustomConversions {
 
+	private static final Log LOGGER = LogFactory.getLog(MongoCustomConversions.class);
 	private static final List<Object> STORE_CONVERTERS;
 
 	static {
@@ -153,7 +155,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
-		private BigDecimalRepresentation bigDecimals = BigDecimalRepresentation.DECIMAL128;
+		private @Nullable BigDecimalRepresentation bigDecimals;
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
@@ -372,12 +374,14 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 			List<Object> storeConverters = new ArrayList<>(STORE_CONVERTERS.size() + 10);
 
-			if (bigDecimals == BigDecimalRepresentation.STRING) {
-				storeConverters.addAll(MongoConverters.getBigNumberStringConverters());
-			}
-
-			if (bigDecimals == BigDecimalRepresentation.DECIMAL128) {
-				storeConverters.addAll(MongoConverters.getBigNumberDecimal128Converters());
+			if (bigDecimals != null) {
+				switch (bigDecimals) {
+					case STRING -> storeConverters.addAll(MongoConverters.getBigNumberStringConverters());
+					case DECIMAL128 -> storeConverters.addAll(MongoConverters.getBigNumberDecimal128Converters());
+				}
+			} else if (LOGGER.isInfoEnabled()) {
+				LOGGER.info(
+						"No BigDecimal/BigInteger representation set. Choose [STRING] or [DECIMAL128] to store values in desired format.");
 			}
 
 			if (useNativeDriverJavaTimeCodecs) {
@@ -395,9 +399,9 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 					// Avoid default registrations
 
-				return !JAVA_DRIVER_TIME_SIMPLE_TYPES.contains(convertiblePair.getSourceType())
-						|| !Date.class.isAssignableFrom(convertiblePair.getTargetType());
-			}, this.propertyValueConversions);
+					return !JAVA_DRIVER_TIME_SIMPLE_TYPES.contains(convertiblePair.getSourceType())
+							|| !Date.class.isAssignableFrom(convertiblePair.getTargetType());
+				}, this.propertyValueConversions);
 
 			}
 

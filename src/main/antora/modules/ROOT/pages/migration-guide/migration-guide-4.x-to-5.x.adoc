@@ -36,3 +36,22 @@ XML::
 </mongo:mongo-client>
 ----
 ======
+
+== BigInteger/BigDecimal Conversion Changes
+
+Spring Data no longer defaults BigInteger/BigDecimal conversion via its configuration support classes.
+In order to persist those values the `BigDecimalRepresentation` hast to be set explicitly.
+
+[source,java]
+----
+@Configuration
+static class Config extends AbstractMongoClientConfiguration {
+
+	@Override
+	protected void configureConverters(MongoConverterConfigurationAdapter configAdapter) {
+		configAdapter.bigDecimal(BigDecimalRepresentation.DECIMAL128);
+	}
+
+    // ...
+}
+----

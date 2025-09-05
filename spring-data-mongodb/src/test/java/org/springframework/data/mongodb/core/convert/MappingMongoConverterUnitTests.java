@@ -90,6 +90,8 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.NestedType;
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.ProjectingType;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.ClassWithMapUsingEnumAsKey.FooBarEnum;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.BigDecimalRepresentation;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -135,8 +137,8 @@ class MappingMongoConverterUnitTests {
 	@BeforeEach
 	void beforeEach() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(
-				Arrays.asList(new ByteBufferToDoubleHolderConverter()));
+		MongoCustomConversions conversions = new MongoCustomConversions(new MongoConverterConfigurationAdapter()
+				.registerConverter(new ByteBufferToDoubleHolderConverter()).bigDecimal(BigDecimalRepresentation.DECIMAL128));
 
 		mappingContext = new MongoMappingContext();
 		mappingContext.setApplicationContext(context);
@@ -396,6 +398,31 @@ class MappingMongoConverterUnitTests {
 
 		assertThat(document.get("value")).isEqualTo(Decimal128.parse("2.5"));
 		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(Decimal128.class);
+	} // MappingMongoConverterUnitTests
+
+	@Test // DATACMNS-42, DATAMONGO-171, GH-4920
+	void writesClassWithBigDecimalFails() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions(new MongoConverterConfigurationAdapter());
+
+		mappingContext = new MongoMappingContext();
+		mappingContext.setApplicationContext(context);
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		mappingContext.afterPropertiesSet();
+
+		mappingContext.getPersistentEntity(Address.class);
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+
+		BigDecimalContainer container = new BigDecimalContainer();
+		container.value = BigDecimal.valueOf(2.5d);
+		container.map = Collections.singletonMap("foo", container.value);
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(container, document);
+
+		assertThat(document.get("value")).isInstanceOf(BigDecimal.class);
+		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(BigDecimal.class);
 	}
 
 	@Test // DATACMNS-42, DATAMONGO-171

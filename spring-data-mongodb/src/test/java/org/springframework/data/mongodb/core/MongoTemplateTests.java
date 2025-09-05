@@ -15,10 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.core.query.Update.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.fail;
+import static org.springframework.data.mongodb.core.query.Criteria.expr;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Update.update;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
@@ -28,17 +32,29 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.bson.codecs.configuration.CodecConfigurationException;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.ConversionFailedException;
@@ -69,6 +85,7 @@ import org.springframework.data.mongodb.core.aggregation.StringOperators;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.BigDecimalRepresentation;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -144,6 +161,12 @@ public class MongoTemplateTests {
 			it.defaultDb(DB_NAME);
 		});
 
+		cfg.configureConversion(it -> {
+			it.customConverters(adapter -> {
+				adapter.bigDecimal(BigDecimalRepresentation.DECIMAL128);
+			});
+		});
+
 		cfg.configureMappingContext(it -> {
 			it.autocreateIndex(false);
 			it.initialEntitySet(AuditablePerson.class);
@@ -170,7 +193,10 @@ public class MongoTemplateTests {
 		});
 
 		cfg.configureConversion(it -> {
-			it.customConverters(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE);
+			it.customConverters(adapter -> {
+				adapter.registerConverters(List.of(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE))
+						.bigDecimal(BigDecimalRepresentation.DECIMAL128);
+			});
 		});
 
 		cfg.configureMappingContext(it -> {
@@ -732,7 +758,7 @@ public class MongoTemplateTests {
 				.containsExactlyInAnyOrder(person1.getName(), person2.getName());
 		assertThat(template.findDistinct(new BasicQuery("{'address.state' : 'PA'}"), "name",
 				template.getCollectionName(MyPerson.class), MyPerson.class, String.class))
-						.containsExactlyInAnyOrder(person1.getName(), person2.getName());
+				.containsExactlyInAnyOrder(person1.getName(), person2.getName());
 	}
 
 	@Test // DATAMONGO-1761
@@ -876,7 +902,7 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-602, GH-4920
-	public void testUsingAnInQueryWithBigIntegerId() throws Exception {
+	public void testUsingAnInQueryWithBigIntegerId() {
 
 		template.remove(new Query(), PersonWithIdPropertyOfTypeBigInteger.class);
 
@@ -885,6 +911,34 @@ public class MongoTemplateTests {
 		p1.setAge(11);
 		p1.setId(new BigInteger("2666666666666666665069473312490162649510603601"));
 		assertThatExceptionOfType(ConversionFailedException.class).isThrownBy(() -> template.insert(p1));
+	}
+
+	@Test // GH-5037
+	public void errorsIfNoBigNumberFormatDefined() {
+
+		template = new MongoTestTemplate(cfg -> {
+
+			cfg.configureDatabaseFactory(it -> {
+
+				it.client(client);
+				it.defaultDb(DB_NAME);
+			});
+
+			cfg.configureConversion(it -> {
+				it.customConverters(adapter -> {
+					// no numeric conversion
+				});
+			});
+
+		});
+
+		template.remove(new Query(), PersonWithIdPropertyOfTypeBigInteger.class);
+
+		PersonWithIdPropertyOfTypeBigInteger p1 = new PersonWithIdPropertyOfTypeBigInteger();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		p1.setId(new BigInteger("2666666666666666665"));
+		assertThatExceptionOfType(CodecConfigurationException.class).isThrownBy(() -> template.insert(p1));
 	}
 
 	@Test
@@ -2561,9 +2615,7 @@ public class MongoTemplateTests {
 		walter.address = new Address("spring", "data");
 		template.save(walter);
 
-		PersonPWA result = template.query(MyPerson.class)
-				.as(PersonPWA.class)
-				.matching(where("id").is(walter.id))
+		PersonPWA result = template.query(MyPerson.class).as(PersonPWA.class).matching(where("id").is(walter.id))
 				.firstValue();
 
 		assertThat(result.getAddress().getCity()).isEqualTo("data");
@@ -2571,6 +2623,7 @@ public class MongoTemplateTests {
 
 	interface PersonPWA {
 		String getName();
+
 		AdressProjection getAddress();
 	}
 
@@ -2823,7 +2876,7 @@ public class MongoTemplateTests {
 
 		assertThat(template.getDb().getCollection("sample").countDocuments(
 				new org.bson.Document("field", new org.bson.Document("$in", Arrays.asList("spring", "mongodb")))))
-						.isEqualTo(0L);
+				.isEqualTo(0L);
 		assertThat(template.getDb().getCollection("sample").countDocuments(new org.bson.Document("field", "data")))
 				.isEqualTo(1L);
 	}
@@ -3935,7 +3988,8 @@ public class MongoTemplateTests {
 
 		template.save(source);
 
-		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class,
+				collection -> collection.find(new org.bson.Document("_id", source.id)).first());
 		assertThat(raw).containsEntry("field.name.with.dots", "v1");
 	}
 
@@ -3954,13 +4008,17 @@ public class MongoTemplateTests {
 		template.save(source);
 		template.save(source2);
 
-		WithFieldNameContainingDots loaded = template.query(WithFieldNameContainingDots.class) // with property -> fieldname mapping
-				.matching(expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("value")).equalToValue("v1"))).firstValue();
+		WithFieldNameContainingDots loaded = template.query(WithFieldNameContainingDots.class) // with property -> fieldname
+																																														// mapping
+				.matching(expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("value")).equalToValue("v1")))
+				.firstValue();
 
 		assertThat(loaded).isEqualTo(source);
 
 		loaded = template.query(WithFieldNameContainingDots.class) // using raw fieldname
-				.matching(expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("field.name.with.dots")).equalToValue("v1"))).firstValue();
+				.matching(
+						expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("field.name.with.dots")).equalToValue("v1")))
+				.firstValue();
 
 		assertThat(loaded).isEqualTo(source);
 	}
@@ -3975,20 +4033,20 @@ public class MongoTemplateTests {
 
 		template.save(source);
 
-		template.update(WithFieldNameContainingDots.class)
-				.matching(where("id").is(source.id))
-				.apply(AggregationUpdate.newUpdate(ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("value", "changed"))))
-				.first();
+		template.update(WithFieldNameContainingDots.class).matching(where("id").is(source.id)).apply(AggregationUpdate
+				.newUpdate(ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("value", "changed")))).first();
 
-		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class,
+				collection -> collection.find(new org.bson.Document("_id", source.id)).first());
 		assertThat(raw).containsEntry("field.name.with.dots", "changed");
 
-		template.update(WithFieldNameContainingDots.class)
-				.matching(where("id").is(source.id))
-				.apply(AggregationUpdate.newUpdate(ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("field.name.with.dots", "changed-again"))))
+		template.update(WithFieldNameContainingDots.class).matching(where("id").is(source.id))
+				.apply(AggregationUpdate.newUpdate(
+						ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("field.name.with.dots", "changed-again"))))
 				.first();
 
-		raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		raw = template.execute(WithFieldNameContainingDots.class,
+				collection -> collection.find(new org.bson.Document("_id", source.id)).first());
 		assertThat(raw).containsEntry("field.name.with.dots", "changed-again");
 	}
 
@@ -4013,9 +4071,8 @@ public class MongoTemplateTests {
 		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class,
 				collection -> collection.find(new org.bson.Document("_id", source.id)).first());
 
-		assertThat(raw.get("mapValue", org.bson.Document.class))
-				.containsEntry("k1", "v1")
-				.containsEntry("map.key.with.dot", "v2");
+		assertThat(raw.get("mapValue", org.bson.Document.class)).containsEntry("k1", "v1").containsEntry("map.key.with.dot",
+				"v2");
 	}
 
 	@Test // GH-4464
@@ -4031,16 +4088,13 @@ public class MongoTemplateTests {
 		MongoTemplate template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME), converter);
 
 		Map<String, String> sourceMap = Map.of("k1", "v1", "sourceMap.key.with.dot", "v2");
-		template.execute(WithFieldNameContainingDots.class,
-				collection -> {
-					collection.insertOne(new org.bson.Document("_id", "id-1").append("mapValue", sourceMap));
-					return null;
-				}
-			);
+		template.execute(WithFieldNameContainingDots.class, collection -> {
+			collection.insertOne(new org.bson.Document("_id", "id-1").append("mapValue", sourceMap));
+			return null;
+		});
 
 		WithFieldNameContainingDots loaded = template.query(WithFieldNameContainingDots.class)
-				.matching(where("id").is("id-1"))
-				.firstValue();
+				.matching(where("id").is("id-1")).firstValue();
 
 		assertThat(loaded.mapValue).isEqualTo(sourceMap);
 	}
@@ -5015,8 +5069,7 @@ public class MongoTemplateTests {
 
 		String id;
 
-		@Field(value = "field.name.with.dots", nameType = Type.KEY)
-		String value;
+		@Field(value = "field.name.with.dots", nameType = Type.KEY) String value;
 
 		Map<String, String> mapValue;
 
@@ -5034,7 +5087,8 @@ public class MongoTemplateTests {
 				return false;
 			}
 			WithFieldNameContainingDots withFieldNameContainingDots = (WithFieldNameContainingDots) o;
-			return Objects.equals(id, withFieldNameContainingDots.id) && Objects.equals(value, withFieldNameContainingDots.value)
+			return Objects.equals(id, withFieldNameContainingDots.id)
+					&& Objects.equals(value, withFieldNameContainingDots.value)
 					&& Objects.equals(mapValue, withFieldNameContainingDots.mapValue);
 		}
 
