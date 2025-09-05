@@ -3,6 +3,7 @@
 ** xref:migration-guides.adoc[]
 *** xref:migration-guide/migration-guide-2.x-to-3.x.adoc[]
 *** xref:migration-guide/migration-guide-3.x-to-4.x.adoc[]
+*** xref:migration-guide/migration-guide-4.x-to-5.x.adoc[]
 
 * xref:mongodb.adoc[]
 ** xref:preface.adoc[]
