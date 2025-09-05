@@ -16,10 +16,12 @@
 package org.springframework.data.mongodb.test.util;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 
 /**
  * Utility to configure {@link MongoCustomConversions}.
@@ -36,5 +38,9 @@ public class MongoConverterConfigurer {
 
 	public void customConverters(Converter<?, ?>... converters) {
 		customConversions(new MongoCustomConversions(Arrays.asList(converters)));
+	}
+
+	public void customConverters(Consumer<MongoConverterConfigurationAdapter> configurer) {
+		customConversions(MongoCustomConversions.create(configurer));
 	}
 }

@@ -1,0 +1,60 @@
+[[mongodb.migration.4.x-5.x]]
+= Migration Guide from 4.x to 5.x
+
+Spring Data MongoDB 4.x requires the MongoDB Java Driver 5.5.x +
+To learn more about driver versions please visit the https://www.mongodb.com/docs/drivers/java/sync/current/upgrade/[MongoDB Documentation].
+
+== UUID Representation Changes
+
+Spring Data no longer defaults UUID settings via its configuration support classes, factory beans, nor XML namespace. +
+In order to persist UUID values the `UuidRepresentation` hast to be set explicitly.
+
+[tabs]
+======
+Java::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+@Configuration
+static class Config extends AbstractMongoClientConfiguration {
+
+	@Override
+	protected void configureClientSettings(MongoClientSettings.Builder builder) {
+		builder.uuidRepresentation(UuidRepresentation.STANDARD);
+	}
+
+    // ...
+}
+----
+
+XML::
++
+[source,xml,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+<mongo:mongo-client>
+	<mongo:client-settings uuid-representation="STANDARD"/>
+</mongo:mongo-client>
+----
+======
+
+== BigInteger/BigDecimal Conversion Changes
+
+Spring Data no longer defaults BigInteger/BigDecimal conversion via its configuration support classes.
+In order to persist those values the default `BigDecimalRepresentation` hast to be set explicitly.
+
+[source,java]
+----
+@Configuration
+static class Config extends AbstractMongoClientConfiguration {
+
+	@Override
+	protected void configureConverters(MongoConverterConfigurationAdapter configAdapter) {
+		configAdapter.bigDecimal(BigDecimalRepresentation.DECIMAL128);
+	}
+
+    // ...
+}
+----
+
+Users upgrading from prior versions may choose `BigDecimalRepresentation.STRING` as default.
+Those using`@Field(targetType = FieldType.DECIMAL128)` need to define a combination of representations `configAdapter.bigDecimal(BigDecimalRepresentation.STRING, BigDecimalRepresentation.DECIMAL128)` to set defaulting to String while having the `DECIMAL128` converter being registered for usage with explicit target type configuration.

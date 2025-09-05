@@ -55,6 +55,7 @@ import org.springframework.data.mongodb.core.aggregation.EvaluationOperators;
 import org.springframework.data.mongodb.core.aggregation.EvaluationOperators.Expr;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.BigDecimalRepresentation;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -97,7 +98,7 @@ public class QueryMapperUnitTests {
 	@BeforeEach
 	void beforeEach() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions();
+		MongoCustomConversions conversions = new MongoCustomConversions(new MongoConverterConfigurationAdapter().bigDecimal(BigDecimalRepresentation.DECIMAL128));
 		this.context = new MongoMappingContext();
 		this.context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 
@@ -150,6 +151,25 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
 		assertThat(result).containsEntry("_id", Decimal128.parse("1"));
+	}
+
+	@Test // GH-5037
+	void leavesBigIntegerAsIsIfNotConfigured() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions();
+		context = new MongoMappingContext();
+		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+
+		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		mapper = new QueryMapper(converter);
+
+		org.bson.Document document = new org.bson.Document("id", new BigInteger("1"));
+
+		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
+		assertThat(result).containsEntry("_id", new BigInteger("1"));
 	}
 
 	@Test

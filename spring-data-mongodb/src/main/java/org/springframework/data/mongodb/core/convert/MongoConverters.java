@@ -132,9 +132,7 @@ abstract class MongoConverters {
 		List<Object> converters = new ArrayList<>(4);
 
 		converters.add(BigDecimalToStringConverter.INSTANCE);
-		converters.add(StringToBigDecimalConverter.INSTANCE);
 		converters.add(BigIntegerToStringConverter.INSTANCE);
-		converters.add(StringToBigIntegerConverter.INSTANCE);
 
 		return converters;
 	}
@@ -168,6 +166,9 @@ abstract class MongoConverters {
 		converters.add(VectorToBsonArrayConverter.INSTANCE);
 		converters.add(ListToVectorConverter.INSTANCE);
 		converters.add(BinaryVectorToMongoVectorConverter.INSTANCE);
+
+		converters.add(StringToBigDecimalConverter.INSTANCE);
+		converters.add(StringToBigIntegerConverter.INSTANCE);
 
 		converters.add(reading(BsonUndefined.class, Object.class, it -> null));
 		converters.add(reading(String.class, URI.class, URI::create).andWriting(URI::toString));
