@@ -15,10 +15,22 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static java.time.ZoneId.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static java.time.ZoneId.systemDefault;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.assertTypeHint;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.getAsDocument;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatExceptionOfType;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatThrownBy;
+import static org.springframework.data.mongodb.test.util.Assertions.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -53,7 +65,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +73,7 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
@@ -2176,6 +2188,61 @@ class MappingMongoConverterUnitTests {
 		assertThat(target.get("bigDecimal")).isEqualTo(new Decimal128(source.bigDecimal));
 	}
 
+	@Test // GH-5037
+	@SuppressWarnings("deprecation")
+	void mapsBigIntegerToDecimal128WhenAnnotatedWithFieldTargetTypeWhenDefaultConversionIsSetToString() {
+
+		converter = createConverter(BigDecimalRepresentation.STRING, BigDecimalRepresentation.DECIMAL128);
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.bigDecimal = BigDecimal.valueOf(3.14159D);
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("bigDecimal")).isEqualTo(new Decimal128(source.bigDecimal));
+	}
+
+	@Test // GH-5037
+	@SuppressWarnings("deprecation")
+	void mapsBigIntegerToStringWhenNotAnnotatedWithFieldTargetTypeAndDefaultConversionIsSetToString() {
+
+		converter = createConverter(BigDecimalRepresentation.STRING, BigDecimalRepresentation.DECIMAL128);
+
+		BigDecimalContainer source = new BigDecimalContainer();
+		source.value = BigDecimal.valueOf(3.14159D);
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+		assertThat(target.get("value")).isInstanceOf(String.class);
+	}
+
+	@Test // GH-5037
+	void mapsBigIntegerToStringWhenAnnotatedWithFieldTargetTypeEvenWhenDefaultConverterIsSetToDecimal128() {
+
+		converter = createConverter(BigDecimalRepresentation.DECIMAL128);
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.bigIntegerAsString = BigInteger.TWO;
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("bigIntegerAsString")).isEqualTo(source.bigIntegerAsString.toString());
+	}
+
+	@Test // GH-5037
+	void explicitBigNumberConversionErrorsIfConverterNotRegistered() {
+
+		converter = createConverter(BigDecimalRepresentation.STRING);
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.bigInteger = BigInteger.TWO;
+
+		org.bson.Document target = new org.bson.Document();
+
+		assertThatExceptionOfType(ConversionFailedException.class).isThrownBy(() -> converter.write(source, target));
+	}
+
 	@Test // DATAMONGO-2328
 	void mapsDateToLongWhenAnnotatedWithFieldTargetType() {
 
@@ -3198,7 +3265,6 @@ class MappingMongoConverterUnitTests {
 								return nativeValue.getString("bar");
 							}
 
-
 							@Override
 							public org.bson.@Nullable Document write(@Nullable String domainValue, MongoConversionContext context) {
 								return new org.bson.Document("bar", domainValue);
@@ -3435,7 +3501,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	private MappingMongoConverter createConverter(
-			MongoCustomConversions.BigDecimalRepresentation bigDecimalRepresentation) {
+			MongoCustomConversions.BigDecimalRepresentation... bigDecimalRepresentation) {
 
 		MongoCustomConversions conversions = MongoCustomConversions.create(
 				it -> it.registerConverter(new ByteBufferToDoubleHolderConverter()).bigDecimal(bigDecimalRepresentation));
@@ -4108,7 +4174,11 @@ class MappingMongoConverterUnitTests {
 		@Field(targetType = FieldType.DECIMAL128) //
 		BigDecimal bigDecimal;
 
-		@Field(targetType = FieldType.DECIMAL128) BigInteger bigInteger;
+		@Field(targetType = FieldType.DECIMAL128) //
+		BigInteger bigInteger;
+
+		@Field(targetType = FieldType.STRING) //
+		BigInteger bigIntegerAsString;
 
 		@Field(targetType = FieldType.INT64) //
 		Date dateAsLong;
@@ -4237,7 +4307,6 @@ class MappingMongoConverterUnitTests {
 
 	@WritingConverter
 	static class TypeImplementingMapToDocumentConverter implements Converter<TypeImplementingMap, org.bson.Document> {
-
 
 		@Override
 		public org.bson.@Nullable Document convert(TypeImplementingMap source) {
@@ -4440,7 +4509,6 @@ class MappingMongoConverterUnitTests {
 			return value.getString("bar");
 		}
 
-
 		@Override
 		public org.bson.@Nullable Document write(@Nullable String value, MongoConversionContext context) {
 			return new org.bson.Document("bar", value);
@@ -4453,7 +4521,6 @@ class MappingMongoConverterUnitTests {
 		public @Nullable String read(org.bson.@Nullable Document value, MongoConversionContext context) {
 			return value.getString("foo");
 		}
-
 
 		@Override
 		public org.bson.@Nullable Document write(@Nullable String value, MongoConversionContext context) {

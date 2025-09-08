@@ -155,7 +155,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
-		private @Nullable BigDecimalRepresentation bigDecimals;
+		private BigDecimalRepresentation @Nullable [] bigDecimals;
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
@@ -312,14 +312,14 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * Configures the representation to for {@link java.math.BigDecimal} and {@link java.math.BigInteger} values in
 		 * MongoDB. Defaults to {@link BigDecimalRepresentation#DECIMAL128}.
 		 *
-		 * @param representation the representation to use.
+		 * @param representations ordered list of representations to use (first one is default)
 		 * @return this.
 		 * @since 4.5
 		 */
-		public MongoConverterConfigurationAdapter bigDecimal(BigDecimalRepresentation representation) {
+		public MongoConverterConfigurationAdapter bigDecimal(BigDecimalRepresentation... representations) {
 
-			Assert.notNull(representation, "BigDecimalDataType must not be null");
-			this.bigDecimals = representation;
+			Assert.notEmpty(representations, "BigDecimalDataType must not be null");
+			this.bigDecimals = representations;
 			return this;
 		}
 
@@ -375,13 +375,15 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			List<Object> storeConverters = new ArrayList<>(STORE_CONVERTERS.size() + 10);
 
 			if (bigDecimals != null) {
-				switch (bigDecimals) {
-					case STRING -> storeConverters.addAll(MongoConverters.getBigNumberStringConverters());
-					case DECIMAL128 -> storeConverters.addAll(MongoConverters.getBigNumberDecimal128Converters());
+				for (BigDecimalRepresentation representation : bigDecimals) {
+					switch (representation) {
+						case STRING -> storeConverters.addAll(MongoConverters.getBigNumberStringConverters());
+						case DECIMAL128 -> storeConverters.addAll(MongoConverters.getBigNumberDecimal128Converters());
+					}
 				}
 			} else if (LOGGER.isInfoEnabled()) {
 				LOGGER.info(
-						"No BigDecimal/BigInteger representation set. Choose [STRING] or [DECIMAL128] to store values in desired format.");
+						"No BigDecimal/BigInteger representation set. Choose [DECIMAL128] and/or [String] to store values in desired format.");
 			}
 
 			if (useNativeDriverJavaTimeCodecs) {

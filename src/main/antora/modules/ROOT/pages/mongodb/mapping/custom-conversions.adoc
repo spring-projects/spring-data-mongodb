@@ -4,7 +4,7 @@ include::{commons}@data-commons::page$custom-conversions.adoc[]
 == Type based Converter
 
 The most trivial way of influencing the mapping result is by specifying the desired native MongoDB target type via the `@Field` annotation.
-This allows to work with non MongoDB types like `BigDecimal` in the domain model while persisting values in native `org.bson.types.Decimal128` format.
+This allows to work with non MongoDB types like `BigDecimal` in the domain model while persisting values in eg. `String` format.
 
 .Explicit target type mapping
 ====
@@ -33,8 +33,7 @@ public class Payment {
 <1> String _id_ values that represent a valid `ObjectId` are converted automatically. See xref:mongodb/template-crud-operations.adoc#mongo-template.id-handling[How the `_id` Field is Handled in the Mapping Layer]
 for details.
 <2> The desired target type is explicitly defined as `String`.
-Otherwise, the
-`BigDecimal` value would have been turned into a `Decimal128`.
+Otherwise.
 <3> `Date` values are handled by the MongoDB driver itself are stored as `ISODate`.
 ====
 
@@ -113,8 +112,10 @@ To persist `BigDecimal` and `BigInteger` values, Spring Data MongoDB converted v
 This approach had several downsides due to lexical instead of numeric comparison for queries, updates, etc.
 
 With MongoDB Server 3.4, `org.bson.types.Decimal128` offers a native representation for `BigDecimal` and `BigInteger`.
-As of Spring Data MongoDB 5.0. the default representation of those types moved to MongoDB native `org.bson.types.Decimal128`.
-You can still use the to the previous `String` variant by configuring the big decimal representation in `MongoCustomConversions` through `MongoCustomConversions.create(config -> config.bigDecimal(BigDecimalRepresentation.STRING))`.
+As of Spring Data MongoDB 5.0. there no longer is a default representation of those types and conversion needs to be configured explicitly.
+You can register multiple formats, 1st being default, and still retain the previous behaviour by configuring the `BigDecimalRepresentation` in `MongoCustomConversions` through `MongoCustomConversions.create(config -> config.bigDecimal(BigDecimalRepresentation.STRING, BigDecimalRepresentation.DECIMAL128))`.
+This allows you to make use of the explicit storage type format via `@Field(targetType = DECIMAL128)` while keeping default conversion set to String.
+Choosing none of the provided representations is valid as long as those values are no persisted.
 
 [NOTE]
 ====
