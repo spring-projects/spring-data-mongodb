@@ -110,9 +110,9 @@ abstract class MongoConverters {
 	 * @return
 	 * @since 5.0
 	 */
-	static Collection<Object> getBigNumberDecimal128Converters() {
+	static Collection<Converter<?, ?>> getBigNumberDecimal128Converters() {
 
-		List<Object> converters = new ArrayList<>(3);
+		List<Converter<?, ?>> converters = new ArrayList<>(3);
 
 		converters.add(BigDecimalToDecimal128Converter.INSTANCE);
 		converters.add(Decimal128ToBigDecimalConverter.INSTANCE);
@@ -127,9 +127,9 @@ abstract class MongoConverters {
 	 * @return
 	 * @since 5.0
 	 */
-	static Collection<Object> getBigNumberStringConverters() {
+	static Collection<Converter<?, ?>> getBigNumberStringConverters() {
 
-		List<Object> converters = new ArrayList<>(4);
+		List<Converter<?, ?>> converters = new ArrayList<>(2);
 
 		converters.add(BigDecimalToStringConverter.INSTANCE);
 		converters.add(BigIntegerToStringConverter.INSTANCE);
@@ -228,6 +228,7 @@ abstract class MongoConverters {
 		}
 	}
 
+	@WritingConverter
 	enum BigDecimalToStringConverter implements Converter<BigDecimal, String> {
 		INSTANCE;
 
@@ -239,6 +240,7 @@ abstract class MongoConverters {
 	/**
 	 * @since 2.2
 	 */
+	@WritingConverter
 	enum BigDecimalToDecimal128Converter implements Converter<BigDecimal, Decimal128> {
 		INSTANCE;
 
@@ -250,6 +252,7 @@ abstract class MongoConverters {
 	/**
 	 * @since 5.0
 	 */
+	@WritingConverter
 	enum BigIntegerToDecimal128Converter implements Converter<BigInteger, Decimal128> {
 		INSTANCE;
 
@@ -258,6 +261,7 @@ abstract class MongoConverters {
 		}
 	}
 
+	@ReadingConverter
 	enum StringToBigDecimalConverter implements Converter<String, BigDecimal> {
 		INSTANCE;
 
@@ -269,6 +273,7 @@ abstract class MongoConverters {
 	/**
 	 * @since 2.2
 	 */
+	@ReadingConverter
 	enum Decimal128ToBigDecimalConverter implements Converter<Decimal128, BigDecimal> {
 		INSTANCE;
 

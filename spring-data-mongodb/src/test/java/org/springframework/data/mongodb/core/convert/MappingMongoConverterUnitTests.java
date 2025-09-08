@@ -15,22 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static java.time.ZoneId.systemDefault;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.data.mongodb.core.DocumentTestUtils.assertTypeHint;
-import static org.springframework.data.mongodb.core.DocumentTestUtils.getAsDocument;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThatExceptionOfType;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThatThrownBy;
-import static org.springframework.data.mongodb.test.util.Assertions.fail;
+import static java.time.ZoneId.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -39,24 +27,7 @@ import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -82,6 +53,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,7 +62,6 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
-import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
@@ -2207,57 +2178,153 @@ class MappingMongoConverterUnitTests {
 
 	@Test // GH-5037
 	@SuppressWarnings("deprecation")
-	void mapsBigIntegerToDecimal128WhenAnnotatedWithFieldTargetTypeWhenDefaultConversionIsSetToString() {
+	void mapsBigNumbersToString() {
 
-		converter = createConverter(BigDecimalRepresentation.STRING, BigDecimalRepresentation.DECIMAL128);
+		converter = createConverter(BigDecimalRepresentation.STRING);
 
-		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
-		source.bigDecimal = BigDecimal.valueOf(3.14159D);
+		WithoutExplicitTargetTypes source = new WithoutExplicitTargetTypes();
+		source.bigInteger = BigInteger.TWO;
+		source.bigDecimal = new BigDecimal("3.14159");
 
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 
-		assertThat(target.get("bigDecimal")).isEqualTo(new Decimal128(source.bigDecimal));
+		assertThat(target.get("bigInteger")).isEqualTo(source.bigInteger.toString());
+		assertThat(target.get("bigDecimal")).isEqualTo(source.bigDecimal.toString());
 	}
 
 	@Test // GH-5037
-	@SuppressWarnings("deprecation")
-	void mapsBigIntegerToStringWhenNotAnnotatedWithFieldTargetTypeAndDefaultConversionIsSetToString() {
-
-		converter = createConverter(BigDecimalRepresentation.STRING, BigDecimalRepresentation.DECIMAL128);
-
-		BigDecimalContainer source = new BigDecimalContainer();
-		source.value = BigDecimal.valueOf(3.14159D);
-		org.bson.Document target = new org.bson.Document();
-		converter.write(source, target);
-		assertThat(target.get("value")).isInstanceOf(String.class);
-	}
-
-	@Test // GH-5037
-	void mapsBigIntegerToStringWhenAnnotatedWithFieldTargetTypeEvenWhenDefaultConverterIsSetToDecimal128() {
+	void mapsBigNumbersToDecimal128() {
 
 		converter = createConverter(BigDecimalRepresentation.DECIMAL128);
 
+		WithoutExplicitTargetTypes source = new WithoutExplicitTargetTypes();
+		source.bigInteger = BigInteger.TWO;
+		source.bigDecimal = new BigDecimal("3.14159");
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("bigInteger")).isEqualTo(new Decimal128(source.bigInteger.longValue()));
+		assertThat(target.get("bigDecimal")).isEqualTo(new Decimal128(source.bigDecimal));
+	}
+
+	@ParameterizedTest // GH-5037
+	@MethodSource("representations")
+	void shouldApplyExplicitBigIntegerToStringConversion(BigDecimalRepresentation representation) {
+
+		converter = createConverter(representation);
+
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
 		source.bigIntegerAsString = BigInteger.TWO;
+		source.bigDecimalAsString = new BigDecimal("123.456");
 
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 
 		assertThat(target.get("bigIntegerAsString")).isEqualTo(source.bigIntegerAsString.toString());
+		assertThat(target.get("bigDecimalAsString")).isEqualTo(source.bigDecimalAsString.toString());
 	}
 
-	@Test // GH-5037
-	void explicitBigNumberConversionErrorsIfConverterNotRegistered() {
+	@ParameterizedTest // GH-5037
+	@MethodSource("representations")
+	void shouldApplyExplicitDecimal128Conversion(BigDecimalRepresentation representation) {
 
-		converter = createConverter(BigDecimalRepresentation.STRING);
+		converter = createConverter(representation);
 
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
 		source.bigInteger = BigInteger.TWO;
+		source.bigDecimal = new BigDecimal("123.456");
 
 		org.bson.Document target = new org.bson.Document();
 
-		assertThatExceptionOfType(ConversionFailedException.class).isThrownBy(() -> converter.write(source, target));
+		converter.write(source, target);
+
+		assertThat(target.get("bigInteger")).isEqualTo(new Decimal128(source.bigInteger.longValue()));
+		assertThat(target.get("bigDecimal")).isEqualTo(new Decimal128(source.bigDecimal));
+	}
+
+	static Stream<Arguments> representations() {
+		return Stream.of(Arguments.argumentSet("None (default)", new Object[] { null }), //
+				Arguments.argumentSet("STRING", BigDecimalRepresentation.STRING), //
+				Arguments.argumentSet("DECIMAL128", BigDecimalRepresentation.DECIMAL128));
+	}
+
+	@Test // GH-5037
+	void shouldWriteBigNumbersAsIsWithoutConfiguration() {
+
+		converter = createConverter();
+
+		WithoutExplicitTargetTypes source = new WithoutExplicitTargetTypes();
+		source.bigInteger = BigInteger.TWO;
+		source.bigDecimal = new BigDecimal("123.456");
+
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(source, target);
+
+		assertThat(target.get("bigInteger")).isEqualTo(source.bigInteger);
+		assertThat(target.get("bigDecimal")).isEqualTo(source.bigDecimal);
+	}
+
+	@Test // GH-5037
+	void shouldReadTypedBigNumbersFromDecimal128() {
+
+		converter = createConverter();
+
+		org.bson.Document target = new org.bson.Document();
+		target.put("bigInteger", new Decimal128(2));
+		target.put("bigDecimal", new Decimal128(new BigDecimal("123.456")));
+
+		WithExplicitTargetTypes result = converter.read(WithExplicitTargetTypes.class, target);
+
+		assertThat(result.bigInteger).isEqualTo(BigInteger.TWO);
+		assertThat(result.bigDecimal).isEqualTo(new BigDecimal("123.456"));
+	}
+
+	@Test // GH-5037
+	void shouldReadTypedBigNumbersFromString() {
+
+		converter = createConverter();
+
+		org.bson.Document target = new org.bson.Document();
+		target.put("bigIntegerAsString", "2");
+		target.put("bigDecimalAsString", "123.456");
+
+		WithExplicitTargetTypes result = converter.read(WithExplicitTargetTypes.class, target);
+
+		assertThat(result.bigIntegerAsString).isEqualTo(BigInteger.TWO);
+		assertThat(result.bigDecimalAsString).isEqualTo(new BigDecimal("123.456"));
+	}
+
+	@Test // GH-5037
+	void shouldReadBigNumbersFromDecimal128() {
+
+		converter = createConverter();
+
+		org.bson.Document target = new org.bson.Document();
+		target.put("bigInteger", new Decimal128(2));
+		target.put("bigDecimal", new Decimal128(new BigDecimal("123.456")));
+
+		WithoutExplicitTargetTypes result = converter.read(WithoutExplicitTargetTypes.class, target);
+
+		assertThat(result.bigInteger).isEqualTo(BigInteger.TWO);
+		assertThat(result.bigDecimal).isEqualTo(new BigDecimal("123.456"));
+	}
+
+	@Test // GH-5037
+	void shouldReadBigNumbersFromString() {
+
+		converter = createConverter();
+
+		org.bson.Document target = new org.bson.Document();
+		target.put("bigInteger", "2");
+		target.put("bigDecimal", "123.456");
+
+		WithoutExplicitTargetTypes result = converter.read(WithoutExplicitTargetTypes.class, target);
+
+		assertThat(result.bigInteger).isEqualTo(BigInteger.TWO);
+		assertThat(result.bigDecimal).isEqualTo(new BigDecimal("123.456"));
 	}
 
 	@Test // DATAMONGO-2328
@@ -3517,11 +3584,21 @@ class MappingMongoConverterUnitTests {
 		assertThat(document).containsEntry("map.foo", "2.5");
 	}
 
+	private MappingMongoConverter createConverter() {
+		return createConverter(null);
+	}
+
 	private MappingMongoConverter createConverter(
-			MongoCustomConversions.BigDecimalRepresentation... bigDecimalRepresentation) {
+			MongoCustomConversions.BigDecimalRepresentation bigDecimalRepresentation) {
 
 		MongoCustomConversions conversions = MongoCustomConversions.create(
-				it -> it.registerConverter(new ByteBufferToDoubleHolderConverter()).bigDecimal(bigDecimalRepresentation));
+				it -> {
+					it.registerConverter(new ByteBufferToDoubleHolderConverter());
+
+					if (bigDecimalRepresentation != null) {
+						it.bigDecimal(bigDecimalRepresentation);
+					}
+				});
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setApplicationContext(context);
@@ -4197,6 +4274,9 @@ class MappingMongoConverterUnitTests {
 		@Field(targetType = FieldType.STRING) //
 		BigInteger bigIntegerAsString;
 
+		@Field(targetType = FieldType.STRING) //
+		BigDecimal bigDecimalAsString;
+
 		@Field(targetType = FieldType.INT64) //
 		Date dateAsLong;
 
@@ -4208,6 +4288,14 @@ class MappingMongoConverterUnitTests {
 
 		@Field(targetType = FieldType.OBJECT_ID) //
 		Date dateAsObjectId;
+	}
+
+	static class WithoutExplicitTargetTypes {
+
+		BigDecimal bigDecimal;
+
+		BigInteger bigInteger;
+
 	}
 
 	static class WrapperAroundWithUnwrapped {

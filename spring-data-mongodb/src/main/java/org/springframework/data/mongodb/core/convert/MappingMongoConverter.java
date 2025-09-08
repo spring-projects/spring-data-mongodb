@@ -1376,6 +1376,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 		if (typeHint != null && Object.class != typeHint) {
 
+			// TODO this is weird and leads to double-conversion in some cases, e.g. BigDecimal -> Decimal128 -> BigDecimal
 			if (conversionService.canConvert(value.getClass(), typeHint)) {
 				value = doConvert(value, typeHint);
 			}
