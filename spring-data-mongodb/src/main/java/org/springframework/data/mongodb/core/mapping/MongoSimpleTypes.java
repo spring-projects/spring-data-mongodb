@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.Set;
@@ -60,7 +61,7 @@ public abstract class MongoSimpleTypes {
 			BsonDocument.class, BsonDouble.class, BsonInt32.class, BsonInt64.class, BsonJavaScript.class,
 			BsonJavaScriptWithScope.class, BsonObjectId.class, BsonRegularExpression.class, BsonString.class,
 			BsonTimestamp.class, Geometry.class, GeometryCollection.class, LineString.class, MultiLineString.class,
-			MultiPoint.class, MultiPolygon.class, Point.class, Polygon.class);
+			MultiPoint.class, MultiPolygon.class, Point.class, Polygon.class, BigInteger.class, BigDecimal.class);
 
 	public static final SimpleTypeHolder HOLDER = createSimpleTypeHolder();
 

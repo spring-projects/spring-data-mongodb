@@ -30,13 +30,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.PropertyValueConversions;
@@ -79,6 +82,12 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	}
 
 	/**
+	 * Converters to be registered with the {@code ConversionService} but hidden from CustomConversions to avoid
+	 * converter-based type hinting.
+	 */
+	private final List<Converter<?, ?>> fallbackConversionServiceConverters = new ArrayList<>();
+
+	/**
 	 * Creates an empty {@link MongoCustomConversions} object.
 	 */
 	MongoCustomConversions() {
@@ -101,7 +110,12 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	 * @since 2.3
 	 */
 	protected MongoCustomConversions(MongoConverterConfigurationAdapter conversionConfiguration) {
-		super(conversionConfiguration.createConverterConfiguration());
+		this(conversionConfiguration.createConverterConfiguration());
+	}
+
+	private MongoCustomConversions(MongoConverterConfiguration converterConfiguration) {
+		super(converterConfiguration);
+		this.fallbackConversionServiceConverters.addAll(converterConfiguration.fallbackConversionServiceConverters);
 	}
 
 	/**
@@ -118,6 +132,12 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		configurer.accept(adapter);
 
 		return new MongoCustomConversions(adapter);
+	}
+
+	@Override
+	public void registerConvertersIn(ConverterRegistry conversionService) {
+		this.fallbackConversionServiceConverters.forEach(conversionService::addConverter);
+		super.registerConvertersIn(conversionService);
 	}
 
 	@WritingConverter
@@ -155,7 +175,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
-		private BigDecimalRepresentation @Nullable [] bigDecimals;
+		private @Nullable BigDecimalRepresentation bigDecimals;
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
@@ -312,14 +332,14 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * Configures the representation to for {@link java.math.BigDecimal} and {@link java.math.BigInteger} values in
 		 * MongoDB. Defaults to {@link BigDecimalRepresentation#DECIMAL128}.
 		 *
-		 * @param representations ordered list of representations to use (first one is default)
+		 * @param representation the representation to use.
 		 * @return this.
 		 * @since 4.5
 		 */
-		public MongoConverterConfigurationAdapter bigDecimal(BigDecimalRepresentation... representations) {
+		public MongoConverterConfigurationAdapter bigDecimal(BigDecimalRepresentation representation) {
 
-			Assert.notEmpty(representations, "BigDecimalDataType must not be null");
-			this.bigDecimals = representations;
+			Assert.notNull(representation, "BigDecimalDataType must not be null");
+			this.bigDecimals = representation;
 			return this;
 		}
 
@@ -365,7 +385,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return this.propertyValueConversions;
 		}
 
-		ConverterConfiguration createConverterConfiguration() {
+		MongoConverterConfiguration createConverterConfiguration() {
 
 			if (hasDefaultPropertyValueConversions()
 					&& propertyValueConversions instanceof SimplePropertyValueConversions svc) {
@@ -373,18 +393,23 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			}
 
 			List<Object> storeConverters = new ArrayList<>(STORE_CONVERTERS.size() + 10);
+			List<Converter<?, ?>> fallbackConversionServiceConverters = new ArrayList<>(5);
+			fallbackConversionServiceConverters.addAll(MongoConverters.getBigNumberStringConverters());
+			fallbackConversionServiceConverters.addAll(MongoConverters.getBigNumberDecimal128Converters());
 
-			if (bigDecimals != null) {
-				for (BigDecimalRepresentation representation : bigDecimals) {
-					switch (representation) {
-						case STRING -> storeConverters.addAll(MongoConverters.getBigNumberStringConverters());
-						case DECIMAL128 -> storeConverters.addAll(MongoConverters.getBigNumberDecimal128Converters());
-					}
+			if (bigDecimals == null) {
+				if (LOGGER.isInfoEnabled()) {
+					LOGGER.info(
+							"No BigDecimal/BigInteger representation set. Choose 'BigDecimalRepresentation.DECIMAL128' or 'BigDecimalRepresentation.String' to store values in desired format.");
 				}
-			} else if (LOGGER.isInfoEnabled()) {
-				LOGGER.info(
-						"No BigDecimal/BigInteger representation set. Choose [DECIMAL128] and/or [String] to store values in desired format.");
+			} else {
+				switch (bigDecimals) {
+					case STRING -> storeConverters.addAll(MongoConverters.getBigNumberStringConverters());
+					case DECIMAL128 -> storeConverters.addAll(MongoConverters.getBigNumberDecimal128Converters());
+				}
 			}
+
+			fallbackConversionServiceConverters.removeAll(storeConverters);
 
 			if (useNativeDriverJavaTimeCodecs) {
 
@@ -397,7 +422,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				StoreConversions storeConversions = StoreConversions
 						.of(new SimpleTypeHolder(JAVA_DRIVER_TIME_SIMPLE_TYPES, MongoSimpleTypes.HOLDER), storeConverters);
 
-				return new ConverterConfiguration(storeConversions, this.customConverters, convertiblePair -> {
+				return new MongoConverterConfiguration(storeConversions, fallbackConversionServiceConverters,
+						this.customConverters, convertiblePair -> {
 
 					// Avoid default registrations
 
@@ -408,14 +434,29 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			}
 
 			storeConverters.addAll(STORE_CONVERTERS);
-			return new ConverterConfiguration(StoreConversions.of(MongoSimpleTypes.createSimpleTypeHolder(), storeConverters),
-					this.customConverters, convertiblePair -> true, this.propertyValueConversions);
+			return new MongoConverterConfiguration(
+					StoreConversions.of(MongoSimpleTypes.createSimpleTypeHolder(), storeConverters),
+					fallbackConversionServiceConverters, this.customConverters, convertiblePair -> true,
+					this.propertyValueConversions);
 		}
 
 		private boolean hasDefaultPropertyValueConversions() {
 			return propertyValueConversions == internalValueConversion;
 		}
 
+	}
+
+	static class MongoConverterConfiguration extends ConverterConfiguration {
+
+		private final List<Converter<?, ?>> fallbackConversionServiceConverters;
+
+		public MongoConverterConfiguration(StoreConversions storeConversions,
+				List<Converter<?, ?>> fallbackConversionServiceConverters, List<?> userConverters,
+				Predicate<GenericConverter.ConvertiblePair> converterRegistrationFilter,
+				@Nullable PropertyValueConversions propertyValueConversions) {
+			super(storeConversions, userConverters, converterRegistrationFilter, propertyValueConversions);
+			this.fallbackConversionServiceConverters = fallbackConversionServiceConverters;
+		}
 	}
 
 	/**
