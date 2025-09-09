@@ -398,21 +398,12 @@ class MappingMongoConverterUnitTests {
 
 		assertThat(document.get("value")).isEqualTo(Decimal128.parse("2.5"));
 		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(Decimal128.class);
-	} // MappingMongoConverterUnitTests
+	}
 
 	@Test // DATACMNS-42, DATAMONGO-171, GH-4920
 	void writesClassWithBigDecimalFails() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(new MongoConverterConfigurationAdapter());
-
-		mappingContext = new MongoMappingContext();
-		mappingContext.setApplicationContext(context);
-		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
-		mappingContext.afterPropertiesSet();
-
-		mappingContext.getPersistentEntity(Address.class);
-
-		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter = createConverter();
 
 		BigDecimalContainer container = new BigDecimalContainer();
 		container.value = BigDecimal.valueOf(2.5d);
@@ -2244,7 +2235,9 @@ class MappingMongoConverterUnitTests {
 		assertThat(target.get("bigDecimal")).isEqualTo(new Decimal128(source.bigDecimal));
 	}
 
+	@SuppressWarnings("deprecation")
 	static Stream<Arguments> representations() {
+
 		return Stream.of(Arguments.argumentSet("None (default)", new Object[] { null }), //
 				Arguments.argumentSet("STRING", BigDecimalRepresentation.STRING), //
 				Arguments.argumentSet("DECIMAL128", BigDecimalRepresentation.DECIMAL128));
