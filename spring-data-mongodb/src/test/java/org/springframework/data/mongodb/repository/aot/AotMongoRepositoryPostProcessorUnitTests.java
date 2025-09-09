@@ -19,9 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.jmolecules.ddd.annotation.Entity;
 import org.jspecify.annotations.Nullable;
@@ -42,6 +44,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.aot.AotContext;
+import org.springframework.data.aot.AotTypeConfiguration;
 import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.config.AotRepositoryContext;
@@ -178,6 +181,11 @@ class AotMongoRepositoryPostProcessorUnitTests {
 		}
 
 		@Override
+		public Set<Class<?>> getUserDomainTypes() {
+			return Set.of();
+		}
+
+		@Override
 		public ConfigurableListableBeanFactory getBeanFactory() {
 			return applicationContext != null ? applicationContext.getBeanFactory() : null;
 		}
@@ -197,6 +205,15 @@ class AotMongoRepositoryPostProcessorUnitTests {
 			return null;
 		}
 
+		@Override
+		public void typeConfiguration(Class<?> type, Consumer<AotTypeConfiguration> configurationConsumer) {
+
+		}
+
+		@Override
+		public Collection<AotTypeConfiguration> typeConfigurations() {
+			return List.of();
+		}
 	}
 
 }

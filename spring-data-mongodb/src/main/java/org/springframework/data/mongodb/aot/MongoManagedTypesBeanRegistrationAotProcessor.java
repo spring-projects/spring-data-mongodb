@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.aot;
 import org.jspecify.annotations.Nullable;
 import org.springframework.aot.generate.GenerationContext;
 import org.springframework.core.ResolvableType;
+import org.springframework.data.aot.AotContext;
 import org.springframework.data.aot.ManagedTypesBeanRegistrationAotProcessor;
 import org.springframework.data.mongodb.MongoManagedTypes;
 import org.springframework.util.ClassUtils;
@@ -44,13 +45,13 @@ class MongoManagedTypesBeanRegistrationAotProcessor extends ManagedTypesBeanRegi
 	}
 
 	@Override
-	protected void contributeType(ResolvableType type, GenerationContext generationContext) {
+	protected void contributeType(ResolvableType type, GenerationContext generationContext, AotContext aotContext) {
 
 		if (MongoAotPredicates.IS_SIMPLE_TYPE.test(type.toClass())) {
 			return;
 		}
 
-		super.contributeType(type, generationContext);
+		super.contributeType(type, generationContext, aotContext);
 		lazyLoadingProxyAotProcessor.registerLazyLoadingProxyIfNeeded(type.toClass(), generationContext);
 	}
 }

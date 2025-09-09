@@ -17,8 +17,10 @@ package org.springframework.data.mongodb.repository.aot;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.jspecify.annotations.Nullable;
 
@@ -28,6 +30,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.test.tools.ClassFile;
+import org.springframework.data.aot.AotTypeConfiguration;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFragmentsContributor;
 import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
@@ -78,6 +81,16 @@ public class TestMongoAotRepositoryContext implements AotRepositoryContext {
 	}
 
 	@Override
+	public void typeConfiguration(Class<?> type, Consumer<AotTypeConfiguration> configurationConsumer) {
+
+	}
+
+	@Override
+	public Collection<AotTypeConfiguration> typeConfigurations() {
+		return List.of();
+	}
+
+	@Override
 	public String getBeanName() {
 		return "dummyRepository";
 	}
@@ -114,6 +127,11 @@ public class TestMongoAotRepositoryContext implements AotRepositoryContext {
 
 	@Override
 	public Set<Class<?>> getResolvedTypes() {
+		return Set.of();
+	}
+
+	@Override
+	public Set<Class<?>> getUserDomainTypes() {
 		return Set.of();
 	}
 
