@@ -56,5 +56,4 @@ static class Config extends AbstractMongoClientConfiguration {
 }
 ----
 
-Users upgrading from prior versions may choose `BigDecimalRepresentation.STRING` as default.
-Those using`@Field(targetType = FieldType.DECIMAL128)` need to define a combination of representations `configAdapter.bigDecimal(BigDecimalRepresentation.STRING, BigDecimalRepresentation.DECIMAL128)` to set defaulting to String while having the `DECIMAL128` converter being registered for usage with explicit target type configuration.
+Users upgrading from prior versions may choose `BigDecimalRepresentation.STRING` as default to retain previous behaviour.
