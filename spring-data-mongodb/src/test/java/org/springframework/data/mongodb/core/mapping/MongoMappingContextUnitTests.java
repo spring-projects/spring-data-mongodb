@@ -96,6 +96,7 @@ public class MongoMappingContextUnitTests {
 		context.setApplicationContext(applicationContext);
 
 		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> context.getPersistentEntity(InvalidPerson.class))
+				.havingRootCause()
 				.withMessageContaining("firstname").withMessageContaining("lastname").withMessageContaining("foo")
 				.withMessageContaining("@Field");
 	}
@@ -158,7 +159,7 @@ public class MongoMappingContextUnitTests {
 		MongoMappingContext context = new MongoMappingContext();
 
 		assertThatExceptionOfType(MappingException.class)
-				.isThrownBy(() -> context.getPersistentEntity(ClassWithInvalidTextScoreProperty.class))
+				.isThrownBy(() -> context.getPersistentEntity(ClassWithInvalidTextScoreProperty.class)).havingRootCause()
 				.withMessageContaining("score").withMessageContaining("Float").withMessageContaining("Double");
 	}
 
