@@ -378,7 +378,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 			if (!useNativeDriverJavaTimeCodecs) {
 
-				converters.addAll(customConverters);
+				converters.addAll(0, customConverters); // need to add at index 0!!
 				return new ConverterConfiguration(STORE_CONVERSIONS, converters, convertiblePair -> true,
 						this.propertyValueConversions);
 			}
