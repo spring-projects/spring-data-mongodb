@@ -53,7 +53,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,6 +108,7 @@ import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -3577,16 +3577,39 @@ class MappingMongoConverterUnitTests {
 		assertThat(document).containsEntry("map.foo", "2.5");
 	}
 
+    @Test // GH-5036
+    void withCustomBigIntegerConversion() {
+
+        MappingMongoConverter converter = createConverter(MongoCustomConversions.BigDecimalRepresentation.STRING,
+            new CustomBigIntegerToStringConverter());
+
+        WithoutExplicitTargetTypes container = new WithoutExplicitTargetTypes();
+        container.bigInteger = BigInteger.TEN;
+
+        org.bson.Document document = new org.bson.Document();
+        converter.write(container, document);
+
+        assertThat(document).containsEntry("bigInteger", "BigInteger('10')");
+    }
+
 	private MappingMongoConverter createConverter() {
-		return createConverter(null);
+		return createConverter(null, new ByteBufferToDoubleHolderConverter());
 	}
 
 	private MappingMongoConverter createConverter(
-			MongoCustomConversions.BigDecimalRepresentation bigDecimalRepresentation) {
+		MongoCustomConversions.BigDecimalRepresentation bigDecimalRepresentation) {
+		return createConverter(bigDecimalRepresentation, new ByteBufferToDoubleHolderConverter());
+	}
+
+		private MappingMongoConverter createConverter(
+			MongoCustomConversions.BigDecimalRepresentation bigDecimalRepresentation, Converter<?,?>... customConverters) {
 
 		MongoCustomConversions conversions = MongoCustomConversions.create(
 				it -> {
-					it.registerConverter(new ByteBufferToDoubleHolderConverter());
+
+					if(!ObjectUtils.isEmpty(customConverters)) {
+						Arrays.stream(customConverters).forEach(it::registerConverter);
+					}
 
 					if (bigDecimalRepresentation != null) {
 						it.bigDecimal(bigDecimalRepresentation);
@@ -3612,6 +3635,14 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 		return target;
+	}
+
+	@WritingConverter
+	static class CustomBigIntegerToStringConverter implements Converter<BigInteger, String> {
+		@Override
+		public String convert(BigInteger source) {
+			return "BigInteger('%s')".formatted(source.toString());
+		}
 	}
 
 	static class WithVector {
