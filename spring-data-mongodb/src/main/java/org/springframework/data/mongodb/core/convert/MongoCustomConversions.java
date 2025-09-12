@@ -175,7 +175,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
-		private @Nullable BigDecimalRepresentation bigDecimals;
+		private BigDecimalRepresentation bigDecimals = BigDecimalRepresentation.UNSPECIFIED;
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
@@ -476,7 +476,13 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		/**
 		 * Store numbers using {@link org.bson.types.Decimal128} (default). Requires MongoDB Server 3.4 or later.
 		 */
-		DECIMAL128
+		DECIMAL128,
+
+		/**
+		 * Pass on values to the MongoDB Java Driver without any prior conversion.
+		 * @since 5.0
+		 */
+		UNSPECIFIED
 
 	}
 
