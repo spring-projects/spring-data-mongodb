@@ -476,7 +476,13 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		/**
 		 * Store numbers using {@link org.bson.types.Decimal128} (default). Requires MongoDB Server 3.4 or later.
 		 */
-		DECIMAL128
+		DECIMAL128,
+
+		/**
+		 * Pass on values to the MongoDB Java Driver without any prior conversion.
+		 * @since 5.0
+		 */
+		UNSPECIFIED
 
 	}
 

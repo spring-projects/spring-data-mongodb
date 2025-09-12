@@ -2239,6 +2239,7 @@ class MappingMongoConverterUnitTests {
 	static Stream<Arguments> representations() {
 
 		return Stream.of(Arguments.argumentSet("None (default)", new Object[] { null }), //
+				Arguments.argumentSet("UNSPECIFIED", BigDecimalRepresentation.UNSPECIFIED), //
 				Arguments.argumentSet("STRING", BigDecimalRepresentation.STRING), //
 				Arguments.argumentSet("DECIMAL128", BigDecimalRepresentation.DECIMAL128));
 	}
@@ -2247,6 +2248,23 @@ class MappingMongoConverterUnitTests {
 	void shouldWriteBigNumbersAsIsWithoutConfiguration() {
 
 		converter = createConverter();
+
+		WithoutExplicitTargetTypes source = new WithoutExplicitTargetTypes();
+		source.bigInteger = BigInteger.TWO;
+		source.bigDecimal = new BigDecimal("123.456");
+
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(source, target);
+
+		assertThat(target.get("bigInteger")).isEqualTo(source.bigInteger);
+		assertThat(target.get("bigDecimal")).isEqualTo(source.bigDecimal);
+	}
+
+	@Test // GH-5037, GH-5054
+	void shouldWriteBigNumbersAsIsWhenUsingUnspecified() {
+
+		converter = createConverter(BigDecimalRepresentation.UNSPECIFIED);
 
 		WithoutExplicitTargetTypes source = new WithoutExplicitTargetTypes();
 		source.bigInteger = BigInteger.TWO;
