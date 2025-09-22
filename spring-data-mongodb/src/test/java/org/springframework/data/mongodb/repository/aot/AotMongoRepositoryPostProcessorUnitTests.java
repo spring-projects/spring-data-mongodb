@@ -19,14 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.jmolecules.ddd.annotation.Entity;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.ClearSystemProperty;
 import org.junitpioneer.jupiter.SetSystemProperty;
@@ -36,18 +33,14 @@ import org.springframework.aot.generate.ClassNameGenerator;
 import org.springframework.aot.generate.DefaultGenerationContext;
 import org.springframework.aot.generate.GenerationContext;
 import org.springframework.aot.generate.InMemoryGeneratedFiles;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.annotation.MergedAnnotation;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.aot.AotContext;
-import org.springframework.data.aot.AotTypeConfiguration;
 import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
 import org.springframework.data.repository.Repository;
-import org.springframework.data.repository.config.AotRepositoryContext;
+import org.springframework.data.repository.config.AotRepositoryContextSupport;
 import org.springframework.data.repository.config.AotRepositoryInformation;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -65,10 +58,10 @@ class AotMongoRepositoryPostProcessorUnitTests {
 	@SetSystemProperty(key = AotDetector.AOT_ENABLED, value = "true")
 	void repositoryProcessorShouldEnableAotRepositoriesByDefaultWhenAotIsEnabled() {
 
-		GenerationContext ctx = createGenerationContext();
 		GenericApplicationContext context = new GenericApplicationContext();
+		context.refresh();
 
-		MongoRepositoryContributor contributor = createContributorWithPersonTypes(context, ctx);
+		MongoRepositoryContributor contributor = createContributorWithPersonTypes(context);
 
 		assertThat(contributor).isNotNull();
 	}
@@ -77,10 +70,10 @@ class AotMongoRepositoryPostProcessorUnitTests {
 	@ClearSystemProperty(key = AotContext.GENERATED_REPOSITORIES_ENABLED)
 	void shouldEnableAotRepositoriesByDefault() {
 
-		GenerationContext ctx = createGenerationContext();
 		GenericApplicationContext context = new GenericApplicationContext();
+		context.refresh();
 
-		MongoRepositoryContributor contributor = createContributorWithPersonTypes(context, ctx);
+		MongoRepositoryContributor contributor = createContributorWithPersonTypes(context);
 
 		assertThat(contributor).isNotNull();
 	}
@@ -89,10 +82,10 @@ class AotMongoRepositoryPostProcessorUnitTests {
 	@SetSystemProperty(key = AotContext.GENERATED_REPOSITORIES_ENABLED, value = "false")
 	void shouldDisableAotRepositoriesWhenGeneratedRepositoriesIsFalse() {
 
-		GenerationContext ctx = createGenerationContext();
 		GenericApplicationContext context = new GenericApplicationContext();
+		context.refresh();
 
-		MongoRepositoryContributor contributor = createContributorWithPersonTypes(context, ctx);
+		MongoRepositoryContributor contributor = createContributorWithPersonTypes(context);
 
 		assertThat(contributor).isNull();
 	}
@@ -101,10 +94,10 @@ class AotMongoRepositoryPostProcessorUnitTests {
 	@SetSystemProperty(key = "spring.aot.mongodb.repositories.enabled", value = "false")
 	void shouldDisableAotRepositoriesWhenJpaGeneratedRepositoriesIsFalse() {
 
-		GenerationContext ctx = createGenerationContext();
 		GenericApplicationContext context = new GenericApplicationContext();
+		context.refresh();
 
-		MongoRepositoryContributor contributor = createContributorWithPersonTypes(context, ctx);
+		MongoRepositoryContributor contributor = createContributorWithPersonTypes(context);
 
 		assertThat(contributor).isNull();
 	}
@@ -113,15 +106,14 @@ class AotMongoRepositoryPostProcessorUnitTests {
 		return new DefaultGenerationContext(new ClassNameGenerator(ClassName.OBJECT), new InMemoryGeneratedFiles());
 	}
 
-	private MongoRepositoryContributor createContributorWithPersonTypes(GenericApplicationContext context,
-			GenerationContext ctx) {
+	private MongoRepositoryContributor createContributorWithPersonTypes(GenericApplicationContext context) {
 
-		return new AotMongoRepositoryPostProcessor().contribute(new DummyAotRepositoryContext(context) {
+		return new AotMongoRepositoryPostProcessor().contributeAotRepository(new DummyAotRepositoryContext(context) {
 			@Override
 			public Set<Class<?>> getResolvedTypes() {
 				return Collections.singleton(Person.class);
 			}
-		}, ctx);
+		});
 	}
 
 	@Entity
@@ -131,22 +123,15 @@ class AotMongoRepositoryPostProcessorUnitTests {
 
 	interface PersonRepository extends Repository<Person, Long> {}
 
-	static class DummyAotRepositoryContext implements AotRepositoryContext {
+	static class DummyAotRepositoryContext extends AotRepositoryContextSupport {
 
-		private final @Nullable AbstractApplicationContext applicationContext;
-
-		DummyAotRepositoryContext(@Nullable AbstractApplicationContext applicationContext) {
-			this.applicationContext = applicationContext;
-		}
-
-		@Override
-		public String getBeanName() {
-			return "jpaRepository";
+		DummyAotRepositoryContext(AbstractApplicationContext applicationContext) {
+			super(AotContext.from(applicationContext, applicationContext.getEnvironment()));
 		}
 
 		@Override
 		public String getModuleName() {
-			return "JPA";
+			return "MongoDB";
 		}
 
 		@Override
@@ -180,40 +165,6 @@ class AotMongoRepositoryPostProcessorUnitTests {
 			return Set.of();
 		}
 
-		@Override
-		public Set<Class<?>> getUserDomainTypes() {
-			return Set.of();
-		}
-
-		@Override
-		public ConfigurableListableBeanFactory getBeanFactory() {
-			return applicationContext != null ? applicationContext.getBeanFactory() : null;
-		}
-
-		@Override
-		public Environment getEnvironment() {
-			return applicationContext == null ? new StandardEnvironment() : applicationContext.getEnvironment();
-		}
-
-		@Override
-		public TypeIntrospector introspectType(String typeName) {
-			return null;
-		}
-
-		@Override
-		public IntrospectedBeanDefinition introspectBeanDefinition(String beanName) {
-			return null;
-		}
-
-		@Override
-		public void typeConfiguration(Class<?> type, Consumer<AotTypeConfiguration> configurationConsumer) {
-
-		}
-
-		@Override
-		public Collection<AotTypeConfiguration> typeConfigurations() {
-			return List.of();
-		}
 	}
 
 }

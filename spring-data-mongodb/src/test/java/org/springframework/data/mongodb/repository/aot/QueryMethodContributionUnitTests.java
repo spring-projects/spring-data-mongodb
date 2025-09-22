@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -391,7 +392,8 @@ class QueryMethodContributionUnitTests {
 
 		Method method = repository.getMethod(methodName, args);
 
-		TestMongoAotRepositoryContext repoContext = new TestMongoAotRepositoryContext(repository, null);
+		TestMongoAotRepositoryContext repoContext = new TestMongoAotRepositoryContext(new DefaultListableBeanFactory(),
+				repository, null);
 		MongoRepositoryContributor contributor = new MongoRepositoryContributor(repoContext);
 		MethodContributor<? extends QueryMethod> methodContributor = contributor.contributeQueryMethod(method);
 

@@ -4,3 +4,6 @@ org.springframework.aot.hint.RuntimeHintsRegistrar=\
 
 org.springframework.beans.factory.aot.BeanRegistrationAotProcessor=\
 	org.springframework.data.mongodb.aot.MongoManagedTypesBeanRegistrationAotProcessor
+
+org.springframework.data.util.TypeCollector$TypeCollectorFilters=\
+	org.springframework.data.mongodb.aot.MongoTypeFilters

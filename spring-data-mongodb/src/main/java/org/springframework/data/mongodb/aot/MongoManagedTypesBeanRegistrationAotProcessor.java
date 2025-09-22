@@ -45,13 +45,8 @@ class MongoManagedTypesBeanRegistrationAotProcessor extends ManagedTypesBeanRegi
 	}
 
 	@Override
-	protected void contributeType(ResolvableType type, GenerationContext generationContext, AotContext aotContext) {
-
-		if (MongoAotPredicates.IS_SIMPLE_TYPE.test(type.toClass())) {
-			return;
-		}
-
-		super.contributeType(type, generationContext, aotContext);
+	protected void registerTypeHints(ResolvableType type, AotContext aotContext, GenerationContext generationContext) {
+		super.registerTypeHints(type, aotContext, generationContext);
 		lazyLoadingProxyAotProcessor.registerLazyLoadingProxyIfNeeded(type.toClass(), generationContext);
 	}
 }

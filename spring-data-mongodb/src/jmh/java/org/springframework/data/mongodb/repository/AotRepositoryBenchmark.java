@@ -24,6 +24,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 
 import org.springframework.aot.test.generate.TestGenerationContext;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.test.tools.TestCompiler;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -57,6 +58,7 @@ public class AotRepositoryBenchmark extends AbstractMicrobenchmark {
 
 		public static Class<?> aot;
 		public static TestMongoAotRepositoryContext repositoryContext = new TestMongoAotRepositoryContext(
+				new DefaultListableBeanFactory(),
 				SmallerPersonRepository.class,
 				RepositoryComposition.of(RepositoryFragment.structural(SimpleMongoRepository.class),
 						RepositoryFragment.structural(QuerydslMongoPredicateExecutor.class)));

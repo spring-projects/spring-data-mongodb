@@ -23,12 +23,12 @@ import org.springframework.data.mongodb.aot.MongoAotPredicates;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.config.RepositoryRegistrationAotProcessor;
 import org.springframework.data.util.TypeContributor;
-import org.springframework.data.util.TypeUtils;
 
 /**
  * Mongodb-specific {@link RepositoryRegistrationAotProcessor} that contributes generated code for repositories.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 4.0
  */
 public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotProcessor {
@@ -38,32 +38,24 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 	private final LazyLoadingProxyAotProcessor lazyLoadingProxyAotProcessor = new LazyLoadingProxyAotProcessor();
 
 	@Override
-	protected @Nullable MongoRepositoryContributor contribute(AotRepositoryContext repositoryContext,
+	protected void configureTypeContributions(AotRepositoryContext repositoryContext,
 			GenerationContext generationContext) {
-
-		// do some custom type registration here
-		super.contribute(repositoryContext, generationContext);
+		super.configureTypeContributions(repositoryContext, generationContext);
 
 		repositoryContext.getResolvedTypes().stream().filter(MongoAotPredicates.IS_SIMPLE_TYPE.negate()).forEach(type -> {
 			TypeContributor.contribute(type, it -> true, generationContext);
 			lazyLoadingProxyAotProcessor.registerLazyLoadingProxyIfNeeded(type, generationContext);
 		});
+	}
+
+	@Override
+	protected @Nullable MongoRepositoryContributor contributeAotRepository(AotRepositoryContext repositoryContext) {
 
 		if (!repositoryContext.isGeneratedRepositoriesEnabled(MODULE_NAME)) {
 			return null;
 		}
 
 		return new MongoRepositoryContributor(repositoryContext);
-	}
-
-	@Override
-	protected void contributeType(Class<?> type, GenerationContext generationContext) {
-
-		if (TypeUtils.type(type).isPartOf("org.springframework.data.mongodb", "com.mongodb")) {
-			return;
-		}
-
-		super.contributeType(type, generationContext);
 	}
 
 }

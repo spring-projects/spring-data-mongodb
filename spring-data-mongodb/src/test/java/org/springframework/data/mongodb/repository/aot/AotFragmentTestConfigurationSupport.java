@@ -54,7 +54,6 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 
 	private final Class<?> repositoryInterface;
 	private final boolean registerFragmentFacade;
-	private final TestMongoAotRepositoryContext repositoryContext;
 
 	public AotFragmentTestConfigurationSupport(Class<?> repositoryInterface) {
 		this(repositoryInterface, true);
@@ -64,15 +63,15 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 
 		this.repositoryInterface = repositoryInterface;
 		this.registerFragmentFacade = registerFragmentFacade;
-		this.repositoryContext = new TestMongoAotRepositoryContext(repositoryInterface, null);
 	}
 
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 
+		TestMongoAotRepositoryContext repositoryContext = new TestMongoAotRepositoryContext(beanFactory,
+				repositoryInterface, null);
 		TestGenerationContext generationContext = new TestGenerationContext(repositoryInterface);
 
-		repositoryContext.setBeanFactory(beanFactory);
 		new MongoRepositoryContributor(repositoryContext).contribute(generationContext);
 		generationContext.writeGeneratedContent();
 
