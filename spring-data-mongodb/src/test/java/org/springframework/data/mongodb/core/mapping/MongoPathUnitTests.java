@@ -15,44 +15,53 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 
 /**
- * Unit tests for {@link MongoPath}.
+ * Unit tests for {@link MongoPath.RawMongoPath}.
  *
  * @author Mark Paluch
  */
 class MongoPathUnitTests {
 
 	MongoMappingContext mappingContext = new MongoMappingContext();
+	QueryMapper queryMapper = new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
 
 	@Test // GH-4516
 	void shouldParsePaths() {
 
-		assertThat(MongoPath.parse("foo")).hasToString("foo");
-		assertThat(MongoPath.parse("foo.bar")).hasToString("foo.bar");
-		assertThat(MongoPath.parse("foo.$")).hasToString("foo.$");
-		assertThat(MongoPath.parse("foo.$[].baz")).hasToString("foo.$[].baz");
-		assertThat(MongoPath.parse("foo.$[1234].baz")).hasToString("foo.$[1234].baz");
-		assertThat(MongoPath.parse("foo.$size")).hasToString("foo.$size");
+		assertThat(MongoPath.RawMongoPath.parse("foo")).hasToString("foo");
+		assertThat(MongoPath.RawMongoPath.parse("foo.bar")).hasToString("foo.bar");
+		assertThat(MongoPath.RawMongoPath.parse("foo.$")).hasToString("foo.$");
+		assertThat(MongoPath.RawMongoPath.parse("foo.$[].baz")).hasToString("foo.$[].baz");
+		assertThat(MongoPath.RawMongoPath.parse("foo.$[1234].baz")).hasToString("foo.$[1234].baz");
+		assertThat(MongoPath.RawMongoPath.parse("foo.$size")).hasToString("foo.$size");
 	}
 
 	@Test // GH-4516
 	void shouldTranslateFieldNames() {
 
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(Person.class);
+		MongoPaths paths = new MongoPaths(mappingContext);
 
-		assertThat(MongoPath.parse("foo").applyFieldNames(mappingContext, persistentEntity)).hasToString("foo");
-		assertThat(MongoPath.parse("firstName").applyFieldNames(mappingContext, persistentEntity)).hasToString("fn");
-		assertThat(MongoPath.parse("firstName.$").applyFieldNames(mappingContext, persistentEntity)).hasToString("fn.$");
-		assertThat(MongoPath.parse("others.$.zip").applyFieldNames(mappingContext, persistentEntity)).hasToString("os.$.z");
-		assertThat(MongoPath.parse("others.$[].zip").applyFieldNames(mappingContext, persistentEntity))
+		assertThat(paths.mappedPath(MongoPath.RawMongoPath.parse("foo"), persistentEntity.getTypeInformation()))
+				.hasToString("foo");
+		assertThat(paths.mappedPath(MongoPath.RawMongoPath.parse("firstName"), persistentEntity.getTypeInformation()))
+				.hasToString("fn");
+		assertThat(paths.mappedPath(MongoPath.RawMongoPath.parse("firstName.$"), persistentEntity.getTypeInformation()))
+				.hasToString("fn.$");
+		assertThat(paths.mappedPath(MongoPath.RawMongoPath.parse("others.$.zip"), persistentEntity.getTypeInformation()))
+				.hasToString("os.$.z");
+		assertThat(paths.mappedPath(MongoPath.RawMongoPath.parse("others.$[].zip"), persistentEntity.getTypeInformation()))
 				.hasToString("os.$[].z");
-		assertThat(MongoPath.parse("others.$[1].zip").applyFieldNames(mappingContext, persistentEntity))
+		assertThat(paths.mappedPath(MongoPath.RawMongoPath.parse("others.$[1].zip"), persistentEntity.getTypeInformation()))
 				.hasToString("os.$[1].z");
 	}
 

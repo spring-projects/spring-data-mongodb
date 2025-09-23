@@ -57,7 +57,14 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.MappedSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment;
+import org.springframework.data.mongodb.core.mapping.MongoPaths;
+import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.Segment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.TargetType;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
@@ -104,6 +111,7 @@ public class QueryMapper {
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoExampleMapper exampleMapper;
 	private final MongoJsonSchemaMapper schemaMapper;
+	protected final MongoPaths paths;
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
@@ -119,6 +127,7 @@ public class QueryMapper {
 		this.mappingContext = converter.getMappingContext();
 		this.exampleMapper = new MongoExampleMapper(converter);
 		this.schemaMapper = new MongoJsonSchemaMapper(converter);
+		this.paths = new MongoPaths(mappingContext);
 	}
 
 	public Document getMappedObject(Bson query, Optional<? extends MongoPersistentEntity<?>> entity) {
@@ -381,10 +390,10 @@ public class QueryMapper {
 		}
 
 		if (FieldName.ID.name().equals(key)) {
-			return new MetadataBackedField(key, entity, mappingContext, entity.getIdProperty());
+			return new MetadataBackedField(paths.create(key), entity, mappingContext, entity.getIdProperty());
 		}
 
-		return new MetadataBackedField(key, entity, mappingContext);
+		return new MetadataBackedField(paths.create(key), entity, mappingContext);
 	}
 
 	/**
@@ -1011,8 +1020,6 @@ public class QueryMapper {
 	 */
 	protected static class Field {
 
-		protected static final Pattern POSITIONAL_OPERATOR = Pattern.compile("\\$\\[.*\\]");
-
 		protected final String name;
 
 		/**
@@ -1124,21 +1131,74 @@ public class QueryMapper {
 	}
 
 	/**
+	 * Create a {@link PropertyPath} starting at {@link MongoPersistentEntity}.
+	 * <p>
+	 * Can return {@code null} if the property path contains named segments that are not mapped to the entity.
+	 *
+	 * @param persistentEntity
+	 * @return
+	 */
+	@Nullable
+	public PropertyPath toPropertyPath(
+		MongoPath mongoPath, MongoPersistentEntity<?> persistentEntity) {
+
+		StringBuilder path = new StringBuilder();
+		MongoPersistentEntity<?> entity = persistentEntity;
+
+		for (PathSegment segment : mongoPath.segments()) {
+
+			if (segment.isKeyword()) {
+				continue;
+			}
+
+			if (entity == null) {
+				return null;
+			}
+
+			MongoPersistentProperty persistentProperty = entity.getPersistentProperty(segment.segment());
+
+			if (persistentProperty == null) {
+
+				if (segment.isNumeric()) {
+					continue;
+
+				}
+
+				return null;
+			}
+
+			entity = mappingContext.getPersistentEntity(persistentProperty);
+
+			String name = segment.segment();
+
+			if (!path.isEmpty()) {
+				path.append(".");
+			}
+			path.append(Pattern.quote(name));
+		}
+
+		if (path.isEmpty()) {
+			return null;
+		}
+
+		return PropertyPath.from(path.toString(), persistentEntity.getType());
+	}
+
+
+	/**
 	 * Extension of {@link Field} to be backed with mapping metadata.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
-	protected static class MetadataBackedField extends Field {
+	protected class MetadataBackedField extends Field {
 
-		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?");
-		private static final Pattern NUMERIC_SEGMENT = Pattern.compile("\\d+");
 		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s; Associations can only be pointed to directly or via their id property";
 
 		private final MongoPersistentEntity<?> entity;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 		private final MongoPersistentProperty property;
-		private final @Nullable PersistentPropertyPath<MongoPersistentProperty> path;
+		private final @Nullable PersistentPropertyPath<MongoPersistentProperty> propertyPath;
 		private final @Nullable Association<MongoPersistentProperty> association;
 		private final MongoPath mongoPath;
 
@@ -1146,44 +1206,44 @@ public class QueryMapper {
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
 		 * {@link MappingContext}.
 		 *
-		 * @param name must not be {@literal null} or empty.
+		 * @param path must not be {@literal null} or empty.
 		 * @param entity must not be {@literal null}.
 		 * @param context must not be {@literal null}.
 		 */
-		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
+		public MetadataBackedField(MongoPath path, MongoPersistentEntity<?> entity,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
-			this(name, entity, context, null);
+			this(path, entity, context, null);
 		}
 
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
 		 * {@link MappingContext} with the given {@link MongoPersistentProperty}.
 		 *
-		 * @param name must not be {@literal null} or empty.
+		 * @param path must not be {@literal null} or empty.
 		 * @param entity must not be {@literal null}.
 		 * @param context must not be {@literal null}.
 		 * @param property may be {@literal null}.
 		 */
-		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
+		public MetadataBackedField(MongoPath path, MongoPersistentEntity<?> entity,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
 				@Nullable MongoPersistentProperty property) {
 
-			super(name);
+			super(path.path());
 
 			Assert.notNull(entity, "MongoPersistentEntity must not be null");
 
 			this.entity = entity;
 			this.mappingContext = context;
 
-			this.mongoPath = MongoPath.parse(name);
-			this.path = getPath(mongoPath, property);
-			this.property = path == null ? property : path.getLeafProperty();
+			this.mongoPath = path;
+			this.propertyPath = getPath(mongoPath, property);
+			this.property = this.propertyPath == null ? property : this.propertyPath.getLeafProperty();
 			this.association = findAssociation();
 		}
 
 		@Override
 		public MetadataBackedField with(String name) {
-			return new MetadataBackedField(name, entity, mappingContext, property);
+			return new MetadataBackedField(mongoPath, entity, mappingContext, property);
 		}
 
 		@Override
@@ -1237,8 +1297,8 @@ public class QueryMapper {
 		@Nullable
 		private Association<MongoPersistentProperty> findAssociation() {
 
-			if (this.path != null) {
-				for (MongoPersistentProperty p : this.path) {
+			if (this.propertyPath != null) {
+				for (MongoPersistentProperty p : this.propertyPath) {
 
 					Association<MongoPersistentProperty> association = p.getAssociation();
 
@@ -1261,19 +1321,20 @@ public class QueryMapper {
 
 			// TODO: Switch to MongoPath?!
 			if (isAssociation()) {
-				return path == null ? name : path.toDotPath(getAssociationConverter());
+				return propertyPath == null ? name : propertyPath.toDotPath(getAssociationConverter());
 			}
 
 			if (entity != null) {
-				return mongoPath.applyFieldNames(mappingContext, entity).toString();
+				return paths.mappedPath(mongoPath, entity.getTypeInformation()).toString();
 			}
 
 			return name;
 		}
 
+
 		@Nullable
 		protected PersistentPropertyPath<MongoPersistentProperty> getPath() {
-			return path;
+			return propertyPath;
 		}
 
 		/**
@@ -1290,7 +1351,7 @@ public class QueryMapper {
 						PropertyPath.from(Pattern.quote(sourceProperty.getName()), entity.getTypeInformation()));
 			}
 
-			PropertyPath path = mongoPath.toPropertyPath(mappingContext, entity);
+			PropertyPath path = toPropertyPath(mongoPath, entity);
 
 			if (path == null || isPathToJavaLangClassProperty(path)) {
 				return null;

@@ -27,6 +27,7 @@ import org.bson.conversions.Bson;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPath;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
@@ -250,7 +251,7 @@ public class UpdateMapper extends QueryMapper {
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		return entity == null ? super.createPropertyField(entity, key, mappingContext)
-				: new MetadataBackedUpdateField(entity, key, mappingContext);
+				: new MetadataBackedUpdateField(entity, paths.create(key), mappingContext);
 	}
 
 	private static Document getSortObject(Sort sort) {
@@ -274,7 +275,7 @@ public class UpdateMapper extends QueryMapper {
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl
 	 */
-	private static class MetadataBackedUpdateField extends MetadataBackedField {
+	private class MetadataBackedUpdateField extends MetadataBackedField {
 
 		private final String key;
 
@@ -287,11 +288,11 @@ public class UpdateMapper extends QueryMapper {
 		 * @param key must not be {@literal null} or empty.
 		 * @param mappingContext must not be {@literal null}.
 		 */
-		public MetadataBackedUpdateField(MongoPersistentEntity<?> entity, String key,
+		public MetadataBackedUpdateField(MongoPersistentEntity<?> entity, MongoPath key,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 			super(key, entity, mappingContext);
-			this.key = key;
+			this.key = key.path();
 		}
 
 		@Override

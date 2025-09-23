@@ -1,11 +1,11 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2025. the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -24,258 +23,279 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
+import org.springframework.util.ConcurrentLruCache;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
- * Represents a MongoDB path expression as in query and update paths. A MongoPath encapsulates paths consisting of field
- * names, keywords and positional identifiers such as {@code foo}, {@code foo.bar},{@code foo.[0].bar} and allows
- * transformations to {@link PropertyPath} and field-name transformation.
- *
- * @author Mark Paluch
+ * @author Christoph Strobl
  */
-public final class MongoPath {
+public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.MappedMongoPath {
 
-	private final List<Segment> segments;
+	static RawMongoPath parse(String path) {
+		return RawMongoPath.parse(path);
+	}
 
-	private MongoPath(List<String> segments) {
+	String path();
 
-		this.segments = new ArrayList<>(segments.size());
-		for (String segment : segments) {
-			this.segments.add(Segment.of(segment));
-		}
+	List<? extends PathSegment> segments();
+
+	interface PathSegment {
+
+		boolean isNumeric();
+
+		boolean isKeyword();
+
+		String segment();
+
 	}
 
 	/**
-	 * Parses a MongoDB path expression into MongoPath.
+	 * Represents a MongoDB path expression as in query and update paths. A MongoPath encapsulates paths consisting of
+	 * field names, keywords and positional identifiers such as {@code foo}, {@code foo.bar},{@code foo.[0].bar} and
+	 * allows transformations to {@link PropertyPath} and field-name transformation.
 	 *
-	 * @param path
-	 * @return
+	 * @author Mark Paluch
 	 */
-	public static MongoPath parse(String path) {
+	final class RawMongoPath implements MongoPath {
 
-		Assert.hasText(path, "Path must not be null or empty");
+		private static final ConcurrentLruCache<String, RawMongoPath> CACHE = new ConcurrentLruCache<>(64,
+				RawMongoPath::new);
 
-		return new MongoPath(Arrays.asList(path.split("\\.")));
-	}
+		private final String path;
+		private final List<Segment> segments;
 
-	/**
-	 * Apply field name conversion.
-	 *
-	 * @param context
-	 * @param persistentEntity
-	 * @return
-	 */
-	public MongoPath applyFieldNames(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
-			MongoPersistentEntity<?> persistentEntity) {
-
-		MongoPersistentEntity<?> entity = persistentEntity;
-		List<String> segments = new ArrayList<>(this.segments.size());
-
-		for (Segment segment : this.segments) {
-
-			if (entity != null && !segment.keyword()
-					&& (segment.targetType() == TargetType.ANY || segment.targetType() == TargetType.PROPERTY)) {
-
-				MongoPersistentProperty persistentProperty = entity.getPersistentProperty(segment.segment);
-
-				String name = segment.segment();
-
-				if (persistentProperty != null) {
-
-					if (persistentProperty.isEntity()) {
-						entity = context.getPersistentEntity(persistentProperty);
-					}
-
-					if (persistentProperty.isUnwrapped()) {
-						continue;
-					}
-
-					name = persistentProperty.getFieldName();
-				}
-
-				segments.add(name);
-			} else {
-				segments.add(segment.segment());
-			}
+		private RawMongoPath(String path) {
+			this(path, segmentsOf(path));
 		}
 
-		return new MongoPath(segments);
-	}
+		RawMongoPath(String path, List<Segment> segments) {
 
-	/**
-	 * Create a {@link PropertyPath} starting at {@link MongoPersistentEntity}.
-	 * <p>
-	 * Can return {@code null} if the property path contains named segments that are not mapped to the entity.
-	 *
-	 * @param context
-	 * @param persistentEntity
-	 * @return
-	 */
-	@Nullable
-	public PropertyPath toPropertyPath(
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
-			MongoPersistentEntity<?> persistentEntity) {
-
-		StringBuilder path = new StringBuilder();
-		MongoPersistentEntity<?> entity = persistentEntity;
-
-		for (Segment segment : this.segments) {
-
-			if (segment.keyword()) {
-				continue;
-			}
-
-			if (entity == null) {
-				return null;
-			}
-
-			MongoPersistentProperty persistentProperty = entity.getPersistentProperty(segment.segment);
-
-			if (persistentProperty == null) {
-
-				if (segment.numeric()) {
-					continue;
-
-				}
-
-				return null;
-			}
-
-			entity = context.getPersistentEntity(persistentProperty);
-
-			String name = segment.segment();
-
-			if (!path.isEmpty()) {
-				path.append(".");
-			}
-			path.append(Pattern.quote(name));
+			this.path = path;
+			this.segments = List.copyOf(segments);
 		}
 
-		if (path.isEmpty()) {
-			return null;
+		/**
+		 * Parses a MongoDB path expression into MongoPath.
+		 *
+		 * @param path
+		 * @return
+		 */
+		public static RawMongoPath parse(String path) {
+
+			Assert.hasText(path, "Path must not be null or empty");
+			return CACHE.get(path);
 		}
 
-		return PropertyPath.from(path.toString(), persistentEntity.getType());
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
+		private static List<Segment> segmentsOf(String path) {
+			return segmentsOf(path.split("\\."));
 		}
-		if (!(o instanceof MongoPath mongoPath)) {
-			return false;
+
+		private static List<Segment> segmentsOf(String[] rawSegments) {
+
+			List<Segment> segments = new ArrayList<>(rawSegments.length);
+			for (String segment : rawSegments) {
+				segments.add(Segment.of(segment));
+			}
+			return segments;
 		}
-		return ObjectUtils.nullSafeEquals(segments, mongoPath.segments);
-	}
 
-	@Override
-	public int hashCode() {
-		return ObjectUtils.nullSafeHashCode(segments);
-	}
+		public List<Segment> getSegments() {
+			return this.segments;
+		}
 
-	@Override
-	public String toString() {
-		return StringUtils.collectionToDelimitedString(segments, ".");
-	}
+		public List<Segment> segments() {
+			return this.segments;
+		}
 
-	record Segment(String segment, boolean keyword, boolean numeric, TargetType targetType) {
+		public String path() {
+			return path;
+		}
 
-		private final static Pattern POSITIONAL = Pattern.compile("\\$\\[\\d+]");
-
-		static Segment of(String segment) {
-
-			Keyword keyword = Keyword.mapping.get(segment);
-
-			if (keyword != null) {
-				return new Segment(segment, true, false, keyword.getType());
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
 			}
-
-			if (POSITIONAL.matcher(segment).matches()) {
-				return new Segment(segment, true, false, Keyword.$POSITIONAL.getType());
+			if (!(o instanceof RawMongoPath mongoPath)) {
+				return false;
 			}
+			return ObjectUtils.nullSafeEquals(segments, mongoPath.segments);
+		}
 
-			try {
-				// positional paths
-				Integer.decode(segment);
-				return new Segment(segment, false, true, TargetType.PROPERTY);
-			} catch (NumberFormatException e) {
-
-			}
-
-			return new Segment(segment, segment.startsWith("$"), false, TargetType.PROPERTY);
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHashCode(segments);
 		}
 
 		@Override
 		public String toString() {
-			return segment;
+			return StringUtils.collectionToDelimitedString(segments, ".");
+		}
+
+		public record Segment(String segment, boolean keyword, boolean numeric,
+				TargetType targetType) implements PathSegment {
+
+			private final static Pattern POSITIONAL = Pattern.compile("\\$\\[\\d+]");
+
+			static Segment of(String segment) {
+
+				Keyword keyword = Keyword.mapping.get(segment);
+
+				if (keyword != null) {
+					return new Segment(segment, true, false, keyword.getType());
+				}
+
+				if (POSITIONAL.matcher(segment).matches()) {
+					return new Segment(segment, true, false, RawMongoPath.Keyword.$POSITIONAL.getType());
+				}
+
+				try {
+					// positional paths
+					Integer.decode(segment);
+					return new Segment(segment, false, true, RawMongoPath.TargetType.PROPERTY);
+				} catch (NumberFormatException e) {
+
+				}
+
+				return new Segment(segment, segment.startsWith("$"), false, RawMongoPath.TargetType.PROPERTY);
+			}
+
+			@Override
+			public String toString() {
+				return segment;
+			}
+
+			@Override
+			public boolean isNumeric() {
+				return numeric;
+			}
+
+			@Override
+			public boolean isKeyword() {
+				return keyword;
+			}
+		}
+
+		enum Keyword {
+
+			$PROJECTION("$", TargetType.PROPERTY), //
+			$POSITIONAL("$[n]", TargetType.PROPERTY), //
+			$ALL_POSITIONAL("$[]", TargetType.PROPERTY), //
+			$IN(TargetType.COLLECTION), //
+			$NIN(TargetType.COLLECTION), //
+			$EXISTS(TargetType.BOOLEAN), //
+			$TYPE(TargetType.ANY), //
+			$SIZE(TargetType.NUMERIC), //
+			$SET(TargetType.DOCUMENT), //
+			$ALL(TargetType.COLLECTION), //
+			$ELEM_MATCH("$elemMatch", TargetType.COLLECTION);
+
+			private final String keyword;
+			private final TargetType type;
+
+			private static final Map<String, Keyword> mapping;
+
+			static {
+
+				Keyword[] values = Keyword.values();
+				mapping = new LinkedHashMap<>(values.length, 1.0f);
+
+				for (Keyword value : values) {
+					mapping.put(value.getKeyword(), value);
+				}
+
+			}
+
+			Keyword(TargetType type) {
+				this.keyword = name().toLowerCase(Locale.ROOT);
+
+				if (!keyword.startsWith("$")) {
+					throw new IllegalStateException("Keyword " + name() + " does not start with $");
+				}
+
+				this.type = type;
+			}
+
+			Keyword(String keyword, TargetType type) {
+				this.keyword = keyword;
+
+				if (!keyword.startsWith("$")) {
+					throw new IllegalStateException("Keyword " + name() + " does not start with $");
+				}
+
+				this.type = type;
+			}
+
+			public String getKeyword() {
+				return keyword;
+			}
+
+			public TargetType getType() {
+				return type;
+			}
+		}
+
+		public enum TargetType {
+			PROPERTY, NUMERIC, COLLECTION, DOCUMENT, BOOLEAN, ANY;
 		}
 	}
 
-	enum Keyword {
+	/**
+	 * @author Christoph Strobl
+	 */
+	final class MappedMongoPath implements MongoPath {
 
-		$PROJECTION("$", TargetType.PROPERTY), //
-		$POSITIONAL("$[n]", TargetType.PROPERTY), //
-		$ALL_POSITIONAL("$[]", TargetType.PROPERTY), //
-		$IN(TargetType.COLLECTION), //
-		$NIN(TargetType.COLLECTION), //
-		$EXISTS(TargetType.BOOLEAN), //
-		$TYPE(TargetType.ANY), //
-		$SIZE(TargetType.NUMERIC), //
-		$SET(TargetType.DOCUMENT), //
-		$ALL(TargetType.COLLECTION), //
-		$ELEM_MATCH("$elemMatch", TargetType.COLLECTION);
+		private final RawMongoPath source;
+		private final List<MappedSegment> mappedSegments;
 
-		private final String keyword;
-		private final TargetType type;
+		public MappedMongoPath(RawMongoPath source, List<MappedSegment> segments) {
+			this.source = source;
+			this.mappedSegments = segments;
+		}
 
-		private static final Map<String, Keyword> mapping;
+		@Override
+		public String path() {
+			return StringUtils.collectionToDelimitedString(mappedSegments, ".");
+		}
 
-		static {
+		public String sourcePath() {
+			return source.path();
+		}
 
-			Keyword[] values = Keyword.values();
-			mapping = new LinkedHashMap<>(values.length, 1.0f);
+		@Override
+		public List<MappedSegment> segments() {
+			return mappedSegments;
+		}
 
-			for (Keyword value : values) {
-				mapping.put(value.getKeyword(), value);
+		public String toString() {
+			return path();
+		}
+
+		public record MappedSegment(PathSegment source, String mappedName) implements PathSegment {
+
+			@Override
+			public boolean isNumeric() {
+				return source.isNumeric();
 			}
 
-		}
-
-		Keyword(TargetType type) {
-			this.keyword = name().toLowerCase(Locale.ROOT);
-
-			if (!keyword.startsWith("$")) {
-				throw new IllegalStateException("Keyword " + name() + " does not start with $");
+			@Override
+			public boolean isKeyword() {
+				return source.isKeyword();
 			}
 
-			this.type = type;
-		}
-
-		Keyword(String keyword, TargetType type) {
-			this.keyword = keyword;
-
-			if (!keyword.startsWith("$")) {
-				throw new IllegalStateException("Keyword " + name() + " does not start with $");
+			@Override
+			public String segment() {
+				return mappedName;
 			}
 
-			this.type = type;
+			@NonNull
+			@Override
+			public String toString() {
+				return mappedName;
+			}
 		}
-
-		public String getKeyword() {
-			return keyword;
-		}
-
-		public TargetType getType() {
-			return type;
-		}
-	}
-
-	enum TargetType {
-		PROPERTY, NUMERIC, COLLECTION, DOCUMENT, BOOLEAN, ANY;
 	}
 }

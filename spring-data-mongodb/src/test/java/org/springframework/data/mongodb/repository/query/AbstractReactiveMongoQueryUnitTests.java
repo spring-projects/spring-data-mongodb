@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -300,7 +301,7 @@ class AbstractReactiveMongoQueryUnitTests {
 
 		ReactiveMongoQueryFake(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations) {
 			super(method, operations, new SpelExpressionParser(),
-					ReactiveExtensionAwareQueryMethodEvaluationContextProvider.DEFAULT);
+				ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 		}
 
 		@Override
