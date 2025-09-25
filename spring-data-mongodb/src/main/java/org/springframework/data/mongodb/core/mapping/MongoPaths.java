@@ -19,9 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.MappedSegment;
-import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.Segment;
-import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.TargetType;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.MappedPropertySegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.WrappedSegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ConcurrentLruCache;
 
@@ -31,7 +33,8 @@ import org.springframework.util.ConcurrentLruCache;
  */
 public class MongoPaths {
 
-	private final ConcurrentLruCache<PathAndType, MongoPath.MappedMongoPath> CACHE = new ConcurrentLruCache<>(128, this::mapFieldNames);
+	private final ConcurrentLruCache<PathAndType, MongoPath.MappedMongoPath> CACHE = new ConcurrentLruCache<>(128,
+			this::mapFieldNames);
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	public MongoPaths(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
@@ -42,15 +45,23 @@ public class MongoPaths {
 		return MongoPath.RawMongoPath.parse(path);
 	}
 
-	public MongoPath mappedPath(MongoPath path, TypeInformation<?> type) {
+	public MappedMongoPath mappedPath(MongoPath path, Class<?> type) {
+		return mappedPath(path, TypeInformation.of(type));
+	}
 
-		if (!(path instanceof MongoPath.RawMongoPath rawMongoPath)) {
-			return path;
+	public MappedMongoPath mappedPath(MongoPath path, TypeInformation<?> type) {
+
+		if (path instanceof MappedMongoPath mappedPath) {
+			return mappedPath;
 		}
 
-		if (!mappingContext.hasPersistentEntityFor(type.getType())) {
-			return path;
+		MongoPath.RawMongoPath rawMongoPath = (RawMongoPath) path;
+
+		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
+		if (persistentEntity == null) {
+			return MappedMongoPath.just(rawMongoPath);
 		}
+
 		return CACHE.get(new PathAndType(rawMongoPath, type));
 	}
 
@@ -60,38 +71,61 @@ public class MongoPaths {
 	MongoPath.MappedMongoPath mapFieldNames(PathAndType cacheKey) {
 
 		MongoPath.RawMongoPath mongoPath = cacheKey.path();
-		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(cacheKey.type());
+		MongoPersistentEntity<?> root = mappingContext.getPersistentEntity(cacheKey.type());
+		MongoPersistentEntity<?> persistentEntity = root;
 
-		List<MappedSegment> segments = new ArrayList<>(mongoPath.getSegments().size());
+		List<PathSegment> segments = new ArrayList<>(mongoPath.getSegments().size());
 
-		for (Segment segment : mongoPath.getSegments()) {
+		for (int i = 0; i < mongoPath.getSegments().size(); i++) {
 
-			if (persistentEntity != null && !segment.keyword()
-					&& (segment.targetType() == TargetType.ANY || segment.targetType() == TargetType.PROPERTY)) {
-
-				MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(segment.toString());
-
-				String name = segment.segment();
-
-				if (persistentProperty != null) {
-
-					if (persistentProperty.isEntity()) {
-						persistentEntity = mappingContext.getPersistentEntity(persistentProperty);
-					}
-
-					if (persistentProperty.isUnwrapped()) {
-						continue;
-					}
-
-					name = persistentProperty.getFieldName();
-				}
-
-				segments.add(new MappedSegment(segment, name));
-			} else {
-				segments.add(new MappedSegment(segment, segment.segment()));
-			}
+			EntityIndexSegment eis = segment(i, mongoPath.getSegments(), persistentEntity);
+			segments.add(eis.segment());
+			persistentEntity = eis.entity();
+			i = eis.index();
 		}
 
-		return new MongoPath.MappedMongoPath(mongoPath, segments);
+		return new MongoPath.MappedMongoPath(mongoPath, root.getTypeInformation(), segments);
+	}
+
+	EntityIndexSegment segment(int index, List<PathSegment> segments, MongoPersistentEntity<?> currentEntity) {
+
+		PathSegment segment = segments.get(index);
+		MongoPersistentEntity<?> entity = currentEntity;
+
+		if (entity != null && !segment.isKeyword()) {
+
+			MongoPersistentProperty persistentProperty = entity.getPersistentProperty(segment.segment());
+
+			if (persistentProperty != null) {
+
+//				if(persistentProperty.isEntity()) {
+					entity = mappingContext.getPersistentEntity(persistentProperty);
+//				}
+
+				if (persistentProperty.isUnwrapped()) {
+
+					if (segments.size() > index + 1) {
+						EntityIndexSegment inner = segment(index + 1, segments, entity);
+						if (inner.segment() instanceof MappedPropertySegment mappedInnerSegment) {
+							return new EntityIndexSegment(inner.entity(), inner.index(),
+									new WrappedSegment(mappedInnerSegment.getMappedName(),
+											new MappedPropertySegment(persistentProperty.findAnnotation(Unwrapped.class).prefix(), segment,
+													persistentProperty),
+											mappedInnerSegment));
+						}
+					} else {
+						return new EntityIndexSegment(entity, index, new WrappedSegment("", new MappedPropertySegment(
+								persistentProperty.findAnnotation(Unwrapped.class).prefix(), segment, persistentProperty), null));
+					}
+				}
+
+				return new EntityIndexSegment(entity, index,
+						new MappedPropertySegment(persistentProperty.getFieldName(), segment, persistentProperty));
+			}
+		}
+		return new EntityIndexSegment(entity, index, segment);
+	}
+
+	record EntityIndexSegment(MongoPersistentEntity<?> entity, int index, PathSegment segment) {
 	}
 }

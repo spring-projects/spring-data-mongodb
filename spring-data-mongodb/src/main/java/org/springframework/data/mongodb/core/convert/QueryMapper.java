@@ -36,7 +36,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
@@ -57,14 +56,9 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.FieldName;
-import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath;
-import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.MappedSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPaths;
-import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath;
-import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.Segment;
-import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.TargetType;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1140,7 +1134,8 @@ public class QueryMapper {
 	 */
 	@Nullable
 	public PropertyPath toPropertyPath(
-		MongoPath mongoPath, MongoPersistentEntity<?> persistentEntity) {
+
+			MongoPath mongoPath, MongoPersistentEntity<?> persistentEntity) {
 
 		StringBuilder path = new StringBuilder();
 		MongoPersistentEntity<?> entity = persistentEntity;
@@ -1183,7 +1178,6 @@ public class QueryMapper {
 
 		return PropertyPath.from(path.toString(), persistentEntity.getType());
 	}
-
 
 	/**
 	 * Extension of {@link Field} to be backed with mapping metadata.
@@ -1331,7 +1325,6 @@ public class QueryMapper {
 			return name;
 		}
 
-
 		@Nullable
 		protected PersistentPropertyPath<MongoPersistentProperty> getPath() {
 			return propertyPath;
@@ -1351,7 +1344,7 @@ public class QueryMapper {
 						PropertyPath.from(Pattern.quote(sourceProperty.getName()), entity.getTypeInformation()));
 			}
 
-			PropertyPath path = toPropertyPath(mongoPath, entity);
+			PropertyPath path = paths.mappedPath(mongoPath, entity.getTypeInformation()).propertyPath();
 
 			if (path == null || isPathToJavaLangClassProperty(path)) {
 				return null;

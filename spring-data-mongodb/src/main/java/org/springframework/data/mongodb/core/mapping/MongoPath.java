@@ -20,10 +20,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PropertySegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.Keyword;
+import org.springframework.data.util.Lazy;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentLruCache;
 import org.springframework.util.ObjectUtils;
@@ -50,6 +57,128 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 
 		String segment();
 
+		static PathSegment of(String segment) {
+
+			Keyword keyword = Keyword.mapping.get(segment);
+
+			if (keyword != null) {
+				return new KeywordSegment(keyword, new Segment(segment, false, true));
+			}
+
+			if (PositionSegment.POSITIONAL.matcher(segment).matches()) {
+				return new PositionSegment(new Segment(segment, true, false));
+			}
+
+			if (segment.startsWith("$")) {
+				return new KeywordSegment(null, new Segment(segment, false, true));
+			}
+
+			return new PropertySegment(new Segment(segment, false, false));
+		}
+
+		record Segment(String segment, boolean isNumeric, boolean isKeyword) implements PathSegment {
+
+		}
+
+		class KeywordSegment implements PathSegment {
+
+			final @Nullable Keyword keyword;
+			final Segment segment;
+
+			public KeywordSegment(@Nullable Keyword keyword, Segment segment) {
+
+				this.keyword = keyword;
+				this.segment = segment;
+			}
+
+			@Override
+			public boolean isNumeric() {
+				return false;
+			}
+
+			@Override
+			public boolean isKeyword() {
+				return true;
+			}
+
+			@Override
+			public String segment() {
+				return segment.segment();
+			}
+
+			@Override
+			public String toString() {
+				return segment();
+			}
+		}
+
+		class PositionSegment implements PathSegment {
+
+			/**
+			 * n numeric position <br />
+			 * $[] all positional operator for update operations, <br />
+			 * $[id] filtered positional operator for update operations, <br />
+			 * $ positional operator for update operations, <br />
+			 * $ projection operator when array index position is unknown <br />
+			 */
+			private final static Pattern POSITIONAL = Pattern.compile("\\$\\[[a-zA-Z0-9]*]|\\$|\\d+");
+
+			final Segment segment;
+
+			public PositionSegment(Segment segment) {
+				this.segment = segment;
+			}
+
+			@Override
+			public boolean isNumeric() {
+				return true;
+			}
+
+			@Override
+			public boolean isKeyword() {
+				return false;
+			}
+
+			@Override
+			public String segment() {
+				return segment.segment();
+			}
+
+			@Override
+			public String toString() {
+				return segment();
+			}
+		}
+
+		class PropertySegment implements PathSegment {
+
+			final Segment segment;
+
+			public PropertySegment(Segment segment) {
+				this.segment = segment;
+			}
+
+			@Override
+			public boolean isNumeric() {
+				return false;
+			}
+
+			@Override
+			public boolean isKeyword() {
+				return false;
+			}
+
+			@Override
+			public String segment() {
+				return segment.segment();
+			}
+
+			@Override
+			public String toString() {
+				return segment();
+			}
+		}
+
 	}
 
 	/**
@@ -65,13 +194,13 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 				RawMongoPath::new);
 
 		private final String path;
-		private final List<Segment> segments;
+		private final List<PathSegment> segments;
 
 		private RawMongoPath(String path) {
 			this(path, segmentsOf(path));
 		}
 
-		RawMongoPath(String path, List<Segment> segments) {
+		RawMongoPath(String path, List<PathSegment> segments) {
 
 			this.path = path;
 			this.segments = List.copyOf(segments);
@@ -89,24 +218,24 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			return CACHE.get(path);
 		}
 
-		private static List<Segment> segmentsOf(String path) {
+		private static List<PathSegment> segmentsOf(String path) {
 			return segmentsOf(path.split("\\."));
 		}
 
-		private static List<Segment> segmentsOf(String[] rawSegments) {
+		private static List<PathSegment> segmentsOf(String[] rawSegments) {
 
-			List<Segment> segments = new ArrayList<>(rawSegments.length);
+			List<PathSegment> segments = new ArrayList<>(rawSegments.length);
 			for (String segment : rawSegments) {
-				segments.add(Segment.of(segment));
+				segments.add(PathSegment.of(segment));
 			}
 			return segments;
 		}
 
-		public List<Segment> getSegments() {
+		public List<PathSegment> getSegments() {
 			return this.segments;
 		}
 
-		public List<Segment> segments() {
+		public List<PathSegment> segments() {
 			return this.segments;
 		}
 
@@ -135,55 +264,8 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			return StringUtils.collectionToDelimitedString(segments, ".");
 		}
 
-		public record Segment(String segment, boolean keyword, boolean numeric,
-				TargetType targetType) implements PathSegment {
+		public enum Keyword {
 
-			private final static Pattern POSITIONAL = Pattern.compile("\\$\\[\\d+]");
-
-			static Segment of(String segment) {
-
-				Keyword keyword = Keyword.mapping.get(segment);
-
-				if (keyword != null) {
-					return new Segment(segment, true, false, keyword.getType());
-				}
-
-				if (POSITIONAL.matcher(segment).matches()) {
-					return new Segment(segment, true, false, RawMongoPath.Keyword.$POSITIONAL.getType());
-				}
-
-				try {
-					// positional paths
-					Integer.decode(segment);
-					return new Segment(segment, false, true, RawMongoPath.TargetType.PROPERTY);
-				} catch (NumberFormatException e) {
-
-				}
-
-				return new Segment(segment, segment.startsWith("$"), false, RawMongoPath.TargetType.PROPERTY);
-			}
-
-			@Override
-			public String toString() {
-				return segment;
-			}
-
-			@Override
-			public boolean isNumeric() {
-				return numeric;
-			}
-
-			@Override
-			public boolean isKeyword() {
-				return keyword;
-			}
-		}
-
-		enum Keyword {
-
-			$PROJECTION("$", TargetType.PROPERTY), //
-			$POSITIONAL("$[n]", TargetType.PROPERTY), //
-			$ALL_POSITIONAL("$[]", TargetType.PROPERTY), //
 			$IN(TargetType.COLLECTION), //
 			$NIN(TargetType.COLLECTION), //
 			$EXISTS(TargetType.BOOLEAN), //
@@ -249,16 +331,90 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 	final class MappedMongoPath implements MongoPath {
 
 		private final RawMongoPath source;
-		private final List<MappedSegment> mappedSegments;
+		private final TypeInformation<?> type;
+		private final List<? extends PathSegment> segments;
+		private final Lazy<PropertyPath> propertyPath = Lazy.of(this::assemblePropertyPath);
+		private final Lazy<String> mappedPath = Lazy.of(this::assembleMappedPath);
 
-		public MappedMongoPath(RawMongoPath source, List<MappedSegment> segments) {
+		public MappedMongoPath(RawMongoPath source, TypeInformation<?> type, List<? extends PathSegment> segments) {
 			this.source = source;
-			this.mappedSegments = segments;
+			this.type = type;
+			this.segments = segments;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			MappedMongoPath that = (MappedMongoPath) o;
+			return source.equals(that.source) && type.equals(that.type);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(source, type);
+		}
+
+		public static MappedMongoPath just(RawMongoPath source) {
+			return new MappedMongoPath(source, TypeInformation.OBJECT,
+					source.segments().stream().map(it -> new MappedPropertySegment(it.segment(), it, null)).toList());
+		}
+
+		public @Nullable PropertyPath propertyPath() {
+			return this.propertyPath.getNullable();
+		}
+
+		private String assembleMappedPath() {
+			return segments.stream().map(PathSegment::segment).filter(StringUtils::hasText).collect(Collectors.joining("."));
+		}
+
+		private @Nullable PropertyPath assemblePropertyPath() {
+
+			StringBuilder path = new StringBuilder();
+
+			for (PathSegment segment : segments) {
+
+				if (segment instanceof PropertySegment) {
+					return null;
+				}
+
+				if (segment.isKeyword() || segment.isNumeric()) {
+					continue;
+				}
+
+				String name = segment.segment();
+				if (segment instanceof MappedPropertySegment mappedSegment) {
+					name = mappedSegment.getSource().segment();
+				} else if (segment instanceof WrappedSegment wrappedSegment) {
+					if (wrappedSegment.getInner() != null) {
+						name = wrappedSegment.getOuter().getProperty().getName() + "."
+								+ wrappedSegment.getInner().getProperty().getName();
+					} else {
+						name = wrappedSegment.getOuter().getProperty().getName();
+					}
+				}
+
+				if (!path.isEmpty()) {
+					path.append(".");
+				}
+
+				path.append(Pattern.quote(name));
+			}
+
+			if (path.isEmpty()) {
+				return null;
+			}
+
+			return PropertyPath.from(path.toString(), type);
 		}
 
 		@Override
 		public String path() {
-			return StringUtils.collectionToDelimitedString(mappedSegments, ".");
+			return mappedPath.get();
 		}
 
 		public String sourcePath() {
@@ -266,15 +422,76 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 		}
 
 		@Override
-		public List<MappedSegment> segments() {
-			return mappedSegments;
+		@SuppressWarnings("unchecked")
+		public List<PathSegment> segments() {
+			return (List<PathSegment>) segments;
 		}
 
 		public String toString() {
 			return path();
 		}
 
-		public record MappedSegment(PathSegment source, String mappedName) implements PathSegment {
+		public static class AssociationSegment extends MappedPropertySegment {
+
+			public AssociationSegment(String mappedName, PathSegment source, MongoPersistentProperty property) {
+				super(mappedName, source, property);
+			}
+		}
+
+		public static class WrappedSegment implements PathSegment {
+
+			private final String mappedName;
+			private final MappedPropertySegment outer;
+			private final MappedPropertySegment inner;
+
+			public WrappedSegment(String mappedName, MappedPropertySegment outer, MappedPropertySegment inner) {
+				this.mappedName = mappedName;
+				this.outer = outer;
+				this.inner = inner;
+			}
+
+			public MappedPropertySegment getInner() {
+				return inner;
+			}
+
+			public MappedPropertySegment getOuter() {
+				return outer;
+			}
+
+			@Override
+			public boolean isNumeric() {
+				return false;
+			}
+
+			@Override
+			public boolean isKeyword() {
+				return false;
+			}
+
+			@Override
+			public String segment() {
+				return mappedName;
+			}
+
+			@Override
+			public String toString() {
+				return segment();
+			}
+
+
+		}
+
+		public static class MappedPropertySegment implements PathSegment {
+
+			PathSegment source;
+			String mappedName;
+			MongoPersistentProperty property;
+
+			public MappedPropertySegment(String mappedName, PathSegment source, MongoPersistentProperty property) {
+				this.source = source;
+				this.mappedName = mappedName;
+				this.property = property;
+			}
 
 			@Override
 			public boolean isNumeric() {
@@ -291,10 +508,38 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 				return mappedName;
 			}
 
+			public boolean isMappedToProperty() {
+				return property != null;
+			}
+
 			@NonNull
 			@Override
 			public String toString() {
 				return mappedName;
+			}
+
+			public PathSegment getSource() {
+				return source;
+			}
+
+			public void setSource(PathSegment source) {
+				this.source = source;
+			}
+
+			public String getMappedName() {
+				return mappedName;
+			}
+
+			public void setMappedName(String mappedName) {
+				this.mappedName = mappedName;
+			}
+
+			public MongoPersistentProperty getProperty() {
+				return property;
+			}
+
+			public void setProperty(MongoPersistentProperty property) {
+				this.property = property;
 			}
 		}
 	}
