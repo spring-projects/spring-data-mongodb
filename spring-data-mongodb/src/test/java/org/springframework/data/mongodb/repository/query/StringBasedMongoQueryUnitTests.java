@@ -296,7 +296,7 @@ public class StringBasedMongoQueryUnitTests {
 	@Test // DATAMONGO-1244
 	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() {
 
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject", boolean.class,
 				String.class);
 

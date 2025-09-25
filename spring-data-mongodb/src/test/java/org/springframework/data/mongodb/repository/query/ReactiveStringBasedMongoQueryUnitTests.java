@@ -191,7 +191,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 	@Test // DATAMONGO-1444
 	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() throws Exception {
 
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1");
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject",
 				boolean.class, String.class);
 

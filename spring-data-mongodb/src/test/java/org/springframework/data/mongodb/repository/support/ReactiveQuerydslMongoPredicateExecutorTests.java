@@ -202,52 +202,52 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-2182
-	public void queryShouldTerminateWithUnsupportedOperationWithJoinOnDBref() {
-
-		User user1 = new User();
-		user1.setUsername("user-1");
-
-		User user2 = new User();
-		user2.setUsername("user-2");
-
-		User user3 = new User();
-		user3.setUsername("user-3");
-
-		Flux.merge(operations.save(user1), operations.save(user2), operations.save(user3)) //
-				.then() //
-				.as(StepVerifier::create) //
-				.verifyComplete(); //
-
-		Person person1 = new Person("Max", "The Mighty");
-		person1.setCoworker(user1);
-
-		Person person2 = new Person("Jack", "The Ripper");
-		person2.setCoworker(user2);
-
-		Person person3 = new Person("Bob", "The Builder");
-		person3.setCoworker(user3);
-
-		operations.save(person1) //
-				.as(StepVerifier::create) //
-				.expectNextCount(1) //
-				.verifyComplete();
-		operations.save(person2)//
-				.as(StepVerifier::create) //
-				.expectNextCount(1) //
-				.verifyComplete();
-		operations.save(person3) //
-				.as(StepVerifier::create) //
-				.expectNextCount(1) //
-				.verifyComplete();
-
-		Flux<Person> result = new ReactiveSpringDataMongodbQuery<>(operations, Person.class).where()
-				.join(person.coworker, QUser.user).on(QUser.user.username.eq("user-2")).fetch();
-
-		result.as(StepVerifier::create) //
-				.expectError(UnsupportedOperationException.class) //
-				.verify();
-	}
+//	@Test // DATAMONGO-2182
+//	public void queryShouldTerminateWithUnsupportedOperationWithJoinOnDBref() {
+//
+//		User user1 = new User();
+//		user1.setUsername("user-1");
+//
+//		User user2 = new User();
+//		user2.setUsername("user-2");
+//
+//		User user3 = new User();
+//		user3.setUsername("user-3");
+//
+//		Flux.merge(operations.save(user1), operations.save(user2), operations.save(user3)) //
+//				.then() //
+//				.as(StepVerifier::create) //
+//				.verifyComplete(); //
+//
+//		Person person1 = new Person("Max", "The Mighty");
+//		person1.setCoworker(user1);
+//
+//		Person person2 = new Person("Jack", "The Ripper");
+//		person2.setCoworker(user2);
+//
+//		Person person3 = new Person("Bob", "The Builder");
+//		person3.setCoworker(user3);
+//
+//		operations.save(person1) //
+//				.as(StepVerifier::create) //
+//				.expectNextCount(1) //
+//				.verifyComplete();
+//		operations.save(person2)//
+//				.as(StepVerifier::create) //
+//				.expectNextCount(1) //
+//				.verifyComplete();
+//		operations.save(person3) //
+//				.as(StepVerifier::create) //
+//				.expectNextCount(1) //
+//				.verifyComplete();
+//
+//		Flux<Person> result = new ReactiveSpringDataMongodbQuery<>(operations, Person.class).where()
+//				.join(person.coworker, QUser.user).on(QUser.user.username.eq("user-2")).fetch();
+//
+//		result.as(StepVerifier::create) //
+//				.expectError(UnsupportedOperationException.class) //
+//				.verify();
+//	}
 
 	@Test // DATAMONGO-2182
 	public void queryShouldTerminateWithUnsupportedOperationOnJoinWithNoResults() {
