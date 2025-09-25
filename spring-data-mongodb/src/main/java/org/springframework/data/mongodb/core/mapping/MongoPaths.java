@@ -23,6 +23,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath;
 import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.MappedPropertySegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.WrappedSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PropertySegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ConcurrentLruCache;
@@ -92,15 +93,13 @@ public class MongoPaths {
 		PathSegment segment = segments.get(index);
 		MongoPersistentEntity<?> entity = currentEntity;
 
-		if (entity != null && !segment.isKeyword()) {
+		if (entity != null && segment instanceof PropertySegment) {
 
 			MongoPersistentProperty persistentProperty = entity.getPersistentProperty(segment.segment());
 
 			if (persistentProperty != null) {
 
-//				if(persistentProperty.isEntity()) {
-					entity = mappingContext.getPersistentEntity(persistentProperty);
-//				}
+				entity = mappingContext.getPersistentEntity(persistentProperty);
 
 				if (persistentProperty.isUnwrapped()) {
 

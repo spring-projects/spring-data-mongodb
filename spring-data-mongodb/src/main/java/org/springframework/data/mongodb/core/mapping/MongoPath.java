@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.KeywordSegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PositionSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PropertySegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.Keyword;
 import org.springframework.data.util.Lazy;
@@ -51,10 +53,6 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 
 	interface PathSegment {
 
-		boolean isNumeric();
-
-		boolean isKeyword();
-
 		String segment();
 
 		static PathSegment of(String segment) {
@@ -62,21 +60,21 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			Keyword keyword = Keyword.mapping.get(segment);
 
 			if (keyword != null) {
-				return new KeywordSegment(keyword, new Segment(segment, false, true));
+				return new KeywordSegment(keyword, new Segment(segment));
 			}
 
 			if (PositionSegment.POSITIONAL.matcher(segment).matches()) {
-				return new PositionSegment(new Segment(segment, true, false));
+				return new PositionSegment(new Segment(segment));
 			}
 
 			if (segment.startsWith("$")) {
-				return new KeywordSegment(null, new Segment(segment, false, true));
+				return new KeywordSegment(null, new Segment(segment));
 			}
 
-			return new PropertySegment(new Segment(segment, false, false));
+			return new PropertySegment(new Segment(segment));
 		}
 
-		record Segment(String segment, boolean isNumeric, boolean isKeyword) implements PathSegment {
+		record Segment(String segment) implements PathSegment {
 
 		}
 
@@ -89,16 +87,6 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 
 				this.keyword = keyword;
 				this.segment = segment;
-			}
-
-			@Override
-			public boolean isNumeric() {
-				return false;
-			}
-
-			@Override
-			public boolean isKeyword() {
-				return true;
 			}
 
 			@Override
@@ -130,16 +118,6 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			}
 
 			@Override
-			public boolean isNumeric() {
-				return true;
-			}
-
-			@Override
-			public boolean isKeyword() {
-				return false;
-			}
-
-			@Override
 			public String segment() {
 				return segment.segment();
 			}
@@ -156,16 +134,6 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 
 			public PropertySegment(Segment segment) {
 				this.segment = segment;
-			}
-
-			@Override
-			public boolean isNumeric() {
-				return false;
-			}
-
-			@Override
-			public boolean isKeyword() {
-				return false;
 			}
 
 			@Override
@@ -382,7 +350,7 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 					return null;
 				}
 
-				if (segment.isKeyword() || segment.isNumeric()) {
+				if (segment instanceof KeywordSegment || segment instanceof PositionSegment) {
 					continue;
 				}
 
@@ -459,16 +427,6 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			}
 
 			@Override
-			public boolean isNumeric() {
-				return false;
-			}
-
-			@Override
-			public boolean isKeyword() {
-				return false;
-			}
-
-			@Override
 			public String segment() {
 				return mappedName;
 			}
@@ -477,7 +435,6 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			public String toString() {
 				return segment();
 			}
-
 
 		}
 
@@ -491,16 +448,6 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 				this.source = source;
 				this.mappedName = mappedName;
 				this.property = property;
-			}
-
-			@Override
-			public boolean isNumeric() {
-				return source.isNumeric();
-			}
-
-			@Override
-			public boolean isKeyword() {
-				return source.isKeyword();
 			}
 
 			@Override

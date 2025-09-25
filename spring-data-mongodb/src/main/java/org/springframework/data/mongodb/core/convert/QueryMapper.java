@@ -1125,61 +1125,6 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Create a {@link PropertyPath} starting at {@link MongoPersistentEntity}.
-	 * <p>
-	 * Can return {@code null} if the property path contains named segments that are not mapped to the entity.
-	 *
-	 * @param persistentEntity
-	 * @return
-	 */
-	@Nullable
-	public PropertyPath toPropertyPath(
-
-			MongoPath mongoPath, MongoPersistentEntity<?> persistentEntity) {
-
-		StringBuilder path = new StringBuilder();
-		MongoPersistentEntity<?> entity = persistentEntity;
-
-		for (PathSegment segment : mongoPath.segments()) {
-
-			if (segment.isKeyword()) {
-				continue;
-			}
-
-			if (entity == null) {
-				return null;
-			}
-
-			MongoPersistentProperty persistentProperty = entity.getPersistentProperty(segment.segment());
-
-			if (persistentProperty == null) {
-
-				if (segment.isNumeric()) {
-					continue;
-
-				}
-
-				return null;
-			}
-
-			entity = mappingContext.getPersistentEntity(persistentProperty);
-
-			String name = segment.segment();
-
-			if (!path.isEmpty()) {
-				path.append(".");
-			}
-			path.append(Pattern.quote(name));
-		}
-
-		if (path.isEmpty()) {
-			return null;
-		}
-
-		return PropertyPath.from(path.toString(), persistentEntity.getType());
-	}
-
-	/**
 	 * Extension of {@link Field} to be backed with mapping metadata.
 	 *
 	 * @author Oliver Gierke
