@@ -63,6 +63,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @param lastname
 	 * @return
 	 */
+	@Meta
 	List<Person> findByLastname(String lastname);
 
 	List<Person> findByLastnameStartsWith(String prefix);
