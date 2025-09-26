@@ -23,8 +23,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.AssociationPath;
 import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath;
-import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.MappedPropertySegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPathImpl.MappedPropertySegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PositionSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PropertySegment;
@@ -219,6 +220,48 @@ class MongoPathsUnitTests {
 		assertThat(mappedMongoPath.propertyPath()).isNull();
 	}
 
+	@Test // GH-4516
+	void notAnAssociationPath() {
+
+		MongoPath mongoPath = paths.create("inner.value");
+		MappedMongoPath mappedMongoPath = paths.mappedPath(mongoPath, Outer.class);
+
+		assertThat(mappedMongoPath.associationPath()).isNull();
+	}
+
+	@Test // GH-4516
+	void rootAssociationPath() {
+
+		MongoPath mongoPath = paths.create("ref");
+		MappedMongoPath mappedMongoPath = paths.mappedPath(mongoPath, Outer.class);
+
+		assertThat(mappedMongoPath.associationPath()).isNotNull().extracting(AssociationPath::propertyPath)
+				.isEqualTo(PropertyPath.from("ref", Outer.class));
+	}
+
+	@Test // GH-4516
+	void nestedAssociationPath() {
+
+		MongoPath mongoPath = paths.create("inner.docRef");
+		MappedMongoPath mappedMongoPath = paths.mappedPath(mongoPath, Outer.class);
+
+		assertThat(mappedMongoPath.associationPath()).isNotNull().extracting(AssociationPath::propertyPath)
+				.isEqualTo(PropertyPath.from("inner.docRef", Outer.class));
+	}
+
+	@Test // GH-4516
+	void associationPathAsPartOfFullPath() {
+
+		MongoPath mongoPath = paths.create("inner.docRef.id");
+		MappedMongoPath mappedMongoPath = paths.mappedPath(mongoPath, Outer.class);
+
+		assertThat(mappedMongoPath.associationPath()).isNotNull().satisfies(associationPath -> {
+			assertThat(associationPath.propertyPath()).isEqualTo(PropertyPath.from("inner.docRef", Outer.class));
+			assertThat(associationPath.targetPropertyPath()).isEqualTo(PropertyPath.from("inner.docRef.id", Outer.class));
+			assertThat(associationPath.targetPath()).isEqualTo(mappedMongoPath);
+		});
+	}
+
 	static class Outer {
 
 		String id;
@@ -238,6 +281,9 @@ class MongoPathsUnitTests {
 		Wrapper wrapper;
 
 		List<Value> valueList;
+
+		@DocumentReference //
+		Referenced docRef;
 	}
 
 	static class Referenced {

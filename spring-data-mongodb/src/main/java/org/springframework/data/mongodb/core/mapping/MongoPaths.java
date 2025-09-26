@@ -20,8 +20,9 @@ import java.util.List;
 
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath;
-import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.MappedPropertySegment;
-import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath.WrappedSegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPathImpl.AssociationSegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPathImpl.MappedPropertySegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPathImpl.WrappedSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PropertySegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath;
@@ -85,7 +86,7 @@ public class MongoPaths {
 			i = eis.index();
 		}
 
-		return new MongoPath.MappedMongoPath(mongoPath, root.getTypeInformation(), segments);
+		return new MongoPath.MappedMongoPathImpl(mongoPath, root.getTypeInformation(), segments);
 	}
 
 	EntityIndexSegment segment(int index, List<PathSegment> segments, MongoPersistentEntity<?> currentEntity) {
@@ -116,6 +117,9 @@ public class MongoPaths {
 						return new EntityIndexSegment(entity, index, new WrappedSegment("", new MappedPropertySegment(
 								persistentProperty.findAnnotation(Unwrapped.class).prefix(), segment, persistentProperty), null));
 					}
+				} else if (persistentProperty.isAssociation()) {
+					return new EntityIndexSegment(entity, index, new AssociationSegment(
+							new MappedPropertySegment(persistentProperty.getFieldName(), segment, persistentProperty)));
 				}
 
 				return new EntityIndexSegment(entity, index,

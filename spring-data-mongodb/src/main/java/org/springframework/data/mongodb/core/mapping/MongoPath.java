@@ -25,9 +25,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.AssociationPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPath;
+import org.springframework.data.mongodb.core.mapping.MongoPath.MappedMongoPathImpl.MappedPropertySegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.KeywordSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PositionSegment;
 import org.springframework.data.mongodb.core.mapping.MongoPath.PathSegment.PropertySegment;
+import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath;
 import org.springframework.data.mongodb.core.mapping.MongoPath.RawMongoPath.Keyword;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
@@ -41,7 +45,7 @@ import org.springframework.util.StringUtils;
 /**
  * @author Christoph Strobl
  */
-public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.MappedMongoPath {
+public sealed interface MongoPath permits AssociationPath, MappedMongoPath, RawMongoPath {
 
 	static RawMongoPath parse(String path) {
 		return RawMongoPath.parse(path);
@@ -51,9 +55,16 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 
 	List<? extends PathSegment> segments();
 
+	@Nullable
+	MongoPath subpath(PathSegment segment);
+
 	interface PathSegment {
 
 		String segment();
+
+		default boolean matches(PathSegment segment) {
+			return this.equals(segment);
+		}
 
 		static PathSegment of(String segment) {
 
@@ -199,6 +210,19 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			return segments;
 		}
 
+		@Override
+		public @Nullable RawMongoPath subpath(PathSegment lookup) {
+
+			List<String> segments = new ArrayList<>(this.segments.size());
+			for (PathSegment segment : this.segments) {
+				segments.add(segment.segment());
+				if (segment.equals(lookup)) {
+					return MongoPath.parse(StringUtils.collectionToDelimitedString(segments, "."));
+				}
+			}
+			return null;
+		}
+
 		public List<PathSegment> getSegments() {
 			return this.segments;
 		}
@@ -293,18 +317,88 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 		}
 	}
 
+	sealed interface MappedMongoPath extends MongoPath permits MappedMongoPathImpl {
+
+		static MappedMongoPath just(RawMongoPath source) {
+			return new MappedMongoPathImpl(source, TypeInformation.OBJECT,
+					source.segments().stream().map(it -> new MappedPropertySegment(it.segment(), it, null)).toList());
+		}
+
+		@Nullable
+		PropertyPath propertyPath();
+
+		@Nullable
+		AssociationPath associationPath();
+	}
+
+	sealed interface AssociationPath extends MongoPath permits AssociationPathImpl {
+
+		@Nullable
+		PropertyPath propertyPath();
+
+		MappedMongoPath targetPath();
+
+		@Nullable
+		PropertyPath targetPropertyPath();
+	}
+
+	final class AssociationPathImpl implements AssociationPath {
+
+		final MappedMongoPath source;
+		final MappedMongoPath path;
+
+		public AssociationPathImpl(MappedMongoPath source, MappedMongoPath path) {
+			this.source = source;
+			this.path = path;
+		}
+
+		@Override
+		public String path() {
+			return path.path();
+		}
+
+		@Override
+		public List<? extends PathSegment> segments() {
+			return path.segments();
+		}
+
+		@Nullable
+		@Override
+		public MongoPath subpath(PathSegment segment) {
+			return path.subpath(segment);
+		}
+
+		@Nullable
+		@Override
+		public PropertyPath propertyPath() {
+			return path.propertyPath();
+		}
+
+		@Nullable
+		@Override
+		public PropertyPath targetPropertyPath() {
+			return source.propertyPath();
+		}
+
+		@Override
+		public MappedMongoPath targetPath() {
+			return source;
+		}
+	}
+
 	/**
 	 * @author Christoph Strobl
 	 */
-	final class MappedMongoPath implements MongoPath {
+	final class MappedMongoPathImpl implements MappedMongoPath {
 
 		private final RawMongoPath source;
 		private final TypeInformation<?> type;
 		private final List<? extends PathSegment> segments;
 		private final Lazy<PropertyPath> propertyPath = Lazy.of(this::assemblePropertyPath);
 		private final Lazy<String> mappedPath = Lazy.of(this::assembleMappedPath);
+		private final Lazy<AssociationPath> associationPath = Lazy.of(this::assembleAssociationPath);
 
-		public MappedMongoPath(RawMongoPath source, TypeInformation<?> type, List<? extends PathSegment> segments) {
+		public MappedMongoPathImpl(RawMongoPath source, TypeInformation<?> type, List<? extends PathSegment> segments) {
 			this.source = source;
 			this.type = type;
 			this.segments = segments;
@@ -318,17 +412,36 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
-			MappedMongoPath that = (MappedMongoPath) o;
-			return source.equals(that.source) && type.equals(that.type);
+			MappedMongoPathImpl that = (MappedMongoPathImpl) o;
+			return source.equals(that.source) && type.equals(that.type) && segments.equals(that.segments);
+		}
+
+		@Nullable
+		@Override
+		public MappedMongoPath subpath(PathSegment lookup) {
+
+			List<PathSegment> segments = new ArrayList<>(this.segments.size());
+			for (PathSegment segment : this.segments) {
+				segments.add(segment);
+				if (segment.matches(lookup)) {
+					break;
+				}
+			}
+
+			if (segments.isEmpty()) {
+				return null;
+			}
+
+			return new MappedMongoPathImpl(source, type, segments);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(source, type);
+			return Objects.hash(source, type, segments);
 		}
 
 		public static MappedMongoPath just(RawMongoPath source) {
-			return new MappedMongoPath(source, TypeInformation.OBJECT,
+			return new MappedMongoPathImpl(source, TypeInformation.OBJECT,
 					source.segments().stream().map(it -> new MappedPropertySegment(it.segment(), it, null)).toList());
 		}
 
@@ -336,8 +449,25 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			return this.propertyPath.getNullable();
 		}
 
+		@Nullable
+		@Override
+		public AssociationPath associationPath() {
+			return this.associationPath.getNullable();
+		}
+
 		private String assembleMappedPath() {
 			return segments.stream().map(PathSegment::segment).filter(StringUtils::hasText).collect(Collectors.joining("."));
+		}
+
+		private @Nullable AssociationPath assembleAssociationPath() {
+
+			for (PathSegment segment : this.segments) {
+				if (segment instanceof AssociationSegment) {
+					MappedMongoPath pathToAssociation = subpath(segment);
+					return new AssociationPathImpl(this, pathToAssociation);
+				}
+			}
+			return null;
 		}
 
 		private @Nullable PropertyPath assemblePropertyPath() {
@@ -385,8 +515,8 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			return mappedPath.get();
 		}
 
-		public String sourcePath() {
-			return source.path();
+		public MongoPath source() {
+			return source;
 		}
 
 		@Override
@@ -400,9 +530,8 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 		}
 
 		public static class AssociationSegment extends MappedPropertySegment {
-
-			public AssociationSegment(String mappedName, PathSegment source, MongoPersistentProperty property) {
-				super(mappedName, source, property);
+			public AssociationSegment(MappedPropertySegment segment) {
+				super(segment.mappedName, segment.source, segment.property);
 			}
 		}
 
@@ -436,6 +565,15 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 				return segment();
 			}
 
+			@Override
+			public boolean matches(PathSegment segment) {
+
+				if (PathSegment.super.matches(segment)) {
+					return true;
+				}
+
+				return this.outer.matches(segment) || this.inner.matches(segment);
+			}
 		}
 
 		public static class MappedPropertySegment implements PathSegment {
@@ -453,10 +591,6 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 			@Override
 			public String segment() {
 				return mappedName;
-			}
-
-			public boolean isMappedToProperty() {
-				return property != null;
 			}
 
 			@NonNull
@@ -487,6 +621,16 @@ public sealed interface MongoPath permits MongoPath.RawMongoPath, MongoPath.Mapp
 
 			public void setProperty(MongoPersistentProperty property) {
 				this.property = property;
+			}
+
+			@Override
+			public boolean matches(PathSegment segment) {
+
+				if (PathSegment.super.matches(segment)) {
+					return true;
+				}
+
+				return source.matches(segment);
 			}
 		}
 	}
