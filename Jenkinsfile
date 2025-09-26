@@ -20,10 +20,10 @@ pipeline {
 	stages {
 		stage("Docker images") {
 			parallel {
-				stage('Publish JDK (Java 24) + MongoDB 8.0') {
+				stage('Publish JDK (Java 25) + MongoDB 8.0') {
 					when {
 							anyOf {
-								changeset "ci/openjdk24-mongodb-8.0/**"
+								changeset "ci/openjdk25-mongodb-8.0/**"
 								changeset "ci/pipeline.properties"
 							}
 						}
@@ -32,7 +32,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-with-mongodb-8.0:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.7.0.version']} ci/openjdk24-mongodb-8.0/")
+							def image = docker.build("springci/spring-data-with-mongodb-8.0:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.7.0.version']} ci/openjdk25-mongodb-8.0/")
 							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
@@ -42,7 +42,7 @@ pipeline {
 				stage('Publish JDK (Java.next) + MongoDB 8.0') {
 					when {
 						anyOf {
-							changeset "ci/openjdk24-mongodb-8.0/**"
+							changeset "ci/openjdk25-mongodb-8.0/**"
 							changeset "ci/pipeline.properties"
 						}
 					}
@@ -51,7 +51,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-with-mongodb-8.0:${p['java.next.tag']}", "--build-arg BASE=${p['docker.java.next.image']} --build-arg MONGODB=${p['docker.mongodb.8.0.version']} ci/openjdk24-mongodb-8.0/")
+							def image = docker.build("springci/spring-data-with-mongodb-8.0:${p['java.next.tag']}", "--build-arg BASE=${p['docker.java.next.image']} --build-arg MONGODB=${p['docker.mongodb.8.0.version']} ci/openjdk25-mongodb-8.0/")
 							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
