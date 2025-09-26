@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Person.Sex;
@@ -128,6 +129,12 @@ class PartTreeMongoQueryUnitTests {
 		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject()).isEmpty();
 	}
 
+	@Test // GH-4852
+	void appliesMetaToPartTreeQuery() {
+		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getMeta()
+				.getMaxTimeMsec()).isEqualTo(1234L);
+	}
+
 	@Test // DATAMONGO-1345
 	void restrictsQueryToFieldsRequiredForProjection() {
 
@@ -194,7 +201,10 @@ class PartTreeMongoQueryUnitTests {
 		PartTreeMongoQuery partTreeQuery = createQueryForMethod(method, types);
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(partTreeQuery.getQueryMethod(), args);
-		return partTreeQuery.createQuery(new ConvertingParameterAccessor(mongoOperationsMock.getConverter(), accessor));
+
+		org.springframework.data.mongodb.core.query.Query query = partTreeQuery.createQuery(new ConvertingParameterAccessor(mongoOperationsMock.getConverter(), accessor));
+		partTreeQuery.applyQueryMetaAttributesWhenPresent(query);
+		return query;
 	}
 
 	private PartTreeMongoQuery createQueryForMethod(String methodName, Class<?>... paramTypes) {
@@ -232,6 +242,7 @@ class PartTreeMongoQueryUnitTests {
 		@Query(fields = "{ 'firstname }")
 		Person findByAge(Integer age);
 
+		@Meta(maxExecutionTimeMs = 1234)
 		Person findPersonBy();
 
 		PersonProjection findPersonProjectedBy();
