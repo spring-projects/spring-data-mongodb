@@ -19,8 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.Map;
 
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -94,4 +97,35 @@ class ReferenceLookupDelegateUnitTests {
 		lookupDelegate.readReference(property, Collections.emptyMap(), lookupFunction, entityReader);
 		verify(lookupFunction, never()).apply(any(), any());
 	}
+
+	@Test // GH-5065
+	@DisplayName("GH-5065: Empty Map with @DocumentReference annotation should deserialize to an empty map.")
+	void shouldResolveEmptyMapOnEmptyDocumentReferenceMapProperty() {
+		DocumentReference documentReference = mock(DocumentReference.class);
+		when(documentReference.lookup()).thenReturn("{ '_id' : ?#{#target} }");
+		when(documentReference.sort()).thenReturn("");
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		when(property.isMap()).thenReturn(true);
+		when(property.isDocumentReference()).thenReturn(true);
+		when(property.getDocumentReference()).thenReturn(documentReference);
+		when(property.isCollectionLike()).thenReturn(false);
+		DocumentReferenceSource source = mock(DocumentReferenceSource.class);
+		when(source.getTargetSource()).thenReturn(Document.parse("{}"));
+		ReferenceLookupDelegate.LookupFunction lookupFunction = mock(ReferenceLookupDelegate.LookupFunction.class);
+
+		Object target = lookupDelegate.readReference(property, source, lookupFunction, entityReader);
+
+		verify(lookupFunction, never()).apply(any(), any()); // Since we mocked it, make sure it is never called.
+		verify(property, times(2)).isMap();
+		verify(property, times(1)).isDocumentReference();
+		verify(property, times(1)).getDocumentReference();
+		verify(property, times(2)).isCollectionLike();
+		verify(documentReference, times(1)).lookup();
+		verify(documentReference, times(1)).sort();
+		verifyNoMoreInteractions(documentReference, property, source); // Make sure we only call the properties we mocked.
+		assertThat(target)
+				.isNotNull()
+				.isInstanceOf(Map.class);
+	}
+
 }

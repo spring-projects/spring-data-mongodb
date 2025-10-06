@@ -34,6 +34,8 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.annotation.Id;
@@ -41,6 +43,7 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.Client;
 
@@ -478,4 +481,64 @@ public class MappingMongoConverterTests {
 					+ ", localTime=" + this.getLocalTime() + ", localDateTime=" + this.getLocalDateTime() + ")";
 		}
 	}
+
+	@Nested // GH-5065
+	@DisplayName("GH-5065: Empty Map Tests")
+    class EmptyMapTests {
+
+		@Test // GH-5065
+		@DisplayName("Passing test to indicate that the problem is not a more generic issue with maps in general.")
+		void readsEmptyMapCorrectly() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			EmptyMapDocument target = converter.read(EmptyMapDocument.class, document);
+			assertThat(target.map).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		@DisplayName("Converter should read an empty object as an empty map when using @DocumentReference.")
+		void readsEmptyMapWithDocumentReferenceCorrectly() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.map).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		@DisplayName("Converter should read an empty object as an empty map with a valis values property when using @DocumentReference(lazy = true).")
+		void readsEmptyMapWithLazyLoadedDocumentReferenceCorrectly() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			LazyDocumentReferenceEmptyMapDocument target = converter.read(LazyDocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.map).isNotNull();
+			assertThat(target.map.values()).isNotNull();
+		}
+
+		static class EmptyMapDocument {
+
+			Map<String, String> map;
+
+			public EmptyMapDocument(Map<String, String> map) {
+				this.map = map;
+			}
+		}
+
+		static class DocumentReferenceEmptyMapDocument {
+
+			@DocumentReference
+			Map<String, String> map;
+
+			public DocumentReferenceEmptyMapDocument(Map<String, String> map) {
+				this.map = map;
+			}
+		}
+
+		static class LazyDocumentReferenceEmptyMapDocument {
+
+			@DocumentReference(lazy = true)
+			Map<String, String> map;
+
+			public LazyDocumentReferenceEmptyMapDocument(Map<String, String> map) {
+				this.map = map;
+			}
+		}
+	}
+
 }

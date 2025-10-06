@@ -21,10 +21,12 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -35,6 +37,8 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
@@ -43,6 +47,9 @@ import com.mongodb.DBRef;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
  * Unit tests for {@link DefaultDbRefResolver}.
@@ -58,6 +65,8 @@ class DefaultDbRefResolverUnitTests {
 	@Mock MongoDatabase dbMock;
 	@Mock MongoCollection<Document> collectionMock;
 	@Mock FindIterable<Document> cursorMock;
+	@Mock MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	@Mock SpELContext spELContext;
 	private DefaultDbRefResolver resolver;
 
 	@BeforeEach
@@ -91,7 +100,7 @@ class DefaultDbRefResolverUnitTests {
 	}
 
 	@Test // DATAMONGO-1194
-	void bulkFetchShouldThrowExceptionWhenUsingDifferntCollectionsWithinSetOfReferences() {
+	void bulkFetchShouldThrowExceptionWhenUsingDifferentCollectionsWithinSetOfReferences() {
 
 		DBRef ref1 = new DBRef("collection-1", new ObjectId());
 		DBRef ref2 = new DBRef("collection-2", new ObjectId());
@@ -133,5 +142,76 @@ class DefaultDbRefResolverUnitTests {
 		when(cursorMock.into(any())).then(invocation -> Arrays.asList(document));
 
 		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(document, document);
+	}
+
+	@Test // GH-5065
+	@DisplayName("GH-5065: Empty Map with @DocumentReference annotation should deserialize to an empty map.")
+	void resolveEmptyMapIsNotNull() {
+		DocumentReference documentReference = mock(DocumentReference.class);
+		when(documentReference.lookup()).thenReturn("{ '_id' : ?#{#target} }");
+		when(documentReference.sort()).thenReturn("");
+		when(documentReference.lazy()).thenReturn(false);
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		when(property.isCollectionLike()).thenReturn(false);
+		when(property.isMap()).thenReturn(true);
+		when(property.isDocumentReference()).thenReturn(true);
+		when(property.getDocumentReference()).thenReturn(documentReference);
+		DocumentReferenceSource source = mock(DocumentReferenceSource.class);
+		when(source.getTargetSource()).thenReturn(Document.parse("{}"));
+		ReferenceLookupDelegate lookupDelegate = new ReferenceLookupDelegate(mappingContext, spELContext);
+
+		ReferenceResolver.MongoEntityReader entityReader = mock(ReferenceResolver.MongoEntityReader.class);
+
+		Object target = resolver.resolveReference(property, source, lookupDelegate, entityReader);
+
+		verify(property, times(3)).isMap();
+		verify(property, times(2)).isDocumentReference();
+		verify(property, times(2)).getDocumentReference();
+		verify(property, times(3)).isCollectionLike();
+		verify(documentReference, times(1)).lookup();
+		verify(documentReference, times(1)).sort();
+		verify(documentReference, times(1)).lazy();
+		verify(source, times(3)).getTargetSource();
+		verifyNoMoreInteractions(documentReference, property, source); // Make sure we only call the properties we mocked.
+		assertThat(target)
+				.isNotNull()
+				.isInstanceOf(Map.class);
+	}
+
+	@Test // GH-5065
+	@DisplayName("GH-5065: Lazy loaded empty Map with @DocumentReference annotation should deserialize to an empty map with a non-null values property.")
+	void resolveLazyLoadedEmptyMapIsNotNull() {
+		DocumentReference documentReference = mock(DocumentReference.class);
+		when(documentReference.lookup()).thenReturn("{ '_id' : ?#{#target} }");
+		when(documentReference.sort()).thenReturn("");
+		when(documentReference.lazy()).thenReturn(true);
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		when(property.isCollectionLike()).thenReturn(false);
+		when(property.isMap()).thenReturn(true);
+		when(property.isDocumentReference()).thenReturn(true);
+		when(property.getDocumentReference()).thenReturn(documentReference);
+        //noinspection rawtypes,unchecked
+        when(property.getType()).thenReturn((Class) Map.class);
+		DocumentReferenceSource source = mock(DocumentReferenceSource.class);
+		when(source.getTargetSource()).thenReturn(Document.parse("{}"));
+		ReferenceLookupDelegate lookupDelegate = new ReferenceLookupDelegate(mappingContext, spELContext);
+
+		ReferenceResolver.MongoEntityReader entityReader = mock(ReferenceResolver.MongoEntityReader.class);
+
+		Object target = resolver.resolveReference(property, source, lookupDelegate, entityReader);
+
+		verify(property, times(1)).isMap();
+		verify(property, times(1)).isDocumentReference();
+		verify(property, times(1)).getDocumentReference();
+		verify(property, times(1)).isCollectionLike();
+		verify(property, times(1)).getType();
+		verify(documentReference, times(1)).lazy();
+		verify(source, times(1)).getTargetSource();
+		verifyNoMoreInteractions(documentReference, property, source); // Make sure we only call the properties we mocked.
+
+		assertThat(target)
+				.isNotNull()
+				.isInstanceOf(Map.class)
+				.asInstanceOf(MAP).values().isNotNull();
 	}
 }
