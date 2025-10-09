@@ -21,7 +21,6 @@ import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
 import com.mongodb.RequestContext;
-import org.jspecify.annotations.Nullable;
 
 /**
  * A {@link Map}-based {@link RequestContext}.
@@ -30,24 +29,18 @@ import org.jspecify.annotations.Nullable;
  * @author Greg Turnquist
  * @since 4.0.0
  */
-class MapRequestContext implements RequestContext {
-
-	private final Map<Object, Object> map;
+record MapRequestContext(Map<Object, Object> map) implements RequestContext {
 
 	public MapRequestContext() {
 		this(new HashMap<>());
 	}
 
-	public MapRequestContext(Map<Object, Object> context) {
-		this.map = context;
-	}
-
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T get(Object key) {
 
-
 		T value = (T) map.get(key);
-		if(value != null) {
+		if (value != null) {
 			return value;
 		}
 		throw new NoSuchElementException("%s is missing".formatted(key));
@@ -55,7 +48,7 @@ class MapRequestContext implements RequestContext {
 
 	@Override
 	public boolean hasKey(Object key) {
-		return map.containsKey(key);
+		return map.get(key) != null;
 	}
 
 	@Override
