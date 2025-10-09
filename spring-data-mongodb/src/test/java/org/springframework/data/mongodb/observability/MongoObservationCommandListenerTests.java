@@ -27,6 +27,7 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 
+import org.assertj.core.api.Assertions;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
@@ -249,6 +250,46 @@ class MongoObservationCommandListenerTests {
 
 		// then
 		assertThat(meterRegistry).hasMeterWithName("custom.name.active");
+	}
+
+	@Test // GH-5064
+	void completionRestoresParentObservation() {
+
+		// given
+		Observation parent = Observation.start("name", observationRegistry);
+		observationRegistry.setCurrentObservationScope(parent.openScope());
+		RequestContext traceRequestContext = getContext();
+
+		// when
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, null, "database", "insert",
+				new BsonDocument("collection", new BsonString("user"))));
+
+		Assertions.assertThat((Observation) traceRequestContext.get(ObservationThreadLocalAccessor.KEY)).isNotNull()
+				.isNotEqualTo(parent);
+
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "insert", null, null, 0));
+
+		Assertions.assertThat((Observation) traceRequestContext.get(ObservationThreadLocalAccessor.KEY)).isEqualTo(parent);
+	}
+
+	@Test // GH-5064
+	void failureRestoresParentObservation() {
+
+		// given
+		Observation parent = Observation.start("name", observationRegistry);
+		observationRegistry.setCurrentObservationScope(parent.openScope());
+		RequestContext traceRequestContext = getContext();
+
+		// when
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, null, "database", "insert",
+				new BsonDocument("collection", new BsonString("user"))));
+
+		Assertions.assertThat((Observation) traceRequestContext.get(ObservationThreadLocalAccessor.KEY)).isNotNull()
+				.isNotEqualTo(parent);
+
+		listener.commandFailed(new CommandFailedEvent(traceRequestContext, 0, 0, null, "insert", null, 0, null));
+
+		Assertions.assertThat((Observation) traceRequestContext.get(ObservationThreadLocalAccessor.KEY)).isEqualTo(parent);
 	}
 
 	private RequestContext getContext() {

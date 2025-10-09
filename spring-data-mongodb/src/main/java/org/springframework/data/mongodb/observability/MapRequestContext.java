@@ -41,13 +41,14 @@ class MapRequestContext implements RequestContext {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T get(Object key) {
 		return (T) map.get(key);
 	}
 
 	@Override
 	public boolean hasKey(Object key) {
-		return map.containsKey(key);
+		return map.get(key) != null;
 	}
 
 	@Override
