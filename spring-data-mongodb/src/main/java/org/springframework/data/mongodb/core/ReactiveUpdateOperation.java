@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.jetbrains.annotations.Contract;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -23,6 +22,7 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.lang.Contract;
 
 import com.mongodb.client.result.UpdateResult;
 

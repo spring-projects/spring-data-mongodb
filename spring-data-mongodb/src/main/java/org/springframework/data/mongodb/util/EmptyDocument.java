@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import org.bson.Document;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Empty variant of {@link Document}.
