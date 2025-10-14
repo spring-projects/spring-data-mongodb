@@ -18,7 +18,11 @@ package org.springframework.data.mongodb.repository.aot;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.mockito.Mockito.mock;
 
+import com.mongodb.reactivestreams.client.MongoClient;
 import example.aot.User;
+import org.junit.jupiter.api.Disabled;
+import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,13 +39,10 @@ import org.springframework.context.aot.ApplicationContextAotGenerator;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.data.aot.AotContext;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.env.MockPropertySource;
 
-import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for AOT processing of reactive repositories.
@@ -52,10 +53,10 @@ class ReactiveAotContributionIntegrationTests {
 
 	@EnableReactiveMongoRepositories(considerNestedRepositories = true, includeFilters = {
 			@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ReactiveQuerydslUserRepository.class) })
-	static class AotConfiguration extends AbstractMongoClientConfiguration {
+	static class AotConfiguration extends AbstractReactiveMongoConfiguration {
 
 		@Override
-		public MongoClient mongoClient() {
+		public MongoClient reactiveMongoClient() {
 			return mock(MongoClient.class);
 		}
 
@@ -66,7 +67,7 @@ class ReactiveAotContributionIntegrationTests {
 	}
 
 	interface ReactiveQuerydslUserRepository
-			extends CrudRepository<User, String>, ReactiveQuerydslPredicateExecutor<User> {
+			extends ReactiveCrudRepository<User, String>, ReactiveQuerydslPredicateExecutor<User> {
 
 		Flux<User> findUserNoArgumentsBy();
 
@@ -75,6 +76,7 @@ class ReactiveAotContributionIntegrationTests {
 	}
 
 	@Test // GH-4964
+	@Disabled("GH-5068: creates a ReactiveQuerydslUserRepositoryImpl__AotRepository referencing imperative template etc.")
 	void shouldGenerateMetadataForBaseRepositoryAndQuerydslFragment() throws IOException {
 
 		TestGenerationContext generationContext = generate(AotConfiguration.class);

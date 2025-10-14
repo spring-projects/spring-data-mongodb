@@ -38,7 +38,9 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.aot.AotContext;
+import org.springframework.data.mongodb.repository.ReactivePersonRepository;
 import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
+import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.config.AotRepositoryContextSupport;
 import org.springframework.data.repository.config.AotRepositoryInformation;
@@ -102,13 +104,32 @@ class AotMongoRepositoryPostProcessorUnitTests {
 		assertThat(contributor).isNull();
 	}
 
+	@Test  // GH-5068
+	void shouldNotAttemptToContributeCodeForReactiveRepository(){
+
+		GenericApplicationContext context = new GenericApplicationContext();
+		context.refresh();
+
+		MongoRepositoryContributor contributor = createContributorForReactiveRepo(context);
+
+		assertThat(contributor).isNull();
+	}
+
 	private GenerationContext createGenerationContext() {
 		return new DefaultGenerationContext(new ClassNameGenerator(ClassName.OBJECT), new InMemoryGeneratedFiles());
 	}
 
-	private MongoRepositoryContributor createContributorWithPersonTypes(GenericApplicationContext context) {
+	private MongoRepositoryContributor createContributorForReactiveRepo(GenericApplicationContext context) {
+		return createContributorWithPersonTypes(context, true);
+	}
 
-		return new AotMongoRepositoryPostProcessor().contributeAotRepository(new DummyAotRepositoryContext(context) {
+	private MongoRepositoryContributor createContributorWithPersonTypes(GenericApplicationContext context) {
+		return createContributorWithPersonTypes(context, false);
+	}
+
+	private MongoRepositoryContributor createContributorWithPersonTypes(GenericApplicationContext context, boolean reactive) {
+
+		return new AotMongoRepositoryPostProcessor().contributeAotRepository(new DummyAotRepositoryContext(context, reactive) {
 			@Override
 			public Set<Class<?>> getResolvedTypes() {
 				return Collections.singleton(Person.class);
@@ -125,8 +146,11 @@ class AotMongoRepositoryPostProcessorUnitTests {
 
 	static class DummyAotRepositoryContext extends AotRepositoryContextSupport {
 
-		DummyAotRepositoryContext(AbstractApplicationContext applicationContext) {
+		boolean reactive;
+
+		DummyAotRepositoryContext(AbstractApplicationContext applicationContext, boolean reactive) {
 			super(AotContext.from(applicationContext, applicationContext.getEnvironment()));
+			this.reactive = reactive;
 		}
 
 		@Override
@@ -151,6 +175,10 @@ class AotMongoRepositoryPostProcessorUnitTests {
 
 		@Override
 		public RepositoryInformation getRepositoryInformation() {
+			if(reactive) {
+				return new AotRepositoryInformation(AbstractRepositoryMetadata.getMetadata(ReactivePersonRepository.class),
+					SimpleReactiveMongoRepository.class, List.of());
+			}
 			return new AotRepositoryInformation(AbstractRepositoryMetadata.getMetadata(PersonRepository.class),
 					SimpleMongoRepository.class, List.of());
 		}

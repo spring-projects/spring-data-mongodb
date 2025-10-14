@@ -55,6 +55,10 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 			return null;
 		}
 
+		if(repositoryContext.getRepositoryInformation().isReactiveRepository()) {
+			return null;
+		}
+
 		return new MongoRepositoryContributor(repositoryContext);
 	}
 
