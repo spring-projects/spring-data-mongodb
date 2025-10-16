@@ -34,6 +34,7 @@ public interface IndexOperationsAdapter extends IndexOperations {
 	 * @param reactiveIndexOperations must not be {@literal null}.
 	 * @return never {@literal null}
 	 */
+	@SuppressWarnings("NullAway")
 	static IndexOperationsAdapter blocking(ReactiveIndexOperations reactiveIndexOperations) {
 
 		Assert.notNull(reactiveIndexOperations, "ReactiveIndexOperations must not be null");

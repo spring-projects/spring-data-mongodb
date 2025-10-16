@@ -156,6 +156,7 @@ public class ReactiveMongoDatabaseUtils {
 		return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
 	}
 
+	@SuppressWarnings("NullAway")
 	private static Mono<ClientSession> doGetSession(TransactionSynchronizationManager synchronizationManager,
 			ReactiveMongoDatabaseFactory dbFactory, SessionSynchronization sessionSynchronization) {
 
