@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import org.bson.BsonArray;
+import org.bson.BsonDateTime;
 import org.bson.BsonDouble;
 import org.bson.BsonInt32;
 import org.bson.BsonInt64;
@@ -148,6 +149,13 @@ class BsonUtilsTest {
 
 		assertThat(BsonUtils.simpleToBsonValue(source))
 				.isEqualTo(new Document("value", source).toBsonDocument().get("value"));
+	}
+
+	@Test // GH-5072
+	void convertsJavaDateToBsonDateTime() {
+
+		Date source = new Date();
+		assertThat(BsonUtils.simpleToBsonValue(source)).isEqualTo(new BsonDateTime(source.getTime()));
 	}
 
 	@ParameterizedTest // GH-4432

@@ -340,7 +340,7 @@ public class BsonUtils {
 	 * @throws IllegalArgumentException if {@literal source} does not correspond to a {@link BsonValue} type.
 	 * @since 4.2
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static BsonValue simpleToBsonValue(Object source, CodecRegistry codecRegistry) {
 
 		if (source instanceof BsonValue bsonValue) {
@@ -384,7 +384,7 @@ public class BsonUtils {
 		}
 
 		if (source instanceof Date date) {
-			new BsonDateTime(date.getTime());
+			return new BsonDateTime(date.getTime());
 		}
 
 		try {
