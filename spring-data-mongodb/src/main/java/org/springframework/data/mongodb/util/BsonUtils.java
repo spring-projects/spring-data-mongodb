@@ -63,6 +63,7 @@ import com.mongodb.MongoClientSettings;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Andrey Litvitski
  * @since 2.0
  */
 public class BsonUtils {
@@ -393,7 +394,7 @@ public class BsonUtils {
 		}
 
 		if (source instanceof Date date) {
-			new BsonDateTime(date.getTime());
+			return new BsonDateTime(date.getTime());
 		}
 
 		try {
