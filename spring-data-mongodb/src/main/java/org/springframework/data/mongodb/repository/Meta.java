@@ -21,9 +21,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.data.annotation.QueryAnnotation;
-
 /**
+ * Annotation to declare meta-information (execution time, cursor size, disk usage) for query methods.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.6
@@ -31,7 +31,6 @@ import org.springframework.data.annotation.QueryAnnotation;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
-@QueryAnnotation
 public @interface Meta {
 
 	/**

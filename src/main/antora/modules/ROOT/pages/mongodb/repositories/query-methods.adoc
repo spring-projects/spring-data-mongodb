@@ -205,6 +205,9 @@ lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
 
 NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
 
+NOTE: In some scenarios, you might require additional options, such as a maximum run time, additional log comments, or the permission to temporarily write data to disk.
+Use the `@Meta` annotation to set those options via `maxExecutionTimeMs`, `comment` or `allowDiskUse`. `@Meta` can only be used on repository query methods, not on base interface or fragment interface methods.
+
 [[mongodb.repositories.queries.geo-spatial]]
 == Geo-spatial Queries
 
@@ -443,7 +446,7 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 ======
 
 Expressions can be used to invoke functions, evaluate conditionals, and construct values.
-SpEL expressions used in conjunction with JSON reveal a side-effect, because Map-like declarations inside of SpEL read like JSON, as the following example shows:
+SpEL expressions used in conjunction with JSON reveal a side effect, because Map-like declarations inside of SpEL read like JSON, as the following example shows:
 
 [tabs]
 ======
