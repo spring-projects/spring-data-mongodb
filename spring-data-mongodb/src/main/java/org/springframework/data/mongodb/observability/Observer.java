@@ -31,7 +31,9 @@ import org.jspecify.annotations.Nullable;
  *
  * @author Mark Paluch
  * @since 4.4.9
+ * @deprecated since 5.0 in favor of native MongoDB Java Driver observability support.
  */
+@Deprecated(since = "5.0",  forRemoval = true)
 class Observer {
 
 	private final List<MongoKeyName.MongoKeyValue> keyValues = new ArrayList<>();
