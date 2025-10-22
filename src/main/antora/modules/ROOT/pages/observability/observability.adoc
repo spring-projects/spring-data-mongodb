@@ -3,6 +3,23 @@
 [[mongodb.observability]]
 = Observability
 
+[WARNING]
+====
+Spring Data MongoDB's flavor of observability has been deprecated and is scheduled for removal in favor of the observability support being directly built into the MongoDB Java Driver which can be configured as outlined below:
+
+[source,java]
+----
+@Bean
+MongoClientSettingsBuilderCustomizer mongoDbObservabilitySettings(ObservationRegistry registry) {
+    return (clientSettingsBuilder) -> {
+        clientSettingsBuilder.observabilitySettings(ObservabilitySettings.micrometerBuilder()
+                .observationRegistry(observationRegistry)
+                .build());
+    };
+}
+----
+====
+
 Spring Data MongoDB currently has the most up-to-date code to support Observability in your MongoDB application.
 These changes, however, haven't been picked up by Spring Boot (yet).
 Until those changes are applied, if you wish to use Spring Data MongoDB's flavor of Observability, you must carry out the following steps.

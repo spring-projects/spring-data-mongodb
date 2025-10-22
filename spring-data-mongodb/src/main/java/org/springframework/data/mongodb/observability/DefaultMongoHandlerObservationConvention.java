@@ -29,7 +29,9 @@ import com.mongodb.event.CommandStartedEvent;
  * @author Mark Paluch
  * @author Michal Domagala
  * @since 4.0
+ * @deprecated since 5.0 in favor of native MongoDB Java Driver observability support.
  */
+@Deprecated(since = "5.0",  forRemoval = true)
 class DefaultMongoHandlerObservationConvention implements MongoHandlerObservationConvention {
 
 	@Override
