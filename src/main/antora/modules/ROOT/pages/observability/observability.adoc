@@ -3,11 +3,27 @@
 [[mongodb.observability]]
 = Observability
 
-Spring Data MongoDB currently has the most up-to-date code to support Observability in your MongoDB application.
-These changes, however, haven't been picked up by Spring Boot (yet).
-Until those changes are applied, if you wish to use Spring Data MongoDB's flavor of Observability, you must carry out the following steps.
+[NOTE]
+====
+MongoDB Java Driver 5.7+ comes with observability directly built in.
+We recommend switching to the driver native `ObservabilitySettings`, which can be configured as outlined below:
+[source,java]
+----
+@Bean
+MongoClientSettingsBuilderCustomizer mongoDbObservabilitySettings(ObservationRegistry registry) {
+    return (clientSettingsBuilder) -> {
+        clientSettingsBuilder.observabilitySettings(ObservabilitySettings.micrometerBuilder()
+                .observationRegistry(observationRegistry)
+                .build());
+    };
+}
+----
+In the light of driver native observability support, the types within the Spring Data provided _org.springframework.data.mongodb.observability_ package will not see further development and are subject to deprecation/removal in subsequent releases.
+====
 
-. First of all, you must opt into Spring Data MongoDB's configuration settings by customizing `MongoClientSettings` through either your `@SpringBootApplication` class or one of your configuration classes.
+To use Spring Data MongoDB's flavor of Observability you must:
+
+. opt into Spring Data MongoDB's configuration settings by customizing `MongoClientSettings` through either your `@SpringBootApplication` class or one of your configuration classes.
 +
 .Registering MongoDB Micrometer customizer setup
 ====
