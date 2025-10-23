@@ -35,6 +35,9 @@ import com.mongodb.event.CommandSucceededEvent;
 
 /**
  * A {@link Observation.Context} that contains MongoDB events.
+ * <p>
+ * <strong>NOTE:</strong> MongoDB Java Driver 5.7+ comes with observability directly built in which can be configured
+ * via {@code MongoClientSettings.Builder#observabilitySettings(ObservabilitySettings)}.
  *
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
