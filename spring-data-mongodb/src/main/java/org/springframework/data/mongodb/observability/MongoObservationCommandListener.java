@@ -36,6 +36,9 @@ import com.mongodb.event.CommandSucceededEvent;
 
 /**
  * Implement MongoDB's {@link CommandListener} using Micrometer's {@link Observation} API.
+ * <p>
+ * <strong>NOTE:</strong> MongoDB Java Driver 5.7+ comes with observability directly built in which can be configured
+ * via {@code MongoClientSettings.Builder#observabilitySettings(ObservabilitySettings)}.
  *
  * @author OpenZipkin Brave Authors
  * @author Marcin Grzejszczak
