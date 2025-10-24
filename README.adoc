@@ -137,7 +137,7 @@ The https://spring.io/[spring.io] site contains several guides that show how to 
 [[building-from-source]]
 == Building from Source
 
-You do not need to build from source to use Spring Data. Binaries are available in https://repo.spring.io[repo.spring.io]
+You do not need to build from source to use Spring Data. Binaries are available in https://central.sonatype.com[Maven Central] or in case of snapshots from  https://repo.spring.io[repo.spring.io]
 and accessible from Maven using the Maven configuration noted <<maven-configuration,above>>.
 
 NOTE: Configuration for Gradle is similar to Maven.
