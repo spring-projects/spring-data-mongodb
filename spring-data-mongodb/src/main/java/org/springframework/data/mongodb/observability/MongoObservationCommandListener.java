@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.observability;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.ObservationView;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 
 import java.util.function.BiConsumer;
@@ -191,7 +192,13 @@ public class MongoObservationCommandListener implements CommandListener {
 				log.debug(
 						"Restoring parent observation [" + observation + "] for Mongo instrumentation and put it in Mongo context");
 			}
-			requestContext.put(ObservationThreadLocalAccessor.KEY, observation.getContext().getParentObservation());
+			ObservationView parentObservation = observation.getContext().getParentObservation();
+
+			if (parentObservation == null) {
+				requestContext.delete(ObservationThreadLocalAccessor.KEY);
+			} else {
+				requestContext.put(ObservationThreadLocalAccessor.KEY, parentObservation);
+			}
 		}
 	}
 

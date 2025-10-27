@@ -26,6 +26,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
+import reactor.core.publisher.BaseSubscriber;
 
 import org.assertj.core.api.Assertions;
 import org.bson.BsonDocument;
@@ -43,6 +44,7 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
+import com.mongodb.reactivestreams.client.ReactiveContextProvider;
 
 /**
  * Series of test cases exercising {@link MongoObservationCommandListener}.
@@ -111,6 +113,25 @@ class MongoObservationCommandListenerTests {
 		assertThat(meterRegistry).hasMeterWithNameAndTags(
 				"spring.data.mongodb.command.active",
 				Tags.of("db.mongodb.collection", "none"));
+	}
+
+	@Test // GH-5082
+	void reactiveContextCompletesNormally() {
+
+		ReactiveContextProvider rcp = (ReactiveContextProvider) ContextProviderFactory.create(observationRegistry);
+		RequestContext context = rcp.getContext(new BaseSubscriber<>() {});
+
+		listener.commandStarted(new CommandStartedEvent(context, 0, 0, //
+				new ConnectionDescription( //
+						new ServerId( //
+								new ClusterId("description"), //
+								new ServerAddress("localhost", 1234))),
+				"database", "insert", //
+				new BsonDocument("collection", new BsonString("user"))));
+		listener.commandSucceeded(new CommandSucceededEvent(context, 0, 0, null, "insert", null, null, 0));
+
+		// then
+		assertThatTimerRegisteredWithTags();
 	}
 
 	@Test
