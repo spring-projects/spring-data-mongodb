@@ -34,7 +34,6 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -57,13 +56,13 @@ import com.mongodb.client.MongoDatabase;
  * @author Christoph Strobl
  */
 
-public class MappingMongoConverterTests {
+class MappingMongoConverterTests {
 
 	private static final String DATABASE = "mapping-converter-tests";
 
 	private static @Client MongoClient client;
 
-	private MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, DATABASE);
+	private final MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, DATABASE);
 
 	private MappingMongoConverter converter;
 	private MongoMappingContext mappingContext;
@@ -483,30 +482,10 @@ public class MappingMongoConverterTests {
 	}
 
 	@Nested // GH-5065
-	@DisplayName("GH-5065: Empty Map Tests")
     class EmptyMapTests {
 
 		@Test // GH-5065
-		@DisplayName("Test control: Passing test to indicate that the problem is not a more generic issue with maps in general.")
-		void readsEmptyMapCorrectly() {
-			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
-			//EmptyMapDocument target = converter.read(EmptyMapDocument.class, document);
-			assertThat(converter.read(EmptyMapDocument.class, document).map).isNotNull().isEmpty();
-			assertThat(converter.read(EmptyMapDocument.class, document).getMap()).isNotNull().isEmpty();
-		}
-
-		@Test // GH-5065
-		@DisplayName("Test control: Converter should read an explicitly assigned null as a null map.")
-		void readsExplicitlyNullMapCorrectly() {
-			org.bson.Document document = org.bson.Document.parse("{\"map\":null}");
-			//EmptyMapDocument target = converter.read(EmptyMapDocument.class, document);
-			assertThat(converter.read(EmptyMapDocument.class, document).map).isNull();
-			assertThat(converter.read(EmptyMapDocument.class, document).getMap()).isNull();
-		}
-
-		@Test // GH-5065
-		@DisplayName("Converter should read an empty object as an empty map when using @DocumentReference.")
-		void readsEmptyMapWithDocumentReferenceCorrectly() {
+		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDocumentReferenceAnnotation() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
 			//DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
 			assertThat(converter.read(DocumentReferenceEmptyMapDocument.class, document).map).isNotNull().isEmpty();
@@ -514,8 +493,7 @@ public class MappingMongoConverterTests {
 		}
 
 		@Test // GH-5065
-		@DisplayName("Converter should read an explicitly assigned null as a null map when using @DocumentReference.")
-		void readsExplicitlyNullMapWithDocumentReferenceCorrectly() {
+		void converterShouldReadAnExplicitlyAssignedNullAsANullMapWhenUsingDocumentReferenceAnnotation() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":null}");
 			//DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
 			assertThat(converter.read(DocumentReferenceEmptyMapDocument.class, document).map).isNull();
@@ -523,8 +501,7 @@ public class MappingMongoConverterTests {
 		}
 
 		@Test // GH-5065
-		@DisplayName("Converter should read an empty object as an empty map with a valid values property when using @DocumentReference(lazy = true).")
-		void readsEmptyMapWithLazyLoadedDocumentReferenceCorrectly() {
+		void converterShouldReadAnEmptyObjectAsAnEmptyMapWithAValidValuesPropertyWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrue() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
 			//LazyDocumentReferenceEmptyMapDocument target = converter.read(LazyDocumentReferenceEmptyMapDocument.class, document);
 			assertThat(converter.read(LazyDocumentReferenceEmptyMapDocument.class, document).map).isNotNull().isEmpty();
@@ -534,8 +511,7 @@ public class MappingMongoConverterTests {
 		}
 
 		@Test // GH-5065
-		@DisplayName("Converter should read an empty object as an empty map when using @DBRef.")
-		void readsEmptyMapWithDBRefCorrectly() {
+		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDBRefAnnotation() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
 			//DBRefEmptyMapDocument target = converter.read(DBRefEmptyMapDocument.class, document);
 			assertThat(converter.read(DBRefEmptyMapDocument.class, document).map).isNotNull().isEmpty();
@@ -543,25 +519,11 @@ public class MappingMongoConverterTests {
 		}
 
 		@Test // GH-5065
-		@DisplayName("Converter should read an explicitly assigned null as a null map when using @DBRef.")
-		void readsExplicitlyNullMapWithDBRefCorrectly() {
+		void converterShouldReadAnExplicitlyAssignedNullAsANullMapWhenUsingDBRefAnnotation() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":null}");
 			//DBRefEmptyMapDocument target = converter.read(DBRefEmptyMapDocument.class, document);
 			assertThat(converter.read(DBRefEmptyMapDocument.class, document).map).isNull();
 			assertThat(converter.read(DBRefEmptyMapDocument.class, document).getMap()).isNull();
-		}
-
-		static class EmptyMapDocument {
-
-			Map<String, String> map;
-
-			public EmptyMapDocument(Map<String, String> map) {
-				this.map = map;
-			}
-
-			Map<String, String> getMap() {
-				return map;
-			}
 		}
 
 		static class DocumentReferenceEmptyMapDocument {

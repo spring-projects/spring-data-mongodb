@@ -26,7 +26,6 @@ import java.util.Map;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -145,8 +144,7 @@ class DefaultDbRefResolverUnitTests {
 	}
 
 	@Test // GH-5065
-	@DisplayName("GH-5065: Empty Map with @DocumentReference annotation should deserialize to an empty map.")
-	void resolveEmptyMapIsNotNull() {
+	void emptyMapWithDocumentReferenceAnnotationShouldDeserializeToAnEmptyMap() {
 		DocumentReference documentReference = mock(DocumentReference.class);
 		when(documentReference.lookup()).thenReturn("{ '_id' : ?#{#target} }");
 		when(documentReference.sort()).thenReturn("");
@@ -180,8 +178,7 @@ class DefaultDbRefResolverUnitTests {
 	}
 
 	@Test // GH-5065
-	@DisplayName("GH-5065: Lazy loaded empty Map with @DocumentReference annotation should deserialize to an empty map with a non-null values property.")
-	void resolveLazyLoadedEmptyMapIsNotNull() {
+	void lazyLoadedEmptyMapWithDocumentReferenceAnnotationShouldDeserializeToAnEmptyMapWithANonnullValuesProperty() {
 		DocumentReference documentReference = mock(DocumentReference.class);
 		when(documentReference.lookup()).thenReturn("{ '_id' : ?#{#target} }");
 		when(documentReference.sort()).thenReturn("");
