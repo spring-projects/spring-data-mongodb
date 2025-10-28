@@ -487,43 +487,85 @@ class MappingMongoConverterTests {
 		@Test // GH-5065
 		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDocumentReferenceAnnotation() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
-			//DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
-			assertThat(converter.read(DocumentReferenceEmptyMapDocument.class, document).map).isNotNull().isEmpty();
-			assertThat(converter.read(DocumentReferenceEmptyMapDocument.class, document).getMap()).isNotNull().isEmpty();
+			DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.map).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDocumentReferenceAnnotationUsingGetMap() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.getMap()).isNotNull().isEmpty();
 		}
 
 		@Test // GH-5065
 		void converterShouldReadAnExplicitlyAssignedNullAsANullMapWhenUsingDocumentReferenceAnnotation() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":null}");
-			//DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
-			assertThat(converter.read(DocumentReferenceEmptyMapDocument.class, document).map).isNull();
-			assertThat(converter.read(DocumentReferenceEmptyMapDocument.class, document).getMap()).isNull();
+			DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.map).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullMapWhenUsingDocumentReferenceAnnotationUsingGetMap() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":null}");
+			DocumentReferenceEmptyMapDocument target = converter.read(DocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.getMap()).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrue() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			LazyDocumentReferenceEmptyMapDocument target = converter.read(LazyDocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.map).isNotNull().isEmpty();
 		}
 
 		@Test // GH-5065
 		void converterShouldReadAnEmptyObjectAsAnEmptyMapWithAValidValuesPropertyWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrue() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
-			//LazyDocumentReferenceEmptyMapDocument target = converter.read(LazyDocumentReferenceEmptyMapDocument.class, document);
-			assertThat(converter.read(LazyDocumentReferenceEmptyMapDocument.class, document).map).isNotNull().isEmpty();
-			assertThat(converter.read(LazyDocumentReferenceEmptyMapDocument.class, document).getMap()).isNotNull().isEmpty();
-			assertThat(converter.read(LazyDocumentReferenceEmptyMapDocument.class, document).map.values()).isNotNull().isEmpty();
-			assertThat(converter.read(LazyDocumentReferenceEmptyMapDocument.class, document).getMap().values()).isNotNull().isEmpty();
+			LazyDocumentReferenceEmptyMapDocument target = converter.read(LazyDocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.map.values()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrueUsingGetMap() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			LazyDocumentReferenceEmptyMapDocument target = converter.read(LazyDocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.getMap()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyMapWithAValidValuesPropertyWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrueUsingGetMap() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			LazyDocumentReferenceEmptyMapDocument target = converter.read(LazyDocumentReferenceEmptyMapDocument.class, document);
+			assertThat(target.getMap().values()).isNotNull().isEmpty();
 		}
 
 		@Test // GH-5065
 		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDBRefAnnotation() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
-			//DBRefEmptyMapDocument target = converter.read(DBRefEmptyMapDocument.class, document);
-			assertThat(converter.read(DBRefEmptyMapDocument.class, document).map).isNotNull().isEmpty();
-			assertThat(converter.read(DBRefEmptyMapDocument.class, document).getMap()).isNotNull().isEmpty();
+			DBRefEmptyMapDocument target = converter.read(DBRefEmptyMapDocument.class, document);
+			assertThat(target.map).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDBRefAnnotationUsingGetMap() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			DBRefEmptyMapDocument target = converter.read(DBRefEmptyMapDocument.class, document);
+			assertThat(target.getMap()).isNotNull().isEmpty();
 		}
 
 		@Test // GH-5065
 		void converterShouldReadAnExplicitlyAssignedNullAsANullMapWhenUsingDBRefAnnotation() {
 			org.bson.Document document = org.bson.Document.parse("{\"map\":null}");
-			//DBRefEmptyMapDocument target = converter.read(DBRefEmptyMapDocument.class, document);
-			assertThat(converter.read(DBRefEmptyMapDocument.class, document).map).isNull();
-			assertThat(converter.read(DBRefEmptyMapDocument.class, document).getMap()).isNull();
+			DBRefEmptyMapDocument target = converter.read(DBRefEmptyMapDocument.class, document);
+			assertThat(target.map).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullMapWhenUsingDBRefAnnotationUsingGetMap() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":null}");
+			DBRefEmptyMapDocument target = converter.read(DBRefEmptyMapDocument.class, document);
+			assertThat(target.getMap()).isNull();
 		}
 
 		static class DocumentReferenceEmptyMapDocument {
