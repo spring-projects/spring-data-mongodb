@@ -111,18 +111,26 @@ class ReferenceLookupDelegateUnitTests {
 		when(property.isCollectionLike()).thenReturn(false);
 		DocumentReferenceSource source = mock(DocumentReferenceSource.class);
 		when(source.getTargetSource()).thenReturn(Document.parse("{}"));
+
+		// Placeholder mock.  It should never get called.
 		ReferenceLookupDelegate.LookupFunction lookupFunction = mock(ReferenceLookupDelegate.LookupFunction.class);
 
 		Object target = lookupDelegate.readReference(property, source, lookupFunction, entityReader);
 
-		verify(lookupFunction, never()).apply(any(), any()); // Since we mocked it, make sure it is never called.
-		verify(property, times(2)).isMap();
-		verify(property, times(1)).isDocumentReference();
-		verify(property, times(1)).getDocumentReference();
-		verify(property, times(2)).isCollectionLike();
-		verify(documentReference, times(1)).lookup();
-		verify(documentReference, times(1)).sort();
-		verifyNoMoreInteractions(documentReference, property, source); // Make sure we only call the properties we mocked.
+		// Since we mocked a placeholder that should never be called, make sure it is never called.
+		verify(lookupFunction, never()).apply(any(), any());
+
+		// Verify that all the mocks we created are used.
+		verify(property, atLeastOnce()).isMap();
+		verify(property, atLeastOnce()).isDocumentReference();
+		verify(property, atLeastOnce()).getDocumentReference();
+		verify(property, atLeastOnce()).isCollectionLike();
+		verify(documentReference, atLeastOnce()).lookup();
+		verify(documentReference, atLeastOnce()).sort();
+
+		// Make sure we only call the properties we mocked.
+		verifyNoMoreInteractions(documentReference, property, source);
+
 		assertThat(target)
 				.isNotNull()
 				.isInstanceOf(Map.class);

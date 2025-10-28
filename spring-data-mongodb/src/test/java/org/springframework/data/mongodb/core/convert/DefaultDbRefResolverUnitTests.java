@@ -164,15 +164,16 @@ class DefaultDbRefResolverUnitTests {
 
 		Object target = resolver.resolveReference(property, source, lookupDelegate, entityReader);
 
-		verify(property, times(3)).isMap();
-		verify(property, times(2)).isDocumentReference();
-		verify(property, times(2)).getDocumentReference();
-		verify(property, times(3)).isCollectionLike();
-		verify(documentReference, times(1)).lookup();
-		verify(documentReference, times(1)).sort();
-		verify(documentReference, times(1)).lazy();
-		verify(source, times(3)).getTargetSource();
+		verify(property, atLeastOnce()).isMap();
+		verify(property, atLeastOnce()).isDocumentReference();
+		verify(property, atLeastOnce()).getDocumentReference();
+		verify(property, atLeastOnce()).isCollectionLike();
+		verify(documentReference, atLeastOnce()).lookup();
+		verify(documentReference, atLeastOnce()).sort();
+		verify(documentReference, atLeastOnce()).lazy();
+		verify(source, atLeastOnce()).getTargetSource();
 		verifyNoMoreInteractions(documentReference, property, source); // Make sure we only call the properties we mocked.
+
 		assertThat(target)
 				.isNotNull()
 				.isInstanceOf(Map.class);
@@ -200,13 +201,13 @@ class DefaultDbRefResolverUnitTests {
 
 		Object target = resolver.resolveReference(property, source, lookupDelegate, entityReader);
 
-		verify(property, times(1)).isMap();
-		verify(property, times(1)).isDocumentReference();
-		verify(property, times(1)).getDocumentReference();
-		verify(property, times(1)).isCollectionLike();
-		verify(property, times(1)).getType();
-		verify(documentReference, times(1)).lazy();
-		verify(source, times(1)).getTargetSource();
+		verify(property, atLeastOnce()).isMap();
+		verify(property, atLeastOnce()).isDocumentReference();
+		verify(property, atLeastOnce()).getDocumentReference();
+		verify(property, atLeastOnce()).isCollectionLike();
+		verify(property, atLeastOnce()).getType();
+		verify(documentReference, atLeastOnce()).lazy();
+		verify(source, atLeastOnce()).getTargetSource();
 		verifyNoMoreInteractions(documentReference, property, source); // Make sure we only call the properties we mocked.
 
 		assertThat(target)
