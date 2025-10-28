@@ -94,10 +94,15 @@ public class Index implements IndexDefinition {
 
 	/**
 	 * Build the index in background (non blocking).
+	 * <p>
+	 * <strong>NOTE:</strong> Since MongoDB 4.2 the background flag is ignored by the server if set.
 	 *
 	 * @return this.
 	 * @since 1.5
-	 */@Contract("-> this")
+	 * @deprecated since 5.0 for removal without replacement.
+	 */
+	@Deprecated(since = "5.0", forRemoval = true)
+	@Contract("-> this")
 	public Index background() {
 
 		this.background = true;

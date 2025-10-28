@@ -152,11 +152,15 @@ public @interface CompoundIndex {
 
 	/**
 	 * If {@literal true} the index will be created in the background.
+	 * <p>
+	 * <strong>NOTE:</strong> Since MongoDB 4.2 the background flag is ignored by the server if set.
 	 *
 	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
+	 * @deprecated since 5.0 for removal without replacement.
 	 */
+	@Deprecated(since = "5.0", forRemoval = true)
 	boolean background() default false;
 
 	/**
