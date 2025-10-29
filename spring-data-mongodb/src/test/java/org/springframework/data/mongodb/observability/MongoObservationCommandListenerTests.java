@@ -31,6 +31,7 @@ import reactor.core.publisher.BaseSubscriber;
 import org.assertj.core.api.Assertions;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -70,6 +71,15 @@ class MongoObservationCommandListenerTests {
 		this.observationRegistry.observationConfig().observationHandler(new DefaultMeterObservationHandler(meterRegistry));
 
 		this.listener = new MongoObservationCommandListener(observationRegistry);
+	}
+
+	@AfterEach
+	void tearDown() {
+		Observation currentObservation = observationRegistry.getCurrentObservation();
+		if (currentObservation != null) {
+			currentObservation.stop();
+			observationRegistry.setCurrentObservationScope(null);
+		}
 	}
 
 	@Test
