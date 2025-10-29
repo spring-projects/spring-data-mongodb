@@ -75,40 +75,32 @@ class MongoObservationCommandListenerTests {
 	@Test
 	void commandStartedShouldNotInstrumentWhenAdminDatabase() {
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(null, 0, 0, null, "admin", "", null));
 
-		// then
 		assertThat(meterRegistry).hasNoMetrics();
 	}
 
 	@Test
 	void commandStartedShouldNotInstrumentWhenNoRequestContext() {
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(null, 0, 0, null, "some name", "", null));
 
-		// then
 		assertThat(meterRegistry).hasNoMetrics();
 	}
 
 	@Test
 	void commandStartedShouldNotInstrumentWhenNoParentSampleInRequestContext() {
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0, null, "some name", "", null));
 
-		// then
 		assertThat(meterRegistry).hasMeterWithName("spring.data.mongodb.command.active");
 	}
 
 	@Test // GH-4994
 	void commandStartedShouldAlwaysIncludeCollection() {
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0, null, "some name", "hello", null));
 
-		// then
 		// although command 'hello' is collection-less, metric must have tag "db.mongodb.collection"
 		assertThat(meterRegistry).hasMeterWithNameAndTags(
 				"spring.data.mongodb.command.active",
@@ -130,18 +122,15 @@ class MongoObservationCommandListenerTests {
 				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(context, 0, 0, null, "insert", null, null, 0));
 
-		// then
 		assertThatTimerRegisteredWithTags();
 	}
 
 	@Test
 	void successfullyCompletedCommandShouldCreateTimerWhenParentSampleInRequestContext() {
 
-		// given
 		Observation parent = Observation.start("name", observationRegistry);
 		RequestContext traceRequestContext = getContext();
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
@@ -150,18 +139,15 @@ class MongoObservationCommandListenerTests {
 				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "insert", null, null, 0));
 
-		// then
 		assertThatTimerRegisteredWithTags();
 	}
 
 	@Test
 	void successfullyCompletedCommandWithCollectionHavingCommandNameShouldCreateTimerWhenParentSampleInRequestContext() {
 
-		// given
 		Observation parent = Observation.start("name", observationRegistry);
 		RequestContext traceRequestContext = getContext();
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
@@ -171,18 +157,15 @@ class MongoObservationCommandListenerTests {
 				new BsonDocument("aggregate", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "aggregate", null, null, 0));
 
-		// then
 		assertThatTimerRegisteredWithTags();
 	}
 
 	@Test
 	void successfullyCompletedCommandWithoutClusterInformationShouldCreateTimerWhenParentSampleInRequestContext() {
 
-		// given
 		Observation parent = Observation.start("name", observationRegistry);
 		RequestContext traceRequestContext = getContext();
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, null, "database", "insert",
 				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "insert", null, null, 0));
@@ -197,11 +180,9 @@ class MongoObservationCommandListenerTests {
 	@Test
 	void commandWithErrorShouldCreateTimerWhenParentSampleInRequestContext() {
 
-		// given
 		Observation parent = Observation.start("name", observationRegistry);
 		RequestContext traceRequestContext = getContext();
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
@@ -212,20 +193,17 @@ class MongoObservationCommandListenerTests {
 		listener.commandFailed( //
 				new CommandFailedEvent(traceRequestContext, 0, 0, null, "db", "insert", 0, new IllegalAccessException()));
 
-		// then
 		assertThatTimerRegisteredWithTags();
 	}
 
 	@Test // GH-4481
 	void completionShouldIgnoreIncompatibleObservationContext() {
 
-		// given
 		RequestContext traceRequestContext = getContext();
 
 		Observation observation = mock(Observation.class);
 		traceRequestContext.put(ObservationThreadLocalAccessor.KEY, observation);
 
-		// when
 		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "insert", null, null, 0));
 
 		verify(observation).getContext();
@@ -235,13 +213,11 @@ class MongoObservationCommandListenerTests {
 	@Test // GH-4481
 	void failureShouldIgnoreIncompatibleObservationContext() {
 
-		// given
 		RequestContext traceRequestContext = getContext();
 
 		Observation observation = mock(Observation.class);
 		traceRequestContext.put(ObservationThreadLocalAccessor.KEY, observation);
 
-		// when
 		listener.commandFailed(new CommandFailedEvent(traceRequestContext, 0, 0, null, "db", "insert", 0, null));
 
 		verify(observation).getContext();
@@ -251,7 +227,6 @@ class MongoObservationCommandListenerTests {
 	@Test // GH-4321
 	void shouldUseObservationConvention() {
 
-		// given
 		MongoHandlerObservationConvention customObservationConvention = new MongoHandlerObservationConvention() {
 			@Override
 			public boolean supportsContext(Observation.Context context) {
@@ -266,22 +241,18 @@ class MongoObservationCommandListenerTests {
 		this.listener = new MongoObservationCommandListener(observationRegistry, mock(ConnectionString.class),
 				customObservationConvention);
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0, null, "some name", "", null));
 
-		// then
 		assertThat(meterRegistry).hasMeterWithName("custom.name.active");
 	}
 
 	@Test // GH-5064
 	void completionRestoresParentObservation() {
 
-		// given
 		Observation parent = Observation.start("name", observationRegistry);
 		observationRegistry.setCurrentObservationScope(parent.openScope());
 		RequestContext traceRequestContext = getContext();
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, null, "database", "insert",
 				new BsonDocument("collection", new BsonString("user"))));
 
@@ -296,12 +267,10 @@ class MongoObservationCommandListenerTests {
 	@Test // GH-5064
 	void failureRestoresParentObservation() {
 
-		// given
 		Observation parent = Observation.start("name", observationRegistry);
 		observationRegistry.setCurrentObservationScope(parent.openScope());
 		RequestContext traceRequestContext = getContext();
 
-		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, null, "database", "insert",
 				new BsonDocument("collection", new BsonString("user"))));
 
