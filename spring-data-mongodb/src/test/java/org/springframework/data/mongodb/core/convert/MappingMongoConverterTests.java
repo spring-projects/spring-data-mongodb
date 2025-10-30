@@ -482,7 +482,23 @@ class MappingMongoConverterTests {
 	}
 
 	@Nested // GH-5065
-    class EmptyMapTests {
+	class EmptyMapTests {
+
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheEmptyMapProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblem() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":{}}");
+			//EmptyMapDocument target = converter.read(EmptyMapDocument.class, document);
+			assertThat(converter.read(EmptyMapDocument.class, document).map).isNotNull().isEmpty();
+			assertThat(converter.read(EmptyMapDocument.class, document).getMap()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheNullMapProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblem() {
+			org.bson.Document document = org.bson.Document.parse("{\"map\":null}");
+			//EmptyMapDocument target = converter.read(EmptyMapDocument.class, document);
+			assertThat(converter.read(EmptyMapDocument.class, document).map).isNull();
+			assertThat(converter.read(EmptyMapDocument.class, document).getMap()).isNull();
+		}
 
 		@Test // GH-5065
 		void converterShouldReadAnEmptyObjectAsAnEmptyMapWhenUsingDocumentReferenceAnnotation() {
@@ -568,6 +584,19 @@ class MappingMongoConverterTests {
 			assertThat(target.getMap()).isNull();
 		}
 
+		static class EmptyMapDocument {
+
+			Map<String, String> map;
+
+			public EmptyMapDocument(Map<String, String> map) {
+				this.map = map;
+			}
+
+			Map<String, String> getMap() {
+				return map;
+			}
+		}
+
 		static class DocumentReferenceEmptyMapDocument {
 
 			@DocumentReference
@@ -595,19 +624,333 @@ class MappingMongoConverterTests {
 				return map;
 			}
 		}
+
+		static class DBRefEmptyMapDocument {
+
+			@DBRef
+			Map<String, String> map;
+
+			public DBRefEmptyMapDocument(Map<String, String> map) {
+				this.map = map;
+			}
+
+			Map<String, String> getMap() {
+				return map;
+			}
+		}
 	}
 
-	static class DBRefEmptyMapDocument {
+	@Nested // GH-5065
+	class EmptyListTests {
 
-		@DBRef
-		Map<String, String> map;
-
-		public DBRefEmptyMapDocument(Map<String, String> map) {
-			this.map = map;
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheEmptyListProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblem() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":[]}");
+			EmptyListDocument target = converter.read(EmptyListDocument.class, document);
+			assertThat(target.list).isNotNull().isEmpty();
 		}
 
-		Map<String, String> getMap() {
-			return map;
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheEmptyListProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblemUsingGetList() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":[]}");
+			EmptyListDocument target = converter.read(EmptyListDocument.class, document);
+			assertThat(target.getList()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheNullListProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblem() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":null}");
+			EmptyListDocument target = converter.read(EmptyListDocument.class, document);
+			assertThat(target.list).isNull();
+		}
+
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheNullListProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblemUsingGetList() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":null}");
+			EmptyListDocument target = converter.read(EmptyListDocument.class, document);
+			assertThat(target.getList()).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyListWhenUsingDocumentReferenceAnnotation() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":[]}");
+			DocumentReferenceEmptyListDocument target = converter.read(DocumentReferenceEmptyListDocument.class, document);
+			assertThat(target.list).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyListWhenUsingDocumentReferenceAnnotationUsingGetList() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":[]}");
+			DocumentReferenceEmptyListDocument target = converter.read(DocumentReferenceEmptyListDocument.class, document);
+			assertThat(target.getList()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullListWhenUsingDocumentReferenceAnnotation() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":null}");
+			DocumentReferenceEmptyListDocument target = converter.read(DocumentReferenceEmptyListDocument.class, document);
+			assertThat(target.list).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullListWhenUsingDocumentReferenceAnnotationUsingGetList() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":null}");
+			DocumentReferenceEmptyListDocument target = converter.read(DocumentReferenceEmptyListDocument.class, document);
+			assertThat(target.getList()).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyListWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrue() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":[]}");
+			LazyDocumentReferenceEmptyListDocument target = converter.read(LazyDocumentReferenceEmptyListDocument.class, document);
+			assertThat(target.list).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyListWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrueUsingGetList() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":[]}");
+			LazyDocumentReferenceEmptyListDocument target = converter.read(LazyDocumentReferenceEmptyListDocument.class, document);
+			assertThat(target.getList()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyListWhenUsingDBRefAnnotation() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":[]}");
+			DBRefEmptyListDocument target = converter.read(DBRefEmptyListDocument.class, document);
+			assertThat(target.list).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptyListWhenUsingDBRefAnnotationUsingGetList() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":[]}");
+			DBRefEmptyListDocument target = converter.read(DBRefEmptyListDocument.class, document);
+			assertThat(target.getList()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullListWhenUsingDBRefAnnotation() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":null}");
+			DBRefEmptyListDocument target = converter.read(DBRefEmptyListDocument.class, document);
+			assertThat(target.list).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullListWhenUsingDBRefAnnotationUsingGetList() {
+			org.bson.Document document = org.bson.Document.parse("{\"list\":null}");
+			DBRefEmptyListDocument target = converter.read(DBRefEmptyListDocument.class, document);
+			assertThat(target.getList()).isNull();
+		}
+
+		static class EmptyListDocument {
+
+			List<String> list;
+
+			public EmptyListDocument(List<String> list) {
+				this.list = list;
+			}
+
+			List<String> getList() {
+				return list;
+			}
+		}
+
+		static class DocumentReferenceEmptyListDocument {
+
+			@DocumentReference
+			List<String> list;
+
+			public DocumentReferenceEmptyListDocument(List<String> list) {
+				this.list = list;
+			}
+
+			List<String> getList() {
+				return list;
+			}
+		}
+
+		static class LazyDocumentReferenceEmptyListDocument {
+
+			@DocumentReference(lazy = true)
+			List<String> list;
+
+			public LazyDocumentReferenceEmptyListDocument(List<String> list) {
+				this.list = list;
+			}
+
+			List<String> getList() {
+				return list;
+			}
+		}
+
+		static class DBRefEmptyListDocument {
+
+			@DBRef
+			List<String> list;
+
+			public DBRefEmptyListDocument(List<String> list) {
+				this.list = list;
+			}
+
+			List<String> getList() {
+				return list;
+			}
+		}
+	}
+
+	@Nested // GH-5065
+	class EmptySetTests {
+
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheEmptySetProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblem() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":[]}");
+			EmptySetDocument target = converter.read(EmptySetDocument.class, document);
+			assertThat(target.set).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheEmptySetProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblemUsingGetSet() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":[]}");
+			EmptySetDocument target = converter.read(EmptySetDocument.class, document);
+			assertThat(target.getSet()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheNullSetProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblem() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":null}");
+			EmptySetDocument target = converter.read(EmptySetDocument.class, document);
+			assertThat(target.set).isNull();
+		}
+
+		@Test // GH-5065
+		void controlTestToIllustrateThatTheNullSetProblemIsLimitedToDocumentReferencesAndNotAMoreGenericProblemUsingGetSet() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":null}");
+			EmptySetDocument target = converter.read(EmptySetDocument.class, document);
+			assertThat(target.getSet()).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptySetWhenUsingDocumentReferenceAnnotation() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":[]}");
+			DocumentReferenceEmptySetDocument target = converter.read(DocumentReferenceEmptySetDocument.class, document);
+			assertThat(target.set).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptySetWhenUsingDocumentReferenceAnnotationUsingGetSet() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":[]}");
+			DocumentReferenceEmptySetDocument target = converter.read(DocumentReferenceEmptySetDocument.class, document);
+			assertThat(target.getSet()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullSetWhenUsingDocumentReferenceAnnotation() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":null}");
+			DocumentReferenceEmptySetDocument target = converter.read(DocumentReferenceEmptySetDocument.class, document);
+			assertThat(target.set).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullSetWhenUsingDocumentReferenceAnnotationUsingGetSet() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":null}");
+			DocumentReferenceEmptySetDocument target = converter.read(DocumentReferenceEmptySetDocument.class, document);
+			assertThat(target.getSet()).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptySetWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrue() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":[]}");
+			LazyDocumentReferenceEmptySetDocument target = converter.read(LazyDocumentReferenceEmptySetDocument.class, document);
+			assertThat(target.set).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptySetWhenUsingDocumentReferenceAnnotationWithLazyEqualToTrueUsingGetSet() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":[]}");
+			LazyDocumentReferenceEmptySetDocument target = converter.read(LazyDocumentReferenceEmptySetDocument.class, document);
+			assertThat(target.getSet()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptySetWhenUsingDBRefAnnotation() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":[]}");
+			DBRefEmptySetDocument target = converter.read(DBRefEmptySetDocument.class, document);
+			assertThat(target.set).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnEmptyObjectAsAnEmptySetWhenUsingDBRefAnnotationUsingGetSet() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":[]}");
+			DBRefEmptySetDocument target = converter.read(DBRefEmptySetDocument.class, document);
+			assertThat(target.getSet()).isNotNull().isEmpty();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullSetWhenUsingDBRefAnnotation() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":null}");
+			DBRefEmptySetDocument target = converter.read(DBRefEmptySetDocument.class, document);
+			assertThat(target.set).isNull();
+		}
+
+		@Test // GH-5065
+		void converterShouldReadAnExplicitlyAssignedNullAsANullSetWhenUsingDBRefAnnotationUsingGetSet() {
+			org.bson.Document document = org.bson.Document.parse("{\"set\":null}");
+			DBRefEmptySetDocument target = converter.read(DBRefEmptySetDocument.class, document);
+			assertThat(target.getSet()).isNull();
+		}
+
+		static class EmptySetDocument {
+
+			Set<String> set;
+
+			public EmptySetDocument(Set<String> set) {
+				this.set = set;
+			}
+
+			Set<String> getSet() {
+				return set;
+			}
+		}
+
+		static class DocumentReferenceEmptySetDocument {
+
+			@DocumentReference
+			Set<String> set;
+
+			public DocumentReferenceEmptySetDocument(Set<String> set) {
+				this.set = set;
+			}
+
+			Set<String> getSet() {
+				return set;
+			}
+		}
+
+		static class LazyDocumentReferenceEmptySetDocument {
+
+			@DocumentReference(lazy = true)
+			Set<String> set;
+
+			public LazyDocumentReferenceEmptySetDocument(Set<String> set) {
+				this.set = set;
+			}
+
+			Set<String> getSet() {
+				return set;
+			}
+		}
+
+		static class DBRefEmptySetDocument {
+
+			@DBRef
+			Set<String> set;
+
+			public DBRefEmptySetDocument(Set<String> set) {
+				this.set = set;
+			}
+
+			Set<String> getSet() {
+				return set;
+			}
 		}
 	}
 

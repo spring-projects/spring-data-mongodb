@@ -33,7 +33,6 @@ import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEnti
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.expression.EvaluationContext;
 
 /**
  * Unit tests for {@link ReferenceLookupDelegate}.
