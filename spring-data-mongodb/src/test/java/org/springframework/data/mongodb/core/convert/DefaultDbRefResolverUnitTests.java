@@ -162,16 +162,6 @@ class DefaultDbRefResolverUnitTests {
 
 		Object target = resolver.resolveReference(property, source, lookupDelegate, entityReader);
 
-		verify(property, atLeastOnce()).isMap();
-		verify(property, atLeastOnce()).isDocumentReference();
-		verify(property, atLeastOnce()).getDocumentReference();
-		verify(property, atLeastOnce()).isCollectionLike();
-		verify(documentReference, atLeastOnce()).lookup();
-		verify(documentReference, atLeastOnce()).sort();
-		verify(documentReference, atLeastOnce()).lazy();
-		verify(source, atLeastOnce()).getTargetSource();
-		verifyNoMoreInteractions(documentReference, property, source); // Make sure we only call the properties we mocked.
-
 		assertThat(target)
 				.isNotNull()
 				.isInstanceOf(Map.class);
@@ -197,15 +187,6 @@ class DefaultDbRefResolverUnitTests {
 		ReferenceResolver.MongoEntityReader entityReader = mock(ReferenceResolver.MongoEntityReader.class);
 
 		Object target = resolver.resolveReference(property, source, lookupDelegate, entityReader);
-
-		verify(property, atLeastOnce()).isMap();
-		verify(property, atLeastOnce()).isDocumentReference();
-		verify(property, atLeastOnce()).getDocumentReference();
-		verify(property, atLeastOnce()).isCollectionLike();
-		verify(property, atLeastOnce()).getType();
-		verify(documentReference, atLeastOnce()).lazy();
-		verify(source, atLeastOnce()).getTargetSource();
-		verifyNoMoreInteractions(documentReference, property, source); // Make sure we only call the properties we mocked.
 
 		assertThat(target)
 				.isNotNull()

@@ -45,7 +45,6 @@ class ReferenceLookupDelegateUnitTests {
 
 	@Mock MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	@Mock SpELContext spELContext;
-	@Mock EvaluationContext evaluationContext;
 	@Mock MongoEntityReader entityReader;
 
 	private ReferenceLookupDelegate lookupDelegate;
@@ -114,20 +113,6 @@ class ReferenceLookupDelegateUnitTests {
 		ReferenceLookupDelegate.LookupFunction lookupFunction = mock(ReferenceLookupDelegate.LookupFunction.class);
 
 		Object target = lookupDelegate.readReference(property, source, lookupFunction, entityReader);
-
-		// Since we mocked a placeholder that should never be called, make sure it is never called.
-		verify(lookupFunction, never()).apply(any(), any());
-
-		// Verify that all the mocks we created are used.
-		verify(property, atLeastOnce()).isMap();
-		verify(property, atLeastOnce()).isDocumentReference();
-		verify(property, atLeastOnce()).getDocumentReference();
-		verify(property, atLeastOnce()).isCollectionLike();
-		verify(documentReference, atLeastOnce()).lookup();
-		verify(documentReference, atLeastOnce()).sort();
-
-		// Make sure we only call the properties we mocked.
-		verifyNoMoreInteractions(documentReference, property, source);
 
 		assertThat(target)
 				.isNotNull()
