@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,8 +34,6 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import org.springframework.core.annotation.AliasFor;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.core.TypeInformation;
@@ -56,6 +55,9 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
+import org.springframework.data.spel.EvaluationContextProvider;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.mock.env.MockEnvironment;
 
 /**
  * Tests for {@link MongoPersistentEntityIndexResolver}.
@@ -106,23 +108,6 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			Iterable<? extends IndexDefinition> definitions = indexResolver.resolveIndexFor(IndexOnLevelOne.class);
 
 			assertThat(definitions).isNotEmpty();
-		}
-
-		@Test // GH-4980
-		public void shouldSupportPropertyPlaceholderInExpireAfter() {
-			StandardEnvironment environment = new StandardEnvironment();
-			environment.getPropertySources().addFirst(new MapPropertySource("test", Map.of("ttl.timeout", "10m")));
-
-			MongoMappingContext mappingContext = new MongoMappingContext();
-			mappingContext.setEnvironment(environment);
-
-			MongoPersistentEntityIndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
-
-			List<IndexDefinitionHolder> indexDefinitions = (List<IndexDefinitionHolder>) resolver
-					.resolveIndexFor(WithExpireAfterAsPropertyPlaceholder.class);
-
-			assertThat(indexDefinitions).hasSize(1);
-			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 600L);
 		}
 
 		@Test // DATAMONGO-899
@@ -314,6 +299,53 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("partialFilterExpression",
 					org.bson.Document.parse("{'value': {'$exists': true}}"));
+		}
+
+		@Test // GH-4980
+		public void resolvesPropertyPlaceholderInExpireAfter() {
+
+			MockEnvironment environment = new MockEnvironment();
+			environment.setProperty("ttl.timeout", "10m");
+
+			MongoMappingContext mappingContext = new MongoMappingContext();
+			mappingContext.setInitialEntitySet(Set.of(WithExpireAfterAsPropertyPlaceholder.class));
+			mappingContext.setEnvironment(environment);
+			mappingContext.initialize();
+
+			MongoPersistentEntityIndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+			List<IndexDefinitionHolder> indexDefinitions = (List<IndexDefinitionHolder>) resolver
+					.resolveIndexFor(WithExpireAfterAsPropertyPlaceholder.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 600L);
+		}
+
+		@Test // GH-4980
+		public void usesValueExpressionResolversCorrectly() {
+
+			MockEnvironment environment = new MockEnvironment();
+			environment.setProperty("ttl.timeout", "10m");
+
+			MongoMappingContext mappingContext = new MongoMappingContext();
+			mappingContext.setInitialEntitySet(Set.of(WithExpireAfterAsPropertyPlaceholder.class));
+			mappingContext.setEnvironment(environment);
+			mappingContext.initialize();
+
+			MongoPersistentEntityIndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+			BasicMongoPersistentEntity<?> basicMongoPersistentEntity = mock(BasicMongoPersistentEntity.class);
+
+			resolver.getValueEvaluationContext(basicMongoPersistentEntity);
+			verify(basicMongoPersistentEntity).getValueEvaluationContext(any());
+
+			EvaluationContext evaluationContext = mock(EvaluationContext.class);
+			EvaluationContextProvider contextProviderMock = mock(EvaluationContextProvider.class);
+			when(contextProviderMock.getEvaluationContext(any())).thenReturn(evaluationContext);
+			resolver.setEvaluationContextProvider(contextProviderMock);
+
+			assertThat(resolver.getValueEvaluationContext(basicMongoPersistentEntity).getEvaluationContext())
+					.isEqualTo(evaluationContext);
 		}
 
 		@Document("Zero")
