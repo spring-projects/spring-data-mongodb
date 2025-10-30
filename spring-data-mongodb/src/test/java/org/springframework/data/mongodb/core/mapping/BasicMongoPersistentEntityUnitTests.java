@@ -34,13 +34,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
-import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.mock.env.MockEnvironment;
 
 /**

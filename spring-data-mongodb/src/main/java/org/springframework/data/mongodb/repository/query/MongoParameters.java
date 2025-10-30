@@ -23,6 +23,7 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Distance;
@@ -38,7 +39,6 @@ import org.springframework.data.mongodb.repository.query.MongoParameters.MongoPa
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersSource;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Custom extension of {@link Parameters} discovering additional

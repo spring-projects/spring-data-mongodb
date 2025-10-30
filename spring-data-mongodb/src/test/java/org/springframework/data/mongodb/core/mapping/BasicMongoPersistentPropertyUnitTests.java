@@ -31,15 +31,16 @@ import org.bson.types.ObjectId;
 import org.jmolecules.ddd.annotation.Identity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ReflectionUtils;
 
 /**

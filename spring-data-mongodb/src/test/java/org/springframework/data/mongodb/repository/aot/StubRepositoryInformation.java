@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
 import org.springframework.data.repository.core.CrudMethods;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -27,7 +29,6 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.AbstractRepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryComposition;
 import org.springframework.data.repository.core.support.RepositoryFragment;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Christoph Strobl

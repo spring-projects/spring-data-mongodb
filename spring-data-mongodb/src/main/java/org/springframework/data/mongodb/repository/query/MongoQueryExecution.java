@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -54,7 +56,6 @@ import org.springframework.data.mongodb.repository.query.VectorSearchDelegate.Qu
 import org.springframework.data.mongodb.repository.util.SliceUtils;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 

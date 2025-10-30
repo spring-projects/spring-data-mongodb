@@ -33,8 +33,10 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
@@ -57,7 +59,6 @@ import org.springframework.data.mongodb.util.DotPath;
 import org.springframework.data.mongodb.util.DurationUtil;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;

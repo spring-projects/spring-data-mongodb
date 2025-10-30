@@ -16,16 +16,17 @@
 package org.springframework.data.mongodb.core.convert.encryption;
 
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext.OperatorContext;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 
 /**
  * Default {@link EncryptionContext} implementation.
- * 
+ *
  * @author Christoph Strobl
  * @author Ross Lawley
  * @since 4.1

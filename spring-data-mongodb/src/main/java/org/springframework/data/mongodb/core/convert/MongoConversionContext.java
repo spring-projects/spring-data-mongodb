@@ -17,11 +17,12 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.convert.ValueConversionContext;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.CheckReturnValue;
 
 /**

@@ -31,7 +31,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.annotation.Id;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.geo.Point;
@@ -44,7 +46,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Christoph Strobl

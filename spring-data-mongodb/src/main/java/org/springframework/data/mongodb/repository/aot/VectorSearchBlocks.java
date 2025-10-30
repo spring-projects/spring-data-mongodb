@@ -20,6 +20,7 @@ import java.util.List;
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
 
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.ScoringFunction;
 import org.springframework.data.domain.Sort;
@@ -34,7 +35,6 @@ import org.springframework.data.mongodb.repository.aot.Snippet.BuilderStyleBuild
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.VectorSearchExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.util.StringUtils;

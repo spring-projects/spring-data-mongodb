@@ -19,11 +19,12 @@ import java.util.function.Supplier;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.Lazy;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Index information for a MongoDB Search Index.

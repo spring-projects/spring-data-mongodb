@@ -24,9 +24,11 @@ import java.util.Map.Entry;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.ValueConversionContext;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.Association;
@@ -37,7 +39,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ObjectUtils;
 
 /**

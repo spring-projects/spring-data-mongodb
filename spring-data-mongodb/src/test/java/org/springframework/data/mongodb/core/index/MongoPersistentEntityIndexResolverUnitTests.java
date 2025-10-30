@@ -31,9 +31,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -52,7 +54,6 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Tests for {@link MongoPersistentEntityIndexResolver}.

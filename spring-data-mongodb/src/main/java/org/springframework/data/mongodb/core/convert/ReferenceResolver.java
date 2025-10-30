@@ -16,10 +16,11 @@
 package org.springframework.data.mongodb.core.convert;
 
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBRef;

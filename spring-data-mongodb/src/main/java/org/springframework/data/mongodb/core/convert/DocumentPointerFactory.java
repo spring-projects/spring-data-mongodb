@@ -24,13 +24,14 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Reference;
+import org.springframework.data.core.PropertyPath;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PersistentPropertyPathAccessor;
-import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapperPropertyAccessorFactory;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;

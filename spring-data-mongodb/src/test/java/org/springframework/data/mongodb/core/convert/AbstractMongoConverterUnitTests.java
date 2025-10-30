@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObjectIdConverter;
@@ -30,7 +31,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.DBRef;
 

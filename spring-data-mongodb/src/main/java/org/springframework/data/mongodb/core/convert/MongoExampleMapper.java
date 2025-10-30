@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher.NullHandler;
 import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
@@ -44,7 +46,6 @@ import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
 import org.springframework.data.mongodb.util.DotPath;
 import org.springframework.data.support.ExampleMatcherAccessor;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;

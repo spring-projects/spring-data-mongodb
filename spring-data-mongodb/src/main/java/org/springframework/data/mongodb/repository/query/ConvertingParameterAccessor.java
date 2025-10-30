@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -38,7 +39,6 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 

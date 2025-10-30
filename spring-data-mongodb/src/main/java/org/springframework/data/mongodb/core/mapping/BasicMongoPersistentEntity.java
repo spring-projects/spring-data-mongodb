@@ -28,6 +28,7 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.expression.ValueExpression;
 import org.springframework.data.expression.ValueExpressionParser;
@@ -42,7 +43,6 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;

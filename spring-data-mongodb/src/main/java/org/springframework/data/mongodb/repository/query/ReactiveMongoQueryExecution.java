@@ -21,8 +21,11 @@ import reactor.core.publisher.Mono;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.DtoInstantiatingConverter;
+import org.springframework.data.core.ReactiveWrappers;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.SearchResult;
@@ -41,9 +44,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.query.VectorSearchDelegate.QueryContainer;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
-import org.springframework.data.util.ReactiveWrappers;
 import org.springframework.data.util.ReflectionUtils;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 

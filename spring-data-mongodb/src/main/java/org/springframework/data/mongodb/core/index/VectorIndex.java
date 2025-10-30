@@ -21,11 +21,12 @@ import java.util.function.Consumer;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;

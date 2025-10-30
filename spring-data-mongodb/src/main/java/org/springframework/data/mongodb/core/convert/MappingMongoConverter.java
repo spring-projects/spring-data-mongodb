@@ -40,6 +40,7 @@ import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
@@ -58,6 +59,7 @@ import org.springframework.data.convert.PropertyValueConversions;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.convert.ValueConversionContext;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.InstanceCreatorMetadata;
 import org.springframework.data.mapping.MappingException;
@@ -94,7 +96,6 @@ import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.Predicates;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
@@ -2147,12 +2148,12 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		@Override
-		public List<org.springframework.data.util.TypeInformation<?>> getParameterTypes(Constructor constructor) {
+		public List<TypeInformation<?>> getParameterTypes(Constructor constructor) {
 			return persistentProperty.getTypeInformation().getParameterTypes(constructor);
 		}
 
 		@Override
-		public org.springframework.data.util.@Nullable TypeInformation<?> getProperty(String property) {
+		public @Nullable TypeInformation<?> getProperty(String property) {
 			return delegate.getProperty(property);
 		}
 
@@ -2162,7 +2163,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		@Override
-		public org.springframework.data.util.TypeInformation<?> getComponentType() {
+		public TypeInformation<?> getComponentType() {
 			return TypeInformation.of(persistentProperty.getFieldType());
 		}
 
@@ -2172,7 +2173,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		@Override
-		public org.springframework.data.util.TypeInformation<?> getMapValueType() {
+		public TypeInformation<?> getMapValueType() {
 			return TypeInformation.of(persistentProperty.getFieldType());
 		}
 
@@ -2187,37 +2188,37 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		@Override
-		public org.springframework.data.util.@Nullable TypeInformation<?> getActualType() {
+		public @Nullable TypeInformation<?> getActualType() {
 			return delegate.getActualType();
 		}
 
 		@Override
-		public org.springframework.data.util.TypeInformation<?> getReturnType(Method method) {
+		public TypeInformation<?> getReturnType(Method method) {
 			return delegate.getReturnType(method);
 		}
 
 		@Override
-		public List<org.springframework.data.util.TypeInformation<?>> getParameterTypes(Method method) {
+		public List<TypeInformation<?>> getParameterTypes(Method method) {
 			return delegate.getParameterTypes(method);
 		}
 
 		@Override
-		public org.springframework.data.util.@Nullable TypeInformation<?> getSuperTypeInformation(Class superType) {
+		public @Nullable TypeInformation<?> getSuperTypeInformation(Class superType) {
 			return delegate.getSuperTypeInformation(superType);
 		}
 
 		@Override
-		public boolean isAssignableFrom(org.springframework.data.util.TypeInformation target) {
+		public boolean isAssignableFrom(TypeInformation target) {
 			return delegate.isAssignableFrom(target);
 		}
 
 		@Override
-		public List<org.springframework.data.util.TypeInformation<?>> getTypeArguments() {
+		public List<TypeInformation<?>> getTypeArguments() {
 			return delegate.getTypeArguments();
 		}
 
 		@Override
-		public org.springframework.data.util.TypeInformation<? extends S> specialize(TypeInformation<?> type) {
+		public TypeInformation<? extends S> specialize(TypeInformation<?> type) {
 			return delegate.specialize(type);
 		}
 

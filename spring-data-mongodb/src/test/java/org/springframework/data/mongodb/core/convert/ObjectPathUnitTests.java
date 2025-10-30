@@ -20,10 +20,11 @@ import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Unit tests for {@link ObjectPath}.

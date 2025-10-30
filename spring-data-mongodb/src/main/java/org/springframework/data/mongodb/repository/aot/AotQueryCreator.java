@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Score;
@@ -59,7 +61,6 @@ import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBRef;

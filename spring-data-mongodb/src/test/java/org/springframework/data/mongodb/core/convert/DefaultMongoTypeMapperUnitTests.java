@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.data.convert.ConfigurableTypeInformationMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Unit tests for {@link DefaultMongoTypeMapper}.

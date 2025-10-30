@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.data.core.PropertyPath;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -36,7 +37,6 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.PersistentPropertyPath;
-import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;

@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -45,7 +47,6 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSch
 import org.springframework.data.mongodb.core.schema.QueryCharacteristic;
 import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;

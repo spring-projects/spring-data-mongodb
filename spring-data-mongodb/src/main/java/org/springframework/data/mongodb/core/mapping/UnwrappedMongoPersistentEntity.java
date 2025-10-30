@@ -25,13 +25,14 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.env.Environment;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.*;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.Streamable;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Contract;
 
 /**

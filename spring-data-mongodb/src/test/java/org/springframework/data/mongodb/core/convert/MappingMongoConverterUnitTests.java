@@ -53,6 +53,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,7 @@ import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -106,7 +108,6 @@ import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.ObjectUtils;
 

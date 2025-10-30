@@ -17,11 +17,12 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.convert.EntityWriter;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.DBRef;
 

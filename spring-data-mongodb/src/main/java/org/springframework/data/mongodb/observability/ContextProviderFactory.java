@@ -25,8 +25,8 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.reactivestreams.Subscriber;
-import org.springframework.data.util.ReactiveWrappers;
-import org.springframework.data.util.ReactiveWrappers.ReactiveLibrary;
+import org.springframework.data.core.ReactiveWrappers;
+import org.springframework.data.core.ReactiveWrappers.ReactiveLibrary;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.ContextProvider;

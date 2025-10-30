@@ -18,17 +18,18 @@ package org.springframework.data.mongodb.core.mapping;
 import java.util.AbstractMap;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.core.NullableWrapperConverters;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.NullableWrapperConverters;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Default implementation of a {@link MappingContext} for MongoDB using {@link BasicMongoPersistentEntity} and

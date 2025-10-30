@@ -49,7 +49,7 @@ import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceCreator;
-import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.core.PropertyPath;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.Person;

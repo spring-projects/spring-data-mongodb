@@ -22,7 +22,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.data.core.ReactiveWrappers;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -43,9 +46,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.Lazy;
-import org.springframework.data.util.ReactiveWrappers;
 import org.springframework.data.util.ReflectionUtils;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;

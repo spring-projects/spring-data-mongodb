@@ -33,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Publisher;
 
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -46,7 +47,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.result.DeleteResult;

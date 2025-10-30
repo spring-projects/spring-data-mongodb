@@ -15,29 +15,30 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import com.mongodb.MongoClientSettings;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.convert.ConversionException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.TypeMapper;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBRef;
+import com.mongodb.MongoClientSettings;
 
 /**
  * Central Mongo specific converter interface which combines {@link MongoWriter} and {@link EntityReader}.

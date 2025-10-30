@@ -23,6 +23,8 @@ import java.util.function.LongUnaryOperator;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
@@ -40,7 +42,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.util.ReflectionUtils;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 

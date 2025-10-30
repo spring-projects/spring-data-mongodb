@@ -21,10 +21,11 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ObjectUtils;
 
 /**

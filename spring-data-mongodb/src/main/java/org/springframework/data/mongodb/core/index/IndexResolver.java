@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 /**
