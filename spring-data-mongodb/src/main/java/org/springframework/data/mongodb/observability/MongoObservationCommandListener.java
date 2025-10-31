@@ -42,7 +42,9 @@ import com.mongodb.event.CommandSucceededEvent;
  * @author Greg Turnquist
  * @author François Kha
  * @since 4.0
+ * @deprecated since 5.0 in favor of native MongoDB Java Driver observability support.
  */
+@Deprecated(since = "5.0",  forRemoval = true)
 public class MongoObservationCommandListener implements CommandListener {
 
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);

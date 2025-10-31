@@ -34,7 +34,9 @@ import com.mongodb.event.CommandEvent;
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
  * @since 4.0
+ * @deprecated since 5.0 in favor of native MongoDB Java Driver observability support.
  */
+@Deprecated(since = "5.0",  forRemoval = true)
 enum MongoObservation implements ObservationDocumentation {
 
 	/**
