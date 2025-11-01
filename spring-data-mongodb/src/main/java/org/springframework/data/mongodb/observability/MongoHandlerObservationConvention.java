@@ -20,7 +20,10 @@ import io.micrometer.observation.ObservationConvention;
 
 /**
  * {@link ObservationConvention} for {@link MongoHandlerContext}.
- *
+ * <p>
+ * <strong>NOTE:</strong> MongoDB Java Driver 5.7+ comes with observability directly built in which can be configured
+ * via {@code MongoClientSettings.Builder#observabilitySettings(ObservabilitySettings)}.
+ * 
  * @author Greg Turnquist
  * @since 4
  */
