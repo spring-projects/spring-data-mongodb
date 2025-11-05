@@ -1,69 +1,10 @@
 = Ahead of Time Optimizations
 
-This chapter covers Spring Data's Ahead of Time (AOT) optimizations that build upon {spring-framework-docs}/core/aot.html[Spring's Ahead of Time Optimizations].
+For a general explanation of what Ahead of Time (AoT) Optimizations Spring Data offers and how to enable them  see
+xref:{commons}@data-commons::page$aot.adoc[]
 
-[[aot.hints]]
-== Runtime Hints
-
-Running an application as a native image requires additional information compared to a regular JVM runtime.
-Spring Data contributes {spring-framework-docs}/core/aot.html#aot.hints[Runtime Hints] during AOT processing for native image usage.
-These are in particular hints for:
-
-* Auditing
-* `ManagedTypes` to capture the outcome of class-path scans
-* Repositories
-** Reflection hints for entities, return types, and Spring Data annotations
-** Repository fragments
-** Querydsl `Q` classes
-** Kotlin Coroutine support
-* Web support (Jackson Hints for `PagedModel`)
-
-[[aot.repositories]]
-== Ahead of Time Repositories
-
-AOT Repositories are an extension to AOT processing by pre-generating eligible query method implementations.
-Query methods are opaque to developers regarding their underlying queries being executed in a query method call.
-AOT repositories contribute query method implementations based on derived or annotated queries, updates or aggregations that are known at build-time.
-This optimization moves query method processing from runtime to build-time, which can lead to a significant bootstrap performance improvement as query methods do not need to be analyzed reflectively upon each application start.
-
-The resulting AOT repository fragment follows the naming scheme of `<Repository FQCN>Impl__Aot` and is placed in the same package as the repository interface.
-You can find all queries in their MQL form for generated repository query methods.
-
-[TIP]
-====
-`spring.aot.repositories.enabled` property needs to be set to `true` for repository fragment code generation.
-====
-
-[NOTE]
-====
-Consider AOT repository classes an internal optimization.
-Do not use them directly in your code as generation and implementation details may change in future releases.
-====
-
-=== Running with AOT Repositories
-
-AOT is a mandatory step to transform a Spring application to a native executable, so it is automatically enabled when running in this mode.
-When AOT is enabled (either for native compilation or by setting `spring.aot.enabled=true`), AOT repositories are automatically enabled by default.
-
-You can disable AOT repository generation entirely or only disable MongoDB AOT repositories:
-
-* Set the `spring.aot.repositories.enabled=false` property to disable generated repositories for all Spring Data modules.
-* Set the `spring.aot.mongodb.repositories.enabled=false` property to disable only MongoDB AOT repositories.
-
-AOT repositories contribute configuration changes to the actual repository bean registration to register the generated repository fragment.
-
-[NOTE]
-====
-When AOT optimizations are included, some decisions that have been taken at build-time are hard-coded in the application setup.
-For instance, profiles that have been enabled at build-time are automatically enabled at runtime as well.
-Also, the Spring Data module implementing a repository is fixed.
-Changing the implementation requires AOT re-processing.
-====
-
-=== Eligible Methods in Data MongoDB
-
-AOT repositories filter methods that are eligible for AOT processing.
-These are typically all query methods that are not backed by an xref:repositories/custom-implementations.adoc[implementation fragment].
+Each module offers optimizations for a slightly different set of repository method.
+With Spring Data MongoDb we generally support query methods that are not backed by an xref:repositories/custom-implementations.adoc[implementation fragment], and don't require, with a few limitations detailed below.
 
 **Supported Features**
 
