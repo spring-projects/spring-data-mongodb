@@ -70,8 +70,13 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 	private static final Pattern EXPRESSION_BINDING_PATTERN = Pattern.compile("[\\?:][#$]\\{.*\\}");
 	private static final Pattern SPEL_PARAMETER_BINDING_PATTERN = Pattern.compile("('\\?(\\d+)'|\\?(\\d+))");
+
 	private static final String QUOTE_START = "\\Q";
+	private static final String ESCAPED_QUOTE_START = "\\" + QUOTE_START;
+	private static final String QUOTE_REPLACEMENT_QUOTE_START = Matcher.quoteReplacement(ESCAPED_QUOTE_START);
 	private static final String QUOTE_END = "\\E";
+	private static final String ESCAPED_QUOTE_END = "\\" + QUOTE_END;
+	private static final String QUOTE_REPLACEMENT_QUOTE_END = Matcher.quoteReplacement(ESCAPED_QUOTE_END);
 
 	private final ParameterBindingContext bindingContext;
 
@@ -423,7 +428,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 		Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(computedValue);
 
-		while (regexMatcher.find()) {
+		if (regexMatcher.find()) {
 
 			String binding = regexMatcher.group();
 			String expression = binding.substring(3, binding.length() - 1);
@@ -463,8 +468,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 			String bindValue = nullSafeToString(getBindableValueForIndex(index));
 			if(isQuoted(tokenValue)) {
-				bindValue = bindValue.replaceAll("\\%s".formatted(QUOTE_START), Matcher.quoteReplacement("\\%s".formatted(QUOTE_START))) //
-					.replaceAll("\\%s".formatted(QUOTE_END), Matcher.quoteReplacement("\\%s".formatted(QUOTE_END)));
+				bindValue = bindValue.replaceAll(ESCAPED_QUOTE_START, QUOTE_REPLACEMENT_QUOTE_START) //
+					.replaceAll(ESCAPED_QUOTE_END, QUOTE_REPLACEMENT_QUOTE_END);
 			}
 			computedValue = computedValue.replace(group, bindValue);
 		}
