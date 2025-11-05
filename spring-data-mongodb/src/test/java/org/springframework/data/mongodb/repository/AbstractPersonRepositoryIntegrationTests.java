@@ -728,7 +728,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result.get(0)).isEqualTo(dave);
 	}
 
-	@Test // DATAMONGO-770
+	@Test
 	void findByFirstnameStartingWith() {
 
 		String inputString = "\\E.*\\Q";
