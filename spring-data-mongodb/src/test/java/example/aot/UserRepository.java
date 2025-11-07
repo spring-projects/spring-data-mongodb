@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.util.Streamable;
 
 /**
  * @author Christoph Strobl
@@ -57,6 +58,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 	/* Derived Queries */
 
 	List<User> findUserNoArgumentsBy();
+
+	Streamable<User> streamUserNoArgumentsBy();
 
 	User findOneByUsername(String username);
 
@@ -266,6 +269,11 @@ public interface UserRepository extends CrudRepository<User, String> {
 			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
 			"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
 	Stream<UserAggregate> streamGroupByLastnameAndAsAggregationResults(String property);
+
+	@Aggregation(pipeline = { //
+		"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+		"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
+	Streamable<UserAggregate> streamAsStreamableGroupByLastnameAndAsAggregationResults(String property);
 
 	@Aggregation(pipeline = { //
 			"{ '$match' : { 'posts' : { '$ne' : null } } }", //

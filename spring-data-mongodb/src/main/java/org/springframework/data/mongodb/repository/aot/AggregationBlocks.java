@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
 import org.springframework.data.util.ReflectionUtils;
+import org.springframework.data.util.Streamable;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.util.ClassUtils;
@@ -145,8 +146,15 @@ class AggregationBlocks {
 						builder.addStatement("return $L.aggregateStream($L, $T.class)", mongoOpsRef, aggregationVariableName,
 								outputType);
 					} else {
-						builder.addStatement("return $L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
+
+						CodeBlock resultBlock = CodeBlock.of("$L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
 								aggregationVariableName, outputType);
+
+						if (queryMethod.getReturnType().getType().equals(Streamable.class)) {
+							resultBlock = CodeBlock.of("$T.of($L)", Streamable.class, resultBlock);
+						}
+
+						builder.addStatement("return $L", resultBlock);
 					}
 				}
 			}

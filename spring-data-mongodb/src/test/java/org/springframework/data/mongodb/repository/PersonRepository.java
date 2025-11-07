@@ -45,6 +45,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.util.Streamable;
 
 /**
  * Sample repository managing {@link Person} entities.
@@ -210,6 +211,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByAddress(Address address);
+
+	Streamable<Person> streamByAddress(Address address);
+
+	Streamable<Person> streamByAddress(Address address, Pageable pageable);
 
 	List<Person> findByAddressZipCode(String zipCode);
 
@@ -441,6 +446,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
 	List<PersonAggregate> groupByLastnameAnd(String property, Pageable page);
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	Streamable<PersonAggregate> streamGroupByLastnameAnd(String property, Pageable page);
 
 	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
 	int sumAge();
