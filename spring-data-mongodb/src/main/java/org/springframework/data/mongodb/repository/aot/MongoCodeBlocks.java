@@ -34,6 +34,8 @@ import org.springframework.data.mongodb.repository.aot.UpdateBlocks.UpdateExecut
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
 import org.springframework.data.repository.aot.generate.ExpressionMarker;
+import org.springframework.data.repository.aot.generate.MethodReturn;
+import org.springframework.data.util.Streamable;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.util.NumberUtils;
@@ -98,7 +100,6 @@ class MongoCodeBlocks {
 	 * @return
 	 */
 	static UpdateCodeBlockBuilder updateBlockBuilder(AotQueryMethodGenerationContext context) {
-
 		return new UpdateCodeBlockBuilder(context);
 	}
 
@@ -111,44 +112,27 @@ class MongoCodeBlocks {
 	 */
 	static UpdateExecutionCodeBlockBuilder updateExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
-
 		return new UpdateExecutionCodeBlockBuilder(context, queryMethod);
 	}
 
 	/**
 	 * Builder for generating aggregation (pipeline) parsing {@link CodeBlock}.
-	 *
-	 * @param context
-	 * @param simpleTypeHolder
-	 * @param queryMethod
-	 * @return
 	 */
 	static AggregationCodeBlockBuilder aggregationBlockBuilder(AotQueryMethodGenerationContext context,
-			SimpleTypeHolder simpleTypeHolder,
-			MongoQueryMethod queryMethod) {
+			SimpleTypeHolder simpleTypeHolder, MongoQueryMethod queryMethod) {
 		return new AggregationCodeBlockBuilder(context, simpleTypeHolder, queryMethod);
 	}
 
 	/**
 	 * Builder for generating aggregation execution {@link CodeBlock}.
-	 *
-	 * @param context
-	 * @param simpleTypeHolder
-	 * @param queryMethod
-	 * @return
 	 */
 	static AggregationExecutionCodeBlockBuilder aggregationExecutionBlockBuilder(AotQueryMethodGenerationContext context,
-			SimpleTypeHolder simpleTypeHolder,
-			MongoQueryMethod queryMethod) {
+			SimpleTypeHolder simpleTypeHolder, MongoQueryMethod queryMethod) {
 		return new AggregationExecutionCodeBlockBuilder(context, simpleTypeHolder, queryMethod);
 	}
 
 	/**
 	 * Builder for generating {@link org.springframework.data.mongodb.core.query.NearQuery} {@link CodeBlock}.
-	 *
-	 * @param context
-	 * @param queryMethod
-	 * @return
 	 */
 	static GeoNearCodeBlockBuilder geoNearBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
@@ -159,12 +143,8 @@ class MongoCodeBlocks {
 	/**
 	 * Builder for generating {@link org.springframework.data.mongodb.core.query.NearQuery} execution {@link CodeBlock}
 	 * that can return {@link org.springframework.data.geo.GeoResults}.
-	 *
-	 * @param context
-	 * @return
 	 */
 	static GeoNearExecutionCodeBlockBuilder geoNearExecutionBlockBuilder(AotQueryMethodGenerationContext context) {
-
 		return new GeoNearExecutionCodeBlockBuilder(context);
 	}
 
@@ -205,6 +185,7 @@ class MongoCodeBlocks {
 
 	static CodeBlock evaluateNumberPotentially(String value, Class<? extends Number> targetType,
 			AotQueryMethodGenerationContext context) {
+
 		try {
 			Number number = NumberUtils.parseNumber(value, targetType);
 			return CodeBlock.of("$L", number);
@@ -251,4 +232,15 @@ class MongoCodeBlocks {
 					readPreference);
 		}
 	}
+
+	/**
+	 * Wraps the given {@link CodeBlock} representing an {@link Iterable} into a {@link Streamable} if the
+	 * {@link MethodReturn} indicates so.
+	 */
+	public static CodeBlock potentiallyWrapStreamable(MethodReturn methodReturn, CodeBlock returningIterable) {
+		return methodReturn.toClass().equals(Streamable.class)
+				? CodeBlock.of("$T.of($L)", Streamable.class, returningIterable)
+				: returningIterable;
+	}
+
 }

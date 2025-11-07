@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
+
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
@@ -33,11 +34,10 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Pag
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
+import org.springframework.data.repository.aot.generate.MethodReturn;
 import org.springframework.data.util.Lazy;
-import org.springframework.data.util.Streamable;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
-import org.springframework.javapoet.TypeName;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
@@ -69,6 +69,7 @@ class QueryBlocks {
 
 		CodeBlock build() {
 
+			MethodReturn methodReturn = context.getMethodReturn();
 			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
 
 			Builder builder = CodeBlock.builder();
@@ -76,7 +77,7 @@ class QueryBlocks {
 			boolean isProjecting = context.getReturnedType().isProjecting();
 			Class<?> domainType = context.getRepositoryInformation().getDomainType();
 			Object actualReturnType = queryMethod.getParameters().hasDynamicProjection() || isProjecting
-					? TypeName.get(context.getActualReturnType().getType())
+					? methodReturn.getActualTypeName()
 					: domainType;
 
 			builder.add("\n");
@@ -105,10 +106,10 @@ class QueryBlocks {
 				terminatingMethod = "stream()";
 			} else {
 				if (query.getQuery().isLimited()) {
-					terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "first()"
+					terminatingMethod = Optional.class.isAssignableFrom(methodReturn.toClass()) ? "first()"
 							: "firstValue()";
 				} else {
-					terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "one()"
+					terminatingMethod = Optional.class.isAssignableFrom(methodReturn.toClass()) ? "one()"
 							: "oneValue()";
 				}
 			}
@@ -139,7 +140,8 @@ class QueryBlocks {
 					}
 				}
 			} else {
-				if (query.isCount() && !ClassUtils.isAssignable(Long.class, context.getActualReturnType().getRawClass())) {
+
+				if (query.isCount() && !ClassUtils.isAssignable(Long.class, methodReturn.getActualReturnClass())) {
 
 					Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
 					builder.addStatement("return $T.convertNumberToTargetClass($L.matching($L).$L, $T.class)", NumberUtils.class,
@@ -150,11 +152,7 @@ class QueryBlocks {
 					CodeBlock resultBlock = CodeBlock.of("$L.matching($L).$L", context.localVariable("finder"), query.name(),
 							terminatingMethod);
 
-					if (queryMethod.getReturnType().getType().equals(Streamable.class)) {
-						resultBlock = CodeBlock.of("$T.of($L)", Streamable.class, resultBlock);
-					}
-
-					builder.addStatement("return $L", resultBlock);
+					builder.addStatement("return $L", MongoCodeBlocks.potentiallyWrapStreamable(methodReturn, resultBlock));
 				}
 			}
 

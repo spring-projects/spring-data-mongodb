@@ -166,10 +166,10 @@ class VectorSearchBlocks {
 			builder.indent();
 
 			builder.add("$1T $4L = $5L.getMappedObject(parse($2S), $3T.class);\n", Document.class, filter.getSortString(),
-					context.getActualReturnType().getType(), mappedSort, ctx);
+					context.getMethodReturn().getActualClassName(), mappedSort, ctx);
 			builder.add("return new $1T($2S, $3L.append(\"__score__\", -1));\n", Document.class, "$sort", mappedSort);
 			builder.unindent();
-			builder.add("};");
+			builder.add("}");
 
 			return new ExpressionSnippet(builder.build());
 		}

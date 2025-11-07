@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
+import org.springframework.data.repository.aot.generate.MethodReturn;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.util.ClassUtils;
@@ -117,12 +118,13 @@ class GeoBlocks {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add("\n");
+			MethodReturn methodReturn = context.getMethodReturn();
 
 			VariableSnippet queryExecutor = Snippet.declare(builder).variable(context.localVariable("nearFinder")).as(
 					"$L.query($T.class).near($L)", context.fieldNameOf(MongoOperations.class),
 					context.getRepositoryInformation().getDomainType(), queryVariableName);
 
-			if (ClassUtils.isAssignable(GeoPage.class, context.getReturnType().getRawClass())) {
+			if (ClassUtils.isAssignable(GeoPage.class, methodReturn.toClass())) {
 
 				VariableSnippet geoResult = Snippet.declare(builder).variable(context.localVariable("geoResult")).as("$L.all()",
 						queryExecutor.getVariableName());
@@ -137,7 +139,7 @@ class GeoBlocks {
 
 				builder.addStatement("return new $T<>($L, $L, $L.getTotalElements())", GeoPage.class,
 						geoResult.getVariableName(), context.getPageableParameterName(), resultPage.getVariableName());
-			} else if (ClassUtils.isAssignable(GeoResults.class, context.getReturnType().getRawClass())) {
+			} else if (ClassUtils.isAssignable(GeoResults.class, methodReturn.toClass())) {
 				builder.addStatement("return $L.all()", queryExecutor.getVariableName());
 			} else {
 				builder.addStatement("return $L.all().getContent()", queryExecutor.getVariableName());

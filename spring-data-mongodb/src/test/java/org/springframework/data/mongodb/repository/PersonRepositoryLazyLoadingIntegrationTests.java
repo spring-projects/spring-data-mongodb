@@ -15,19 +15,18 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.assertProxyIsResolved;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
@@ -78,7 +77,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 	}
 
 	@Test // DATAMONGO-348
-	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg; ArrayList require to open java.util.")
+	@Disabled("Class Proxies for eg; ArrayList require to open java.util.")
 	public void shouldLoadAssociationWithDbRefOnConcreteCollectionAndLazyLoadingEnabled() {
 
 		User thomas = new User();

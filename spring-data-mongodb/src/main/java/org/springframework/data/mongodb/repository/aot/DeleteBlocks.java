@@ -18,17 +18,18 @@ package org.springframework.data.mongodb.repository.aot;
 import java.util.Optional;
 
 import org.jspecify.annotations.NullUnmarked;
+
 import org.springframework.core.ResolvableType;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
+import org.springframework.data.repository.aot.generate.MethodReturn;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
@@ -59,12 +60,11 @@ class DeleteBlocks {
 
 			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
 			Builder builder = CodeBlock.builder();
-
+			MethodReturn methodReturn = context.getMethodReturn();
 			Class<?> domainType = context.getRepositoryInformation().getDomainType();
-			boolean isProjecting = context.getActualReturnType() != null
-					&& !ObjectUtils.nullSafeEquals(TypeName.get(domainType), context.getActualReturnType());
+			boolean isProjecting = methodReturn.isProjecting();
 
-			Object actualReturnType = isProjecting ? context.getActualReturnType().getType() : domainType;
+			Object actualReturnType = isProjecting ? methodReturn.getActualTypeName() : domainType;
 
 			builder.add("\n");
 			VariableSnippet remover = Snippet.declare(builder)
@@ -83,7 +83,7 @@ class DeleteBlocks {
 
 			actualReturnType = ClassUtils.isPrimitiveOrWrapper(context.getMethod().getReturnType())
 					? TypeName.get(context.getMethod().getReturnType())
-					: queryMethod.isCollectionQuery() ? context.getReturnTypeName() : actualReturnType;
+					: queryMethod.isCollectionQuery() ? methodReturn.getTypeName() : actualReturnType;
 
 			if (ClassUtils.isVoidType(context.getMethod().getReturnType())) {
 				builder.addStatement("new $T($L, $T.$L).execute($L)", DeleteExecution.class, remover.getVariableName(),
