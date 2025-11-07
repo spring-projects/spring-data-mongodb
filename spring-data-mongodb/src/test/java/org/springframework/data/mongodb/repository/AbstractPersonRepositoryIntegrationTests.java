@@ -79,6 +79,7 @@ import org.springframework.data.mongodb.test.util.DirtiesStateExtension.DirtiesS
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension.ProvidesState;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.querydsl.QSort;
+import org.springframework.data.util.Streamable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -310,6 +311,33 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 		List<Person> result = repository.findByAddress(address);
 		assertThat(result).hasSize(1).contains(dave);
+	}
+
+	@Test // GH-5089
+	void streamPersonByAddressCorrectly() {
+
+		Address address = new Address("Foo Street 1", "C0123", "Bar");
+		dave.setAddress(address);
+		repository.save(dave);
+
+		Streamable<Person> result = repository.streamByAddress(address);
+		assertThat(result).hasSize(1).contains(dave);
+	}
+
+	@Test // GH-5089
+	void streamPersonByAddressCorrectlyWhenPaged() {
+
+		Address address = new Address("Foo Street 1", "C0123", "Bar");
+		dave.setAddress(address);
+		oliver.setAddress(address);
+		repository.saveAll(List.of(dave, oliver));
+
+		Streamable<Person> result = repository.streamByAddress(address,
+				PageRequest.of(0, 1, Sort.by(Direction.DESC, "firstname")));
+		assertThat(result).containsExactly(oliver);
+
+		result = repository.streamByAddress(address, PageRequest.of(1, 1, Sort.by(Direction.DESC, "firstname")));
+		assertThat(result).containsExactly(dave);
 	}
 
 	@Test
@@ -1514,6 +1542,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 				.containsExactly( //
 						new PersonAggregate("Lessard", Collections.singletonList("Stefan")), //
 						new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+	}
+
+	@Test // GH-5089
+	void annotatedAggregationReturningStreamable() {
+
+		assertThat(repository.streamGroupByLastnameAnd("firstname", PageRequest.of(1, 2, Sort.by("lastname")))) //
+			.isInstanceOf(Streamable.class) //
+			.containsExactly( //
+				new PersonAggregate("Lessard", Collections.singletonList("Stefan")), //
+				new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
 	}
 
 	@Test // DATAMONGO-2153

@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Sli
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
 import org.springframework.data.util.Lazy;
+import org.springframework.data.util.Streamable;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
@@ -145,8 +146,15 @@ class QueryBlocks {
 							context.localVariable("finder"), query.name(), terminatingMethod, returnType);
 
 				} else {
-					builder.addStatement("return $L.matching($L).$L", context.localVariable("finder"), query.name(),
+
+					CodeBlock resultBlock = CodeBlock.of("$L.matching($L).$L", context.localVariable("finder"), query.name(),
 							terminatingMethod);
+
+					if (queryMethod.getReturnType().getType().equals(Streamable.class)) {
+						resultBlock = CodeBlock.of("$T.of($L)", Streamable.class, resultBlock);
+					}
+
+					builder.addStatement("return $L", resultBlock);
 				}
 			}
 

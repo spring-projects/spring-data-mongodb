@@ -387,6 +387,25 @@ class QueryMethodContributionUnitTests {
 						"Document(\"$sort\", mappedSort.append(\"__score__\", -1))");
 	}
 
+	@Test // GH-5089
+	void rendersStreamableReturnType() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "streamUserNoArgumentsBy");
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence("return", "Streamable.of(", "all())");
+	}
+
+	@Test // GH-5089
+	void rendersStreamableReturnTypeForAggregation() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "streamAsStreamableGroupByLastnameAndAsAggregationResults",
+				String.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence("return", "Streamable.of(", "getMappedResults())");
+	}
+
 	private static MethodSpec codeOf(Class<?> repository, String methodName, Class<?>... args)
 			throws NoSuchMethodException {
 
