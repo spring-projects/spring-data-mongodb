@@ -38,7 +38,6 @@ import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -58,17 +57,8 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions.BigD
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
-import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.*;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.TextScore;
-import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -98,7 +88,8 @@ public class QueryMapperUnitTests {
 	@BeforeEach
 	void beforeEach() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(new MongoConverterConfigurationAdapter().bigDecimal(BigDecimalRepresentation.DECIMAL128));
+		MongoCustomConversions conversions = new MongoCustomConversions(
+				new MongoConverterConfigurationAdapter().bigDecimal(BigDecimalRepresentation.DECIMAL128));
 		this.context = new MongoMappingContext();
 		this.context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 
@@ -133,7 +124,8 @@ public class QueryMapperUnitTests {
 	void handlesBigIntegerIdsCorrectly/*in legacy string format*/() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
-		converter.setCustomConversions(MongoCustomConversions.create(adapter -> adapter.bigDecimal(BigDecimalRepresentation.STRING)));
+		converter.setCustomConversions(
+				MongoCustomConversions.create(adapter -> adapter.bigDecimal(BigDecimalRepresentation.STRING)));
 		converter.afterPropertiesSet();
 
 		QueryMapper mapper = new QueryMapper(converter);
@@ -1663,7 +1655,7 @@ public class QueryMapperUnitTests {
 
 		Query query = query(expr(Expr.valueOf(ComparisonOperators.valueOf("field").greaterThan("budget"))));
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
-			context.getPersistentEntity(Object.class));
+				context.getPersistentEntity(Object.class));
 		assertThat(mappedObject).isEqualTo("{ $expr : { $expr : { $gt : [ '$field', '$budget'] } } }");
 	}
 
@@ -1730,9 +1722,47 @@ public class QueryMapperUnitTests {
 		Criteria criteria = new Criteria().andOperator(where("name").isNull().and("id").all(List.of(oid.toString())));
 
 		org.bson.Document mappedObject = mapper.getMappedObject(criteria.getCriteriaObject(),
-			context.getPersistentEntity(Customer.class));
+				context.getPersistentEntity(Customer.class));
 
 		assertThat(mappedObject).containsEntry("$and.[0]._id.$all", List.of(oid));
+	}
+
+	@Test // GH-4346
+	void propertyValueConverterOnlyGetsInvokedOnMatchingType() {
+
+		Criteria criteria = new Criteria().andOperator(where("text").regex("abc"));
+		org.bson.Document mappedObject = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		org.bson.Document parsedExpected = org.bson.Document.parse("{ '$and' : [{ 'text' : /abc/ }] }");
+
+		// We are comparing BsonDocument instances instead of Document instances, because Document.parse applies a Codec,
+		// which the ObjectMapper doesn't, yielding slightly different results.
+		// converting both to BsonDocuments applies the Codec to both.
+		assertThat(mappedObject.toBsonDocument()).isEqualTo(parsedExpected.toBsonDocument());
+	}
+
+	@Test // GH-4346
+	void nullConversionIsApplied(){
+
+		org.bson.Document mappedObject = mapper.getMappedObject(new org.bson.Document("text", null),
+				context.getPersistentEntity(WithNullReplacingPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("text", "W"));
+	}
+
+	@Test // GH-4346
+	void nullConversionIsAppliedToLists(){
+
+		List<String> listOfStrings = new ArrayList<>();
+		listOfStrings.add("alpha");
+		listOfStrings.add(null);
+		listOfStrings.add("beta");
+
+		org.bson.Document mappedObject = mapper.getMappedObject(new org.bson.Document("text", listOfStrings),
+				context.getPersistentEntity(WithNullReplacingPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("text", List.of("alpha", "W", "beta")));
 	}
 
 	class WithSimpleMap {
@@ -2019,6 +2049,16 @@ public class QueryMapperUnitTests {
 	static class WithPropertyValueConverter {
 
 		@ValueConverter(ReversingValueConverter.class) String text;
+	}
+
+	static class WithNullReplacingPropertyValueConverter {
+
+		@ValueConverter(NullReplacingValueConverter.class) String text;
+	}
+
+	static class WithNullReplacingPropertyValueConverterOnList {
+
+		@ValueConverter(NullReplacingValueConverter.class) List<String> text;
 	}
 
 	@WritingConverter

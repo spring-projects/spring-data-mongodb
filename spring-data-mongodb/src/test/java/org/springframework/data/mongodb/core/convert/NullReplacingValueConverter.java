@@ -18,23 +18,27 @@ package org.springframework.data.mongodb.core.convert;
 import org.jspecify.annotations.Nullable;
 
 /**
- * @author Christoph Strobl
+ * @author Jens Schauder
  */
-class ReversingValueConverter implements MongoValueConverter<String, String> {
+class NullReplacingValueConverter implements MongoValueConverter<String, String> {
 
-	@Nullable
 	@Override
-	public String read(String value, MongoConversionContext context) {
-		return reverse(value);
+	public @Nullable String read(String value, MongoConversionContext context) {
+		return value;
 	}
 
-	@Nullable
 	@Override
-	public String write(String value, MongoConversionContext context) {
-		return reverse(value);
+	public @Nullable String readNull(MongoConversionContext context) {
+		return "R";
 	}
 
-	private String reverse(String source) {
-		return new StringBuilder(source).reverse().toString();
+	@Override
+	public @Nullable String write(String value, MongoConversionContext context) {
+		return value;
+	}
+
+	@Override
+	public @Nullable String writeNull(MongoConversionContext context) {
+		return "W";
 	}
 }

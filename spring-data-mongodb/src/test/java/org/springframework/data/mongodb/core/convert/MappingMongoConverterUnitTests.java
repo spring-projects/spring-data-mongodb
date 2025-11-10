@@ -3315,6 +3315,21 @@ class MappingMongoConverterUnitTests {
 		assertThat(read.converterEnum).isEqualTo("spring");
 	}
 
+	@Test // GH-4346
+	void nullConverter() {
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.nullConverter = null;
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target).containsEntry("nullConverter", "W");
+
+		WithValueConverters read = converter.read(WithValueConverters.class, org.bson.Document.parse("{ nullConverter : null}"));
+		assertThat(read.nullConverter).isEqualTo("R");
+	}
+
 	@Test // GH-3596
 	void beanConverter() {
 
@@ -3357,12 +3372,12 @@ class MappingMongoConverterUnitTests {
 						new PropertyValueConverter<String, org.bson.Document, MongoConversionContext>() {
 
 							@Override
-							public @Nullable String read(org.bson.@Nullable Document nativeValue, MongoConversionContext context) {
+							public @Nullable String read(org.bson.Document nativeValue, MongoConversionContext context) {
 								return nativeValue.getString("bar");
 							}
 
 							@Override
-							public org.bson.@Nullable Document write(@Nullable String domainValue, MongoConversionContext context) {
+							public org.bson.Document write(String domainValue, MongoConversionContext context) {
 								return new org.bson.Document("bar", domainValue);
 							}
 						});
@@ -4614,6 +4629,8 @@ class MappingMongoConverterUnitTests {
 		@ValueConverter(Converter1.class) String converterWithDefaultCtor;
 
 		@ValueConverter(Converter2.class) String converterEnum;
+
+		@ValueConverter(NullReplacingValueConverter.class) String nullConverter;
 
 		String viaRegisteredConverter;
 	}
