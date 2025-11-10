@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>5.0.0-SNAPSHOT</version>
+		<version>5.0.0-4346-property-value-convert-cce-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
