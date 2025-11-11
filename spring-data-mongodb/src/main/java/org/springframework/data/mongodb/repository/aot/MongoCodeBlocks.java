@@ -20,6 +20,8 @@ import java.util.regex.Pattern;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.aot.AggregationBlocks.AggregationCodeBlockBuilder;
@@ -241,20 +243,16 @@ class MongoCodeBlocks {
 	public static CodeBlock potentiallyWrapStreamable(MethodReturn methodReturn, CodeBlock returningIterable) {
 
 		Class<?> returnType = methodReturn.toClass();
+
 		if (returnType.equals(Streamable.class)) {
 			return CodeBlock.of("$T.of($L)", Streamable.class, returningIterable);
 		}
+
 		if (ClassUtils.isAssignable(Streamable.class, returnType)) {
-			CodeBlock streamable = CodeBlock.of("$T.of($L)", Streamable.class, returningIterable);
-			if (ClassUtils.hasConstructor(returnType, Streamable.class)) {
-				return CodeBlock.of("new $T($L)", returnType, streamable);
-			}
-			if (ClassUtils.hasAtLeastOneMethodWithName(returnType, "of")) {
-				return CodeBlock.of("$T.of($L)", returnType, streamable);
-			}
-			if (ClassUtils.hasAtLeastOneMethodWithName(returnType, "valueOf")) {
-				return CodeBlock.of("$T.valueOf($L)", returnType, streamable);
-			}
+
+			return CodeBlock.of(
+					"($1T) $2T.getSharedInstance().convert($3T.of($4L), $5T.valueOf($3T.class), $5T.valueOf($1T.class))",
+					returnType, DefaultConversionService.class, Streamable.class, returningIterable, TypeDescriptor.class);
 		}
 
 		return returningIterable;
