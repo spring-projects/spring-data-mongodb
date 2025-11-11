@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -213,6 +214,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByAddress(Address address);
 
 	Streamable<Person> streamByAddress(Address address);
+
+	Persons streamPersonsByAddress(Address address);
 
 	Streamable<Person> streamByAddress(Address address, Pageable pageable);
 
@@ -502,4 +505,17 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	List<Person> findBySpiritAnimal(User user);
 
+	class Persons implements Streamable<Person> {
+
+		private final Streamable<Person> streamable;
+
+		public Persons(Streamable<Person> streamable) {
+			this.streamable = streamable;
+		}
+
+		@Override
+		public Iterator<Person> iterator() {
+			return streamable.iterator();
+		}
+	}
 }

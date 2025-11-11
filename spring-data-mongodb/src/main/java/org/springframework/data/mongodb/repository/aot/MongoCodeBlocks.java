@@ -38,6 +38,7 @@ import org.springframework.data.repository.aot.generate.MethodReturn;
 import org.springframework.data.util.Streamable;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
@@ -238,9 +239,25 @@ class MongoCodeBlocks {
 	 * {@link MethodReturn} indicates so.
 	 */
 	public static CodeBlock potentiallyWrapStreamable(MethodReturn methodReturn, CodeBlock returningIterable) {
-		return methodReturn.toClass().equals(Streamable.class)
-				? CodeBlock.of("$T.of($L)", Streamable.class, returningIterable)
-				: returningIterable;
+
+		Class<?> returnType = methodReturn.toClass();
+		if (returnType.equals(Streamable.class)) {
+			return CodeBlock.of("$T.of($L)", Streamable.class, returningIterable);
+		}
+		if (ClassUtils.isAssignable(Streamable.class, returnType)) {
+			CodeBlock streamable = CodeBlock.of("$T.of($L)", Streamable.class, returningIterable);
+			if (ClassUtils.hasConstructor(returnType, Streamable.class)) {
+				return CodeBlock.of("new $T($L)", returnType, streamable);
+			}
+			if (ClassUtils.hasAtLeastOneMethodWithName(returnType, "of")) {
+				return CodeBlock.of("$T.of($L)", returnType, streamable);
+			}
+			if (ClassUtils.hasAtLeastOneMethodWithName(returnType, "valueOf")) {
+				return CodeBlock.of("$T.valueOf($L)", returnType, streamable);
+			}
+		}
+
+		return returningIterable;
 	}
 
 }
