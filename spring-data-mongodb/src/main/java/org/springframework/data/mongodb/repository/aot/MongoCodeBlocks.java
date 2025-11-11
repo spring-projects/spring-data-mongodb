@@ -20,6 +20,8 @@ import java.util.regex.Pattern;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.aot.AggregationBlocks.AggregationCodeBlockBuilder;
@@ -38,6 +40,7 @@ import org.springframework.data.repository.aot.generate.MethodReturn;
 import org.springframework.data.util.Streamable;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
@@ -238,9 +241,21 @@ class MongoCodeBlocks {
 	 * {@link MethodReturn} indicates so.
 	 */
 	public static CodeBlock potentiallyWrapStreamable(MethodReturn methodReturn, CodeBlock returningIterable) {
-		return methodReturn.toClass().equals(Streamable.class)
-				? CodeBlock.of("$T.of($L)", Streamable.class, returningIterable)
-				: returningIterable;
+
+		Class<?> returnType = methodReturn.toClass();
+
+		if (returnType.equals(Streamable.class)) {
+			return CodeBlock.of("$T.of($L)", Streamable.class, returningIterable);
+		}
+
+		if (ClassUtils.isAssignable(Streamable.class, returnType)) {
+
+			return CodeBlock.of(
+					"($1T) $2T.getSharedInstance().convert($3T.of($4L), $5T.valueOf($3T.class), $5T.valueOf($1T.class))",
+					returnType, DefaultConversionService.class, Streamable.class, returningIterable, TypeDescriptor.class);
+		}
+
+		return returningIterable;
 	}
 
 }

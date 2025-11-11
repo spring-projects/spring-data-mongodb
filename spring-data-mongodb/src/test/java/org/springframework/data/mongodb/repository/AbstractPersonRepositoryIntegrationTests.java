@@ -73,6 +73,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Person.Sex;
+import org.springframework.data.mongodb.repository.PersonRepository.Persons;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension.DirtiesState;
@@ -321,6 +322,17 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		repository.save(dave);
 
 		Streamable<Person> result = repository.streamByAddress(address);
+		assertThat(result).hasSize(1).contains(dave);
+	}
+
+	@Test // GH-5089
+	void useCustomReturnTypeImplementingStreamable() {
+
+		Address address = new Address("Foo Street 1", "C0123", "Bar");
+		dave.setAddress(address);
+		repository.save(dave);
+
+		Persons result = repository.streamPersonsByAddress(address);
 		assertThat(result).hasSize(1).contains(dave);
 	}
 
