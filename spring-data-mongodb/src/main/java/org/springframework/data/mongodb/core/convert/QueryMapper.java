@@ -15,17 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -38,7 +29,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
-
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
@@ -713,7 +704,7 @@ public class QueryMapper {
 
 			List<Object> converted = new ArrayList<>(collection.size());
 			for (Object o : collection) {
-				converted.add(valueConverter.write(o, conversionContext));
+				converted.add(typeSafeSingleWriteConversion(valueConverter, conversionContext, o));
 			}
 
 			return converted;
@@ -730,7 +721,28 @@ public class QueryMapper {
 			});
 		}
 
-		return value != null ? valueConverter.write(value, conversionContext) : value;
+		return typeSafeSingleWriteConversion(valueConverter, conversionContext, value);
+	}
+
+	private static @Nullable Object typeSafeSingleWriteConversion(PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter, MongoConversionContext conversionContext, @Nullable Object o) {
+
+		Class<?>[] typeArguments = GenericTypeResolver.resolveTypeArguments(valueConverter.getClass(), PropertyValueConverter.class);
+
+		if (o == null) {
+			return valueConverter.writeNull(conversionContext);
+		}
+
+		// don't apply the converter if we can determine, that the types don't match.
+		// this happens for regex comparisons.
+		if (typeArguments != null && typeArguments.length > 0) {
+
+			Class<?> converterWriteArgumentType = typeArguments[0];
+			if (!converterWriteArgumentType.isAssignableFrom(o.getClass())) {
+				return o;
+			}
+		}
+
+		return valueConverter.write(o, conversionContext);
 	}
 
 	@Nullable
