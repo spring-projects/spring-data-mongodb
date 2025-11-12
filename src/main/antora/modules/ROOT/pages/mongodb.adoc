@@ -16,6 +16,8 @@ Includes integrated object mapping between documents and POJOs.
 * xref:repositories/core-extensions.adoc#mongodb.repositories.queries.type-safe[QueryDSL integration] to support type-safe queries.
 * xref:mongodb/client-session-transactions.adoc[Multi-Document Transactions].
 * xref:mongodb/template-query-operations.adoc#mongo.geo-json[GeoSpatial integration].
+* xref:mongodb/mongo-search-indexes.adoc#mongo.search.vector[Vector Index] and declarative xref:mongodb/repositories/vector-search.adoc[Vector Search] support.
+* xref:mongodb/aot.adoc[Ahead Of Time (AOT)] optimizations.
 
 For most tasks, you should use `MongoTemplate` or the Repository support, which both leverage the rich mapping functionality.
 `MongoTemplate` is the place to look for accessing functionality such as incrementing counters or ad-hoc CRUD operations.

@@ -7,6 +7,11 @@ include::{commons}@data-commons::page$aot.adoc[]
 
 With Spring Data MongoDb we generally support query methods that are not backed by an xref:repositories/custom-implementations.adoc[implementation fragment], and don't require, with a few limitations detailed below.
 
+[NOTE]
+====
+Reactive Repository interfaces using Project Reactor, Kotlin Coroutines et. al. are not supported.
+====
+
 **Supported Features**
 
 * Derived `find`, `count`, `exists` and `delete` methods
