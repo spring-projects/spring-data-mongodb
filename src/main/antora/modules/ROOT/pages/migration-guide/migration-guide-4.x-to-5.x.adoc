@@ -1,8 +1,12 @@
 [[mongodb.migration.4.x-5.x]]
 = Migration Guide from 4.x to 5.x
 
-Spring Data MongoDB 4.x requires the MongoDB Java Driver 5.5.x +
+Spring Data MongoDB 5.x requires the MongoDB Java Driver 5.6+ +
 To learn more about driver versions please visit the https://www.mongodb.com/docs/drivers/java/sync/current/upgrade/[MongoDB Documentation].
+
+== MongoDB Java Driver 4.x Driver Compatibility Removed
+
+Spring Data MongoDB does no longer support the 4.x MongoDB Java Driver generation.
 
 == UUID Representation Changes
 

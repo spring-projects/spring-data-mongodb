@@ -3,7 +3,7 @@
 
 The Spring Data MongoDB 4.x binaries require JDK level 17 and above and https://spring.io/docs[Spring Framework] {springVersion} and above.
 
-In terms of database and driver, you need at least version 4.x of https://www.mongodb.org/[MongoDB] and a compatible MongoDB Java Driver (5.2.x).
+In terms of database and driver, you need at least version 4.x of https://www.mongodb.org/[MongoDB] and a compatible MongoDB Java Driver (5.6+).
 
 [[compatibility.matrix]]
 == Compatibility Matrix
@@ -24,7 +24,7 @@ See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibilit
 
 |2025.0
 |4.5.x
-|5.3.x
+|5.6.x
 |6.x to 8.x
 
 |2024.1
