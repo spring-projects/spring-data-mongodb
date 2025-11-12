@@ -1,9 +1,10 @@
-= Ahead of Time Optimizations
+include::{commons}@data-commons::page$aot.adoc[]
 
-For a general explanation of what Ahead of Time (AoT) Optimizations Spring Data offers and how to enable them  see
-xref:{commons}@data-commons::page$aot.adoc[]
+== MongoDB Specific Ahead Of Time Features
 
-Each module offers optimizations for a slightly different set of repository method.
+[[aot.repositories.mongodb]]
+=== MongoDB Ahead of Time Repositories
+
 With Spring Data MongoDb we generally support query methods that are not backed by an xref:repositories/custom-implementations.adoc[implementation fragment], and don't require, with a few limitations detailed below.
 
 **Supported Features**
@@ -19,7 +20,8 @@ With Spring Data MongoDb we generally support query methods that are not backed 
 
 * `@Meta.flags` is not evaluated.
 * Limited `Collation` detection.
-* No support for in-clauses with pattern matching / case insensitivity
+* No support for in-clauses with pattern matching / case insensitivity.
+* Custom Collection return types (e.g. `io.vavr.collection`, `"org.eclipse.collections`) are not yet supported.
 
 **Excluded methods**
 
