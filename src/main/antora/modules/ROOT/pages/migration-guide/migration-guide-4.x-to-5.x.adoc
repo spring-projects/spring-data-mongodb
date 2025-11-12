@@ -57,3 +57,8 @@ static class Config extends AbstractMongoClientConfiguration {
 ----
 
 Users upgrading from prior versions may choose `BigDecimalRepresentation.STRING` as default to retain previous behaviour.
+
+== JMX Support Discontinued.
+
+We recommend switching to Spring Boot https://docs.spring.io/spring-boot/reference/actuator/endpoints.html[Actuator Endpoints].
+
