@@ -28,7 +28,9 @@ import com.mongodb.RequestContext;
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
  * @since 4.0.0
+ * @deprecated since 5.0 in favor of native MongoDB Java Driver observability support.
  */
+@Deprecated(since = "5.0",  forRemoval = true)
 record MapRequestContext(Map<Object, Object> map) implements RequestContext {
 
 	public MapRequestContext() {
