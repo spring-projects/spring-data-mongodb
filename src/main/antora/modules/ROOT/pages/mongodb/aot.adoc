@@ -26,7 +26,7 @@ Reactive Repository interfaces using Project Reactor, Kotlin Coroutines et. al. 
 * `@Meta.flags` is not evaluated.
 * Limited `Collation` detection.
 * No support for in-clauses with pattern matching / case insensitivity.
-* Custom Collection return types (e.g. `io.vavr.collection`, `"org.eclipse.collections`) are not yet supported.
+* Custom Collection return types (e.g. `io.vavr.collection`, `org.eclipse.collections`) are not yet supported.
 
 **Excluded methods**
 
