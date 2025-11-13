@@ -36,6 +36,7 @@
 ** xref:mongodb/sharding.adoc[]
 ** xref:mongodb/mongo-search-indexes.adoc[]
 ** xref:mongodb/mongo-encryption.adoc[]
+** xref:mongodb/aot.adoc[]
 
 // Repository
 * xref:repositories.adoc[]
@@ -55,7 +56,6 @@
 ** xref:mongodb/repositories/cdi-integration.adoc[]
 ** xref:repositories/query-keywords-reference.adoc[]
 ** xref:repositories/query-return-types-reference.adoc[]
-** xref:mongodb/aot.adoc[]
 
 // Observability
 * xref:observability/observability.adoc[]
