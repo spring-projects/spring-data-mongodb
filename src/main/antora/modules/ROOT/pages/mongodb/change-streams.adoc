@@ -44,7 +44,7 @@ container.stop();                                                               
 <5> Do not forget to stop the container once you are sure you no longer need it. Doing so stops all running `Task` instances within the container.
 ====
 
-`DefaultMessageListenerContainer` implements `SmartLifecycle` and will by default be automatically started when registered as a Bean in the Application Context.
+`DefaultMessageListenerContainer` implements `SmartLifecycle` and will by default be automatically started when registered as a bean in the Application Context.
 
 [NOTE]
 ====
