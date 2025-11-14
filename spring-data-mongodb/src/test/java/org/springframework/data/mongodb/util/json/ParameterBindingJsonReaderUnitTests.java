@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
@@ -31,6 +32,9 @@ import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
@@ -84,47 +88,12 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(new Document("lastname", "100"));
 	}
 
-	@Test // GH-4806
-	void regexConsidersOptions() {
+	@ParameterizedTest // GH-4806
+	@MethodSource("treatNestedStringParametersArgs")
+	void treatNestedStringParameters(String source, String value, Object expected) {
 
-		Document target = parse("{ 'c': /^true$/i }");
-
-		BsonRegularExpression pattern = target.get("c", BsonRegularExpression.class);
-		assertThat(pattern.getPattern()).isEqualTo("^true$");
-		assertThat(pattern.getOptions()).isEqualTo("i");
-	}
-
-	@Test // GH-4806
-	void regexConsidersBindValueWithOptions() {
-
-		Document target = parse("{ 'c': /^?0$/i }", "foo");
-
-		BsonRegularExpression pattern = target.get("c", BsonRegularExpression.class);
-		assertThat(pattern.getPattern()).isEqualTo("^foo$");
-		assertThat(pattern.getOptions()).isEqualTo("i");
-	}
-
-	@Test // GH-4806
-	void treatsQuotedValueThatLooksLikeRegexAsPlainString() {
-
-		Document target = parse("{ 'c': '/^?0$/i' }", "foo");
-
-		assertThat(target.get("c")).isInstanceOf(String.class);
-	}
-
-	@Test // GH-4806
-	void treatsStringParameterValueThatLooksLikeRegexAsPlainString() {
-
-		Document target = parse("{ 'c': ?0 }", "/^foo$/i");
-
-		assertThat(target.get("c")).isInstanceOf(String.class);
-	}
-
-	@Test
-	void bindValueToRegex() {
-
-		Document target = parse("{ 'lastname' : { '$regex' : '^(?0)'} }", "kohlin");
-		assertThat(target).isEqualTo(Document.parse("{ 'lastname' : { '$regex' : '^(kohlin)'} }"));
+		Document target = parse(source, value);
+		assertThat(target.get("value")).isEqualTo(expected);
 	}
 
 	@Test
@@ -632,6 +601,20 @@ class ParameterBindingJsonReaderUnitTests {
 		String json = "{ 'value' : { '$uuid' : \"73ff-d26444b-34c6-990e8e-7d1dfc035d4\" } } }";
 		BsonBinary value = parse(json).get("value", BsonBinary.class);
 		assertThat(value.getType()).isEqualTo(BsonBinarySubType.UUID_STANDARD.getValue());
+	}
+
+	static Stream<Arguments> treatNestedStringParametersArgs() {
+		return Stream.of( //
+				Arguments.of("{ 'value': '/^?0$/i' }", "foo", "/^foo$/i"),
+				Arguments.of("{ 'value': /^true$/i }", null, new BsonRegularExpression("^true$", "i")),
+				Arguments.of("{ 'value': /^?0$/i }", "foo", new BsonRegularExpression("^foo$", "i")), //
+				Arguments.of("{ 'value': '/^?0$/i' }", "\\Qfoo\\E", "/^\\Qfoo\\E$/i"),
+				Arguments.of("{ 'value': '?0' }", "/^foo$/i", "/^foo$/i"), //
+				Arguments.of("{ 'value': /^\\Q?0\\E/}", "foo", new BsonRegularExpression("^\\Qfoo\\E")), //
+				Arguments.of("{ 'value': /^\\Q?0\\E/}", "\\E.*", new BsonRegularExpression("^\\Q\\\\E.*\\E")), //
+				Arguments.of("{ 'value': ?0 }", "/^foo$/i", "/^foo$/i"), //
+				Arguments.of("{ 'value': { '$regex' : '^(?0)'} }", "foo", new Document("$regex", "^(foo)")) //
+		);
 	}
 
 	private static Document parse(String json, Object... args) {

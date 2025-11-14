@@ -68,6 +68,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 	private static final Pattern EXPRESSION_BINDING_PATTERN = Pattern.compile("[\\?:][#$]\\{.*\\}");
 	private static final Pattern SPEL_PARAMETER_BINDING_PATTERN = Pattern.compile("('\\?(\\d+)'|\\?(\\d+))");
+	private static final String QUOTE_START = "\\Q";
+	private static final String QUOTE_END = "\\E";
 
 	private final ParameterBindingContext bindingContext;
 
@@ -456,7 +458,13 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 			String group = matcher.group();
 			int index = computeParameterIndex(group);
-			computedValue = computedValue.replace(group, nullSafeToString(getBindableValueForIndex(index)));
+
+			String bindValue = nullSafeToString(getBindableValueForIndex(index));
+			if(isQuoted(tokenValue)) {
+				bindValue = bindValue.replaceAll("\\%s".formatted(QUOTE_START), Matcher.quoteReplacement("\\%s".formatted(QUOTE_START))) //
+					.replaceAll("\\%s".formatted(QUOTE_END), Matcher.quoteReplacement("\\%s".formatted(QUOTE_END)));
+			}
+			computedValue = computedValue.replace(group, bindValue);
 		}
 
 		if (isRegularExpression) {
@@ -480,6 +488,10 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 
 		return ObjectUtils.nullSafeToString(value);
+	}
+
+	private static boolean isQuoted(String value) {
+		return value.contains(QUOTE_START) || value.contains(QUOTE_END);
 	}
 
 	private static int computeParameterIndex(String parameter) {
