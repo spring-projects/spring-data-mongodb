@@ -729,6 +729,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	}
 
 	@Test // DATAMONGO-770
+	void findByFirstnameStartingWith() {
+
+		String inputString = "\\E.*\\Q";
+		List<Person> result = repository.findByFirstnameStartingWith(inputString);
+		assertThat(result).isEmpty();
+	}
+
+	@Test // DATAMONGO-770
 	void findByFirstnameEndingWithIgnoreCase() {
 
 		List<Person> result = repository.findByFirstnameEndingWithIgnoreCase("VE");
