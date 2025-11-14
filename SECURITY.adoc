@@ -13,4 +13,3 @@ Spring Data JARs released on Maven Central are signed.
 You'll find more information about the key here: https://spring.io/GPG-KEY-spring.txt
 
 Versions released prior to 2023 may be signed with a different key.
-
