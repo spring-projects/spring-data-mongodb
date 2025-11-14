@@ -295,6 +295,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	// DATAMONGO-770
 	List<Person> findByFirstnameNotIgnoreCase(String firstName);
 
+	List<Person> findByFirstnameStartingWith(String firstName);
+
 	// DATAMONGO-770
 	List<Person> findByFirstnameStartingWithIgnoreCase(String firstName);
 
