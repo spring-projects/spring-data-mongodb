@@ -22,27 +22,30 @@ import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.geo.GeoJsonJackson3Module;
 import org.springframework.data.mongodb.core.geo.GeoJsonModule;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
- * Integration tests for {@link GeoJsonConfiguration}.
+ * Integration tests for {@link GeoJsonJackson3Configuration}.
  *
- * @author Oliver Gierke
+ * @author Bjorn Harvold
+ * @author Jens Schauder
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration
-public class GeoJsonConfigurationIntegrationTests {
+public class GeoJsonJackson3ConfigurationIntegrationTests {
 
 	@Configuration
 	@EnableSpringDataWebSupport
 	static class Config {}
 
-	@Autowired GeoJsonModule geoJsonModule;
+	@Autowired
+	GeoJsonJackson3Module geoJsonModule;
 
-	@Test // DATAMONGO-1181
+	@Test // GH-5100
 	public void picksUpGeoJsonModuleConfigurationByDefault() {
 		assertThat(geoJsonModule).isNotNull();
 	}
