@@ -17,16 +17,14 @@ package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.geo.GeoJsonJackson3Module;
-import org.springframework.data.mongodb.core.geo.GeoJsonModule;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Integration tests for {@link GeoJsonJackson3Configuration}.
@@ -34,7 +32,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Bjorn Harvold
  * @author Jens Schauder
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
 public class GeoJsonJackson3ConfigurationIntegrationTests {
 
@@ -42,8 +40,7 @@ public class GeoJsonJackson3ConfigurationIntegrationTests {
 	@EnableSpringDataWebSupport
 	static class Config {}
 
-	@Autowired
-	GeoJsonJackson3Module geoJsonModule;
+	@Autowired GeoJsonJackson3Module geoJsonModule;
 
 	@Test // GH-5100
 	public void picksUpGeoJsonModuleConfigurationByDefault() {
