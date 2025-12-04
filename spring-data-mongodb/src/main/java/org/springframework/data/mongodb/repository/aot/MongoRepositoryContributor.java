@@ -25,7 +25,7 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
-
+import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -72,6 +72,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	private final SimpleTypeHolder simpleTypeHolder;
 	private final MongoMappingContext mappingContext;
 	private final NamedQueries namedQueries;
+	private final @Nullable String mongoOperationsRef;
 
 	public MongoRepositoryContributor(AotRepositoryContext repositoryContext) {
 
@@ -81,7 +82,9 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		if (classLoader == null) {
 			classLoader = getClass().getClassLoader();
 		}
-		namedQueries = getNamedQueries(repositoryContext.getConfigurationSource(), classLoader);
+
+		this.namedQueries = getNamedQueries(repositoryContext.getConfigurationSource(), classLoader);
+		this.mongoOperationsRef = getMongoTemplateRef(repositoryContext.getConfigurationSource());
 
 		// avoid Java Time (JSR-310) Type introspection
 		MongoCustomConversions mongoCustomConversions = MongoCustomConversions
@@ -95,6 +98,14 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		this.mappingContext.afterPropertiesSet();
 
 		this.queryCreator = new AotQueryCreator(this.mappingContext);
+	}
+
+	private @Nullable String getMongoTemplateRef(@Nullable RepositoryConfigurationSource configSource) {
+		if (configSource == null) {
+			return null;
+		}
+
+		return configSource.getAttribute("mongoTemplateRef").filter(it -> !"mongoTemplate".equals(it)).orElse(null);
 	}
 
 	@SuppressWarnings("NullAway")
@@ -132,9 +143,15 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	@Override
 	protected void customizeConstructor(AotRepositoryConstructorBuilder constructorBuilder) {
 
-		constructorBuilder.addParameter("operations", MongoOperations.class);
-		constructorBuilder.addParameter("context", RepositoryFactoryBeanSupport.FragmentCreationContext.class,
-				false);
+		constructorBuilder.addParameter("operations", MongoOperations.class, customizer -> {
+
+			customizer.bindToField()
+					.origin(StringUtils.hasText(this.mongoOperationsRef)
+							? new RuntimeBeanReference(this.mongoOperationsRef, MongoOperations.class)
+							: new RuntimeBeanReference(MongoOperations.class));
+		});
+
+		constructorBuilder.addParameter("context", RepositoryFactoryBeanSupport.FragmentCreationContext.class, false);
 
 		constructorBuilder.customize((builder) -> {
 			builder.addStatement("super(operations, context)");
