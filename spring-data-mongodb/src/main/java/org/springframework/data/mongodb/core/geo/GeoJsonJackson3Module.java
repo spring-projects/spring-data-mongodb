@@ -25,7 +25,7 @@ import org.springframework.util.Assert;
 
 public class GeoJsonJackson3Module {
 
-	private static Version version = new Version(3, 2, 0, null, "org.springframework.data",
+	private static Version version = new Version(4, 1, 0, null, "org.springframework.data",
 			"spring-data-mongodb-geojson");
 
 	public static class Serializers extends JacksonModule {
