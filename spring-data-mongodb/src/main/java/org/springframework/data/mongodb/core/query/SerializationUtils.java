@@ -23,6 +23,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.bson.Document;
+import org.bson.json.JsonMode;
+import org.bson.json.JsonWriterSettings;
+import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.Contract;
@@ -36,6 +39,11 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  */
 public abstract class SerializationUtils {
+
+	private static final JsonWriterSettings LOGGING_JSON_SETTINGS =
+			JsonWriterSettings.builder()
+					.outputMode(JsonMode.SHELL)
+					.build();
 
 	private SerializationUtils() {
 
@@ -118,7 +126,14 @@ public abstract class SerializationUtils {
 		}
 
 		try {
-			String json = value instanceof Document document ? document.toJson() : serializeValue(value);
+			String json;
+
+			if (value instanceof Document document) {
+				json = document.toJson(LOGGING_JSON_SETTINGS);
+			} else {
+				json = serializeValue(value);
+			}
+
 			return json.replaceAll("\":", "\" :").replaceAll("\\{\"", "{ \"");
 		} catch (Exception e) {
 
@@ -140,7 +155,11 @@ public abstract class SerializationUtils {
 			return "null";
 		}
 
-		String documentJson = new Document("toBeEncoded", value).toJson();
+		if (value instanceof ObjectId objectId) {
+			return "ObjectId(\"" + objectId.toHexString() + "\")";
+		}
+
+		String documentJson = new Document("toBeEncoded", value).toJson(LOGGING_JSON_SETTINGS);
 		return documentJson.substring(documentJson.indexOf(':') + 1, documentJson.length() - 1).trim();
 	}
 
