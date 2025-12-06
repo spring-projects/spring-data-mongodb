@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 
@@ -115,6 +116,25 @@ public class SerializationUtilsUnitTests {
 	@Test // DATAMONGO-1245
 	public void flattenMapShouldReturnEmptyMapWhenSourceIsNull() {
 		assertThat(flattenMap(null)).isEmpty();
+	}
+
+	@Test
+	void shouldRenderStandaloneObjectIdInShellFormat() {
+		ObjectId id = new ObjectId("507f1f77bcf86cd799439011");
+		String result = SerializationUtils.serializeValue(id);
+		assertThat(result).isEqualTo("ObjectId(\"507f1f77bcf86cd799439011\")");
+	}
+
+	@Test
+	void shouldRenderDocumentWithObjectIdInShellFormat() {
+		ObjectId id = new ObjectId("507f1f77bcf86cd799439011");
+		Document doc = new Document("_id", id);
+
+		String result = SerializationUtils.serializeToJsonSafely(doc);
+
+		assertThat(result)
+				.contains("ObjectId(\"507f1f77bcf86cd799439011\")")
+				.doesNotContain("\"$oid\"");
 	}
 
 	static class Complex {
