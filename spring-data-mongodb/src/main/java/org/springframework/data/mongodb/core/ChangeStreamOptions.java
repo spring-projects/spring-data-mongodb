@@ -53,6 +53,7 @@ public class ChangeStreamOptions {
 	private @Nullable FullDocumentBeforeChange fullDocumentBeforeChangeLookup;
 	private @Nullable Collation collation;
 	private @Nullable Object resumeTimestamp;
+	private @Nullable Boolean showExpandedEvents;
 	private Resume resume = Resume.UNDEFINED;
 
 	protected ChangeStreamOptions() {}
@@ -106,6 +107,13 @@ public class ChangeStreamOptions {
 	 */
 	public Optional<BsonTimestamp> getResumeBsonTimestamp() {
 		return Optional.ofNullable(resumeTimestamp).map(timestamp -> asTimestampOfType(timestamp, BsonTimestamp.class));
+	}
+
+	/**
+	 * @return {@link Optional#empty()} if not set.
+	 */
+	public Optional<Boolean> getShowExpandedEvents() {
+		return Optional.ofNullable(showExpandedEvents);
 	}
 
 	/**
@@ -191,6 +199,9 @@ public class ChangeStreamOptions {
 		if (!ObjectUtils.nullSafeEquals(this.resumeTimestamp, that.resumeTimestamp)) {
 			return false;
 		}
+		if (!ObjectUtils.nullSafeEquals(this.showExpandedEvents, that.showExpandedEvents)) {
+			return false;
+		}
 		return resume == that.resume;
 	}
 
@@ -202,6 +213,7 @@ public class ChangeStreamOptions {
 		result = 31 * result + ObjectUtils.nullSafeHashCode(fullDocumentBeforeChangeLookup);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(collation);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(resumeTimestamp);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(showExpandedEvents);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(resume);
 		return result;
 	}
@@ -239,6 +251,7 @@ public class ChangeStreamOptions {
 		private @Nullable FullDocumentBeforeChange fullDocumentBeforeChangeLookup;
 		private @Nullable Collation collation;
 		private @Nullable Object resumeTimestamp;
+		private @Nullable Boolean showExpandedEvents;
 		private Resume resume = Resume.UNDEFINED;
 
 		private ChangeStreamOptionsBuilder() {}
@@ -433,6 +446,19 @@ public class ChangeStreamOptions {
 		}
 
 		/**
+		 * Set whether expanded change events (e.g. createIndexes, shardCollection) should be emitted.
+		 *
+		 * @param showExpandedEvents {@code true} to include expanded events.
+		 * @return this.
+		 */
+		@Contract("_ -> this")
+		public ChangeStreamOptionsBuilder showExpandedEvents(boolean showExpandedEvents) {
+
+			this.showExpandedEvents = showExpandedEvents;
+			return this;
+		}
+
+		/**
 		 * @return the built {@link ChangeStreamOptions}
 		 */
 		@Contract("-> new")
@@ -446,6 +472,7 @@ public class ChangeStreamOptions {
 			options.fullDocumentBeforeChangeLookup = this.fullDocumentBeforeChangeLookup;
 			options.collation = this.collation;
 			options.resumeTimestamp = this.resumeTimestamp;
+			options.showExpandedEvents = this.showExpandedEvents;
 			options.resume = this.resume;
 
 			return options;
