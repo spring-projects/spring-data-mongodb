@@ -53,4 +53,12 @@ public class ChangeStreamOptionsUnitTests {
 		assertThat(options.isResumeAfter()).isFalse();
 		assertThat(options.isStartAfter()).isFalse();
 	}
+
+	@Test // GH-5069
+	void shouldStoreShowExpandedEvents() {
+
+		ChangeStreamOptions options = ChangeStreamOptions.builder().showExpandedEvents(true).build();
+
+		assertThat(options.getShowExpandedEvents()).isPresent().hasValue(true);
+	}
 }

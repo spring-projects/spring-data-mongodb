@@ -140,6 +140,22 @@ class ChangeStreamTaskUnitTests {
 		verify(changeStreamIterable).fullDocumentBeforeChange(FullDocumentBeforeChange.REQUIRED);
 	}
 
+	@Test // GH-5069
+	void shouldApplyShowExpandedEventsToChangeStream() {
+		
+		when(changeStreamIterable.showExpandedEvents(true)).thenReturn(changeStreamIterable);
+
+		ChangeStreamRequest request = ChangeStreamRequest.builder() //
+				.collection("start-wars") //
+				.showExpandedEvents(true) //
+				.publishTo(message -> {}) //
+				.build();
+		
+		initTask(request, Document.class);
+
+		verify(changeStreamIterable).showExpandedEvents(true);
+	}
+
 	private MongoCursor<ChangeStreamDocument<Document>> initTask(ChangeStreamRequest request, Class<?> targetType) {
 
 		ChangeStreamTask task = new ChangeStreamTask(template, request, targetType, er -> {});
