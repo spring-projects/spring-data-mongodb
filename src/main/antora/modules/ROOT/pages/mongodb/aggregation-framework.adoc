@@ -118,13 +118,13 @@ At the time of this writing, we provide support for the following Aggregation Op
 | `abs`, `acos`, `acosh`, `add` (+++*+++ via `plus`), `asin`, `asin`, `atan`, `atan2`, `atanh`, `ceil`, `cos`, `cosh`, `derivative`, `divide`, `exp`, `floor`, `integral`, `ln`, `log`, `log10`, `mod`, `multiply`, `pow`, `round`, `sqrt`, `subtract` (+++*+++ via `minus`), `sin`, `sinh`, `tan`, `tanh`, `trunc`
 
 | String Aggregation Operators
-| `concat`, `substr`, `toLower`, `toUpper`, `strcasecmp`, `indexOfBytes`, `indexOfCP`, `regexFind`, `regexFindAll`, `regexMatch`, `replaceAll`, `replaceOne`, split`, `strLenBytes`, `strLenCP`, `substrCP`, `trim`, `ltrim`, `rtim`
+| `concat`, `substr`, `toLower`, `toUpper`, `strcasecmp`, `indexOfBytes`, `indexOfCP`, `regexFind`, `regexFindAll`, `regexMatch`, `replaceAll`, `replaceOne`, `split`, `strLenBytes`, `strLenCP`, `substrCP`, `trim`, `ltrim`, `rtim`
 
 | Comparison Aggregation Operators
 | `eq` (+++*+++ via `is`), `gt`, `gte`, `lt`, `lte`, `ne`
 
 | Array Aggregation Operators
-| `arrayElementAt`, `arrayToObject`, `concatArrays`, `filter`, `first`, `in`, `indexOfArray`, `isArray`, `last`, range`, `reverseArray`, `reduce`, `size`, `sortArray`, `slice`, `zip`
+| `arrayElementAt`, `arrayToObject`, `concatArrays`, `filter`, `first`, `in`, `indexOfArray`, `isArray`, `last`, `range`, `reverseArray`, `reduce`, `size`, `sortArray`, `slice`, `zip`
 
 | Literal Operators
 | `literal`
