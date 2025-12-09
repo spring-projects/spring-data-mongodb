@@ -27,7 +27,7 @@
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>4.1.0-SNAPSHOT</springdata.commons>
-		<mongo>5.6.1</mongo>
+		<mongo>5.6.2</mongo>
 	</properties>
 
 	<developers>
