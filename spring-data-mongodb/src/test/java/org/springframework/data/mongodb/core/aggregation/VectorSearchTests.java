@@ -25,6 +25,7 @@ import org.bson.BinaryVector;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -50,6 +51,7 @@ import com.mongodb.client.MongoClients;
  * @author Mark Paluch
  */
 @Testcontainers(disabledWithoutDocker = true)
+@Tag("VectorSearch")
 public class VectorSearchTests {
 
 	private static final String SCORE_FIELD = "vector-search-tests";
