@@ -313,7 +313,7 @@ class EntityOperations {
 	public <M, D> EntityProjection<M, D> introspectProjection(Class<M> resultType, Class<D> entityType) {
 
 		MongoPersistentEntity<?> persistentEntity = queryMapper.getMappingContext().getPersistentEntity(entityType);
-		if (persistentEntity == null && !resultType.isInterface() || ClassUtils.isAssignable(Document.class, resultType)) {
+		if (persistentEntity == null && !resultType.isInterface() || ClassUtils.isAssignable(Map.class, resultType)) {
 			return (EntityProjection) EntityProjection.nonProjecting(resultType);
 		}
 		return introspector.introspect(resultType, entityType);
