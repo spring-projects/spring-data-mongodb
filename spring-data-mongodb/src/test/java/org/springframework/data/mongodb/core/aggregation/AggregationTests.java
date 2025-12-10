@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
@@ -2122,6 +2123,25 @@ public class AggregationTests {
 		List<Document> mappedResults = results.getMappedResults();
 		assertThat(mappedResults).hasSize(1);
 		assertThat(mappedResults.get(0)).containsEntry("itemId", "1");
+	}
+
+	@Test // GH-5115
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	void aggregationAllowsToReadBackRawDocumentAsMap() {
+
+		mongoTemplate.insert(List.of( //
+				Item.builder().itemId("1").build(), //
+				Item.builder().itemId("2").build(), //
+				Item.builder().itemId("3").build()), //
+				Item.class);
+
+		TypedAggregation<Item> aggregation = newAggregation(Item.class, count().as("count"));
+
+		AggregationResults<Map> result = mongoTemplate.aggregate(aggregation, Map.class);
+		Map<Object, Object> uniqueResult = result.getUniqueMappedResult();
+
+		assertThat(uniqueResult).containsKey("count") //
+				.extracting(it -> it.get("count")).isEqualTo(3);
 	}
 
 	private void createUsersWithReferencedPersons() {
