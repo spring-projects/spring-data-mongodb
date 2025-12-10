@@ -23,6 +23,7 @@ import reactor.test.StepVerifier;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,7 @@ import com.mongodb.client.MongoClients;
  */
 @Testcontainers(disabledWithoutDocker = true)
 @SpringJUnitConfig(classes = { ReactiveVectorSearchTests.Config.class })
+@Tag("VectorSearch")
 public class ReactiveVectorSearchTests {
 
 	Vector VECTOR = Vector.of(0.2001f, 0.32345f, 0.43456f, 0.54567f, 0.65678f);
