@@ -102,7 +102,7 @@ pipeline {
 						docker.image("springci/spring-data-with-mongodb-6.0:${p['java.main.tag']}").inside(p['docker.java.inside.docker']) {
 							sh 'ci/start-replica.sh'
 							sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-								"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B -DexcludedGroups=VectorSearch"
+								"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B -Pno-vector-search-tests"
 						}
 					}
 				}
@@ -133,7 +133,7 @@ pipeline {
 								docker.image("springci/spring-data-with-mongodb-7.0:${p['java.main.tag']}").inside(p['docker.java.inside.docker']) {
 									sh 'ci/start-replica.sh'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B -DexcludedGroups=VectorSearch"
+										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B -Pno-vector-search-tests"
 								}
 							}
 						}
@@ -155,7 +155,7 @@ pipeline {
 								docker.image("springci/spring-data-with-mongodb-8.0:${p['java.next.tag']}").inside(p['docker.java.inside.docker']) {
 									sh 'ci/start-replica.sh'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B -DexcludedGroups=VectorSearch"
+										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B -Pno-vector-search-tests"
 								}
 							}
 						}
