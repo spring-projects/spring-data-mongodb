@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.mockito.Mockito.mock;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import example.aot.User;
 import example.aot.UserRepository;
@@ -25,15 +25,20 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
+
 import org.springframework.aot.generate.GeneratedFiles;
 import org.springframework.aot.test.generate.TestGenerationContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.repository.Meta;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -47,15 +52,19 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 class MongoRepositoryContributorUnitTests {
 
 	@Configuration
+	@EnableMongoRepositories(considerNestedRepositories = true, mongoTemplateRef = "mongoOperations",
+			includeFilters = { @ComponentScan.Filter(classes = MetaUserRepository.class, type = FilterType.ASSIGNABLE_TYPE) })
 	static class MongoRepositoryContributorConfiguration extends AotFragmentTestConfigurationSupport {
 
 		public MongoRepositoryContributorConfiguration() {
-			super(MetaUserRepository.class);
+			super(MetaUserRepository.class, MongoRepositoryContributorConfiguration.class);
 		}
 
 		@Bean
-		MongoOperations mongoOperations() {
-			return mock(MongoOperations.class);
+		MongoOperations mongoOperations(MongoConverter mongoConverter) {
+			MongoOperations operations = mock(MongoOperations.class);
+			when(operations.getConverter()).thenReturn(mongoConverter);
+			return operations;
 		}
 
 	}
@@ -66,7 +75,8 @@ class MongoRepositoryContributorUnitTests {
 	void shouldConsiderMetaAnnotation() throws IOException {
 
 		InputStreamSource aotFragment = generationContext.getGeneratedFiles().getGeneratedFile(GeneratedFiles.Kind.SOURCE,
-				MetaUserRepository.class.getPackageName().replace('.', '/') + "/MetaUserRepositoryImpl__AotRepository.java");
+				AotFragmentTestConfigurationSupport.getAotImplFragmentName(MetaUserRepository.class).replace('.', '/')
+						+ ".java");
 
 		String content = new InputStreamResource(aotFragment).getContentAsString(StandardCharsets.UTF_8);
 
@@ -76,7 +86,7 @@ class MongoRepositoryContributorUnitTests {
 		assertThat(content).contains("filterQuery.diskUse(DiskUse.DENY)");
 	}
 
-	interface MetaUserRepository extends CrudRepository<User, String> {
+	public interface MetaUserRepository extends CrudRepository<User, String> {
 
 		@Meta
 		User findAllByLastname(String lastname);
