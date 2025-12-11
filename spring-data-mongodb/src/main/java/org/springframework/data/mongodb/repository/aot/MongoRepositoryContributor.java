@@ -68,11 +68,11 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 	private static final Log logger = LogFactory.getLog(MongoRepositoryContributor.class);
 
+	private final AotRepositoryContext repositoryContext;
 	private final AotQueryCreator queryCreator;
 	private final SimpleTypeHolder simpleTypeHolder;
 	private final MongoMappingContext mappingContext;
 	private final NamedQueries namedQueries;
-	private final @Nullable String mongoOperationsRef;
 
 	public MongoRepositoryContributor(AotRepositoryContext repositoryContext) {
 
@@ -83,8 +83,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			classLoader = getClass().getClassLoader();
 		}
 
+		this.repositoryContext = repositoryContext;
 		this.namedQueries = getNamedQueries(repositoryContext.getConfigurationSource(), classLoader);
-		this.mongoOperationsRef = getMongoTemplateRef(repositoryContext.getConfigurationSource());
 
 		// avoid Java Time (JSR-310) Type introspection
 		MongoCustomConversions mongoCustomConversions = MongoCustomConversions
@@ -98,14 +98,6 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		this.mappingContext.afterPropertiesSet();
 
 		this.queryCreator = new AotQueryCreator(this.mappingContext);
-	}
-
-	private @Nullable String getMongoTemplateRef(@Nullable RepositoryConfigurationSource configSource) {
-		if (configSource == null) {
-			return null;
-		}
-
-		return configSource.getAttribute("mongoTemplateRef").filter(it -> !"mongoTemplate".equals(it)).orElse(null);
 	}
 
 	@SuppressWarnings("NullAway")
@@ -145,9 +137,10 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 		constructorBuilder.addParameter("operations", MongoOperations.class, customizer -> {
 
+			String mongoOperationsRef = getMongoTemplateRef();
 			customizer.bindToField()
-					.origin(StringUtils.hasText(this.mongoOperationsRef)
-							? new RuntimeBeanReference(this.mongoOperationsRef, MongoOperations.class)
+					.origin(StringUtils.hasText(mongoOperationsRef)
+							? new RuntimeBeanReference(mongoOperationsRef, MongoOperations.class)
 							: new RuntimeBeanReference(MongoOperations.class));
 		});
 
@@ -156,6 +149,11 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		constructorBuilder.customize((builder) -> {
 			builder.addStatement("super(operations, context)");
 		});
+	}
+
+	private @Nullable String getMongoTemplateRef() {
+		return repositoryContext.getConfigurationSource().getAttribute("mongoTemplateRef")
+				.filter(it -> !"mongoTemplate".equals(it)).orElse(null);
 	}
 
 	@Override

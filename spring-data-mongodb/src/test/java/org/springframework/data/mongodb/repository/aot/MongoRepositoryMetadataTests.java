@@ -34,6 +34,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 /**
@@ -41,7 +42,6 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
  *
  * @author Mark Paluch
  */
-
 @SpringJUnitConfig(classes = MongoRepositoryMetadataTests.MongoRepositoryContributorConfiguration.class)
 class MongoRepositoryMetadataTests {
 
@@ -53,8 +53,10 @@ class MongoRepositoryMetadataTests {
 		}
 
 		@Bean
-		MongoOperations mongoOperations() {
-			return mock(MongoOperations.class);
+		MongoOperations mongoOperations(MongoConverter mongoConverter) {
+			MongoOperations operations = mock(MongoOperations.class);
+			when(operations.getConverter()).thenReturn(mongoConverter);
+			return operations;
 		}
 
 	}

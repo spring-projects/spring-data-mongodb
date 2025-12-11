@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.repository.aot;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.core.env.StandardEnvironment;
@@ -41,21 +39,20 @@ import org.springframework.data.repository.core.support.RepositoryComposition;
 public class TestMongoAotRepositoryContext extends AotRepositoryContextSupport {
 
 	private final AotRepositoryInformation repositoryInformation;
-	private final Class<?> repositoryInterface;
+	private final RepositoryConfigurationSource configurationSource;
 
 	public TestMongoAotRepositoryContext(BeanFactory beanFactory, Class<?> repositoryInterface,
-			@Nullable RepositoryComposition composition) {
+			RepositoryConfigurationSource configurationSource) {
+
 		super(AotContext.from(beanFactory, new StandardEnvironment()));
 
-		this.repositoryInterface = repositoryInterface;
-
 		RepositoryMetadata metadata = AnnotationRepositoryMetadata.getMetadata(repositoryInterface);
-
 		RepositoryComposition.RepositoryFragments fragments = MongoRepositoryFragmentsContributor.DEFAULT
 				.describe(metadata);
 
 		this.repositoryInformation = new AotRepositoryInformation(metadata, SimpleMongoRepository.class,
 				fragments.stream().toList());
+		this.configurationSource = configurationSource;
 	}
 
 	@Override
@@ -65,12 +62,7 @@ public class TestMongoAotRepositoryContext extends AotRepositoryContextSupport {
 
 	@Override
 	public RepositoryConfigurationSource getConfigurationSource() {
-		return null;
-	}
-
-	@Override
-	public Set<String> getBasePackages() {
-		return Set.of(repositoryInterface.getPackageName());
+		return configurationSource;
 	}
 
 	@Override

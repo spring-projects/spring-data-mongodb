@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.repository.aot;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import org.mockito.Mockito;
+
 import org.springframework.aot.test.generate.TestGenerationContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -27,12 +29,26 @@ import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.DefaultBeanNameGenerator;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.test.tools.TestCompiler;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
+import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
@@ -53,23 +69,54 @@ import org.springframework.util.ReflectionUtils;
 public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProcessor {
 
 	private final Class<?> repositoryInterface;
+	private final RepositoryConfigurationSource configSource;
 	private final boolean registerFragmentFacade;
 
 	public AotFragmentTestConfigurationSupport(Class<?> repositoryInterface) {
-		this(repositoryInterface, true);
+		this(repositoryInterface, SampleConfiguration.class, true);
+	}
+
+	public AotFragmentTestConfigurationSupport(Class<?> repositoryInterface, Class<?> configClass) {
+		this(repositoryInterface, configClass, true);
 	}
 
 	public AotFragmentTestConfigurationSupport(Class<?> repositoryInterface, boolean registerFragmentFacade) {
+		this(repositoryInterface, SampleConfiguration.class, registerFragmentFacade);
+	}
+
+	public AotFragmentTestConfigurationSupport(Class<?> repositoryInterface, Class<?> configClass,
+			boolean registerFragmentFacade) {
 
 		this.repositoryInterface = repositoryInterface;
 		this.registerFragmentFacade = registerFragmentFacade;
+		this.configSource = new AnnotationRepositoryConfigurationSource(AnnotationMetadata.introspect(configClass),
+				EnableMongoRepositories.class, new DefaultResourceLoader(), new StandardEnvironment(),
+				Mockito.mock(BeanDefinitionRegistry.class), DefaultBeanNameGenerator.INSTANCE);
+	}
+
+	@Bean
+	MongoCustomConversions customConversions() {
+		return MongoCustomConversions.create(adapter -> adapter.useSpringDataJavaTimeCodecs());
+	}
+
+	@Bean
+	MongoMappingContext mongoMappingContext(MongoCustomConversions conversions) {
+		MongoMappingContext context = new MongoMappingContext();
+		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		return context;
+	}
+
+	@Bean
+	MongoConverter mongoConverter(MongoMappingContext context, MongoCustomConversions conversions) {
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
+		converter.setCustomConversions(conversions);
+		return converter;
 	}
 
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 
-		TestMongoAotRepositoryContext repositoryContext = new TestMongoAotRepositoryContext(beanFactory,
-				repositoryInterface, null);
+		TestMongoAotRepositoryContext repositoryContext = getRepositoryContext(beanFactory);
 		TestGenerationContext generationContext = new TestGenerationContext(repositoryInterface);
 
 		new MongoRepositoryContributor(repositoryContext).contribute(generationContext);
@@ -99,6 +146,10 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 		}
 
 		beanFactory.registerSingleton("generationContext", generationContext);
+	}
+
+	public TestMongoAotRepositoryContext getRepositoryContext(ConfigurableListableBeanFactory beanFactory) {
+		return new TestMongoAotRepositoryContext(beanFactory, repositoryInterface, configSource);
 	}
 
 	private Object getFragmentFacadeProxy(Object fragment) {
@@ -155,6 +206,12 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 		public MethodNotImplementedException(String message) {
 			super(message);
 		}
+	}
+
+	@EnableMongoRepositories(considerNestedRepositories = true, includeFilters = {
+			@ComponentScan.Filter(classes = SampleConfiguration.class, type = FilterType.ASSIGNABLE_TYPE) })
+	public static class SampleConfiguration {
+
 	}
 
 }
