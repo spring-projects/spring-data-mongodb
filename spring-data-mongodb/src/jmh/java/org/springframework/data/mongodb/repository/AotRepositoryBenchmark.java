@@ -29,17 +29,15 @@ import org.springframework.core.test.tools.TestCompiler;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.microbenchmark.AbstractMicrobenchmark;
+import org.springframework.data.mongodb.repository.aot.AotFragmentTestConfigurationSupport;
 import org.springframework.data.mongodb.repository.aot.MongoRepositoryContributor;
 import org.springframework.data.mongodb.repository.aot.TestMongoAotRepositoryContext;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
-import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
-import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryComposition;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
-import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 import com.mongodb.client.MongoClient;
@@ -57,11 +55,10 @@ public class AotRepositoryBenchmark extends AbstractMicrobenchmark {
 	public static class BenchmarkParameters {
 
 		public static Class<?> aot;
-		public static TestMongoAotRepositoryContext repositoryContext = new TestMongoAotRepositoryContext(
-				new DefaultListableBeanFactory(),
-				SmallerPersonRepository.class,
-				RepositoryComposition.of(RepositoryFragment.structural(SimpleMongoRepository.class),
-						RepositoryFragment.structural(QuerydslMongoPredicateExecutor.class)));
+		public static AotFragmentTestConfigurationSupport config = new AotFragmentTestConfigurationSupport(
+				SmallerPersonRepository.class);
+		public static DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+		public static TestMongoAotRepositoryContext repositoryContext = config.getRepositoryContext(beanFactory);
 
 		MongoClient mongoClient;
 		MongoTemplate mongoTemplate;
@@ -76,14 +73,14 @@ public class AotRepositoryBenchmark extends AbstractMicrobenchmark {
 
 			if (this.aot == null) {
 
-				TestGenerationContext generationContext = new TestGenerationContext(PersonRepository.class);
-
+				TestGenerationContext generationContext = new TestGenerationContext(SmallerPersonRepository.class);
 				new MongoRepositoryContributor(repositoryContext).contribute(generationContext);
+				generationContext.writeGeneratedContent();
 
 				TestCompiler.forSystem().withCompilerOptions("-parameters").with(generationContext).compile(compiled -> {
-
 					try {
-						this.aot = compiled.getClassLoader().loadClass(SmallerPersonRepository.class.getName() + "Impl__Aot");
+						this.aot = compiled.getClassLoader()
+								.loadClass(AotFragmentTestConfigurationSupport.getAotImplFragmentName(SmallerPersonRepository.class));
 					} catch (Exception e) {
 						throw new RuntimeException(e);
 					}
