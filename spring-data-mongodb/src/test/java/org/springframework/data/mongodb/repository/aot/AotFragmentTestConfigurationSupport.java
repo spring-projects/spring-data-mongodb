@@ -123,8 +123,7 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 		generationContext.writeGeneratedContent();
 
 		AbstractBeanDefinition aotGeneratedRepository = BeanDefinitionBuilder
-				.genericBeanDefinition(
-						repositoryInterface.getPackageName() + "." + repositoryInterface.getSimpleName() + "Impl__AotRepository") //
+				.genericBeanDefinition(getAotImplFragmentName(repositoryInterface)) //
 				.addConstructorArgValue(new RuntimeBeanReference(MongoOperations.class)) //
 				.addConstructorArgValue(getCreationContext(repositoryContext)).getBeanDefinition();
 
@@ -199,6 +198,10 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 				return projectionFactory.get();
 			}
 		};
+	}
+
+	public static String getAotImplFragmentName(Class<?> repositoryInterface) {
+		return repositoryInterface.getPackageName() + "." + repositoryInterface.getSimpleName() + "Impl__AotRepository";
 	}
 
 	public static class MethodNotImplementedException extends RuntimeException {
