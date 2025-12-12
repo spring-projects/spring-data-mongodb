@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>5.1.0-SNAPSHOT</version>
+		<version>5.1.0-5100-geojson-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -233,6 +233,12 @@
 			<artifactId>jackson-databind</artifactId>
 			<optional>true</optional>
 		</dependency>
+
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <optional>true</optional>
+        </dependency>
 
 		<dependency>
 			<groupId>nl.jqno.equalsverifier</groupId>

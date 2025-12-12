@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,45 +17,42 @@ package org.springframework.data.mongodb.core.geo;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.IOException;
+import tools.jackson.databind.json.JsonMapper;
+
 import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.geo.Point;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
- * Tests for the {@link GeoJsonModule}
+ * Tests for the {@link GeoJsonModule}.
  *
- * @author Christoph Strobl
+ * @author Jens Schauder
  */
-class GeoJsonModuleUnitTests {
+class GeoJsonJackson3ModuleUnitTests {
 
-	ObjectMapper mapper;
+	JsonMapper mapper;
 
 	@BeforeEach
 	void setUp() {
 
-		mapper = new ObjectMapper();
-		mapper.registerModule(new GeoJsonModule());
+		mapper = JsonMapper.builder()
+				.addModule(new GeoJsonJackson3Module.Serializers())
+				.addModule(new GeoJsonJackson3Module.Deserializers())
+				.build();
 	}
 
-	@Test // DATAMONGO-1181
-	void shouldDeserializeJsonPointCorrectly() throws JsonParseException, JsonMappingException, IOException {
+	@Test // GH-5100
+	void shouldDeserializeJsonPointCorrectly() {
 
 		String json = "{ \"type\": \"Point\", \"coordinates\": [10.0, 20.0] }";
 
 		assertThat(mapper.readValue(json, GeoJsonPoint.class)).isEqualTo(new GeoJsonPoint(10D, 20D));
 	}
 
-	@Test // DATAMONGO-1181
-	void shouldDeserializeGeoJsonLineStringCorrectly()
-			throws JsonParseException, JsonMappingException, IOException {
+	@Test // GH-5100
+	void shouldDeserializeGeoJsonLineStringCorrectly() {
 
 		String json = "{ \"type\": \"LineString\", \"coordinates\": [ [10.0, 20.0], [30.0, 40.0], [50.0, 60.0] ]}";
 
@@ -63,9 +60,8 @@ class GeoJsonModuleUnitTests {
 				.isEqualTo(new GeoJsonLineString(Arrays.asList(new Point(10, 20), new Point(30, 40), new Point(50, 60))));
 	}
 
-	@Test // DATAMONGO-1181
-	void shouldDeserializeGeoJsonMultiPointCorrectly()
-			throws JsonParseException, JsonMappingException, IOException {
+	@Test // GH-5100
+	void shouldDeserializeGeoJsonMultiPointCorrectly() {
 
 		String json = "{ \"type\": \"MultiPoint\", \"coordinates\": [ [10.0, 20.0], [30.0, 40.0], [50.0, 60.0] ]}";
 
@@ -73,10 +69,9 @@ class GeoJsonModuleUnitTests {
 				.isEqualTo(new GeoJsonMultiPoint(Arrays.asList(new Point(10, 20), new Point(30, 40), new Point(50, 60))));
 	}
 
-	@Test // DATAMONGO-1181
+	@Test // GH-5100
 	@SuppressWarnings("unchecked")
-	void shouldDeserializeGeoJsonMultiLineStringCorrectly()
-			throws JsonParseException, JsonMappingException, IOException {
+	void shouldDeserializeGeoJsonMultiLineStringCorrectly() {
 
 		String json = "{ \"type\": \"MultiLineString\", \"coordinates\": [ [ [10.0, 20.0], [30.0, 40.0] ], [ [50.0, 60.0] , [70.0, 80.0] ] ]}";
 
@@ -84,8 +79,8 @@ class GeoJsonModuleUnitTests {
 				Arrays.asList(new Point(10, 20), new Point(30, 40)), Arrays.asList(new Point(50, 60), new Point(70, 80))));
 	}
 
-	@Test // DATAMONGO-1181
-	void shouldDeserializeGeoJsonPolygonCorrectly() throws JsonParseException, JsonMappingException, IOException {
+	@Test // GH-5100
+	void shouldDeserializeGeoJsonPolygonCorrectly() {
 
 		String json = "{ \"type\": \"Polygon\", \"coordinates\": [ [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0] ] ]}";
 
@@ -93,9 +88,8 @@ class GeoJsonModuleUnitTests {
 				Arrays.asList(new Point(100, 0), new Point(101, 0), new Point(101, 1), new Point(100, 1), new Point(100, 0))));
 	}
 
-	@Test // DATAMONGO-1181
-	void shouldDeserializeGeoJsonMultiPolygonCorrectly()
-			throws JsonParseException, JsonMappingException, IOException {
+	@Test // GH-5100
+	void shouldDeserializeGeoJsonMultiPolygonCorrectly() {
 
 		String json = "{ \"type\": \"Polygon\", \"coordinates\": ["
 				+ "[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],"
