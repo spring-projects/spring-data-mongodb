@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.domain.Sort.Direction.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,13 +26,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.mongodb.MongoNamespace;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.bulk.ClientNamespacedInsertOneModel;
+import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
+import com.mongodb.internal.client.model.bulk.ClientWriteModel;
+import com.mongodb.internal.client.model.bulk.ConcreteClientInsertOneModel;
+import com.mongodb.internal.client.model.bulk.ConcreteClientNamespacedInsertOneModel;
+import com.mongodb.internal.operation.ClientBulkWriteOperation;
+import org.bson.BsonBoolean;
+import org.bson.BsonInt32;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
@@ -44,6 +55,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -52,6 +64,7 @@ import org.springframework.data.util.Pair;
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 
 /**
@@ -65,6 +78,8 @@ import com.mongodb.client.MongoCollection;
 public class DefaultBulkOperationsIntegrationTests {
 
 	static final String COLLECTION_NAME = "bulk_ops";
+
+	@Client static MongoClient mongoClient;
 
 	@Template(initialEntitySet = BaseDoc.class) //
 	static MongoTestTemplate operations;
@@ -192,7 +207,8 @@ public class DefaultBulkOperationsIntegrationTests {
 		BulkWriteResult result = bulkOps.execute();
 
 		assertThat(result.getModifiedCount()).isEqualTo(1);
-		assertThat(operations.<Long>execute(COLLECTION_NAME, collection -> collection.countDocuments(new org.bson.Document("value", "value3")))).isOne();
+		assertThat(operations.<Long> execute(COLLECTION_NAME,
+				collection -> collection.countDocuments(new org.bson.Document("value", "value3")))).isOne();
 	}
 
 	@Test // DATAMONGO-934
@@ -210,7 +226,8 @@ public class DefaultBulkOperationsIntegrationTests {
 		BulkWriteResult result = bulkOps.execute();
 
 		assertThat(result.getModifiedCount()).isEqualTo(2);
-		assertThat(operations.<Long>execute(COLLECTION_NAME, collection -> collection.countDocuments(new org.bson.Document("value", "value3")))).isEqualTo(2);
+		assertThat(operations.<Long> execute(COLLECTION_NAME,
+				collection -> collection.countDocuments(new org.bson.Document("value", "value3")))).isEqualTo(2);
 	}
 
 	@Test // DATAMONGO-934
@@ -332,7 +349,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		insertSomeDocuments();
 
 		BulkWriteResult result = createBulkOps(BulkMode.ORDERED, BaseDocWithRenamedField.class)
-			.updateOne(new Query().with(Sort.by(DESC, "renamedField")), new Update().set("bsky", "altnps")).execute();
+				.updateOne(new Query().with(Sort.by(DESC, "renamedField")), new Update().set("bsky", "altnps")).execute();
 
 		assertThat(result.getModifiedCount()).isOne();
 
@@ -350,12 +367,51 @@ public class DefaultBulkOperationsIntegrationTests {
 		target.value = "replacement";
 
 		BulkWriteResult result = createBulkOps(BulkMode.ORDERED, BaseDocWithRenamedField.class)
-			.replaceOne(new Query().with(Sort.by(DESC, "renamedField")), target).execute();
+				.replaceOne(new Query().with(Sort.by(DESC, "renamedField")), target).execute();
 
 		assertThat(result.getModifiedCount()).isOne();
 
 		Document raw = operations.execute(COLLECTION_NAME, col -> col.find(new Document("_id", "4")).first());
 		assertThat(raw).containsEntry("value", target.value);
+	}
+
+	@Test // GH-5087
+	void exploreItOnClient() {
+
+		ClientBulkWriteOperation op = null;
+		op.execute()
+
+		mongoClient.getDatabase("test").getCollection("pizzas").drop();
+		mongoClient.getDatabase("test").getCollection("pizzaOrders").drop();
+
+		// command:
+		MongoDatabase db = operations.getDb();
+		MongoTemplate template = operations;
+
+		Document commandDocument = new Document("bulkWrite", new BsonInt32(1))
+			.append("errorsOnly", BsonBoolean.TRUE)
+			.append("ordered", BsonBoolean.TRUE);
+		List<Document> bulkOperations = new ArrayList<>();
+		bulkOperations.add(Document.parse("{ insert: 0, document: { _id: 5, type: 'sausage', size: 'small', price: 12 } }"));
+		bulkOperations.add(Document.parse("{ insert: 1, document: { _id: 4, type: 'vegan cheese', number: 16 } }"));
+		commandDocument.put("ops", bulkOperations);
+
+		List<Document> namespaceInfo = new ArrayList<>();
+		namespaceInfo.add(Document.parse("{ns: '%s.pizzas'}".formatted(template.getDb().getName())));
+		namespaceInfo.add(Document.parse("{ns: '%s.pizzaOrders'}".formatted(template.getDb().getName())));
+		commandDocument.put("nsInfo", namespaceInfo);
+
+		template.getMongoDatabaseFactory().getMongoDatabase("admin").runCommand(commandDocument);
+	}
+
+	@Test
+	void hackSomePotentialApi() {
+
+		MongoNamespace pizzasNamespace = new MongoNamespace(operations.getDb().getName(), "pizzas");
+
+		ConcreteClientNamespacedInsertOneModel insert1 = new ConcreteClientNamespacedInsertOneModel(pizzasNamespace, new ConcreteClientInsertOneModel(Document.parse("{ insert: 0, document: { _id: 5, type: 'sausage', size: 'small', price: 12 } }")));
+		insert1.getNamespace();
+		insert1.getModel();
 	}
 
 	private void testUpdate(BulkMode mode, boolean multi, int expectedUpdates) {
@@ -426,7 +482,8 @@ public class DefaultBulkOperationsIntegrationTests {
 	}
 
 	private static Stream<Arguments> upsertArguments() {
-		return Stream.of(Arguments.of(set("value", "value2")), Arguments.of(AggregationUpdate.update().set("value").toValue("value2")));
+		return Stream.of(Arguments.of(set("value", "value2")),
+				Arguments.of(AggregationUpdate.update().set("value").toValue("value2")));
 	}
 
 	private static BaseDoc newDoc(String id) {
@@ -459,7 +516,6 @@ public class DefaultBulkOperationsIntegrationTests {
 
 	static class BaseDocWithRenamedField extends BaseDoc {
 
-		@Field("rn_f")
-		String renamedField;
+		@Field("rn_f") String renamedField;
 	}
 }
