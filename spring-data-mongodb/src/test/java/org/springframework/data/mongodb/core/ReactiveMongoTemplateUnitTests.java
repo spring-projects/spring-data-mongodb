@@ -1668,6 +1668,21 @@ public class ReactiveMongoTemplateUnitTests {
 
 	}
 
+	@Test // GH-5069
+	void changeStreamOptionShowExpandedEventsShouldBeApplied() {
+
+		when(factory.getMongoDatabase(anyString())).thenReturn(Mono.just(db));
+		when(collection.watch(any(Class.class))).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.showExpandedEvents(anyBoolean())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.fullDocument(any())).thenReturn(changeStreamPublisher);
+
+		ChangeStreamOptions options = ChangeStreamOptions.builder()
+				.showExpandedEvents(true).build();
+		template.changeStream("database", "collection", options, Object.class).subscribe();
+
+		verify(changeStreamPublisher).showExpandedEvents(true);
+	}
+
 	@Test // GH-4462
 	void replaceShouldUseCollationWhenPresent() {
 
