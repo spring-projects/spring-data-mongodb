@@ -22,12 +22,12 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.aot.AotPlaceholders.AsListPlaceholder;
 import org.springframework.data.mongodb.repository.aot.AotPlaceholders.RegexPlaceholder;
 import org.springframework.util.StringUtils;
 
@@ -83,7 +83,7 @@ class AotStringQuery extends Query {
 			return false;
 		}
 
-		return this.placeholders.get(index) instanceof RegexPlaceholder;
+		return obtainAndPotentiallyUnwrapPlaceholder(index) instanceof RegexPlaceholder;
 	}
 
 	@Nullable
@@ -92,7 +92,21 @@ class AotStringQuery extends Query {
 			return null;
 		}
 
-		return this.placeholders.get(index) instanceof RegexPlaceholder rgp ? rgp.regexOptions() : null;
+		Object placeholderValue = obtainAndPotentiallyUnwrapPlaceholder(index);
+		return placeholderValue instanceof RegexPlaceholder rgp ? rgp.regexOptions() : null;
+	}
+
+	@Nullable Object obtainAndPotentiallyUnwrapPlaceholder(int index) {
+
+		if (this.placeholders.isEmpty()) {
+			return null;
+		}
+
+		Object placeholerValue = this.placeholders.get(index);
+		if (placeholerValue instanceof AsListPlaceholder asListPlaceholder) {
+			placeholerValue = asListPlaceholder.placeholder();
+		}
+		return placeholerValue;
 	}
 
 	@Override
