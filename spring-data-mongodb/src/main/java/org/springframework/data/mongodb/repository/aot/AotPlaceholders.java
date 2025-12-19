@@ -112,6 +112,26 @@ class AotPlaceholders {
 	}
 
 	/**
+	 * Create a placeholder that indicates the value should be treated as list.
+	 *
+	 * @param index zero-based index referring to the bindable method parameter.
+	 * @return new instance of {@link Placeholder}.
+	 */
+	static Placeholder asList(int index) {
+		return asList(indexed(index));
+	}
+
+	/**
+	 * Create a placeholder that indicates the wrapped placeholder should be treated as list.
+	 *
+	 * @param source the target placeholder
+	 * @return new instance of {@link Placeholder}.
+	 */
+	static Placeholder asList(Placeholder source) {
+		return new AsListPlaceholder(source);
+	}
+
+	/**
 	 * A placeholder expression used when rending queries to JSON.
 	 *
 	 * @since 5.0
@@ -292,6 +312,19 @@ class AotPlaceholders {
 		@Override
 		public String toString() {
 			return getValue();
+		}
+	}
+
+	record AsListPlaceholder(Placeholder placeholder) implements Placeholder {
+
+		@Override
+		public String toString() {
+			return getValue();
+		}
+
+		@Override
+		public String getValue() {
+			return "[" + placeholder.getValue() + "]";
 		}
 	}
 
