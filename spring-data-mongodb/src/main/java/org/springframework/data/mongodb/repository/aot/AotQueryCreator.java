@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -48,6 +47,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.VectorSearch;
+import org.springframework.data.mongodb.repository.aot.AotPlaceholders.AsListPlaceholder;
 import org.springframework.data.mongodb.repository.aot.AotPlaceholders.Placeholder;
 import org.springframework.data.mongodb.repository.aot.AotPlaceholders.RegexPlaceholder;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
@@ -130,6 +130,10 @@ record AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext
 
 			if (param instanceof RegexPlaceholder) {
 				return criteria.raw("$regex", param);
+			}
+
+			if (param instanceof AsListPlaceholder asListPlaceholder && !property.isCollectionLike()) {
+				return super.createContainingCriteria(part, property, criteria, asListPlaceholder.placeholder());
 			}
 
 			return super.createContainingCriteria(part, property, criteria, param);
@@ -226,7 +230,24 @@ record AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext
 															partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS)
 																	|| partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.WHEN_POSSIBLE) ? "i"
 																			: null));
-						} else {
+						} else if (partForIndex != null && (partForIndex.getType().equals(Type.IN)
+								|| partForIndex.getType().equals(Type.NOT_IN) || partForIndex.getType().equals(Type.CONTAINING)
+								|| partForIndex.getType().equals(Type.NOT_CONTAINING))) {
+
+							if (partForIndex.getProperty().isCollection()
+									&& !TypeInformation.of(parameter.getType()).isCollectionLike()) {
+								if (partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS)) {
+									placeholders.add(parameter.getIndex(),
+											AotPlaceholders.asList(AotPlaceholders.regex(parameter.getIndex(), "i")));
+								} else {
+									placeholders.add(parameter.getIndex(), AotPlaceholders.asList(parameter.getIndex()));
+								}
+							} else {
+								placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
+							}
+						}
+
+						else {
 							placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
 						}
 					}

@@ -195,9 +195,9 @@ class QueryBlocks {
 					String regexOptions = source.getQuery().getRegexOptions(i);
 
 					if (StringUtils.hasText(regexOptions)) {
-						formatted.add(CodeBlock.of("toRegex($L)", parameterName));
-					} else {
 						formatted.add(CodeBlock.of("toRegex($L, $S)", parameterName, regexOptions));
+					} else {
+						formatted.add(CodeBlock.of("toRegex($L)", parameterName));
 					}
 				} else {
 					formatted.add(CodeBlock.of("$L", parameterName));
