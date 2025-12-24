@@ -1063,6 +1063,20 @@ public interface MongoOperations extends FluentMongoOperations {
 			Class<T> entityClass, String collectionName);
 
 	/**
+	 * Get the next counter value atomically using MongoDB's findAndModify operation.
+	 * <p>
+	 * Counter starts at 1 on first call and increments by 1 on each subsequent call.
+	 * Uses $inc with upsert to ensure atomic behavior even under concurrent access.
+	 *
+	 * @param counterName the name of the counter, must not be {@literal null}.
+	 * @param collectionName the collection to store counter documents, must not be {@literal null}.
+	 * @return the next counter value.
+	 * @since 4.5
+	 * @see <a href="https://github.com/spring-projects/spring-data-mongodb/issues/4823">GH-4823</a>
+	 */
+	long getNextCounterValue(String counterName, String collectionName);
+
+	/**
 	 * Triggers
 	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement}

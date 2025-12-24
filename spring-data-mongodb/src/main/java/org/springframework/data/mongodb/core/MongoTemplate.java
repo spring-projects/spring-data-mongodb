@@ -209,6 +209,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private final PropertyOperations propertyOperations;
 	private final QueryOperations queryOperations;
 	private final EntityLifecycleEventDelegate eventDelegate;
+	private final MongoCounterSupport counterSupport;
 
 	private @Nullable WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -270,6 +271,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
 				mongoDbFactory);
 		this.eventDelegate = new EntityLifecycleEventDelegate();
+		this.counterSupport = new MongoCounterSupport(this);
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -307,6 +309,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.propertyOperations = that.propertyOperations;
 		this.queryOperations = that.queryOperations;
 		this.eventDelegate = that.eventDelegate;
+		this.counterSupport = that.counterSupport;
 	}
 
 	/**
@@ -1175,6 +1178,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return doFindAndModify(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse, resultConverter);
+	}
+
+	@Override
+	public long getNextCounterValue(String counterName, String collectionName) {
+		return counterSupport.getNextSequenceValue(counterName, collectionName);
 	}
 
 	@Override
