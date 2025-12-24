@@ -4099,6 +4099,39 @@ public class MongoTemplateTests {
 		assertThat(loaded.mapValue).isEqualTo(sourceMap);
 	}
 
+	@Test // GH-4823
+	void shouldGetNextCounterValue() {
+
+		String countersCollection = "counters";
+		MongoTestUtils.flushCollection(DB_NAME, countersCollection, client);
+
+		long value1 = template.getNextCounterValue("order-id", countersCollection);
+		long value2 = template.getNextCounterValue("order-id", countersCollection);
+		long value3 = template.getNextCounterValue("order-id", countersCollection);
+
+		assertThat(value1).isEqualTo(1L);
+		assertThat(value2).isEqualTo(2L);
+		assertThat(value3).isEqualTo(3L);
+	}
+
+	@Test // GH-4823
+	void shouldMaintainIndependentCountersInDifferentCollections() {
+
+		String collectionA = "collection-a";
+		String collectionB = "collection-b";
+
+		MongoTestUtils.flushCollection(DB_NAME, collectionA, client);
+		MongoTestUtils.flushCollection(DB_NAME, collectionB, client);
+
+		long counter1 = template.getNextCounterValue("counter-1", collectionA);
+		long counter2 = template.getNextCounterValue("counter-1", collectionB);
+		long counter1Again = template.getNextCounterValue("counter-1", collectionA);
+
+		assertThat(counter1).isEqualTo(1L);
+		assertThat(counter2).isEqualTo(1L);
+		assertThat(counter1Again).isEqualTo(2L);
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
