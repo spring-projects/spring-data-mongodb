@@ -1,2 +1,3 @@
 org.springframework.data.web.config.SpringDataJacksonModules=org.springframework.data.mongodb.config.GeoJsonConfiguration
+org.springframework.data.web.config.SpringDataJackson3Modules=org.springframework.data.mongodb.config.GeoJsonJackson3Configuration
 org.springframework.data.repository.core.support.RepositoryFactorySupport=org.springframework.data.mongodb.repository.support.MongoRepositoryFactory
