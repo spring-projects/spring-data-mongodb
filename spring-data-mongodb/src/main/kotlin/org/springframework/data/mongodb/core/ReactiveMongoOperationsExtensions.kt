@@ -191,6 +191,15 @@ inline fun <reified T : Any> ReactiveMongoOperations.geoNear(near: NearQuery, co
 /**
  * Extension for [ReactiveMongoOperations.findAndModify] leveraging reified type parameters.
  *
+ * @author Yejun Ho
+ * @since 5.1
+ */
+inline fun <reified T : Any> ReactiveMongoOperations.findAndModify(query: Query, update: UpdateDefinition, collectionName: String? = null): Mono<T> =
+	if (collectionName != null) findAndModify(query, update, T::class.java, collectionName) else findAndModify(query, update, T::class.java)
+
+/**
+ * Extension for [ReactiveMongoOperations.findAndModify] leveraging reified type parameters.
+ *
  * @author Sebastien Deleuze
  * @since 2.0
  */

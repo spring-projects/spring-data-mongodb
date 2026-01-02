@@ -258,6 +258,16 @@ inline fun <reified T : Any, reified E : Any> MongoOperations.findDistinct(query
 /**
  * Extension for [MongoOperations.findAndModify] leveraging reified type parameters.
  *
+ * @author Yejun Ho
+ * @since 5.1
+ */
+inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: UpdateDefinition, collectionName: String? = null): T? =
+	if (collectionName != null) findAndModify(query, update, T::class.java, collectionName)
+	else findAndModify(query, update, T::class.java)
+
+/**
+ * Extension for [MongoOperations.findAndModify] leveraging reified type parameters.
+ *
  * @author Sebastien Deleuze
  * @since 2.0
  */
