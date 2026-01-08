@@ -105,12 +105,14 @@ class CriteriaUnitTests {
 
 	@Test
 	void testChainedCriteria() {
+
 		Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}");
 	}
 
 	@Test
 	void testCriteriaWithMultipleConditionsForSameKey() {
+
 		Criteria c = new Criteria("name").gte("M").and("name").ne("A");
 
 		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class).isThrownBy(c::getCriteriaObject);
@@ -458,12 +460,17 @@ class CriteriaUnitTests {
 	}
 
 	@Test // GH-3414
-	void shouldEqualForSamePatternAndFlags() {
+	void shouldEqualOnlyForSamePatternAndFlags() {
 
 		Criteria left = new Criteria("field").regex("foo", "iu");
-		Criteria right = new Criteria("field").regex("foo");
+		Criteria same = new Criteria("field").regex("foo", "iu");
 
-		assertThat(left).isNotEqualTo(right);
+		Criteria noOption = new Criteria("field").regex("foo");
+		Criteria differentRegex = new Criteria("field").regex("fox", "iu");
+
+		assertThat(left).isNotEqualTo(noOption);
+		assertThat(left).isNotEqualTo(differentRegex);
+		assertThat(left).isEqualTo(same);
 	}
 
 	@Test // GH-3414
@@ -475,5 +482,32 @@ class CriteriaUnitTests {
 				new Criteria("bar").regex("value"));
 
 		assertThat(left).isEqualTo(right);
+	}
+
+	@Test // GH-5135
+	void equalsConsidersPartialCriteria() {
+
+		Criteria criteria = new Criteria("alpha").is("a");
+		Criteria partialCriteria = new Criteria("alpha");
+
+		assertThat(criteria).isNotEqualTo(partialCriteria);
+	}
+
+	@Test // GH-5135
+	void equalsConsidersPartialCriteriaChain() {
+
+		Criteria criteria = new Criteria("alpha").is("a").and("beta").is("b");
+		Criteria partialCriteria = new Criteria("alpha").is("a").and("beta");
+
+		assertThat(criteria).isNotEqualTo(partialCriteria);
+	}
+
+	@Test // GH-5135
+	void criteriaIsImmutable() {
+
+		Criteria base = new Criteria("alpha").is("a");
+		Criteria mutated = base.and("beta");
+
+		assertThat(base).isNotEqualTo(mutated);
 	}
 }

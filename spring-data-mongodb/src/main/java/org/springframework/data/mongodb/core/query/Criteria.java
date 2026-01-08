@@ -35,6 +35,8 @@ import org.bson.Document;
 import org.bson.types.Binary;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.data.core.PropertyReference;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -91,8 +93,13 @@ public class Criteria implements CriteriaDefinition {
 		this.key = key;
 	}
 
+	public Criteria(TypedPropertyPath<?,?> propertyReference) {
+		this(propertyReference.toDotPath());
+	}
+
 	protected Criteria(List<Criteria> criteriaChain, String key) {
-		this.criteriaChain = criteriaChain;
+
+		this.criteriaChain = new ArrayList<>(criteriaChain);
 		this.criteriaChain.add(this);
 		this.key = key;
 	}
@@ -105,6 +112,10 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public static Criteria where(String key) {
 		return new Criteria(key);
+	}
+
+	public static Criteria where(TypedPropertyPath<?,?> propertyReference) {
+		return where(propertyReference.toDotPath());
 	}
 
 	/**
@@ -189,6 +200,16 @@ public class Criteria implements CriteriaDefinition {
 	@Contract("_ -> new")
 	public Criteria and(String key) {
 		return new Criteria(this.criteriaChain, key);
+	}
+
+	/**
+	 * Static factory method to create a Criteria using the provided key
+	 *
+	 * @return new instance of {@link Criteria}.
+	 */
+	@Contract("_ -> new")
+	public Criteria and(PropertyReference<?,?> propertyReference) {
+		return and(propertyReference.getName());
 	}
 
 	/**
