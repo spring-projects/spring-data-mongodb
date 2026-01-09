@@ -162,6 +162,27 @@ class ReactiveMongoOperationsExtensionsTests {
 		verify { operations.findById(id, First::class.java, collectionName) }
 	}
 
+	@Test // GH-5128
+	fun `findAndModify(Query, Update) with reified type parameter extension should call its Java counterpart`() {
+
+		val query = mockk<Query>()
+		val update = mockk<Update>()
+
+		operations.findAndModify<First>(query, update)
+		verify { operations.findAndModify(query, update, First::class.java) }
+	}
+
+	@Test // GH-5128
+	fun `findAndModify(Query, Update, String) with reified type parameter extension should call its Java counterpart`() {
+
+		val collectionName = "foo"
+		val query = mockk<Query>()
+		val update = mockk<Update>()
+
+		operations.findAndModify<First>(query, update, collectionName)
+		verify { operations.findAndModify(query, update, First::class.java, collectionName) }
+	}
+
 	@Test // DATAMONGO-1689
 	fun `findAndModify(Query, Update, FindAndModifyOptions) with reified type parameter extension should call its Java counterpart`() {
 
