@@ -1,0 +1,144 @@
+= Spring Data MongoDB image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-mongodb%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-mongodb/] image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A["Revved up by Develocity", link="https://ge.spring.io/scans?search.rootProjectNames=Spring Data MongoDB"]
+
+The primary goal of the https://spring.io/projects/spring-data[Spring Data] project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
+
+The Spring Data project aims to provide a familiar and consistent Spring-based programming model for new datastores while retaining store-specific features and capabilities.
+The Spring Data MongoDB project provides integration with the MongoDB document database.
+Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB `+Document+` and easily writing a repository style data access layer.
+
+include::https://raw.githubusercontent.com/spring-projects/spring-data-build/refs/heads/main/etc/readme/code-of-conduct.adoc[]
+
+[[getting-started]]
+== Getting Started
+
+Here is a quick teaser of an application using Spring Data Repositories in Java:
+
+[source,java]
+----
+public interface PersonRepository extends CrudRepository<Person, Long> {
+
+  List<Person> findByLastname(String lastname);
+
+  List<Person> findByFirstnameLike(String firstname);
+}
+
+@Service
+public class MyService {
+
+  private final PersonRepository repository;
+
+  public MyService(PersonRepository repository) {
+    this.repository = repository;
+  }
+
+  public void doWork() {
+
+    repository.deleteAll();
+
+    Person person = new Person();
+    person.setFirstname("Oliver");
+    person.setLastname("Drotbohm");
+    repository.save(person);
+
+    List<Person> lastNameResults = repository.findByLastname("Drotbohm");
+    List<Person> firstNameResults = repository.findByFirstnameLike("Oli*");
+ }
+}
+
+@Configuration
+@EnableMongoRepositories
+class ApplicationConfig extends AbstractMongoClientConfiguration {
+
+  @Override
+  protected String getDatabaseName() {
+    return "springdata";
+  }
+}
+----
+
+include::https://raw.githubusercontent.com/spring-projects/spring-data-build/refs/heads/main/etc/readme/dependencies.adoc[]
+
+include::https://raw.githubusercontent.com/spring-projects/spring-data-build/refs/heads/main/etc/readme/upgrading-getting-help-reporting-issues.adoc[]
+
+[[guides]]
+== Guides
+
+The https://spring.io/[spring.io] site contains several guides that show how to use Spring Data step-by-step:
+
+* https://spring.io/guides/gs/accessing-data-mongodb/[Accessing Data with MongoDB] is a very basic guide that shows you how to create a simple application and how to access data using repositories.
+* https://spring.io/guides/gs/accessing-mongodb-data-rest/[Accessing MongoDB Data with REST] is a guide to creating a REST web service exposing data stored in MongoDB through repositories.
+
+include::https://raw.githubusercontent.com/spring-projects/spring-data-build/refs/heads/main/etc/readme/examples.adoc[]
+
+[[building-from-source]]
+== Building from Source
+
+include::https://raw.githubusercontent.com/spring-projects/spring-data-build/refs/heads/main/etc/readme/building-source-intro.adoc[]
+
+[[local-build-environment]]
+=== Local Build Environment
+
+In order to build Spring Data MongoDB, you will need to https://www.mongodb.com/try/download/community[download]
+and https://docs.mongodb.com/manual/installation/[install a MongoDB distribution] and https://www.docker.com/products/docker-desktop/[Docker].
+
+Once you have installed MongoDB, you need to start a MongoDB server. It is convenient to set an environment variable to
+your MongoDB installation directory (e.g. `MONGODB_HOME`).
+
+To run the full test suite, a https://docs.mongodb.com/manual/tutorial/deploy-replica-set/[MongoDB Replica Set]
+is required.
+
+To run the MongoDB server enter the following command from a command-line:
+
+[source,bash]
+----
+$ $MONGODB_HOME/bin/mongod --dbpath $MONGODB_HOME/runtime/data --ipv6 --port 27017 --replSet rs0
+...
+"msg":"Successfully connected to host"
+----
+
+Once the MongoDB server starts up, you should see the message (`msg`), "_Successfully connected to host_".
+
+Notice the `--dbpath` option to the `mongod` command. You can set this to anything you like, but in this case, we set
+the absolute path to a sub-directory (`runtime/data/`) under the MongoDB installation directory (in `$MONGODB_HOME`).
+
+You need to initialize the MongoDB replica set only once on the first time the MongoDB server is started.
+To initialize the replica set, start a mongo client:
+
+[source,bash]
+----
+$ $MONGODB_HOME/bin/mongo
+MongoDB server version: 8.0.0
+...
+----
+
+Then enter the following command:
+
+[source,bash]
+----
+mongo> rs.initiate({ _id: 'rs0', members: [ { _id: 0, host: '127.0.0.1:27017' } ] })
+----
+
+Finally, on UNIX-based system (for example, Linux or Mac OS X) you may need to adjust the `ulimit`.
+In case you need to, you can adjust the `ulimit` with the following command (32768 is just a recommendation):
+
+[source,bash]
+----
+$ ulimit -n 32768
+----
+
+You can use `ulimit -a` again to verify the `ulimit` for "_open files_" was set appropriately.
+
+=== Running the Build
+
+[source,bash]
+----
+ $ ./mvnw clean install
+----
+
+include::https://raw.githubusercontent.com/spring-projects/spring-data-build/refs/heads/main/etc/readme/building-source-outro.adoc[]
+
+:antora-output: spring-data-mongodb-distribution/target/site/index.html
+
+include::https://raw.githubusercontent.com/spring-projects/spring-data-build/refs/heads/main/etc/readme/building-documentation.adoc[]
+
+include::https://raw.githubusercontent.com/spring-projects/spring-data-build/refs/heads/main/etc/readme/license.adoc[]
