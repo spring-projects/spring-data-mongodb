@@ -108,6 +108,12 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 		return "$addFields";
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		AddFieldsOperation that = obj instanceof AddFieldsOperation ? (AddFieldsOperation) obj : null;
+		return that != null && this.getValueMap().equals(that.getValueMap());
+	}
+
 	/**
 	 * @author Christoph Strobl
 	 * @since 3.0
