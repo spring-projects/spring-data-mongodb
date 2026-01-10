@@ -90,6 +90,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		FullDocumentBeforeChange fullDocumentBeforeChange = null;
 		BsonTimestamp startAt = null;
 		boolean resumeAfter = true;
+		boolean showExpandedEvents = false;
 
 		if (options instanceof ChangeStreamRequest.ChangeStreamRequestOptions requestOptions) {
 
@@ -103,6 +104,10 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 					collation = aggregation.getOptions().getCollation()
 							.map(org.springframework.data.mongodb.core.query.Collation::toMongoCollation).orElse(null);
 				}
+			}
+
+			if (changeStreamOptions.getShowExpandedEvents().isPresent()) {
+				showExpandedEvents = changeStreamOptions.getShowExpandedEvents().get();
 			}
 
 			if (changeStreamOptions.getResumeToken().isPresent()) {
@@ -153,6 +158,10 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 
 		if (collation != null) {
 			iterable = iterable.collation(collation);
+		}
+
+		if (showExpandedEvents) {
+			iterable = iterable.showExpandedEvents(showExpandedEvents);
 		}
 
 		iterable = iterable.fullDocument(fullDocument);

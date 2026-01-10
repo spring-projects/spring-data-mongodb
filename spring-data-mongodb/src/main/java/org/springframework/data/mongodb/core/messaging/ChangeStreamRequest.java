@@ -243,6 +243,7 @@ public class ChangeStreamRequest<T>
 		private @Nullable String databaseName;
 		private @Nullable String collectionName;
 		private @Nullable Duration maxAwaitTime;
+		private @Nullable Boolean showExpandedEvents;
 		private @Nullable MessageListener<ChangeStreamDocument<Document>, ? super T> listener;
 		private final ChangeStreamOptionsBuilder delegate = ChangeStreamOptions.builder();
 
@@ -467,6 +468,20 @@ public class ChangeStreamRequest<T>
 			Assert.notNull(timeout, "timeout not be null");
 
 			this.maxAwaitTime = timeout;
+			return this;
+		}
+
+		/**
+		 * Set whether expanded change events (e.g. createIndexes, shardCollection) should be emitted.
+		 *
+		 * @param showExpandedEvents {@code true} to include expanded events.
+		 * @return this.
+		 */
+		@Contract("_ -> this")
+		public ChangeStreamRequestBuilder<T> showExpandedEvents(boolean showExpandedEvents) {
+
+			this.showExpandedEvents = showExpandedEvents;
+			this.delegate.showExpandedEvents(showExpandedEvents);
 			return this;
 		}
 
