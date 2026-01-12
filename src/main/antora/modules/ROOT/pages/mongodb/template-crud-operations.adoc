@@ -690,7 +690,7 @@ template.save(tmp); // throws OptimisticLockingFailureException                 
 
 Only certain CRUD operations on `MongoTemplate` do consider and alter version properties. Please consult `MongoOperations` java doc for detailed information.
 
-IMPORTANT: Optimistic Locking requires to set the `WriteConcern` to `ACKNOWLEDGED`. Otherwise `OptimisticLockingFailureException` can be silently swallowed.
+NOTE: Optimistic Locking requires write acknowledgement (a write result response) by the server. Using `WriteConcern.UNACKNOWLEDGED` can lead to silently swallowed `OptimisticLockingFailureException`.
 
 NOTE: As of Version 2.2 `MongoOperations` also includes the `@Version` property when removing an entity from the database.
 To remove a `Document` without version check use `MongoOperations#remove(Query,...)` instead of `MongoOperations#remove(Object)`.
