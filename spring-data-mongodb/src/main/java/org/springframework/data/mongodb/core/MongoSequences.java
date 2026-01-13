@@ -24,10 +24,12 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @since 5.1
  */
+// TODO: Do we want to have a MongoSequenceRegistry holding instances of sequences identified by name?
 public class MongoSequences {
 
 	private final MongoOperations mongoOperations;
 
+	// TODO: Can we operate upon the MongoDatabaseFactory or do we need MongoOperations?
 	public MongoSequences(MongoOperations mongoOperations) {
 		this.mongoOperations = mongoOperations;
 	}
@@ -43,6 +45,7 @@ public class MongoSequences {
 		return longMongoSequenceBuilder.build();
 	}
 
+	// TODO: MongoSequenceConfigurer in callback vs. MongoSequenceConfiguration
 	public interface MongoSequenceConfigurer<T> {
 
 		MongoSequenceConfigurer<T> inCollection(String collectionName);

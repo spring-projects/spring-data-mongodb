@@ -22,4 +22,6 @@ package org.springframework.data.mongodb.core;
 public interface MongoSequence<T> {
 
 	T nextValue();
+
+	// TODO: Do we need other methods eg. for Sequence recreation (drop/reset/...) or is being minimalistic here the way?
 }
