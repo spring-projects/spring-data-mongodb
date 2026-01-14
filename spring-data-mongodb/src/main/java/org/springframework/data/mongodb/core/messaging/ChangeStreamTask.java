@@ -59,6 +59,7 @@ import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Myroslav Kosinskyi
+ * @author Kyuhong Han
  * @since 2.1
  */
 class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>, Object> {

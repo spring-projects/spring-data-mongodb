@@ -24,11 +24,12 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link ChangeStreamOptions}.
  *
  * @author Mark Paluch
+ * @author Kyuhong Han
  */
-public class ChangeStreamOptionsUnitTests {
+class ChangeStreamOptionsUnitTests {
 
 	@Test // DATAMONGO-2258
-	public void shouldReportResumeAfter() {
+	void shouldReportResumeAfter() {
 
 		ChangeStreamOptions options = ChangeStreamOptions.builder().resumeAfter(new BsonDocument()).build();
 
@@ -37,7 +38,7 @@ public class ChangeStreamOptionsUnitTests {
 	}
 
 	@Test // DATAMONGO-2258
-	public void shouldReportStartAfter() {
+	void shouldReportStartAfter() {
 
 		ChangeStreamOptions options = ChangeStreamOptions.builder().startAfter(new BsonDocument()).build();
 
@@ -46,7 +47,7 @@ public class ChangeStreamOptionsUnitTests {
 	}
 
 	@Test // DATAMONGO-2258
-	public void shouldNotReportResumeStartAfter() {
+	void shouldNotReportResumeStartAfter() {
 
 		ChangeStreamOptions options = ChangeStreamOptions.empty();
 
@@ -59,6 +60,6 @@ public class ChangeStreamOptionsUnitTests {
 
 		ChangeStreamOptions options = ChangeStreamOptions.builder().showExpandedEvents(true).build();
 
-		assertThat(options.getShowExpandedEvents()).isPresent().hasValue(true);
+		assertThat(options.getShowExpandedEvents()).hasValue(true);
 	}
 }

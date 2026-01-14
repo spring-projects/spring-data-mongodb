@@ -111,6 +111,7 @@ public class ChangeStreamOptions {
 
 	/**
 	 * @return {@link Optional#empty()} if not set.
+	 * @since 5.1
 	 */
 	public Optional<Boolean> getShowExpandedEvents() {
 		return Optional.ofNullable(showExpandedEvents);
@@ -450,6 +451,7 @@ public class ChangeStreamOptions {
 		 *
 		 * @param showExpandedEvents {@code true} to include expanded events.
 		 * @return this.
+		 * @since 5.1
 		 */
 		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder showExpandedEvents(boolean showExpandedEvents) {

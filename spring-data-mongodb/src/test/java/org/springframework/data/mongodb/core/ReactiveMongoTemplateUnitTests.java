@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import reactor.core.publisher.Flux;
@@ -135,6 +134,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
  * @author Ben Foster
+ * @author Kyuhong Han
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 @ExtendWith(MockitoExtension.class)

@@ -36,8 +36,7 @@ import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 /**
  * {@link SubscriptionRequest} implementation to be used for listening to
  * <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> via a {@link MessageListenerContainer}
- * using the synchronous MongoDB Java driver.
- * <br />
+ * using the synchronous MongoDB Java driver. <br />
  * The most trivial use case is subscribing to all events of a specific {@link com.mongodb.client.MongoCollection
  * collection}
  *
@@ -93,6 +92,7 @@ import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Myroslav Kosinskyi
+ * @author Kyuhong Han
  * @since 2.1
  */
 public class ChangeStreamRequest<T>
@@ -243,7 +243,6 @@ public class ChangeStreamRequest<T>
 		private @Nullable String databaseName;
 		private @Nullable String collectionName;
 		private @Nullable Duration maxAwaitTime;
-		private @Nullable Boolean showExpandedEvents;
 		private @Nullable MessageListener<ChangeStreamDocument<Document>, ? super T> listener;
 		private final ChangeStreamOptionsBuilder delegate = ChangeStreamOptions.builder();
 
@@ -476,11 +475,11 @@ public class ChangeStreamRequest<T>
 		 *
 		 * @param showExpandedEvents {@code true} to include expanded events.
 		 * @return this.
+		 * @since 5.1
 		 */
 		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> showExpandedEvents(boolean showExpandedEvents) {
 
-			this.showExpandedEvents = showExpandedEvents;
 			this.delegate.showExpandedEvents(showExpandedEvents);
 			return this;
 		}

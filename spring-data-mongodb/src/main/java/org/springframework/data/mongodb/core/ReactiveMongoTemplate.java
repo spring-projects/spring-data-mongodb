@@ -188,6 +188,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
  * @author Florian Lüdiger
+ * @author Kyuhong Han
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {

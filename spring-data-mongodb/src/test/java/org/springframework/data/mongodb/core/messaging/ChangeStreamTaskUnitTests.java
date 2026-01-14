@@ -45,6 +45,7 @@ import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
  *
  * @author Christoph Strobl
  * @author Myroslav Kosinskyi
+ * @author Kyuhong Han
  */
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -142,7 +143,7 @@ class ChangeStreamTaskUnitTests {
 
 	@Test // GH-5069
 	void shouldApplyShowExpandedEventsToChangeStream() {
-		
+
 		when(changeStreamIterable.showExpandedEvents(true)).thenReturn(changeStreamIterable);
 
 		ChangeStreamRequest request = ChangeStreamRequest.builder() //
@@ -150,7 +151,7 @@ class ChangeStreamTaskUnitTests {
 				.showExpandedEvents(true) //
 				.publishTo(message -> {}) //
 				.build();
-		
+
 		initTask(request, Document.class);
 
 		verify(changeStreamIterable).showExpandedEvents(true);
