@@ -22,12 +22,12 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.aot.AotPlaceholders.AsListPlaceholder;
 import org.springframework.data.mongodb.repository.aot.AotPlaceholders.RegexPlaceholder;
 import org.springframework.util.StringUtils;
 
@@ -47,9 +47,9 @@ class AotStringQuery extends Query {
 	private @Nullable String sort;
 	private @Nullable String fields;
 
-	private List<Object> placeholders = new ArrayList<>();
+	private List<AotPlaceholders.Placeholder> placeholders = new ArrayList<>();
 
-	public AotStringQuery(Query query, List<Object> placeholders) {
+	public AotStringQuery(Query query, List<AotPlaceholders.Placeholder> placeholders) {
 		this.delegate = query;
 		this.placeholders = placeholders;
 	}
@@ -79,34 +79,24 @@ class AotStringQuery extends Query {
 	}
 
 	boolean isRegexPlaceholderAt(int index) {
-		if (this.placeholders.isEmpty()) {
-			return false;
-		}
-
-		return obtainAndPotentiallyUnwrapPlaceholder(index) instanceof RegexPlaceholder;
+		return getRegexPlaceholder(index) != null;
 	}
 
 	@Nullable
 	String getRegexOptions(int index) {
-		if (this.placeholders.isEmpty()) {
-			return null;
-		}
 
-		Object placeholderValue = obtainAndPotentiallyUnwrapPlaceholder(index);
-		return placeholderValue instanceof RegexPlaceholder rgp ? rgp.regexOptions() : null;
+		RegexPlaceholder placeholder = getRegexPlaceholder(index);
+		return placeholder != null ? placeholder.regexOptions() : null;
 	}
 
-	@Nullable Object obtainAndPotentiallyUnwrapPlaceholder(int index) {
+	@Nullable
+	RegexPlaceholder getRegexPlaceholder(int index) {
 
-		if (this.placeholders.isEmpty()) {
+		if (index >= this.placeholders.size()) {
 			return null;
 		}
 
-		Object placeholerValue = this.placeholders.get(index);
-		if (placeholerValue instanceof AsListPlaceholder asListPlaceholder) {
-			placeholerValue = asListPlaceholder.placeholder();
-		}
-		return placeholerValue;
+		return this.placeholders.get(index).unwrap(RegexPlaceholder.class);
 	}
 
 	@Override

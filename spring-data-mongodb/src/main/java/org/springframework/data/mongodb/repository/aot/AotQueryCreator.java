@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -61,7 +62,6 @@ import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBRef;
 
@@ -132,8 +132,8 @@ record AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext
 				return criteria.raw("$regex", param);
 			}
 
-			if (param instanceof AsListPlaceholder asListPlaceholder && !property.isCollectionLike()) {
-				return super.createContainingCriteria(part, property, criteria, asListPlaceholder.placeholder());
+			if (param instanceof AsListPlaceholder asList && !property.isCollectionLike()) {
+				return super.createContainingCriteria(part, property, criteria, asList.placeholder());
 			}
 
 			return super.createContainingCriteria(part, property, criteria, param);
@@ -176,10 +176,11 @@ record AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext
 	@NullUnmarked
 	static class PlaceholderParameterAccessor implements MongoParameterAccessor {
 
-		private final List<Object> placeholders;
+		private final List<Placeholder> placeholders;
 
 		@Nullable
 		Part getPartForIndex(PartTree partTree, Parameter parameter) {
+
 			if (!parameter.isBindable()) {
 				return null;
 			}
@@ -197,62 +198,74 @@ record AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext
 
 		public PlaceholderParameterAccessor(PartTree partTree, QueryMethod queryMethod) {
 
-			if (queryMethod.getParameters().getNumberOfParameters() == 0) {
+			Parameters<?, ?> parameters = queryMethod.getParameters();
+			if (parameters.getNumberOfParameters() == 0) {
 				placeholders = List.of();
 			} else {
 
-				placeholders = new ArrayList<>();
-				Parameters<?, ?> parameters = queryMethod.getParameters();
-
+				placeholders = new ArrayList<>(parameters.getNumberOfParameters());
 				for (Parameter parameter : parameters.toList()) {
-					if (ClassUtils.isAssignable(GeoJson.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.geoJson(parameter.getIndex(), ""));
-					} else if (ClassUtils.isAssignable(Point.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.point(parameter.getIndex()));
-					} else if (ClassUtils.isAssignable(Circle.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.circle(parameter.getIndex()));
-					} else if (ClassUtils.isAssignable(Box.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.box(parameter.getIndex()));
-					} else if (ClassUtils.isAssignable(Sphere.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.sphere(parameter.getIndex()));
-					} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.polygon(parameter.getIndex()));
-					} else if (ClassUtils.isAssignable(Pattern.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), AotPlaceholders.regex(parameter.getIndex(), null));
-					} else {
-						Part partForIndex = getPartForIndex(partTree, parameter);
-						if (partForIndex != null
-								&& (partForIndex.getType().equals(Type.LIKE) || partForIndex.getType().equals(Type.NOT_LIKE))) {
-							placeholders
-									.add(parameter.getIndex(),
-											AotPlaceholders
-													.regex(parameter.getIndex(),
-															partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS)
-																	|| partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.WHEN_POSSIBLE) ? "i"
-																			: null));
-						} else if (partForIndex != null && (partForIndex.getType().equals(Type.IN)
-								|| partForIndex.getType().equals(Type.NOT_IN) || partForIndex.getType().equals(Type.CONTAINING)
-								|| partForIndex.getType().equals(Type.NOT_CONTAINING))) {
 
-							if (partForIndex.getProperty().isCollection()
-									&& !TypeInformation.of(parameter.getType()).isCollectionLike()) {
-								if (partForIndex.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS)) {
-									placeholders.add(parameter.getIndex(),
-											AotPlaceholders.asList(AotPlaceholders.regex(parameter.getIndex(), "i")));
-								} else {
-									placeholders.add(parameter.getIndex(), AotPlaceholders.asList(parameter.getIndex()));
-								}
-							} else {
-								placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
-							}
-						}
-
-						else {
-							placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
-						}
-					}
+					int index = parameter.getIndex();
+					placeholders.add(index, getPlaceholder(index, parameter, partTree));
 				}
 			}
+		}
+
+		private Placeholder getPlaceholder(int index, Parameter parameter, PartTree partTree) {
+
+			Class<?> type = parameter.getType();
+
+			if (GeoJson.class.isAssignableFrom(type)) {
+				return AotPlaceholders.geoJson(index, "");
+			} else if (Point.class.isAssignableFrom(type)) {
+				return AotPlaceholders.point(index);
+			} else if (Circle.class.isAssignableFrom(type)) {
+				return AotPlaceholders.circle(index);
+			} else if (Box.class.isAssignableFrom(type)) {
+				return AotPlaceholders.box(index);
+			} else if (Sphere.class.isAssignableFrom(type)) {
+				return AotPlaceholders.sphere(index);
+			} else if (Polygon.class.isAssignableFrom(type)) {
+				return AotPlaceholders.polygon(index);
+			} else if (Pattern.class.isAssignableFrom(type)) {
+				return AotPlaceholders.regex(index, null);
+			}
+
+			Part partForIndex = getPartForIndex(partTree, parameter);
+			if (partForIndex != null) {
+
+				IgnoreCaseType ignoreCaseType = partForIndex.shouldIgnoreCase();
+				if (isLike(partForIndex.getType())) {
+
+					boolean ignoreCase = !ignoreCaseType.equals(IgnoreCaseType.NEVER);
+					return AotPlaceholders.regex(index, ignoreCase ? "i" : null);
+				}
+
+				if (isContaining(partForIndex.getType())) {
+
+					if (partForIndex.getProperty().isCollection() && !TypeInformation.of(type).isCollectionLike()) {
+						if (ignoreCaseType.equals(IgnoreCaseType.ALWAYS)) {
+							return AotPlaceholders.asList(AotPlaceholders.regex(index, "i"));
+						} else {
+							return AotPlaceholders.asList(index);
+						}
+					}
+
+					return AotPlaceholders.indexed(index);
+				}
+			}
+
+			return AotPlaceholders.indexed(index);
+		}
+
+		private static boolean isContaining(Part.Type type) {
+			return type.equals(Type.IN) || type.equals(Type.NOT_IN) //
+					|| type.equals(Type.CONTAINING) || type.equals(Type.NOT_CONTAINING);
+		}
+
+		private static boolean isLike(Part.Type type) {
+			return type.equals(Type.LIKE) || type.equals(Type.NOT_LIKE);
 		}
 
 		@Override
@@ -322,8 +335,7 @@ record AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext
 
 		@Override
 		public @Nullable Object getBindableValue(int index) {
-			return placeholders.get(index) instanceof Placeholder placeholder ? placeholder.getValue()
-					: placeholders.get(index);
+			return placeholders.get(index).getValue();
 		}
 
 		@Override
@@ -337,7 +349,7 @@ record AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext
 			return ((List) placeholders).iterator();
 		}
 
-		public List<Object> getPlaceholders() {
+		public List<Placeholder> getPlaceholders() {
 			return placeholders;
 		}
 	}
