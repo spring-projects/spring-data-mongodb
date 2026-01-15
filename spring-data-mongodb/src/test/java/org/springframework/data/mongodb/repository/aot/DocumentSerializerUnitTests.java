@@ -22,6 +22,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.query.GeoCommand;
 
 /**
@@ -35,7 +36,7 @@ class DocumentSerializerUnitTests {
 	void writesGeoCommandToJson() {
 
 		Document source = new Document();
-		source.append("foo", new GeoCommand(AotPlaceholders.box(1)));
+		source.append("foo", new GeoCommand((Shape) AotPlaceholders.box(1)));
 
 		String jsonString = DocumentSerializer.toJson(source);
 
