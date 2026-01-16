@@ -17,11 +17,14 @@ package org.springframework.data.mongodb;
 
 import org.springframework.dao.UncategorizedDataAccessException;
 
+import java.io.Serial;
+
 /**
  * @author Oliver Gierke
  */
 public class LazyLoadingException extends UncategorizedDataAccessException {
 
+	@Serial
 	private static final long serialVersionUID = -7089224903873220037L;
 
 	/**
