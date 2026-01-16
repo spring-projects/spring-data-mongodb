@@ -21,6 +21,8 @@ import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Buc
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder;
 import org.springframework.util.Assert;
 
+import java.util.Objects;
+
 /**
  * Encapsulates the aggregation framework {@code $bucketAuto}-operation. <br />
  * Bucket stage is typically used with {@link Aggregation} and {@code $facet}. Categorizes incoming documents into a
@@ -156,6 +158,21 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	@Override
 	public BucketAutoOperationOutputBuilder andOutput(String fieldName) {
 		return new BucketAutoOperationOutputBuilder(Fields.field(fieldName), this);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof BucketAutoOperation)) {
+			return false;
+		}
+		if (!super.equals(o)) {
+			return false;
+		}
+		BucketAutoOperation that = (BucketAutoOperation) o;
+		return buckets == that.buckets && Objects.equals(granularity, that.granularity);
 	}
 
 	/**
