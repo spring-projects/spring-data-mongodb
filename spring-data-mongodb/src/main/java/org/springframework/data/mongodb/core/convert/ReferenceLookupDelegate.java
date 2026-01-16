@@ -116,7 +116,7 @@ public final class ReferenceLookupDelegate {
 		}
 
 		if (!result.iterator().hasNext()) {
-			return null;
+			return property.isMap() ? Collections.emptyMap() : null;
 		}
 
 		Object resultValue = result.iterator().next();
