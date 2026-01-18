@@ -65,6 +65,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Junhyeong Choi
  */
 class MongoQueryCreatorUnitTests {
 
@@ -668,6 +669,47 @@ class MongoQueryCreatorUnitTests {
 				getAccessor(converter, point, Distance.of(1, Metrics.KILOMETERS)), context);
 
 		assertThat(creator.createQuery()).isEqualTo(query(where("location").nearSphere(point).maxDistance(1000.0D)));
+	}
+
+	@Test // GH-4606
+	void createsIsEmptyQueryForStringPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameIsEmpty", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("firstName").is("")));
+	}
+
+	@Test // GH-4606
+	void createsIsNotEmptyQueryForStringPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameIsNotEmpty", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("firstName").ne("")));
+	}
+
+	@Test // GH-4606
+	void createsIsEmptyQueryForCollectionPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByEmailAddressesIsEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("emailAddresses").size(0)));
+	}
+
+	@Test // GH-4606
+	void createsIsNotEmptyQueryForCollectionPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByEmailAddressesIsNotEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		// size > 0 is equivalent to exists and not empty
+		assertThat(query).isEqualTo(query(where("emailAddresses").not().size(0)));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
