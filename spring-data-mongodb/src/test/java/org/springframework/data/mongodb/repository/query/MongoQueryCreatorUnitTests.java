@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.bson.BsonRegularExpression;
@@ -65,6 +66,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Junhyeong Choi
  */
 class MongoQueryCreatorUnitTests {
 
@@ -670,6 +672,87 @@ class MongoQueryCreatorUnitTests {
 		assertThat(creator.createQuery()).isEqualTo(query(where("location").nearSphere(point).maxDistance(1000.0D)));
 	}
 
+	@Test // GH-4606
+	void createsIsEmptyQueryForStringPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameIsEmpty", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("firstName").is("")));
+	}
+
+	@Test // GH-4606
+	void createsIsNotEmptyQueryForStringPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameIsNotEmpty", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("firstName").ne("")));
+	}
+
+	@Test // GH-4606
+	void createsIsEmptyQueryForCollectionPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByEmailAddressesIsEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("emailAddresses").size(0)));
+	}
+
+	@Test // GH-4606
+	void createsIsNotEmptyQueryForCollectionPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByEmailAddressesIsNotEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		// size > 0 is equivalent to exists and not empty
+		assertThat(query).isEqualTo(query(where("emailAddresses").not().size(0)));
+	}
+
+	@Test // GH-4606
+	void createsIsEmptyQueryForMapPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByMetadataIsEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("metadata").is(new Document())));
+	}
+
+	@Test // GH-4606
+	void createsIsNotEmptyQueryForMapPropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByMetadataIsNotEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("metadata").ne(new Document())));
+	}
+
+	@Test // GH-4606
+	void createsIsEmptyQueryForDomainTypePropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByAddressIsEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("address").is(new Document())));
+	}
+
+	@Test // GH-4606
+	void createsIsNotEmptyQueryForDomainTypePropertyCorrectly() {
+
+		PartTree tree = new PartTree("findByAddressIsNotEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("address").ne(new Document())));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
@@ -684,6 +767,8 @@ class MongoQueryCreatorUnitTests {
 		@DBRef User creator;
 
 		List<String> emailAddresses;
+
+		Map<String, String> metadata;
 
 		Address address;
 

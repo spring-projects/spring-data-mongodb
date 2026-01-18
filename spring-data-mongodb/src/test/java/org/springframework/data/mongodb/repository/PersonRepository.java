@@ -56,6 +56,7 @@ import org.springframework.data.util.Streamable;
  * @author Christoph Strobl
  * @author Fırat KÜÇÜK
  * @author Mark Paluch
+ * @author Junhyeong Choi
  */
 public interface PersonRepository extends MongoRepository<Person, String>, QuerydslPredicateExecutor<Person> {
 
@@ -509,6 +510,30 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	Person findByQueryWithNullEqualityCheck();
 
 	List<Person> findBySpiritAnimal(User user);
+
+	// GH-4606
+	List<Person> findByFirstnameIsEmpty();
+
+	// GH-4606
+	List<Person> findByFirstnameIsNotEmpty();
+
+	// GH-4606
+	List<Person> findBySkillsIsEmpty();
+
+	// GH-4606
+	List<Person> findBySkillsIsNotEmpty();
+
+	// GH-4606
+	List<Person> findByAddressIsEmpty();
+
+	// GH-4606
+	List<Person> findByAddressIsNotEmpty();
+
+	// GH-4606
+	List<Person> findByMetadataIsEmpty();
+
+	// GH-4606
+	List<Person> findByMetadataIsNotEmpty();
 
 	class Persons implements Streamable<Person> {
 
