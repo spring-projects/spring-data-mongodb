@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Unwrapped;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Junhyeong Choi
  */
 @Document
 public class Person extends Contact {
@@ -80,6 +82,8 @@ public class Person extends Contact {
 	@DocumentReference(lazy = true) User lazySpiritAnimal;
 
 	int visits;
+
+	Map<String, String> metadata;
 
 	public Person() {
 
@@ -332,6 +336,14 @@ public class Person extends Contact {
 
 	public void setLazySpiritAnimal(User lazySpiritAnimal) {
 		this.lazySpiritAnimal = lazySpiritAnimal;
+	}
+
+	public Map<String, String> getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(Map<String, String> metadata) {
+		this.metadata = metadata;
 	}
 
 	@Override

@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
+import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.core.PropertyPath;
@@ -65,6 +66,7 @@ import org.springframework.util.ObjectUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Edward Prentice
+ * @author Junhyeong Choi
  */
 public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
@@ -218,6 +220,10 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return criteria.is(true);
 			case FALSE:
 				return criteria.is(false);
+			case IS_EMPTY:
+				return createIsEmptyCriteria(property, criteria);
+			case IS_NOT_EMPTY:
+				return createIsNotEmptyCriteria(property, criteria);
 			case NEAR:
 				return createNearCriteria(property, criteria, parameters);
 			case WITHIN:
@@ -252,6 +258,60 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	protected Criteria exists(Criteria criteria, Object param) {
 		return criteria.exists((Boolean) param);
+	}
+
+	/**
+	 * Creates a criterion for the {@literal IS_EMPTY} keyword. For {@link Collection} properties, checks if the
+	 * collection size is 0. For {@link String} properties, checks if the value equals an empty string. For {@link Map}
+	 * and other types, checks if the value equals an empty document.
+	 *
+	 * @param property the property to check.
+	 * @param criteria the criteria to extend.
+	 * @return the extended criteria.
+	 * @since 5.1
+	 */
+	protected Criteria createIsEmptyCriteria(MongoPersistentProperty property, Criteria criteria) {
+
+		if (property.isCollectionLike()) {
+			return criteria.size(0);
+		}
+
+		if (property.isMap()) {
+			return criteria.is(new Document());
+		}
+
+		if (property.getType() == String.class) {
+			return criteria.is("");
+		}
+
+		return criteria.is(new Document());
+	}
+
+	/**
+	 * Creates a criterion for the {@literal IS_NOT_EMPTY} keyword. For {@link Collection} properties, checks if the
+	 * collection size is not 0. For {@link String} properties, checks if the value is not an empty string. For
+	 * {@link Map} and other types, checks if the value is not an empty document.
+	 *
+	 * @param property the property to check.
+	 * @param criteria the criteria to extend.
+	 * @return the extended criteria.
+	 * @since 5.1
+	 */
+	protected Criteria createIsNotEmptyCriteria(MongoPersistentProperty property, Criteria criteria) {
+
+		if (property.isCollectionLike()) {
+			return criteria.not().size(0);
+		}
+
+		if (property.isMap()) {
+			return criteria.ne(new Document());
+		}
+
+		if (property.getType() == String.class) {
+			return criteria.ne("");
+		}
+
+		return criteria.ne(new Document());
 	}
 
 	private Criteria createNearCriteria(MongoPersistentProperty property, Criteria criteria,
