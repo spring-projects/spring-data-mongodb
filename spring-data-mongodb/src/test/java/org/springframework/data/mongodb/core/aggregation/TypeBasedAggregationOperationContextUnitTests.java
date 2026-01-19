@@ -42,10 +42,12 @@ import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.V
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.SetOperators.SetUnion;
+import org.springframework.data.mongodb.core.convert.AggregationMapper;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -72,7 +74,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		this.context = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(dbRefResolver, context);
-		this.mapper = new QueryMapper(converter);
+		this.mapper = new AggregationMapper(converter);
 	}
 
 	@Test
@@ -103,6 +105,30 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		AggregationOperationContext context = getContext(Foo.class);
 		assertThat(context.getReference("id"))
 				.isEqualTo(new DirectFieldReference(new ExposedField(field("id", "_id"), true)));
+	}
+
+	@Test // GH-5058
+	void mapsFieldReferencesInGroupIdWithoutConvertingValues() {
+
+		AggregationOperationContext context = getContext(ObjectIdEntity.class);
+
+		Document groupStage = Document.parse("{ '$group' : { '_id' : '$refId' } }");
+		Document mapped = context.getMappedObject(groupStage, ObjectIdEntity.class);
+
+		Document mappedGroup = getAsDocument(mapped, "$group");
+		assertThat(mappedGroup.get("_id")).isEqualTo("$ref_id");
+	}
+
+	@Test // GH-5011
+	void allowsLookupAliasesToBypassAssociationPathValidation() {
+
+		AggregationOperationContext context = getContext(LookupOwner.class);
+
+		Document matchStage = Document.parse("{ '$match' : { 'person.deleted' : true } }");
+		Document mapped = context.getMappedObject(matchStage, LookupOwner.class);
+
+		Document mappedMatch = getAsDocument(mapped, "$match");
+		assertThat(mappedMatch.get("person.deleted")).isEqualTo(true);
 	}
 
 	@Test // DATAMONGO-912
@@ -588,5 +614,25 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	static class WithLists {
 		public List<String> listOfString;
 		public List<List<String>> listOfListOfString;
+	}
+
+	static class ObjectIdEntity {
+
+		@Id ObjectId id;
+
+		@org.springframework.data.mongodb.core.mapping.Field("ref_id") String refId;
+	}
+
+	static class LookupOwner {
+
+		@Id ObjectId id;
+
+		@DBRef LookupTarget person;
+	}
+
+	static class LookupTarget {
+
+		@Id ObjectId id;
+		boolean deleted;
 	}
 }

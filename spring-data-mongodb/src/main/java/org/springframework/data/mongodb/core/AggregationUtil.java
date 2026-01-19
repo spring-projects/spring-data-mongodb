@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions.Doma
 import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.convert.AggregationMapper;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -42,6 +43,7 @@ import org.springframework.data.util.Lazy;
 class AggregationUtil {
 
 	final QueryMapper queryMapper;
+	final AggregationMapper aggregationMapper;
 	final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	final Lazy<AggregationOperationContext> untypedMappingContext;
 
@@ -49,9 +51,10 @@ class AggregationUtil {
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		this.queryMapper = queryMapper;
+		this.aggregationMapper = queryMapper instanceof AggregationMapper am ? am : new AggregationMapper(queryMapper.getConverter());
 		this.mappingContext = mappingContext;
 		this.untypedMappingContext = Lazy.of(() -> new TypeBasedAggregationOperationContext(Object.class, mappingContext,
-				queryMapper, FieldLookupPolicy.relaxed()));
+				aggregationMapper, FieldLookupPolicy.relaxed()));
 	}
 
 	AggregationOperationContext createAggregationContext(Aggregation aggregation, @Nullable Class<?> inputType) {
@@ -66,14 +69,14 @@ class AggregationUtil {
 				&& !aggregation.getPipeline().containsUnionWith() ? FieldLookupPolicy.strict() : FieldLookupPolicy.relaxed();
 
 		if (aggregation instanceof TypedAggregation<?> ta) {
-			return new TypeBasedAggregationOperationContext(ta.getInputType(), mappingContext, queryMapper, lookupPolicy);
+			return new TypeBasedAggregationOperationContext(ta.getInputType(), mappingContext, aggregationMapper, lookupPolicy);
 		}
 
 		if (inputType == null) {
 			return untypedMappingContext.get();
 		}
 
-		return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper, lookupPolicy);
+		return new TypeBasedAggregationOperationContext(inputType, mappingContext, aggregationMapper, lookupPolicy);
 	}
 
 	/**
