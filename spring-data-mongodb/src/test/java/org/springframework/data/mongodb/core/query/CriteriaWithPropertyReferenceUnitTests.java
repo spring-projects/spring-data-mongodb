@@ -20,7 +20,7 @@ class CriteriaWithPropertyReferenceUnitTests {
 			), //
 			new Fixture( //
 					"path", //
-					Criteria.where(TypedPropertyPath.ofReference((TestEntity e) -> e.referenced).then(r -> r.value)), //
+					Criteria.where(TypedPropertyPath.of((TestEntity e) -> e.referenced).then(r -> r.value)), //
 					new Criteria("referenced.value") //
 			), //
 			new Fixture( //

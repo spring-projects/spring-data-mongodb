@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Window;
 import org.springframework.data.geo.GeoResults;
@@ -187,6 +188,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			Assert.notNull(field, "Field must not be null");
 
 			return new DistinctOperationSupport(this, field);
+		}
+
+		@Override
+		public <V, R> TerminatingDistinct<R> distinct(TypedPropertyPath<V, R> path) {
+			return new DistinctOperationSupport(this, path.toDotPath());
 		}
 
 		private List<T> doFind(@Nullable CursorPreparer preparer) {

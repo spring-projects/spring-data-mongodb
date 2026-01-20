@@ -935,10 +935,6 @@ public interface MongoOperations extends FluentMongoOperations {
 		return findDistinct(new Query(), field, entityClass, resultClass);
 	}
 
-	default <R, E> List<R> findDistinct(TypedPropertyPath<E, ?> path) {
-		return findDistinct(new Query(), path.toDotPath(), path.getOwningType().getType(), (Class<R>) path.getType());
-	}
-
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
 	 * returns the results in a {@link List}.

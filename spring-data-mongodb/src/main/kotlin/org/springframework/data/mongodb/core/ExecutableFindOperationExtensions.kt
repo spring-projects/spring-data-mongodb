@@ -57,12 +57,3 @@ inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<*>.asTyp
  */
 inline fun <reified T : Any> ExecutableFindOperation.DistinctWithProjection.asType(): ExecutableFindOperation.TerminatingDistinct<T> =
 		`as`(T::class.java)
-
-/**
- * Extension for [ExecutableFindOperation.FindDistinct.distinct] leveraging KProperty.
- *
- * @author Mark Paluch
- * @since 3.0
- */
-fun ExecutableFindOperation.FindDistinct.distinct(key: KProperty<*>): ExecutableFindOperation.TerminatingDistinct<Any> =
-		distinct(key.toDotPath())

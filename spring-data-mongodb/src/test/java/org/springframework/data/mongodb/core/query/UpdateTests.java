@@ -229,7 +229,7 @@ class UpdateTests {
 
 	@Test // DATAMONGO-853
 	void testCreatingUpdateWithNullKeyThrowsException() {
-		assertThatIllegalArgumentException().isThrownBy(() -> Update.update(null, "value"));
+		assertThatIllegalArgumentException().isThrownBy(() -> Update.update((String) null, "value"));
 	}
 
 	@Test // DATAMONGO-953
