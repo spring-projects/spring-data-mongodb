@@ -26,7 +26,6 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -935,10 +934,6 @@ public interface MongoOperations extends FluentMongoOperations {
 		return findDistinct(new Query(), field, entityClass, resultClass);
 	}
 
-	default <R, E> List<R> findDistinct(TypedPropertyPath<E, ?> path) {
-		return findDistinct(new Query(), path.toDotPath(), path.getOwningType().getType(), (Class<R>) path.getType());
-	}
-
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
 	 * returns the results in a {@link List}.
@@ -952,10 +947,6 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @since 2.1
 	 */
 	<R> List<R> findDistinct(Query query, String field, Class<?> entityClass, Class<R> resultClass);
-
-	default <R, E> List<R> findDistinct(Query query, TypedPropertyPath<E, R> path){
-		return findDistinct(query, path.toDotPath(), path.getOwningType().getType(), (Class<R>) path.getType());
-	}
 
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
@@ -971,10 +962,6 @@ public interface MongoOperations extends FluentMongoOperations {
 	 */
 	<R> List<R> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
 							 Class<R> resultClass);
-
-	default <R, E> List<R> findDistinct(Query query, TypedPropertyPath<E, R> path, String collectionName){
-		return findDistinct(query, path.toDotPath(), collectionName, path.getOwningType().getType(), (Class<R>)path.getType());
-	}
 
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and

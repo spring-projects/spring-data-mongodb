@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Window;
@@ -330,6 +331,16 @@ public interface ExecutableFindOperation {
 		 * @throws IllegalArgumentException if field is {@literal null}.
 		 */
 		TerminatingDistinct<Object> distinct(String field);
+
+		/**
+		 * Finds the distinct values for a specified {@literal path} across a single {@link MongoCollection} or view.
+		 *
+		 * @param path path of the field. Must not be {@literal null}.
+		 * @return new instance of {@link TerminatingDistinct}.
+		 * @throws IllegalArgumentException if field is {@literal null}.
+		 * @since 5.1
+		 */
+		<V, R> TerminatingDistinct<R> distinct(TypedPropertyPath<V, R> path);
 	}
 
 	/**

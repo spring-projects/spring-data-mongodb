@@ -15,10 +15,12 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
@@ -47,6 +49,14 @@ class UpdateTests {
 				.isEqualTo(Document.parse("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}"));
 	}
 
+	@Test // GH-5135
+	void testSetViaPath() {
+
+		Update u = new Update().set(TestFile::getDirectory, "/Users/Test/Desktop");
+		assertThat(u.getUpdateObject())
+				.isEqualTo(Document.parse("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}"));
+	}
+
 	@Test
 	void testSetSet() {
 
@@ -60,6 +70,20 @@ class UpdateTests {
 
 		Update u = new Update().inc("size", 1);
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$inc\" : { \"size\" : 1}}"));
+	}
+
+	@Test // GH-5135
+	void testIncViaPath() {
+
+		Update u = new Update().inc(TestFile::getSize, 1);
+		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$inc\" : { \"size\" : 1}}"));
+	}
+
+	@Test // GH-5135
+	void testIncByOneViaPath() {
+
+		Update u = new Update().inc(TestFile::getSize);
+		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$inc\" : { \"size\" : NumberLong(1)}}"));
 	}
 
 	@Test
@@ -85,6 +109,13 @@ class UpdateTests {
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$unset\" : { \"directory\" : 1}}"));
 	}
 
+	@Test // GH-5135
+	void testUnsetViaPath() {
+
+		Update u = new Update().unset(TestFile::getDirectory);
+		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$unset\" : { \"directory\" : 1}}"));
+	}
+
 	@Test
 	void testPush() {
 
@@ -92,10 +123,25 @@ class UpdateTests {
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
 	}
 
+	@Test // GH-5135
+	void testPushViaPath() {
+
+		Update u = new Update().push(TestFile::getAuthors, Collections.singletonMap("name", "Sven"));
+		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
+	}
+
 	@Test
 	void testAddToSet() {
 
 		Update u = new Update().addToSet("authors", Collections.singletonMap("name", "Sven"));
+		assertThat(u.getUpdateObject())
+				.isEqualTo(Document.parse("{ \"$addToSet\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
+	}
+
+	@Test // GH-5135
+	void testAddToSetViaPath() {
+
+		Update u = new Update().addToSet(TestFile::getAuthors, Collections.singletonMap("name", "Sven"));
 		assertThat(u.getUpdateObject())
 				.isEqualTo(Document.parse("{ \"$addToSet\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
 	}
@@ -110,10 +156,27 @@ class UpdateTests {
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$pop\" : { \"authors\" : 1}}"));
 	}
 
+	@Test // GH-5135
+	void testPopViaPath() {
+
+		Update u = new Update().pop(TestFile::getAuthors, Update.Position.FIRST);
+		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$pop\" : { \"authors\" : -1}}"));
+
+		u = new Update().pop(TestFile::getAuthors, Update.Position.LAST);
+		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$pop\" : { \"authors\" : 1}}"));
+	}
+
 	@Test
 	void testPull() {
 
 		Update u = new Update().pull("authors", Collections.singletonMap("name", "Sven"));
+		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$pull\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
+	}
+
+	@Test // GH-5135
+	void testPullViaPath() {
+
+		Update u = new Update().pull(TestFile::getAuthors, Collections.singletonMap("name", "Sven"));
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$pull\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
 	}
 
@@ -124,6 +187,17 @@ class UpdateTests {
 		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
 
 		Update u = new Update().pullAll("authors", new Object[] { m1, m2 });
+		assertThat(u.getUpdateObject()).isEqualTo(
+				Document.parse("{ \"$pullAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}"));
+	}
+
+	@Test // GH-5135
+	void testPullAllViaPath() {
+
+		Map<String, String> m1 = Collections.singletonMap("name", "Sven");
+		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
+
+		Update u = new Update().pullAll(TestFile::getAuthors, new Object[] { m1, m2 });
 		assertThat(u.getUpdateObject()).isEqualTo(
 				Document.parse("{ \"$pullAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}"));
 	}
@@ -154,6 +228,13 @@ class UpdateTests {
 	void testSetOnInsert() {
 
 		Update u = new Update().setOnInsert("size", 1);
+		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$setOnInsert\" : { \"size\" : 1}}"));
+	}
+
+	@Test // GH-5135
+	void testSetOnInsertViaPath() {
+
+		Update u = new Update().setOnInsert(TestFile::getSize, 1);
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$setOnInsert\" : { \"size\" : 1}}"));
 	}
 
@@ -229,7 +310,7 @@ class UpdateTests {
 
 	@Test // DATAMONGO-853
 	void testCreatingUpdateWithNullKeyThrowsException() {
-		assertThatIllegalArgumentException().isThrownBy(() -> Update.update(null, "value"));
+		assertThatIllegalArgumentException().isThrownBy(() -> Update.update((String) null, "value"));
 	}
 
 	@Test // DATAMONGO-953
@@ -341,10 +422,27 @@ class UpdateTests {
 		assertThat(update.getUpdateObject()).isEqualTo(new Document().append("$mul", new Document("key", 10D)));
 	}
 
+	@Test // GH-5135
+	void multiplyShouldAddMultiplierAsItsDoubleValueViaPath() {
+
+		Update update = new Update().multiply(TestFile::getKey, 10);
+
+		assertThat(update.getUpdateObject()).isEqualTo(new Document().append("$mul", new Document("key", 10D)));
+	}
+
 	@Test // DATAMONGO-1101
 	void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseAnd() {
 
 		Update update = new Update().bitwise("key").and(10L);
+
+		assertThat(update.getUpdateObject())
+				.isEqualTo(new Document().append("$bit", new Document("key", new Document("and", 10L))));
+	}
+
+	@Test // GH-5135
+	void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseAndViaPath() {
+
+		Update update = new Update().bitwise(TestFile::getKey).and(10L);
 
 		assertThat(update.getUpdateObject())
 				.isEqualTo(new Document().append("$bit", new Document("key", new Document("and", 10L))));
@@ -401,10 +499,26 @@ class UpdateTests {
 		assertThat(update.getUpdateObject()).isEqualTo(new Document("$max", new Document("key", 10)));
 	}
 
+	@Test // GH-5135
+	void getUpdateObjectShouldReturnCorrectRepresentationForMaxViaPath() {
+
+		Update update = new Update().max(TestFile::getKey, 10);
+
+		assertThat(update.getUpdateObject()).isEqualTo(new Document("$max", new Document("key", 10)));
+	}
+
 	@Test // DATAMONGO-1404
 	void getUpdateObjectShouldReturnCorrectRepresentationForMin() {
 
 		Update update = new Update().min("key", 10);
+
+		assertThat(update.getUpdateObject()).isEqualTo(new Document("$min", new Document("key", 10)));
+	}
+
+	@Test // GH-5135
+	void getUpdateObjectShouldReturnCorrectRepresentationForMinViaPath() {
+
+		Update update = new Update().min(TestFile::getKey, 10);
 
 		assertThat(update.getUpdateObject()).isEqualTo(new Document("$min", new Document("key", 10)));
 	}
@@ -498,5 +612,39 @@ class UpdateTests {
 
 		assertThat(update1.hashCode()).isEqualTo(update2.hashCode());
 		assertThat(update1.hashCode()).isNotEqualTo(update3.hashCode());
+	}
+
+	static class TestFile {
+
+		String directory;
+		String fileName;
+		int version;
+		long size;
+		List<String> authors;
+		List<String> key;
+
+		public String getDirectory() {
+			return directory;
+		}
+
+		public String getFileName() {
+			return fileName;
+		}
+
+		public int getVersion() {
+			return version;
+		}
+
+		public List<String> getKey() {
+			return key;
+		}
+
+		public List<String> getAuthors() {
+			return authors;
+		}
+
+		public long getSize() {
+			return size;
+		}
 	}
 }

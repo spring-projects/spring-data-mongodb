@@ -114,8 +114,16 @@ public class Criteria implements CriteriaDefinition {
 		return new Criteria(key);
 	}
 
-	public static Criteria where(TypedPropertyPath<?,?> propertyReference) {
-		return where(propertyReference.toDotPath());
+
+	/**
+	 * Static factory method to create a Criteria using the provided path.
+	 *
+	 * @param path the path to the target property.
+	 * @return new instance of {@link Criteria}.
+	 * @since 5.1
+	 */
+	public static <T> Criteria where(TypedPropertyPath<T,?> path) {
+		return where(path.toDotPath());
 	}
 
 	/**
@@ -203,13 +211,15 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Static factory method to create a Criteria using the provided key
+	 * Static factory method to create a Criteria using the provided path.
 	 *
+	 * @param path the path to the target property.
 	 * @return new instance of {@link Criteria}.
+	 * @since 5.1
 	 */
 	@Contract("_ -> new")
-	public Criteria and(PropertyReference<?,?> propertyReference) {
-		return and(propertyReference.getName());
+	public Criteria and(TypedPropertyPath<?,?> path) {
+		return and(path.toDotPath());
 	}
 
 	/**

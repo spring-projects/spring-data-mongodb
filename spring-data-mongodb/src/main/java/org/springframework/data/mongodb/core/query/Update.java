@@ -29,6 +29,7 @@ import java.util.Set;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -70,6 +71,17 @@ public class Update implements UpdateDefinition {
 	 */
 	public static Update update(String key, @Nullable Object value) {
 		return new Update().set(key, value);
+	}
+
+	/**
+	 * Static factory method to create an Update using the provided path
+	 *
+	 * @param path the property path to update.
+	 * @return new instance of {@link Update}.
+	 * @since 5.1
+	 */
+	public static <T> Update update(TypedPropertyPath<T, ?> path, @Nullable Object value) {
+		return update(path.toDotPath(), value);
 	}
 
 	/**
@@ -122,6 +134,22 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update using the {@literal $set} update modifier.
+	 *
+	 * @param path the property path.
+	 * @param value can be {@literal null}. In this case the property remains in the db with a {@literal null} value. To
+	 *          remove it use {@link #unset(TypedPropertyPath)}.
+	 * @return this.
+	 * @see #set(String, Object)
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/update/set/">MongoDB Update operator: $set</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update set(TypedPropertyPath<T, ?> path, @Nullable Object value) {
+		return set(path.toDotPath(), value);
+	}
+
+	/**
 	 * Update using the {@literal $setOnInsert} update modifier.
 	 *
 	 * @param key the field name.
@@ -137,6 +165,22 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update using the {@literal $setOnInsert} update modifier.
+	 *
+	 * @param path the property path.
+	 * @param value can be {@literal null}.
+	 * @return this.
+	 * @see #setOnInsert(String, Object)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/setOnInsert/">MongoDB Update operator:
+	 *      $setOnInsert</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update setOnInsert(TypedPropertyPath<T, ?> path, @Nullable Object value) {
+		return setOnInsert(path.toDotPath(), value);
+	}
+
+	/**
 	 * Update using the {@literal $unset} update modifier.
 	 *
 	 * @param key the field name.
@@ -147,6 +191,20 @@ public class Update implements UpdateDefinition {
 	public Update unset(String key) {
 		addMultiFieldOperation("$unset", key, 1);
 		return this;
+	}
+
+	/**
+	 * Update using the {@literal $unset} update modifier.
+	 *
+	 * @param path the property path.
+	 * @return this.
+	 * @see #unset(String)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/unset/">MongoDB Update operator: $unset</a>
+	 * @since 5.1
+	 */
+	@Contract("_ -> this")
+	public <T> Update unset(TypedPropertyPath<T, ?> path) {
+		return unset(path.toDotPath());
 	}
 
 	/**
@@ -164,6 +222,21 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update using the {@literal $inc} update modifier.
+	 *
+	 * @param path the property path.
+	 * @param inc must not be {@literal null}.
+	 * @return this.
+	 * @see #inc(String, Number)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/inc/">MongoDB Update operator: $inc</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update inc(TypedPropertyPath<T, ?> path, Number inc) {
+		return inc(path.toDotPath(), inc);
+	}
+
+	/**
 	 * Update using the {@literal $inc} update modifier by one.
 	 *
 	 * @param key the field name.
@@ -174,6 +247,20 @@ public class Update implements UpdateDefinition {
 	@Contract("_ -> this")
 	public Update inc(String key) {
 		return inc(key, 1L);
+	}
+
+	/**
+	 * Update using the {@literal $inc} update modifier by one.
+	 *
+	 * @param path the property path.
+	 * @return this.
+	 * @see #inc(String)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/inc/">MongoDB Update operator: $inc</a>
+	 * @since 5.1
+	 */
+	@Contract("_ -> this")
+	public <T> Update inc(TypedPropertyPath<T, ?> path) {
+		return inc(path.toDotPath());
 	}
 
 	/**
@@ -188,6 +275,21 @@ public class Update implements UpdateDefinition {
 	public Update push(String key, @Nullable Object value) {
 		addMultiFieldOperation("$push", key, value);
 		return this;
+	}
+
+	/**
+	 * Update using the {@literal $push} update modifier.
+	 *
+	 * @param path the property path.
+	 * @param value can be {@literal null}.
+	 * @return this.
+	 * @see #push(String, Object)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update push(TypedPropertyPath<T, ?> path, @Nullable Object value) {
+		return push(path.toDotPath(), value);
 	}
 
 	/**
@@ -213,6 +315,22 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update using {@code $push} modifier. Allows creation of {@code $push} command for single or multiple (using
+	 * {@code $each}) values as well as using {@code $position}.
+	 *
+	 * @param path the property path.
+	 * @return {@link PushOperatorBuilder} for given path
+	 * @see #push(String)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/each/">MongoDB Update operator: $each</a>
+	 * @since 5.1
+	 */
+	@Contract("_ -> new")
+	public <T> PushOperatorBuilder push(TypedPropertyPath<T, ?> path) {
+		return push(path.toDotPath());
+	}
+
+	/**
 	 * Update using {@code $addToSet} modifier. Allows creation of {@code $push} command for single or multiple (using
 	 * {@code $each}) values
 	 *
@@ -223,6 +341,20 @@ public class Update implements UpdateDefinition {
 	@Contract("_ -> new")
 	public AddToSetBuilder addToSet(String key) {
 		return new AddToSetBuilder(key);
+	}
+
+	/**
+	 * Update using {@code $addToSet} modifier. Allows creation of {@code $push} command for single or multiple (using
+	 * {@code $each}) values
+	 *
+	 * @param path the property path.
+	 * @return new instance of {@link AddToSetBuilder}.
+	 * @see #addToSet(String)
+	 * @since 5.1
+	 */
+	@Contract("_ -> new")
+	public <T> AddToSetBuilder addToSet(TypedPropertyPath<T, ?> path) {
+		return addToSet(path.toDotPath());
 	}
 
 	/**
@@ -241,6 +373,22 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update using the {@literal $addToSet} update modifier.
+	 *
+	 * @param path the property path.
+	 * @param value can be {@literal null}.
+	 * @return this.
+	 * @see #addToSet(String, Object)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/addToSet/">MongoDB Update operator:
+	 *      $addToSet</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update addToSet(TypedPropertyPath<T, ?> path, @Nullable Object value) {
+		return addToSet(path.toDotPath(), value);
+	}
+
+	/**
 	 * Update using the {@literal $pop} update modifier.
 	 *
 	 * @param key the field name.
@@ -252,6 +400,21 @@ public class Update implements UpdateDefinition {
 	public Update pop(String key, Position pos) {
 		addMultiFieldOperation("$pop", key, pos == Position.FIRST ? -1 : 1);
 		return this;
+	}
+
+	/**
+	 * Update using the {@literal $pop} update modifier.
+	 *
+	 * @param path the property path.
+	 * @param pos must not be {@literal null}.
+	 * @return this.
+	 * @see #pop(String, Position)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pop/">MongoDB Update operator: $pop</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update pop(TypedPropertyPath<T, ?> path, Position pos) {
+		return pop(path.toDotPath(), pos);
 	}
 
 	/**
@@ -269,6 +432,21 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update using the {@literal $pull} update modifier.
+	 *
+	 * @param path the property path.
+	 * @param value can be {@literal null}.
+	 * @return this.
+	 * @see #pull(String, Object)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pull/">MongoDB Update operator: $pull</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update pull(TypedPropertyPath<T, ?> path, @Nullable Object value) {
+		return pull(path.toDotPath(), value);
+	}
+
+	/**
 	 * Update using the {@literal $pullAll} update modifier.
 	 *
 	 * @param key the field name.
@@ -281,6 +459,22 @@ public class Update implements UpdateDefinition {
 	public Update pullAll(String key, Object[] values) {
 		addMultiFieldOperation("$pullAll", key, Arrays.asList(values));
 		return this;
+	}
+
+	/**
+	 * Update using the {@literal $pullAll} update modifier.
+	 *
+	 * @param path the property path.
+	 * @param values must not be {@literal null}.
+	 * @return this.
+	 * @see #pullAll(String, Object[])
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pullAll/">MongoDB Update operator:
+	 *      $pullAll</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update pullAll(TypedPropertyPath<T, ?> path, Object[] values) {
+		return pullAll(path.toDotPath(), values);
 	}
 
 	/**
@@ -315,6 +509,21 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update given key to current date using {@literal $currentDate} modifier.
+	 *
+	 * @param path the property path.
+	 * @return this.
+	 * @see #currentDate(String)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
+	 *      $currentDate</a>
+	 * @since 5.1
+	 */
+	@Contract("_ -> this")
+	public <T> Update currentDate(TypedPropertyPath<T, ?> path) {
+		return currentDate(path.toDotPath());
+	}
+
+	/**
 	 * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
 	 *
 	 * @param key the field name.
@@ -328,6 +537,21 @@ public class Update implements UpdateDefinition {
 
 		addMultiFieldOperation("$currentDate", key, new Document("$type", "timestamp"));
 		return this;
+	}
+
+	/**
+	 * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
+	 *
+	 * @param path the property path.
+	 * @return this.
+	 * @see #currentTimestamp(String)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
+	 *      $currentDate</a>
+	 * @since 5.1
+	 */
+	@Contract("_ -> this")
+	public <T> Update currentTimestamp(TypedPropertyPath<T, ?> path) {
+		return currentTimestamp(path.toDotPath());
 	}
 
 	/**
@@ -345,6 +569,21 @@ public class Update implements UpdateDefinition {
 		Assert.notNull(multiplier, "Multiplier must not be null");
 		addMultiFieldOperation("$mul", key, multiplier.doubleValue());
 		return this;
+	}
+
+	/**
+	 * Multiply the value of given key by the given number.
+	 *
+	 * @param path the property path.
+	 * @param multiplier must not be {@literal null}.
+	 * @return this.
+	 * @see #multiply(String, Number)
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/mul/">MongoDB Update operator: $mul</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update multiply(TypedPropertyPath<T, ?> path, Number multiplier) {
+		return multiply(path.toDotPath(), multiplier);
 	}
 
 	/**
@@ -366,6 +605,22 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update given key to the {@code value} if the {@code value} is greater than the current value of the field.
+	 *
+	 * @param path the property path.
+	 * @param value must not be {@literal null}.
+	 * @return this.
+	 * @see #max(String, Object)
+	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/max/">MongoDB Update operator: $max</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update max(TypedPropertyPath<T, ?> path, Object value) {
+		return max(path.toDotPath(), value);
+	}
+
+	/**
 	 * Update given key to the {@code value} if the {@code value} is less than the current value of the field.
 	 *
 	 * @param key must not be {@literal null}.
@@ -384,6 +639,22 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
+	 * Update given key to the {@code value} if the {@code value} is less than the current value of the field.
+	 *
+	 * @param path the property path.
+	 * @param value must not be {@literal null}.
+	 * @return this.
+	 * @see #min(String, Object)
+	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/min/">MongoDB Update operator: $min</a>
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T> Update min(TypedPropertyPath<T, ?> path, Object value) {
+		return min(path.toDotPath(), value);
+	}
+
+	/**
 	 * The operator supports bitwise {@code and}, bitwise {@code or}, and bitwise {@code xor} operations.
 	 *
 	 * @param key the field name.
@@ -393,6 +664,19 @@ public class Update implements UpdateDefinition {
 	@Contract("_ -> new")
 	public BitwiseOperatorBuilder bitwise(String key) {
 		return new BitwiseOperatorBuilder(this, key);
+	}
+
+	/**
+	 * The operator supports bitwise {@code and}, bitwise {@code or}, and bitwise {@code xor} operations.
+	 *
+	 * @param path the property path.
+	 * @return this.
+	 * @see #bitwise(String)
+	 * @since 5.1
+	 */
+	@Contract("_ -> new")
+	public <T> BitwiseOperatorBuilder bitwise(TypedPropertyPath<T, ?> path) {
+		return bitwise(path.toDotPath());
 	}
 
 	/**

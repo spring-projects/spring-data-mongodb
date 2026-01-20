@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
@@ -49,6 +50,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
@@ -601,6 +603,21 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 				.as(String.class) //
 				.all() //
 		).containsExactlyInAnyOrder("luke");
+	}
+
+	@Test // GH-5135
+	void distinctWithTypedPropertyPath() {
+
+		luke.father = new Person();
+		luke.father.firstname = "anakin";
+		template.save(luke);
+
+		List<String> fatherFirstnames = template.query(Person.class).inCollection(STAR_WARS)
+				.distinct(TypedPropertyPath.path(Person::getFather).then(Person::getFirstname)) //
+				.matching(Criteria.where(Person::getLastname).is(luke.lastname)) //
+				.all();
+
+		assertThat(fatherFirstnames).containsExactlyInAnyOrder("anakin");
 	}
 
 	@Test // GH-2860
