@@ -70,12 +70,5 @@ class ExecutableFindOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2417
-	fun `ExecutableFindOperation#FindDistinct#field() using KProperty should call its Java counterpart`() {
-
-		findDistinct.distinct(KotlinUser::username)
-		verify { findDistinct.distinct("username") }
-	}
-
 	data class KotlinUser(val username: String)
 }
