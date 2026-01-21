@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.bson.BsonInvalidOperationException;
 import org.jspecify.annotations.Nullable;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -48,6 +49,7 @@ import com.mongodb.bulk.BulkWriteError;
  * @author Michal Vich
  * @author Christoph Strobl
  * @author Brice Vandeputte
+ * @author Banseok Kim
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
@@ -142,6 +144,9 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			if (MongoDbErrorCodes.isClientSessionFailure(mongoException)) {
 				return isTransientFailure(mongoException) ? new TransientClientSessionException(ex.getMessage(), ex)
 						: new ClientSessionException(ex.getMessage(), ex);
+			}
+			if (MongoDbErrorCodes.isConcurrencyFailureError(mongoException)) {
+				return  new ConcurrencyFailureException(ex.getMessage(), ex);
 			}
 			if (ex.getCause() != null && SECURITY_EXCEPTIONS.contains(ClassUtils.getShortName(ex.getCause().getClass()))) {
 				return new PermissionDeniedDataAccessException(ex.getMessage(), ex);

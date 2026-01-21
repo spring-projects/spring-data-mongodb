@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.core.NestedRuntimeException;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
@@ -121,6 +122,15 @@ class MongoExceptionTranslatorUnitTests {
 		checkTranslatedMongoException(InvalidDataAccessApiUsageException.class, 12010);
 		checkTranslatedMongoException(InvalidDataAccessApiUsageException.class, 12011);
 		checkTranslatedMongoException(InvalidDataAccessApiUsageException.class, 12012);
+	}
+
+	@Test
+	void translateWriteConflictToConcurrencyFailureException() {
+
+		MongoException exception = new MongoException(112, "WriteConflict");
+		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
+
+		expectExceptionWithCauseMessage(translatedException, ConcurrencyFailureException.class);
 	}
 
 	@Test

@@ -29,6 +29,7 @@ import org.jspecify.annotations.Nullable;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author SangHyuk Lee
+ * @author Banseok Kim
  * @since 1.8
  */
 public final class MongoDbErrorCodes {
@@ -37,6 +38,7 @@ public final class MongoDbErrorCodes {
 	static HashMap<Integer, String> dataIntegrityViolationCodes;
 	static HashMap<Integer, String> duplicateKeyCodes;
 	static HashMap<Integer, String> invalidDataAccessApiUsageException;
+	static HashMap<Integer, String> concurrencyFailureCodes;
 	static HashMap<Integer, String> permissionDeniedCodes;
 	static HashMap<Integer, String> clientSessionCodes;
 	static HashMap<Integer, String> transactionCodes;
@@ -59,12 +61,11 @@ public final class MongoDbErrorCodes {
 		dataAccessResourceFailureCodes.put(13441, "BadOffsetInFile");
 		dataAccessResourceFailureCodes.put(13640, "DataFileHeaderCorrupt");
 
-		dataIntegrityViolationCodes = new HashMap<>(6, 1f);
+		dataIntegrityViolationCodes = new HashMap<>(5, 1f);
 		dataIntegrityViolationCodes.put(67, "CannotCreateIndex");
 		dataIntegrityViolationCodes.put(68, "IndexAlreadyExists");
 		dataIntegrityViolationCodes.put(85, "IndexOptionsConflict");
 		dataIntegrityViolationCodes.put(86, "IndexKeySpecsConflict");
-		dataIntegrityViolationCodes.put(112, "WriteConflict");
 		dataIntegrityViolationCodes.put(117, "ConflictingOperationInProgress");
 
 		duplicateKeyCodes = new HashMap<>(4, 1f);
@@ -130,11 +131,14 @@ public final class MongoDbErrorCodes {
 		clientSessionCodes.put(263, "OperationNotSupportedInTransaction");
 		clientSessionCodes.put(264, "TooManyLogicalSessions");
 
+		concurrencyFailureCodes = new HashMap<>(1, 1f);
+		concurrencyFailureCodes.put(112, "WriteConflict");
+
 		transactionCodes = new HashMap<>(0);
 
  		errorCodes = new HashMap<>(
 				dataAccessResourceFailureCodes.size() + dataIntegrityViolationCodes.size() + duplicateKeyCodes.size()
-						+ invalidDataAccessApiUsageException.size() + permissionDeniedCodes.size() + clientSessionCodes.size(),
+						+ invalidDataAccessApiUsageException.size() + permissionDeniedCodes.size() + clientSessionCodes.size() + concurrencyFailureCodes.size(),
 				1f);
 		errorCodes.putAll(dataAccessResourceFailureCodes);
 		errorCodes.putAll(dataIntegrityViolationCodes);
@@ -142,6 +146,7 @@ public final class MongoDbErrorCodes {
 		errorCodes.putAll(invalidDataAccessApiUsageException);
 		errorCodes.putAll(permissionDeniedCodes);
 		errorCodes.putAll(clientSessionCodes);
+		errorCodes.putAll(concurrencyFailureCodes);
 	}
 
 	public static @Nullable String getErrorDescription(@Nullable Integer errorCode) {
@@ -161,6 +166,19 @@ public final class MongoDbErrorCodes {
 
 		if (exception instanceof MongoException me) {
 			return isDataIntegrityViolationCode(me.getCode());
+		}
+		return false;
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 5.0
+	 */
+	public static boolean isConcurrencyFailureError(Exception exception) {
+
+		if (exception instanceof MongoException me) {
+			return isConcurrencyFailureCode(me.getCode());
 		}
 		return false;
 	}
@@ -251,6 +269,17 @@ public final class MongoDbErrorCodes {
 	 */
 	public static boolean isClientSessionFailureCode(@Nullable Integer errorCode) {
 		return errorCode != null && clientSessionCodes.containsKey(errorCode);
+	}
+
+	/**
+	 * Check if the given error code matches a know concurrency related error.
+	 *
+	 * @param errorCode the error code to check.
+	 * @return {@literal true} if error matches.
+	 * @since 5.0
+	 */
+	public static boolean isConcurrencyFailureCode(@Nullable Integer errorCode) {
+		return errorCode != null && concurrencyFailureCodes.containsKey(errorCode);
 	}
 
 	/**
