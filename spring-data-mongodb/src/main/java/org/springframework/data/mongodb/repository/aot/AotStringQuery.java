@@ -47,9 +47,9 @@ class AotStringQuery extends Query {
 	private @Nullable String sort;
 	private @Nullable String fields;
 
-	private List<Object> placeholders = new ArrayList<>();
+	private List<AotPlaceholders.Placeholder> placeholders = new ArrayList<>();
 
-	public AotStringQuery(Query query, List<Object> placeholders) {
+	public AotStringQuery(Query query, List<AotPlaceholders.Placeholder> placeholders) {
 		this.delegate = query;
 		this.placeholders = placeholders;
 	}
@@ -79,20 +79,24 @@ class AotStringQuery extends Query {
 	}
 
 	boolean isRegexPlaceholderAt(int index) {
-		if (this.placeholders.isEmpty()) {
-			return false;
-		}
-
-		return this.placeholders.get(index) instanceof RegexPlaceholder;
+		return getRegexPlaceholder(index) != null;
 	}
 
 	@Nullable
 	String getRegexOptions(int index) {
-		if (this.placeholders.isEmpty()) {
+
+		RegexPlaceholder placeholder = getRegexPlaceholder(index);
+		return placeholder != null ? placeholder.regexOptions() : null;
+	}
+
+	@Nullable
+	RegexPlaceholder getRegexPlaceholder(int index) {
+
+		if (index >= this.placeholders.size()) {
 			return null;
 		}
 
-		return this.placeholders.get(index) instanceof RegexPlaceholder rgp ? rgp.regexOptions() : null;
+		return this.placeholders.get(index).unwrap(RegexPlaceholder.class);
 	}
 
 	@Override

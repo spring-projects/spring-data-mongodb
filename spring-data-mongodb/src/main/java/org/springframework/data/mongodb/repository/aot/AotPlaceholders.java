@@ -53,7 +53,7 @@ class AotPlaceholders {
 	 * @param type
 	 * @return
 	 */
-	static Shape geoJson(int index, String type) {
+	static Placeholder geoJson(int index, String type) {
 		return new GeoJsonPlaceholder(index, type);
 	}
 
@@ -63,7 +63,7 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	static Point point(int index) {
+	static Placeholder point(int index) {
 		return new PointPlaceholder(index);
 	}
 
@@ -73,7 +73,7 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	static Shape circle(int index) {
+	static Placeholder circle(int index) {
 		return new CirclePlaceholder(index);
 	}
 
@@ -83,7 +83,7 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	static Shape box(int index) {
+	static Placeholder box(int index) {
 		return new BoxPlaceholder(index);
 	}
 
@@ -93,7 +93,7 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	static Shape sphere(int index) {
+	static Placeholder sphere(int index) {
 		return new SpherePlaceholder(index);
 	}
 
@@ -103,12 +103,32 @@ class AotPlaceholders {
 	 * @param index zero-based index referring to the bindable method parameter.
 	 * @return
 	 */
-	static Shape polygon(int index) {
+	static Placeholder polygon(int index) {
 		return new PolygonPlaceholder(index);
 	}
 
 	static RegexPlaceholder regex(int index, @Nullable String options) {
 		return new RegexPlaceholder(index, options);
+	}
+
+	/**
+	 * Create a placeholder that indicates the value should be treated as list.
+	 *
+	 * @param index zero-based index referring to the bindable method parameter.
+	 * @return new instance of {@link Placeholder}.
+	 */
+	static Placeholder asList(int index) {
+		return asList(indexed(index));
+	}
+
+	/**
+	 * Create a placeholder that indicates the wrapped placeholder should be treated as list.
+	 *
+	 * @param source the target placeholder
+	 * @return new instance of {@link Placeholder}.
+	 */
+	static Placeholder asList(Placeholder source) {
+		return new AsListPlaceholder(source);
 	}
 
 	/**
@@ -120,6 +140,17 @@ class AotPlaceholders {
 	interface Placeholder {
 
 		String getValue();
+
+		/**
+		 * Unwrap the current {@link Placeholder} to the given target type if possible.
+		 *
+		 * @param targetType
+		 * @return
+		 * @param <T>
+		 */
+		default <T extends Placeholder> @Nullable T unwrap(Class<? extends T> targetType) {
+			return targetType.isInstance(this) ? targetType.cast(this) : null;
+		}
 	}
 
 	/**
@@ -292,6 +323,29 @@ class AotPlaceholders {
 		@Override
 		public String toString() {
 			return getValue();
+		}
+	}
+
+	record AsListPlaceholder(Placeholder placeholder) implements Placeholder {
+
+		@Override
+		public @Nullable <T extends Placeholder> T unwrap(Class<? extends T> targetType) {
+
+			if (targetType.isInstance(placeholder)) {
+				return targetType.cast(placeholder);
+			}
+
+			return Placeholder.super.unwrap(targetType);
+		}
+
+		@Override
+		public String toString() {
+			return getValue();
+		}
+
+		@Override
+		public String getValue() {
+			return "[" + placeholder.getValue() + "]";
 		}
 	}
 

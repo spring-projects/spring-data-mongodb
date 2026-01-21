@@ -1341,10 +1341,32 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result).hasSize(1).contains(carter);
 	}
 
+	@Test // GH-5123
+	void findBySkillsContainsSingleElement() {
+
+		List<Person> result = repository.findBySkillsContains("Drums");
+		assertThat(result).hasSize(1).contains(carter);
+	}
+
+	@Test // GH-5123
+	void findBySkillsContainsSingleElementWithIgnoreCase() {
+
+		List<Person> result = repository.findBySkillsContainsIgnoreCase("drums");
+		assertThat(result).hasSize(1).contains(carter);
+	}
+
 	@Test // DATAMONGO-1425
 	void findBySkillsNotContains() {
 
 		List<Person> result = repository.findBySkillsNotContains(Arrays.asList("Drums"));
+		assertThat(result).hasSize((int) (repository.count() - 1));
+		assertThat(result).doesNotContain(carter);
+	}
+
+	@Test // GH-5123
+	void findBySkillsNotContainsSingleElement() {
+
+		List<Person> result = repository.findBySkillsNotContains("Drums");
 		assertThat(result).hasSize((int) (repository.count() - 1));
 		assertThat(result).doesNotContain(carter);
 	}
