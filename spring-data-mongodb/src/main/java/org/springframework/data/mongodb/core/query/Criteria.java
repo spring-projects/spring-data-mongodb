@@ -35,7 +35,6 @@ import org.bson.Document;
 import org.bson.types.Binary;
 import org.jspecify.annotations.Nullable;
 
-import org.springframework.data.core.PropertyReference;
 import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
@@ -84,17 +83,13 @@ public class Criteria implements CriteriaDefinition {
 	private @Nullable Object isValue = NOT_SET;
 
 	public Criteria() {
-		this.criteriaChain = new ArrayList<Criteria>();
+		this.criteriaChain = new ArrayList<>();
 	}
 
 	public Criteria(String key) {
-		this.criteriaChain = new ArrayList<Criteria>();
+		this.criteriaChain = new ArrayList<>();
 		this.criteriaChain.add(this);
 		this.key = key;
-	}
-
-	public Criteria(TypedPropertyPath<?,?> propertyReference) {
-		this(propertyReference.toDotPath());
 	}
 
 	protected Criteria(List<Criteria> criteriaChain, String key) {
@@ -122,8 +117,8 @@ public class Criteria implements CriteriaDefinition {
 	 * @return new instance of {@link Criteria}.
 	 * @since 5.1
 	 */
-	public static <T> Criteria where(TypedPropertyPath<T,?> path) {
-		return where(path.toDotPath());
+	public static <T, P> Criteria where(TypedPropertyPath<T, P> property) {
+		return where(TypedPropertyPath.of(property).toDotPath());
 	}
 
 	/**
@@ -213,13 +208,13 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Static factory method to create a Criteria using the provided path.
 	 *
-	 * @param path the path to the target property.
+	 * @param property path to the target property.
 	 * @return new instance of {@link Criteria}.
 	 * @since 5.1
 	 */
 	@Contract("_ -> new")
-	public Criteria and(TypedPropertyPath<?,?> path) {
-		return and(path.toDotPath());
+	public <T, P> Criteria and(TypedPropertyPath<T, P> property) {
+		return and(TypedPropertyPath.of(property).toDotPath());
 	}
 
 	/**

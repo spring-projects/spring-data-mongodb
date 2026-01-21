@@ -20,53 +20,51 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import org.junit.jupiter.api.Test;
 
-import org.springframework.data.mongodb.core.aggregation.Fields.*;
-
 /**
  * Unit tests for {@link Fields}.
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public class FieldsUnitTests {
+class FieldsUnitTests {
 
 	@Test
-	public void rejectsNullFieldVarArgs() {
+	void rejectsNullFieldVarArgs() {
 		assertThatIllegalArgumentException().isThrownBy(() -> Fields.from((Field[]) null));
 	}
 
 	@Test
-	public void rejectsNullFieldNameVarArgs() {
+	void rejectsNullFieldNameVarArgs() {
 		assertThatIllegalArgumentException().isThrownBy(() -> Fields.fields((String[]) null));
 	}
 
 	@Test
-	public void createsFieldFromNameOnly() {
+	void createsFieldFromNameOnly() {
 		verify(Fields.field("foo"), "foo", null);
 	}
 
 	@Test
-	public void createsFieldFromNameAndTarget() {
+	void createsFieldFromNameAndTarget() {
 		verify(Fields.field("foo", "bar"), "foo", "bar");
 	}
 
 	@Test
-	public void rejectsNullFieldName() {
+	void rejectsNullFieldName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> Fields.field(null));
 	}
 
 	@Test
-	public void rejectsNullFieldNameIfTargetGiven() {
+	void rejectsNullFieldNameIfTargetGiven() {
 		assertThatIllegalArgumentException().isThrownBy(() -> Fields.field(null, "foo"));
 	}
 
 	@Test
-	public void rejectsEmptyFieldName() {
+	void rejectsEmptyFieldName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> Fields.field(""));
 	}
 
 	@Test
-	public void createsFieldsFromFieldInstances() {
+	void createsFieldsFromFieldInstances() {
 
 		AggregationField reference = new AggregationField("foo");
 		Fields fields = Fields.from(reference);
@@ -76,12 +74,12 @@ public class FieldsUnitTests {
 	}
 
 	@Test
-	public void aliasesPathExpressionsIntoLeafForImplicits() {
+	void aliasesPathExpressionsIntoLeafForImplicits() {
 		verify(Fields.field("foo.bar"), "bar", "foo.bar");
 	}
 
 	@Test
-	public void fieldsFactoryMethod() {
+	void fieldsFactoryMethod() {
 
 		Fields fields = fields("a", "b").and("c").and("d", "e");
 
@@ -94,31 +92,31 @@ public class FieldsUnitTests {
 	}
 
 	@Test
-	public void rejectsAmbiguousFieldNames() {
+	void rejectsAmbiguousFieldNames() {
 		assertThatIllegalArgumentException().isThrownBy(() -> fields("b", "a.b"));
 	}
 
 	@Test // DATAMONGO-774
-	public void stripsLeadingDollarsFromName() {
+	void stripsLeadingDollarsFromName() {
 
 		assertThat(Fields.field("$name").getName()).isEqualTo("name");
 		assertThat(Fields.field("$$$$name").getName()).isEqualTo("name");
 	}
 
 	@Test // DATAMONGO-774
-	public void rejectsNameConsistingOfDollarOnly() {
+	void rejectsNameConsistingOfDollarOnly() {
 		assertThatIllegalArgumentException().isThrownBy(() -> Fields.field("$"));
 	}
 
 	@Test // DATAMONGO-774
-	public void stripsLeadingDollarsFromTarget() {
+	void stripsLeadingDollarsFromTarget() {
 
 		assertThat(Fields.field("$target").getTarget()).isEqualTo("target");
 		assertThat(Fields.field("$$$$target").getTarget()).isEqualTo("target");
 	}
 
 	@Test // GH-4123
-	public void keepsRawMappingToDbRefId() {
+	void keepsRawMappingToDbRefId() {
 
 		assertThat(Fields.field("$id").getName()).isEqualTo("id");
 		assertThat(Fields.field("person.$id").getTarget()).isEqualTo("person.$id");
@@ -130,4 +128,5 @@ public class FieldsUnitTests {
 		assertThat(field.getName()).isEqualTo(name);
 		assertThat(field.getTarget()).isEqualTo(target != null ? target : name);
 	}
+
 }

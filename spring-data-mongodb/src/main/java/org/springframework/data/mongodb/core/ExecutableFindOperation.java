@@ -333,14 +333,14 @@ public interface ExecutableFindOperation {
 		TerminatingDistinct<Object> distinct(String field);
 
 		/**
-		 * Finds the distinct values for a specified {@literal path} across a single {@link MongoCollection} or view.
+		 * Finds the distinct values for a specified {@literal property} across a single {@link MongoCollection} or view.
 		 *
-		 * @param path path of the field. Must not be {@literal null}.
+		 * @param property path of the field. Must not be {@literal null}.
 		 * @return new instance of {@link TerminatingDistinct}.
 		 * @throws IllegalArgumentException if field is {@literal null}.
 		 * @since 5.1
 		 */
-		<V, R> TerminatingDistinct<R> distinct(TypedPropertyPath<V, R> path);
+		<V, R> TerminatingDistinct<R> distinct(TypedPropertyPath<V, R> property);
 	}
 
 	/**
