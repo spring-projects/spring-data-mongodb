@@ -20,9 +20,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.PropertyPath;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
@@ -133,6 +137,19 @@ public class Field {
 	}
 
 	/**
+	 * Include one or more {@code properties} to be returned by the query operation.
+	 *
+	 * @param properties the document field names to be included.
+	 * @return {@code this} field projection instance.
+	 * @since 5.1
+	 */
+	@SafeVarargs
+	@Contract("_ -> this")
+	public final <T> Field include(TypedPropertyPath<T, ?>... properties) {
+		return include(Stream.of(properties).map(TypedPropertyPath::of).map(PropertyPath::toDotPath).toList());
+	}
+
+	/**
 	 * Include one or more {@code fields} to be returned by the query operation.
 	 *
 	 * @param fields the document field names to be included.
@@ -174,6 +191,19 @@ public class Field {
 	@Contract("_ -> this")
 	public Field exclude(String... fields) {
 		return exclude(Arrays.asList(fields));
+	}
+
+	/**
+	 * Exclude one or more {@code properties} from being returned by the query operation.
+	 *
+	 * @param properties the document field names to be excluded.
+	 * @return {@code this} field projection instance.
+	 * @since 5.1
+	 */
+	@SafeVarargs
+	@Contract("_ -> this")
+	public final <T> Field exclude(TypedPropertyPath<T, ?>... properties) {
+		return exclude(Stream.of(properties).map(TypedPropertyPath::of).map(PropertyPath::toDotPath).toList());
 	}
 
 	/**

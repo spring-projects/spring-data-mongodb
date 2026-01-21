@@ -20,6 +20,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.springframework.data.mapping.div
+import org.springframework.data.core.div as divTyped
 
 /**
  * @author Sebastien Deleuze
@@ -89,13 +90,13 @@ class CriteriaExtensionsTests {
 	@Test
 	fun `and(KProperty) extension should call its Java counterpart`() {
 
-		criteria.and(Book::title)
+		val criteria = Criteria().and(Book::title).isEqualTo("foo")
 
-		verify(exactly = 1) { criteria.and("title") }
+		assertThat(criteria.criteriaObject).containsEntry("title", "foo")
 	}
 
 	@Test
-	fun `and(KProperty) extension should support nested properties`() {
+	fun `deprecated and(KProperty) extension should support nested properties`() {
 
 		criteria.and(Book::author / Author::name)
 
@@ -103,11 +104,20 @@ class CriteriaExtensionsTests {
 	}
 
 	@Test
+	fun `and(KProperty) extension should support nested properties`() {
+
+		val criteria =
+			Criteria().and(Book::author.divTyped(Author::name)).isEqualTo("foo")
+
+		assertThat(criteria.criteriaObject).containsEntry("author.name", "foo")
+	}
+
+	@Test
 	fun `where(KProperty) should equal Criteria where()`() {
 
 		class Book(val title: String)
 
-		val typedCriteria = where(Book::title)
+		val typedCriteria = Criteria.where(Book::title)
 		val classicCriteria = Criteria.where("title")
 
 		assertThat(typedCriteria).isEqualTo(classicCriteria)

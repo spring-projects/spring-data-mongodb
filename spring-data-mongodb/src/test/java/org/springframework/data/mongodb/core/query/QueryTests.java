@@ -376,6 +376,24 @@ class QueryTests {
 		assertThat(query.isSorted()).isTrue();
 	}
 
+	@Test // GH-5135
+	void shouldIncludeFields() {
+
+		Query query = new Query();
+		query.fields().include(Person::firstName, Person::lastName);
+
+		assertThat(query.getFieldsObject()).containsEntry("firstName", 1).containsEntry("lastName", 1);
+	}
+
+	@Test // GH-5135
+	void shouldExcludeFields() {
+
+		Query query = new Query();
+		query.fields().exclude(Person::firstName, Person::lastName);
+
+		assertThat(query.getFieldsObject()).containsEntry("firstName", 0).containsEntry("lastName", 0);
+	}
+
 	private void compareQueries(Query actual, Query expected) {
 
 		assertThat(actual.getCollation()).isEqualTo(expected.getCollation());
@@ -394,5 +412,9 @@ class QueryTests {
 
 	enum EnumType {
 		VAL_1, VAL_2
+	}
+
+	record Person(String firstName, String lastName) {
+
 	}
 }
