@@ -1,0 +1,37 @@
+name: snapshot.yml
+on:
+  workflow_dispatch:
+  push:
+    #    branches: [ main, 5.0.x, 4.5.x, 'issue/**' ]
+    branches: [ 'issue/actions' ]
+
+permissions: read-all
+
+jobs:
+  build-snapshots:
+    name: Build and deploy snapshots
+    if: ${{ github.repository_owner == 'spring-projects' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Java and Maven
+        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        with:
+          develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
+      - name: Mongo Version
+        id: determine-mongo-version
+        run: |
+          MONGO_VERSION=$(echo ${CONFIG_JSON} | jq -r '.database.mongodb["latest"]')
+          echo "$MONGO_VERSION"
+          echo "MONGO_VERSION=$MONGO_VERSION" >> $GITHUB_OUTPUT
+      - name: Initialize MongoDB
+        uses: ./.github/actions/mongodb/
+        with:
+          mongo-version: ${{ steps.determine-mongo-version.outputs.MONGO_VERSION }}
+          replica-set: 'rs0'
+      - name: Deploy to Artifactory
+        uses: spring-projects/spring-data-release/actions/maven-artifactory-deploy@main
+        with:
+          build-name: 'spring-data-mongodb'
+          username: '${{ secrets.ARTIFACTORY_USERNAME }}'
+          password: '${{ secrets.ARTIFACTORY_PASSWORD }}'
