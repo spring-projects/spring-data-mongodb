@@ -1,0 +1,30 @@
+name: Snapshots
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, 5.0.x, 4.5.x, 'issue/**' ]
+
+permissions: read-all
+
+jobs:
+  build-snapshots:
+    name: Build and deploy snapshots
+    if: ${{ github.repository_owner == 'spring-projects' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Java and Maven
+        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        with:
+          develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
+      - name: Setup MongoDB Server
+        uses: spring-projects/spring-data-release/actions/setup-mongodb@main
+        with:
+          replica-set: 'rs0'
+      - name: Deploy to Artifactory
+        uses: spring-projects/spring-data-release/actions/maven-artifactory-deploy@main
+        with:
+          build-name: 'spring-data-mongodb'
+          username: '${{ secrets.ARTIFACTORY_USERNAME }}'
+          password: '${{ secrets.ARTIFACTORY_PASSWORD }}'

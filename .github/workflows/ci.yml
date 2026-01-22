@@ -1,0 +1,31 @@
+name: CI Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, 5.0.x, 4.5.x, 'issue/**' ]
+
+permissions: read-all
+
+jobs:
+  build-java:
+    strategy:
+      matrix:
+        java-version: [ base, main ]
+        mongodb-version: [ 'latest', '8.2', '8.0', '7.0' ]
+    name: Build project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Java and Maven
+        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        with:
+          java-version: ${{ matrix.java-version }}
+          develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
+      - name: Setup MongoDB Server
+        uses: spring-projects/spring-data-release/actions/setup-mongodb@main
+        with:
+          version: '${{ matrix.mongodb-version }}'
+          replica-set: 'rs0'
+      - name: Build
+        uses: spring-projects/spring-data-release/actions/maven-build@main
