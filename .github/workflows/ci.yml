@@ -1,0 +1,35 @@
+name: CI Build
+
+on:
+  workflow_dispatch: 
+  push:
+#    branches: [ main, 5.0.x, 4.5.x, 'issue/**' ]
+    branches: [ 'issue/actions' ]
+
+permissions: read-all
+
+jobs:
+  build-java:
+    strategy:
+      matrix:
+        java-version: [ base, main ]
+        mongo-version: [8.0]
+    name: Build project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Java and Maven
+        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        with:
+          java-version: ${{ matrix.java-version }}
+          develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
+      - name: Start MongoDB
+        run: docker run --rm -d -p 27017:27017 --name mongo  mongo:${{ matrix.mongo-version }} --replSet rs0 --bind_ip_all
+      - name: Initialize MongoDB
+        run: |
+          sleep 5 # Give mongo a chance to start up
+          docker run --rm mongo:${{ matrix.mongo-version }} mongosh --host 172.17.0.1 --eval 'rs.initiate({_id: "rs0", members: [{_id: 0, host: "172.17.0.1:27017"}]})'
+      - name: Build
+        uses: spring-projects/spring-data-release/actions/maven-build@main
+        with:
+          run: ./mvnw -Dsort -B -U -Pci clean dependency:list verify
