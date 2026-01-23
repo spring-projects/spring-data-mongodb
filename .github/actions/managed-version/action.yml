@@ -1,0 +1,34 @@
+name: managed-version
+description: Obtain a managed version
+
+inputs:
+  version:
+    description: 'Version to look up for managed one'
+    required: true
+    default: 'latest'
+  managed-versions:
+    description: 'manged version json'
+    required: true
+  key:
+    description: 'the key to lookup'
+    required: true
+    default: '.database.mongodb'
+
+outputs:
+  managed-version:
+    description: "The managed version"
+    value: ${{ steps.determine-managed-version.outputs.managed-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Obtain Managed Version
+      id: determine-managed-version
+      shell: bash
+      run: |
+        MANAGED_VERSION=$(echo ${{inputs.managed-versions}} | jq -r '${{inputs.key}}["${{inputs.version}}"]')
+        if [[ -z "$MANAGED_VERSION" ]] || [[ "$MANAGED_VERSION" == "null" ]]; then
+          MANAGED_VERSION=${{inputs.version}}
+        fi
+        echo "managed-version=$MANAGED_VERSION" >> $GITHUB_OUTPUT
+

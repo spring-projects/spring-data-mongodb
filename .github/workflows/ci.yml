@@ -23,10 +23,17 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
+      - name: Mongo Version
+        id: determine-mongo-version
+        uses: ./.github/actions/managed-version
+        with:
+          managed-versions: ${CONFIG_JSON}
+          key: '.database.mongodb'
+          version: '${{ matrix.mongo-version }}'
       - name: Initialize MongoDB
         uses: ./.github/actions/mongodb/
         with:
-          mongo-version: ${{ matrix.mongo-version }}
+          mongo-version: ${{ steps.determine-mongo-version.outputs.managed-version }}
           replica-set: 'rs0'
       - name: Build
         uses: spring-projects/spring-data-release/actions/maven-build@main
