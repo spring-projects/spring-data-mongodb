@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         java-version: [ base, main ]
-        mongo-version: [8.0]
+        mongo-version: ['latest', '8.2', '8.0', '7.0']
     name: Build project
     runs-on: ubuntu-latest
     steps:
@@ -23,17 +23,11 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
-      - name: Mongo Version
-        id: determine-mongo-version
-        uses: ./.github/actions/managed-version
-        with:
-          managed-versions: ${CONFIG_JSON}
-          key: '.database.mongodb'
-          version: '${{ matrix.mongo-version }}'
-      - name: Initialize MongoDB
+      - name: Initialize MongoDB Server
         uses: ./.github/actions/mongodb/
         with:
-          mongo-version: ${{ steps.determine-mongo-version.outputs.managed-version }}
+          managed-versions: ${CONFIG_JSON}
+          mongodb-server-version: '${{ matrix.mongo-version }}'
           replica-set: 'rs0'
       - name: Build
         uses: spring-projects/spring-data-release/actions/maven-build@main

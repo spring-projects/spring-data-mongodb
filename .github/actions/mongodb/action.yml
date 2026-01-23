@@ -1,26 +1,30 @@
-name: MongoDB
-description: 'Set up a MongoDB server'
+name: Initialize MongoDB
+description: 'Initialize a MongoDB server looking up a configuration managed version pointing to a dedicated revision'
 
 inputs:
-  mongo-version:
-    description: 'MongoDB Server version'
+  managed-versions:
+    description: 'managed version json to retrieve the target server version from'
     required: true
-  replica-set:
-    description: 'Replica Set Name'
+  mongodb-server-version:
+    description: 'The desired MongoDB Server version'
     required: false
-    default: '_standalone_'
+    default: 'latest'
+  replica-set:
+    description: 'Replica Set Name (if not provided Mongo will be started as a standalone instance)'
+    required: false
+
 runs:
   using: composite
   steps:
-    - name: Start MongoDB Standalone
-      shell: bash
-      if: ${{ inputs.replica-set == '_standalone_' }}
-      run: docker run --rm -d -p 27017:27017 --name mongo mongo:${{ inputs.mongo-version }} --bind_ip_all
-    - name: Start MongoDB Replica Set
-      shell: bash
-      if: ${{ inputs.replica-set != '_standalone_' }}
-      run: |
-        echo 'replica'
-        docker run --rm -d -p 27017:27017 --name mongo mongo:${{ inputs.mongo-version }} --replSet ${{ inputs.replica-set }} --bind_ip_all
-        sleep 5 # Give mongo a chance to start up
-        docker run --rm mongo:${{ inputs.mongo-version }} mongosh --host 172.17.0.1 --eval 'rs.initiate({_id: "${{ inputs.replica-set }}", members: [{_id: 0, host: "172.17.0.1:27017"}]})'
+    - name: Mongo Version
+      id: determine-mongo-version
+      uses: ./.github/actions/managed-version
+      with:
+        managed-versions: ${{ inputs.managed-versions }}
+        key: '.database.mongodb'
+        version: '${{ inputs.mongodb-server-version }}'
+    - name: Initialize MongoDB
+      uses: ./.github/actions/start-mongodb-server
+      with:
+        mongo-version: '${{ steps.determine-mongo-version.outputs.managed-version }}'
+        replica-set: ${{ inputs.replica-set }}

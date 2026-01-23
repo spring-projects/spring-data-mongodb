@@ -18,17 +18,11 @@ jobs:
         uses: spring-projects/spring-data-release/actions/setup-maven@main
         with:
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
-      - name: Mongo Version
-        id: determine-mongo-version
-        uses: ./.github/actions/managed-version
-        with:
-          managed-versions: ${CONFIG_JSON}
-          key: '.database.mongodb'
-          version: 'latest'
-      - name: Initialize MongoDB
+      - name: Initialize MongoDB Server
         uses: ./.github/actions/mongodb/
         with:
-          mongo-version: ${{ steps.determine-mongo-version.outputs.managed-version }}
+          managed-versions: ${CONFIG_JSON}
+          mongodb-server-version: 'latest'
           replica-set: 'rs0'
       - name: Deploy to Artifactory
         uses: spring-projects/spring-data-release/actions/maven-artifactory-deploy@main

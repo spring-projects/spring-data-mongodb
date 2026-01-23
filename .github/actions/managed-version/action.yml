@@ -7,12 +7,11 @@ inputs:
     required: true
     default: 'latest'
   managed-versions:
-    description: 'manged version json'
+    description: 'managed version json'
     required: true
   key:
     description: 'the key to lookup'
     required: true
-    default: '.database.mongodb'
 
 outputs:
   managed-version:
@@ -28,7 +27,7 @@ runs:
       run: |
         MANAGED_VERSION=$(echo ${{inputs.managed-versions}} | jq -r '${{inputs.key}}["${{inputs.version}}"]')
         if [[ -z "$MANAGED_VERSION" ]] || [[ "$MANAGED_VERSION" == "null" ]]; then
-          MANAGED_VERSION=${{inputs.version}}
+          MANAGED_VERSION='${{inputs.version}}'
         fi
         echo "managed-version=$MANAGED_VERSION" >> $GITHUB_OUTPUT
 
