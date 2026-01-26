@@ -1,10 +1,9 @@
-name: Snapshot Build
+name: Snapshots
 
 on:
   workflow_dispatch:
   push:
-    #    branches: [ main, 5.0.x, 4.5.x, 'issue/**' ]
-    branches: [ 'issue/actions' ]
+    branches: [ main, 5.0.x, 4.5.x, 'issue/**' ]
 
 permissions: read-all
 
@@ -19,11 +18,9 @@ jobs:
         uses: spring-projects/spring-data-release/actions/setup-maven@main
         with:
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
-      - name: Initialize MongoDB Server
-        uses: ./.github/actions/mongodb/
+      - name: Setup MongoDB Server
+        uses: spring-projects/spring-data-release/actions/setup-mongodb@main
         with:
-          managed-versions: ${CONFIG_JSON}
-          mongodb-server-version: 'latest'
           replica-set: 'rs0'
       - name: Deploy to Artifactory
         uses: spring-projects/spring-data-release/actions/maven-artifactory-deploy@main
