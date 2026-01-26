@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.data.mongodb.test.util.Assertions.*;
-
-import org.junit.jupiter.api.Test;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.data.core.TypedPropertyPath;
 
 /**
  * Unit tests for {@link Field}.
@@ -50,6 +51,16 @@ class FieldUnitTests {
 		assertThat(fields.getFieldsObject()).isEqualTo("{foo:1, bar:1, baz:1}");
 	}
 
+	@Test // GH-5135
+	void rendersInclusionViaPropertyPathCorrectly() {
+
+		Field fields = new Field()
+				.include(Person::getFirstName, TypedPropertyPath.of(Person::getAddress).then(Address::getStreet))
+				.include("baz");
+
+		assertThat(fields.getFieldsObject()).isEqualTo("{firstName:1, 'address.street':1, baz:1}");
+	}
+
 	@Test
 	void differentObjectSetupCreatesEqualField() {
 
@@ -68,6 +79,16 @@ class FieldUnitTests {
 		assertThat(fields.getFieldsObject()).isEqualTo("{foo:0, bar:0, baz:0}");
 	}
 
+	@Test // DATAMONGO-2294
+	void rendersExclusionViaPropertyPathCorrectly() {
+
+		Field fields = new Field()
+				.exclude(Person::getFirstName, TypedPropertyPath.of(Person::getAddress).then(Address::getStreet))
+				.exclude("baz");
+
+		assertThat(fields.getFieldsObject()).isEqualTo("{firstName:0, 'address.street':0, baz:0}");
+	}
+
 	@Test // GH-4625
 	void overriddenInclusionMethodsCreateEqualFields() {
 
@@ -84,5 +105,45 @@ class FieldUnitTests {
 		Field right = new Field().exclude(List.of("foo", "bar"));
 
 		assertThat(left).isEqualTo(right);
+	}
+
+	static class Person {
+
+		private String firstName;
+		private String lastName;
+		private Address address;
+
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public String getLastName() {
+			return lastName;
+		}
+
+		public Address getAddress() {
+			return address;
+		}
+	}
+
+	static class Address {
+		private String street;
+		private String city;
+
+		public String getStreet() {
+			return street;
+		}
+
+		public void setStreet(String street) {
+			this.street = street;
+		}
+
+		public String getCity() {
+			return city;
+		}
+
+		public void setCity(String city) {
+			this.city = city;
+		}
 	}
 }

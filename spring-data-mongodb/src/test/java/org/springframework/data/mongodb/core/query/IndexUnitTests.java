@@ -21,6 +21,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.Index;
@@ -37,6 +38,12 @@ public class IndexUnitTests {
 	public void testWithAscendingIndex() {
 		Index i = new Index().on("name", Direction.ASC);
 		assertThat(i.getIndexKeys()).isEqualTo(Document.parse("{ \"name\" : 1}"));
+	}
+
+	@Test // GH-5135
+	public void createIndexViaTypedPropertyPath() {
+		Index i = new Index().on(Person::getFirstName, Direction.ASC);
+		assertThat(i.getIndexKeys()).isEqualTo(Document.parse("{ \"firstName\" : 1}"));
 	}
 
 	@Test

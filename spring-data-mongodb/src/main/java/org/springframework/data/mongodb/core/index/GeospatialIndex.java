@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
@@ -55,6 +56,18 @@ public class GeospatialIndex implements IndexDefinition {
 		Assert.hasText(field, "Field must have text");
 
 		this.field = field;
+	}
+
+	/**
+	 * Create a new {@link GeospatialIndex} definition for the given {@link TypedPropertyPath property}.
+	 *
+	 * @param property must not be {@literal null}.
+	 * @param <T> Property owing root type
+	 * @param <P> Target property reachable via path.
+	 * @since 5.1
+	 */
+	public <T, P> GeospatialIndex(TypedPropertyPath<T, P> property) {
+		this(property.toDotPath());
 	}
 
 	/**

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.util.ObjectUtils;
 
@@ -54,6 +55,10 @@ public class UntypedExampleMatcher implements ExampleMatcher {
 		return new UntypedExampleMatcher(delegate.withIgnorePaths(ignoredPaths));
 	}
 
+	public <T> UntypedExampleMatcher withIgnorePaths(TypedPropertyPath<T, ?>... ignoredPaths) {
+		return new UntypedExampleMatcher(delegate.withIgnorePaths(ignoredPaths));
+	}
+
 	public UntypedExampleMatcher withStringMatcher(StringMatcher defaultStringMatcher) {
 		return new UntypedExampleMatcher(delegate.withStringMatcher(defaultStringMatcher));
 	}
@@ -75,11 +80,23 @@ public class UntypedExampleMatcher implements ExampleMatcher {
 		return new UntypedExampleMatcher(delegate.withMatcher(propertyPath, genericPropertyMatcher));
 	}
 
+	public <T,P> UntypedExampleMatcher withMatcher(TypedPropertyPath<T,P> property, GenericPropertyMatcher genericPropertyMatcher) {
+		return new UntypedExampleMatcher(delegate.withMatcher(property, genericPropertyMatcher));
+	}
+
 	public UntypedExampleMatcher withTransformer(String propertyPath, PropertyValueTransformer propertyValueTransformer) {
 		return new UntypedExampleMatcher(delegate.withTransformer(propertyPath, propertyValueTransformer));
 	}
 
+	public <T,P> UntypedExampleMatcher withTransformer(TypedPropertyPath<T,P> property, PropertyValueTransformer propertyValueTransformer) {
+		return new UntypedExampleMatcher(delegate.withTransformer(property, propertyValueTransformer));
+	}
+
 	public UntypedExampleMatcher withIgnoreCase(String... propertyPaths) {
+		return new UntypedExampleMatcher(delegate.withIgnoreCase(propertyPaths));
+	}
+
+	public <T> UntypedExampleMatcher withIgnoreCase(TypedPropertyPath<T,?>... propertyPaths) {
 		return new UntypedExampleMatcher(delegate.withIgnoreCase(propertyPaths));
 	}
 

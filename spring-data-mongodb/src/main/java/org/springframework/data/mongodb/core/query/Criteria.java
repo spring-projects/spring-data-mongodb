@@ -118,7 +118,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 5.1
 	 */
 	public static <T, P> Criteria where(TypedPropertyPath<T, P> property) {
-		return where(TypedPropertyPath.of(property).toDotPath());
+		return where(property.toDotPath());
 	}
 
 	/**

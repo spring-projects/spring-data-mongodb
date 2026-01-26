@@ -192,7 +192,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		@Override
 		public <V, R> TerminatingDistinct<R> distinct(TypedPropertyPath<V, R> property) {
-			return new DistinctOperationSupport(this, TypedPropertyPath.of(property).toDotPath());
+			return new DistinctOperationSupport(this, property.toDotPath());
 		}
 
 		private List<T> doFind(@Nullable CursorPreparer preparer) {
