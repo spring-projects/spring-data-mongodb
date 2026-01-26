@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.bson.Document;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.util.Assert;
 
 /**
@@ -44,6 +45,19 @@ public class HashedIndex implements IndexDefinition {
 	 */
 	public static HashedIndex hashed(String field) {
 		return new HashedIndex(field);
+	}
+
+	/**
+	 * Creates a new {@link HashedIndex} for the given property.
+	 *
+	 * @param property must not be {@literal null}.
+	 * @return new instance of {@link HashedIndex}.
+	 * @param <T> Property owing root type
+	 * @param <P> Target property reachable via path.
+	 * @since 5.1
+	 */
+	public static <T, P> HashedIndex hashed(TypedPropertyPath<T, P> property) {
+		return new HashedIndex(TypedPropertyPath.of(property).toDotPath());
 	}
 
 	@Override

@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.IndexOptions.Unique;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -53,10 +54,38 @@ public class Index implements IndexDefinition {
 		fieldSpec.put(key, direction);
 	}
 
+	/**
+	 * Create a new {@link Index} definition for the given {@link TypedPropertyPath property} and {@link Direction}
+	 * 
+	 * @param property must not be {@literal null}.
+	 * @param direction index order
+	 * @param <T> Property owing root type
+	 * @param <P> Target property reachable via path.
+	 * @since 5.1
+	 */
+	public <T, P> Index(TypedPropertyPath<T, P> property, Direction direction) {
+		this(TypedPropertyPath.of(property).toDotPath(), direction);
+	}
+
 	@Contract("_, _ -> this")
 	public Index on(String key, Direction direction) {
 		fieldSpec.put(key, direction);
 		return this;
+	}
+
+	/**
+	 * Append the {@link TypedPropertyPath path} to the target property to the index definition.
+	 *
+	 * @param property the property to include.
+	 * @param direction the direction to order values within the index.
+	 * @return this.
+	 * @param <T> Property owing root type
+	 * @param <P> Target property reachable via path.
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T, P> Index on(TypedPropertyPath<T, P> property, Direction direction) {
+		return on(TypedPropertyPath.of(property).toDotPath(), direction);
 	}
 
 	@Contract("_ -> this")

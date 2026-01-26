@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
@@ -56,8 +56,8 @@ class CriteriaWithPropertyReferenceUnitTests {
 			) //
 	);
 
-	@ParameterizedTest
 	@FieldSource
+	@ParameterizedTest // GH-5135
 	void compare(Fixture fixture) {
 		assertThat(fixture.underTest).describedAs(fixture.description).isEqualTo(fixture.expected);
 	}
@@ -67,5 +67,7 @@ class CriteriaWithPropertyReferenceUnitTests {
 
 	record TestEntity(String name, Long age, Referenced referenced) {
 	}
-	record Referenced(String value) {}
+
+	record Referenced(String value) {
+	}
 }

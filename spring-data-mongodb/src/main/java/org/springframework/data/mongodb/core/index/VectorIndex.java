@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.core.TypeInformation;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -70,6 +71,18 @@ public class VectorIndex implements SearchIndexDefinition {
 	}
 
 	/**
+	 * Add a filter field.
+	 *
+	 * @param property The property used for filtering.
+	 * @return this.
+	 * @since 5.1
+	 */
+	@Contract("_ -> this")
+	public <T,P> VectorIndex addFilter(TypedPropertyPath<T,P> property) {
+		return addFilter(TypedPropertyPath.of(property).toDotPath());
+	}
+
+	/**
 	 * Add a vector field and accept a {@link VectorFieldBuilder} customizer.
 	 *
 	 * @param path dot notation to field/property used for filtering.
@@ -84,6 +97,19 @@ public class VectorIndex implements SearchIndexDefinition {
 		VectorFieldBuilder builder = new VectorFieldBuilder(path, "vector");
 		customizer.accept(builder);
 		return addField(builder.build());
+	}
+
+	/**
+	 * Add a vector field and accept a {@link VectorFieldBuilder} customizer.
+	 *
+	 * @param path the property holding the vector.
+	 * @param customizer customizer function.
+	 * @return this.
+	 * @since 5.1
+	 */
+	@Contract("_, _ -> this")
+	public <T,P> VectorIndex addVector(TypedPropertyPath<T,P> path, Consumer<VectorFieldBuilder> customizer) {
+		return addVector(TypedPropertyPath.of(path).toDotPath(), customizer);
 	}
 
 	@Override
