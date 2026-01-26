@@ -1,4 +1,5 @@
-name: snapshot.yml
+name: Snapshot Build
+
 on:
   workflow_dispatch:
   push:
