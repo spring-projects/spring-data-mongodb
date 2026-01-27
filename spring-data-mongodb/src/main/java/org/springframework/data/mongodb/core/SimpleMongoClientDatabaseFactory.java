@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.client.MongoCluster;
 import org.springframework.beans.factory.DisposableBean;
 
 import com.mongodb.ClientSessionOptions;
@@ -95,4 +96,8 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 		return getMongoClient().getDatabase(dbName);
 	}
 
+	@Override
+	public MongoCluster getCluster() {
+		return getMongoClient();
+	}
 }

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.client.MongoCluster;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.framework.ProxyFactory;
@@ -166,6 +167,13 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	 */
 	record ClientSessionBoundMongoDbFactory(ClientSession session,
 			MongoDatabaseFactory delegate) implements MongoDatabaseFactory {
+
+		@Override
+		public MongoCluster getCluster() {
+
+			// TODO: we need to proxy the cluster and methods that accept a client session
+			return delegate.getCluster();
+		}
 
 		@Override
 		public MongoDatabase getMongoDatabase() throws DataAccessException {

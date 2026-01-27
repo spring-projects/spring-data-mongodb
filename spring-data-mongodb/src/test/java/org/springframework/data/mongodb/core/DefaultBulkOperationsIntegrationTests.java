@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.data.domain.Sort.Direction.DESC;
+import static org.springframework.data.mongodb.core.Namespace.namespace;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,14 +27,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.mongodb.MongoNamespace;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.bulk.ClientNamespacedInsertOneModel;
-import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
-import com.mongodb.internal.client.model.bulk.ClientWriteModel;
-import com.mongodb.internal.client.model.bulk.ConcreteClientInsertOneModel;
-import com.mongodb.internal.client.model.bulk.ConcreteClientNamespacedInsertOneModel;
-import com.mongodb.internal.operation.ClientBulkWriteOperation;
 import org.bson.BsonBoolean;
 import org.bson.BsonInt32;
 import org.bson.Document;
@@ -62,10 +55,15 @@ import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.Pair;
 
 import com.mongodb.MongoBulkWriteException;
+import com.mongodb.MongoNamespace;
 import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.internal.client.model.bulk.ConcreteClientInsertOneModel;
+import com.mongodb.internal.client.model.bulk.ConcreteClientNamespacedInsertOneModel;
+import com.mongodb.internal.operation.ClientBulkWriteOperation;
 
 /**
  * Integration tests for {@link DefaultBulkOperations}.
@@ -376,10 +374,26 @@ public class DefaultBulkOperationsIntegrationTests {
 	}
 
 	@Test // GH-5087
+	void hackItOn() {
+
+		NamespaceBulkOperations ops = null;
+		ops.inNamespace(namespace("person"))
+			.update()
+				.one(Criteria.where("name").is("batman"), null)
+			.insert()
+				.many(List.of())
+			.inNamespace(namespace("log"))
+			.insert()
+			.execute();
+
+		
+	}
+
+	@Test // GH-5087
 	void exploreItOnClient() {
 
 		ClientBulkWriteOperation op = null;
-		op.execute()
+		// op.execute()
 
 		mongoClient.getDatabase("test").getCollection("pizzas").drop();
 		mongoClient.getDatabase("test").getCollection("pizzaOrders").drop();
@@ -388,11 +402,11 @@ public class DefaultBulkOperationsIntegrationTests {
 		MongoDatabase db = operations.getDb();
 		MongoTemplate template = operations;
 
-		Document commandDocument = new Document("bulkWrite", new BsonInt32(1))
-			.append("errorsOnly", BsonBoolean.TRUE)
-			.append("ordered", BsonBoolean.TRUE);
+		Document commandDocument = new Document("bulkWrite", new BsonInt32(1)).append("errorsOnly", BsonBoolean.TRUE)
+				.append("ordered", BsonBoolean.TRUE);
 		List<Document> bulkOperations = new ArrayList<>();
-		bulkOperations.add(Document.parse("{ insert: 0, document: { _id: 5, type: 'sausage', size: 'small', price: 12 } }"));
+		bulkOperations
+				.add(Document.parse("{ insert: 0, document: { _id: 5, type: 'sausage', size: 'small', price: 12 } }"));
 		bulkOperations.add(Document.parse("{ insert: 1, document: { _id: 4, type: 'vegan cheese', number: 16 } }"));
 		commandDocument.put("ops", bulkOperations);
 
@@ -409,7 +423,9 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		MongoNamespace pizzasNamespace = new MongoNamespace(operations.getDb().getName(), "pizzas");
 
-		ConcreteClientNamespacedInsertOneModel insert1 = new ConcreteClientNamespacedInsertOneModel(pizzasNamespace, new ConcreteClientInsertOneModel(Document.parse("{ insert: 0, document: { _id: 5, type: 'sausage', size: 'small', price: 12 } }")));
+		ConcreteClientNamespacedInsertOneModel insert1 = new ConcreteClientNamespacedInsertOneModel(pizzasNamespace,
+				new ConcreteClientInsertOneModel(
+						Document.parse("{ insert: 0, document: { _id: 5, type: 'sausage', size: 'small', price: 12 } }")));
 		insert1.getNamespace();
 		insert1.getModel();
 	}

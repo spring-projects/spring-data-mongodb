@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import com.mongodb.client.MongoCluster;
 import org.bson.codecs.configuration.CodecRegistry;
 
 import org.springframework.dao.DataAccessException;
@@ -159,5 +163,15 @@ public interface MongoDatabaseFactory extends CodecRegistryProvider, MongoSessio
 	 */
 	default boolean isTransactionActive() {
 		return false;
+	}
+
+	MongoCluster getCluster();
+
+	default void doWithClient(Consumer<MongoCluster> consumer) {
+		consumer.accept(getCluster());
+	}
+
+	default <T> T doWithClient(Function<MongoCluster, T> execution) {
+		return execution.apply(getCluster());
 	}
 }
