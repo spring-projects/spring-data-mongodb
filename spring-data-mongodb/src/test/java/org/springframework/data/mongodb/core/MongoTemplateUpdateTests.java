@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Sort;
@@ -337,6 +336,30 @@ class MongoTemplateUpdateTests {
 			collection(Versioned.class).find(new org.bson.Document("_id", source.id)).limit(1).into(new ArrayList<>()))
 			.containsExactly(new org.bson.Document("_id", source.id).append("version", 10L).append("value", "changed")
 				.append("_class", "org.springframework.data.mongodb.core.MongoTemplateUpdateTests$Versioned"));
+	}
+
+	@Test // GH-5146
+	void bitOperatorShouldRetainInputType() {
+
+		MongoCollection<org.bson.Document> collection = collection(Score.class);
+		collection.insertOne(new org.bson.Document("_id", "bitwise-update-int").append("extraCredit", 10));
+		collection.insertOne(new org.bson.Document("_id", "bitwise-update-long").append("extraCredit", 10));
+
+		Query queryInt = Query.query(Criteria.where("_id").is("bitwise-update-int"));
+		Update updateInt = new Update().bitwise("extraCredit").or(100);
+		template.updateFirst(queryInt, updateInt, template.getCollectionName(Score.class));
+
+		Query queryLong = Query.query(Criteria.where("_id").is("bitwise-update-long"));
+		Update updateLong = new Update().bitwise("extraCredit").or(100L);
+		template.updateFirst(queryLong, updateLong, template.getCollectionName(Score.class));
+
+		org.bson.Document $project = org.bson.Document
+				.parse("{ $project : { 'extraCredit-field-type' : { $type : '$extraCredit'}} }");
+		ArrayList<org.bson.Document> fieldTypesAfterUpdate = collection.aggregate(List.of($project))
+				.into(new ArrayList<>());
+		assertThat(fieldTypesAfterUpdate).containsExactly(
+				new org.bson.Document("_id", "bitwise-update-int").append("extraCredit-field-type", "int"), //
+				new org.bson.Document("_id", "bitwise-update-long").append("extraCredit-field-type", "long"));
 	}
 
 	private List<org.bson.Document> all(Class<?> type) {

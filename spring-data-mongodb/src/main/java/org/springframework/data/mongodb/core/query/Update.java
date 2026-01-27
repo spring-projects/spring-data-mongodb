@@ -1332,6 +1332,19 @@ public class Update implements UpdateDefinition {
 		}
 
 		/**
+		 * Updates to the result of a bitwise and operation between the current value and the given one.
+		 *
+		 * @param value
+		 * @return never {@literal null}.
+		 * @since 4.5.9
+		 */
+		public Update and(int value) {
+
+			addFieldOperation(BitwiseOperator.AND, value);
+			return reference;
+		}
+
+		/**
 		 * Updates to the result of a bitwise or operation between the current value and the given one.
 		 *
 		 * @param value
@@ -1344,12 +1357,38 @@ public class Update implements UpdateDefinition {
 		}
 
 		/**
+		 * Updates to the result of a bitwise or operation between the current value and the given one.
+		 *
+		 * @param value
+		 * @return never {@literal null}.
+		 * @since 4.5.9
+		 */
+		public Update or(int value) {
+
+			addFieldOperation(BitwiseOperator.OR, value);
+			return reference;
+		}
+
+		/**
 		 * Updates to the result of a bitwise xor operation between the current value and the given one.
 		 *
 		 * @param value
 		 * @return never {@literal null}.
 		 */
 		public Update xor(long value) {
+
+			addFieldOperation(BitwiseOperator.XOR, value);
+			return reference;
+		}
+
+		/**
+		 * Updates to the result of a bitwise xor operation between the current value and the given one.
+		 *
+		 * @param value
+		 * @return never {@literal null}.
+		 * @since 4.5.9
+		 */
+		public Update xor(int value) {
 
 			addFieldOperation(BitwiseOperator.XOR, value);
 			return reference;
