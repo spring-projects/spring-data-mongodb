@@ -76,12 +76,12 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Static factory method to create an Update using the provided path
 	 *
-	 * @param path the property path to update.
+	 * @param property the property path to update.
 	 * @return new instance of {@link Update}.
 	 * @since 5.1
 	 */
-	public static <T, P> Update update(TypedPropertyPath<T, P> path, @Nullable Object value) {
-		return update(TypedPropertyPath.of(path).toDotPath(), value);
+	public static <T, P> Update update(TypedPropertyPath<T, P> property, @Nullable Object value) {
+		return update(property.toDotPath(), value);
 	}
 
 	/**
@@ -177,7 +177,7 @@ public class Update implements UpdateDefinition {
 	 */
 	@Contract("_, _ -> this")
 	public <T, P> Update setOnInsert(TypedPropertyPath<T, P> property, @Nullable Object value) {
-		return setOnInsert(TypedPropertyPath.of(property).toDotPath(), value);
+		return setOnInsert(property.toDotPath(), value);
 	}
 
 	/**
@@ -233,7 +233,7 @@ public class Update implements UpdateDefinition {
 	 */
 	@Contract("_, _ -> this")
 	public <T, P> Update inc(TypedPropertyPath<T, P> property, Number inc) {
-		return inc(TypedPropertyPath.of(property).toDotPath(), inc);
+		return inc(property.toDotPath(), inc);
 	}
 
 	/**
@@ -327,7 +327,7 @@ public class Update implements UpdateDefinition {
 	 */
 	@Contract("_ -> new")
 	public <T, P> PushOperatorBuilder push(TypedPropertyPath<T, P> property) {
-		return push(TypedPropertyPath.of(property).toDotPath());
+		return push(property.toDotPath());
 	}
 
 	/**
@@ -347,14 +347,14 @@ public class Update implements UpdateDefinition {
 	 * Update using {@code $addToSet} modifier. Allows creation of {@code $push} command for single or multiple (using
 	 * {@code $each}) values
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @return new instance of {@link AddToSetBuilder}.
 	 * @see #addToSet(String)
 	 * @since 5.1
 	 */
 	@Contract("_ -> new")
 	public <T, P> AddToSetBuilder addToSet(TypedPropertyPath<T, P> property) {
-		return addToSet(TypedPropertyPath.of(property).toDotPath());
+		return addToSet(property.toDotPath());
 	}
 
 	/**
@@ -414,7 +414,7 @@ public class Update implements UpdateDefinition {
 	 */
 	@Contract("_, _ -> this")
 	public <T, P> Update pop(TypedPropertyPath<T, P> property, Position pos) {
-		return pop(TypedPropertyPath.of(property).toDotPath(), pos);
+		return pop(property.toDotPath(), pos);
 	}
 
 	/**
@@ -474,7 +474,7 @@ public class Update implements UpdateDefinition {
 	 */
 	@Contract("_, _ -> this")
 	public <T, P> Update pullAll(TypedPropertyPath<T, P> property, Object[] values) {
-		return pullAll(TypedPropertyPath.of(property).toDotPath(), values);
+		return pullAll(property.toDotPath(), values);
 	}
 
 	/**
@@ -551,7 +551,7 @@ public class Update implements UpdateDefinition {
 	 */
 	@Contract("_ -> this")
 	public <T, P> Update currentTimestamp(TypedPropertyPath<T, P> property) {
-		return currentTimestamp(TypedPropertyPath.of(property).toDotPath());
+		return currentTimestamp(property.toDotPath());
 	}
 
 	/**
@@ -617,7 +617,7 @@ public class Update implements UpdateDefinition {
 	 */
 	@Contract("_, _ -> this")
 	public <T, P> Update max(TypedPropertyPath<T, P> property, Object value) {
-		return max(TypedPropertyPath.of(property).toDotPath(), value);
+		return max(property.toDotPath(), value);
 	}
 
 	/**
@@ -676,7 +676,7 @@ public class Update implements UpdateDefinition {
 	 */
 	@Contract("_ -> new")
 	public <T, P> BitwiseOperatorBuilder bitwise(TypedPropertyPath<T, P> property) {
-		return bitwise(TypedPropertyPath.of(property).toDotPath());
+		return bitwise(property.toDotPath());
 	}
 
 	/**

@@ -64,7 +64,7 @@ public class Index implements IndexDefinition {
 	 * @since 5.1
 	 */
 	public <T, P> Index(TypedPropertyPath<T, P> property, Direction direction) {
-		this(TypedPropertyPath.of(property).toDotPath(), direction);
+		this(property.toDotPath(), direction);
 	}
 
 	@Contract("_, _ -> this")

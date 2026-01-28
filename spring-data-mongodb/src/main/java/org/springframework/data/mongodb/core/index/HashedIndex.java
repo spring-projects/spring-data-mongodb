@@ -57,7 +57,7 @@ public class HashedIndex implements IndexDefinition {
 	 * @since 5.1
 	 */
 	public static <T, P> HashedIndex hashed(TypedPropertyPath<T, P> property) {
-		return new HashedIndex(TypedPropertyPath.of(property).toDotPath());
+		return new HashedIndex(property.toDotPath());
 	}
 
 	@Override

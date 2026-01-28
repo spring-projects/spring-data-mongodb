@@ -67,7 +67,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @since 5.1
 	 */
 	public <T, P> GeospatialIndex(TypedPropertyPath<T, P> property) {
-		this(TypedPropertyPath.of(property).toDotPath());
+		this(property.toDotPath());
 	}
 
 	/**

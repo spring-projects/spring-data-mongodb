@@ -79,7 +79,7 @@ public class VectorIndex implements SearchIndexDefinition {
 	 */
 	@Contract("_ -> this")
 	public <T,P> VectorIndex addFilter(TypedPropertyPath<T,P> property) {
-		return addFilter(TypedPropertyPath.of(property).toDotPath());
+		return addFilter(property.toDotPath());
 	}
 
 	/**
@@ -102,14 +102,14 @@ public class VectorIndex implements SearchIndexDefinition {
 	/**
 	 * Add a vector field and accept a {@link VectorFieldBuilder} customizer.
 	 *
-	 * @param path the property holding the vector.
+	 * @param property the property holding the vector.
 	 * @param customizer customizer function.
 	 * @return this.
 	 * @since 5.1
 	 */
 	@Contract("_, _ -> this")
-	public <T,P> VectorIndex addVector(TypedPropertyPath<T,P> path, Consumer<VectorFieldBuilder> customizer) {
-		return addVector(TypedPropertyPath.of(path).toDotPath(), customizer);
+	public <T,P> VectorIndex addVector(TypedPropertyPath<T,P> property, Consumer<VectorFieldBuilder> customizer) {
+		return addVector(property.toDotPath(), customizer);
 	}
 
 	@Override
