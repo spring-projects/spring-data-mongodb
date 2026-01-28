@@ -44,28 +44,30 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
  */
 public interface NamespaceBulkOperations {
 
-	NamespacedBulkOperations inNamespace(Namespace namespace);
+	NamespacedBulkOperations<Object> inNamespace(Namespace namespace);
+	<T> NamespacedBulkOperations<T> inNamespace(Class<T> type);
 
-	interface NamespacedBulkOperations {
-		NamespacedBulkInsertOperations insert();
-		NamespacedBulkUpdateOperations update();
-		NamespacedBulkDeleteOperations delete();
-		NamespacedBulkOperations inNamespace(Namespace namespace);
+	interface NamespacedBulkOperations<T> {
+		NamespacedBulkInsertOperations<T> insert();
+		NamespacedBulkUpdateOperations<T> update();
+		NamespacedBulkDeleteOperations<T> delete();
+		NamespacedBulkOperations<Object> inNamespace(Namespace namespace);
+		<S> NamespacedBulkOperations<S> inNamespace(Class<S> type);
 
 		BulkWriteResult execute();
 	}
 
-	interface NamespacedBulkInsertOperations extends NamespacedBulkOperations {
-		NamespacedBulkInsertOperations one(Object object);
-		NamespacedBulkInsertOperations many(List<Object> object);
+	interface NamespacedBulkInsertOperations<T> extends NamespacedBulkOperations<T> {
+		NamespacedBulkInsertOperations<T> one(T object);
+		NamespacedBulkInsertOperations<T> many(List<T> object);
 	}
 
-	interface NamespacedBulkUpdateOperations extends NamespacedBulkOperations {
-		NamespacedBulkUpdateOperations one(Query query, UpdateDefinition update);
-		NamespacedBulkUpdateOperations one(CriteriaDefinition where, UpdateDefinition update);
+	interface NamespacedBulkUpdateOperations<T> extends NamespacedBulkOperations<T> {
+		NamespacedBulkUpdateOperations<T> one(Query query, UpdateDefinition update);
+		NamespacedBulkUpdateOperations<T> one(CriteriaDefinition where, UpdateDefinition update);
 	}
-	interface NamespacedBulkDeleteOperations{
-		NamespacedBulkDeleteOperations delete(Query query);
+	interface NamespacedBulkDeleteOperations <T>{
+		NamespacedBulkDeleteOperations<T> delete(Query query);
 	}
 
 

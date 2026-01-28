@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.data.domain.Score;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
@@ -376,17 +377,25 @@ public class DefaultBulkOperationsIntegrationTests {
 	@Test // GH-5087
 	void hackItOn() {
 
-		NamespaceBulkOperations ops = null;
-		ops.inNamespace(namespace("person"))
-			.update()
-				.one(Criteria.where("name").is("batman"), null)
-			.insert()
-				.many(List.of())
+
+
+		NamespaceBulkOperations bulkOps = operations.bulkOps(BulkMode.ORDERED);
+		bulkOps
+			.inNamespace(namespace("person"))
+				.update()
+					.one(Criteria.where("name").is("batman"), null)
+					.one(Criteria.where("name").is("joker"), null)
+				.insert()
+					.many(List.of(new Person()))
 			.inNamespace(namespace("log"))
-			.insert()
+				.insert()
+					.one(new User())
+			.inNamespace(Score.class)
+				.insert().many(List.of())
+
 			.execute();
 
-		
+
 	}
 
 	@Test // GH-5087

@@ -470,6 +470,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 */
 	BulkOperations bulkOps(BulkMode mode, String collectionName);
 
+	NamespaceBulkOperations bulkOps(BulkMode mode);
+
 	/**
 	 * Returns a new {@link BulkOperations} for the given entity type.
 	 *
