@@ -15,6 +15,7 @@
 *** xref:mongodb/template-collection-management.adoc[]
 *** xref:mongodb/template-crud-operations.adoc[]
 *** xref:mongodb/template-query-operations.adoc[]
+*** xref:mongodb/property-paths.adoc[]
 *** xref:mongodb/template-document-count.adoc[]
 *** xref:mongodb/aggregation-framework.adoc[]
 
