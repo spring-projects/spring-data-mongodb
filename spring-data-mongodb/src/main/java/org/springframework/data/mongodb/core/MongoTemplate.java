@@ -27,6 +27,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.mongodb.client.MongoCluster;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
@@ -63,6 +64,7 @@ import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.CollectionPreparerSupport.CollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
+import org.springframework.data.mongodb.core.NamespacedBulkOperationSupport.NamespacedBulkOperationContext;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
@@ -630,6 +632,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
+	public <T> @Nullable T doWithClient(MongoClusterCallback<MongoCluster> action) throws DataAccessException {
+
+		try {
+			return this.getMongoDatabaseFactory().doWithClient((Function<MongoCluster, T>) action::doWithClient);
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
+		}
+	}
+
+	@Override
 	public SessionScoped withSession(ClientSessionOptions options) {
 
 		Assert.notNull(options, "ClientSessionOptions must not be null");
@@ -823,6 +835,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public BulkOperations bulkOps(BulkMode mode, String collectionName) {
 		return bulkOps(mode, null, collectionName);
+	}
+
+	@Override
+	public NamespaceBulkOperations bulkOps(BulkMode mode) {
+
+		NamespacedBulkOperationContext namespacedBulkOperationContext = new NamespacedBulkOperationContext(getDb().getName(),
+			mongoConverter, queryMapper, updateMapper, eventPublisher, entityCallbacks);
+		return new NamespacedBulkOperationSupport(mode, namespacedBulkOperationContext, this);
 	}
 
 	@Override

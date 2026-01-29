@@ -24,8 +24,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.mongodb.client.MongoCluster;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -142,6 +144,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 */
 	@Nullable
 	<T> T execute(DbCallback<T> action);
+
+	@Nullable
+	<T> T doWithClient(MongoClusterCallback<MongoCluster> action) throws DataAccessException;
 
 	/**
 	 * Executes the given {@link CollectionCallback} on the entity collection of the specified class. <br />

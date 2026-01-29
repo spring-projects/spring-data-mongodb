@@ -34,6 +34,7 @@ package org.springframework.data.mongodb.core;
 import java.util.List;
 
 import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -43,13 +44,13 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
  * @author Christoph Strobl
  * @since 2026/01
  */
-public interface NamespaceBulkOperations {
+public interface NamespaceBulkOperations extends BulkWriteOperationBase {
 
 	NamespaceAwareBulkIOperations inCollection(Class<?> type);
 	NamespaceAwareBulkIOperations inCollection(String collection);
 	NamespaceBulkOperations switchDatabase(String databaseName);
 
-	interface NamespaceAwareBulkIOperations extends BulkOperations, NamespaceBulkOperations {
+	interface NamespaceAwareBulkIOperations extends BulkWriteOperationBase, NamespaceBulkOperations {
 
 		NamespaceAwareBulkIOperations insert(List<? extends Object> documents);
 
@@ -58,6 +59,8 @@ public interface NamespaceBulkOperations {
 			upsert(query, (UpdateDefinition) update);
 			return this;
 		}
+
+		ClientBulkWriteResult execute();
 	}
 
 
