@@ -28,6 +28,7 @@ import java.util.List;
  * @author Owen Q
  * @author Mark Paluch
  * @author Kirill Egorov
+ * @author GaEun Kim
  */
 class FieldUnitTests {
 
@@ -84,5 +85,19 @@ class FieldUnitTests {
 		Field right = new Field().exclude(List.of("foo", "bar"));
 
 		assertThat(left).isEqualTo(right);
+	}
+
+	@Test
+	void assertDifferentHashCodesForExcludeAndIncludeQueries() {
+
+		Query queryWithExclude = new Query();
+		queryWithExclude.fields().exclude("key1");
+		queryWithExclude.fields().exclude("key2");
+
+		Query queryWithInclude = new Query();
+		queryWithInclude.fields().include("key1");
+		queryWithInclude.fields().include("key2");
+
+		assertThat(queryWithExclude.hashCode()).isNotEqualTo(queryWithInclude.hashCode());
 	}
 }
