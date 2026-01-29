@@ -235,7 +235,7 @@ public class VectorIndex implements SearchIndexDefinition {
 		}
 
 		/**
-		 * Number of vector dimensions enforced at index- & query-time.
+		 * Number of vector dimensions enforced at index- and query-time.
 		 *
 		 * @param dimensions value between {@code 0} and {@code 4096}.
 		 * @return this.

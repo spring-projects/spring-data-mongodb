@@ -33,7 +33,7 @@ import com.mongodb.client.model.CollationStrength;
 
 /**
  * Central abstraction for MongoDB collation support. <br />
- * Allows fluent creation of a collation {@link Document} that can be used for creating collections & indexes as well as
+ * Allows fluent creation of a collation {@link Document} that can be used for creating collections and indexes as well as
  * querying data.
  * <br />
  * <strong>NOTE:</strong> Please keep in mind that queries will only make use of an index with collation settings if the

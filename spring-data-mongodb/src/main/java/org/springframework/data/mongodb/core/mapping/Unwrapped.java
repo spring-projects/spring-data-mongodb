@@ -44,7 +44,7 @@ public @interface Unwrapped {
 	 * <br />
 	 * {@link Nullable @Unwrapped.Nullable} and {@link Empty @Unwrapped.Empty} offer shortcuts for this.
 	 *
-	 * @return never {@link} null.
+	 * @return never {@literal null}.
 	 */
 	OnEmpty onEmpty();
 

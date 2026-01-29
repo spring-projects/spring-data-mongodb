@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.index;
 import org.bson.Document;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Jon Brisbin (jbrisbin&#64;vmware.com)
  * @author Christoph Strobl
  * @author Mark Paluch
  */

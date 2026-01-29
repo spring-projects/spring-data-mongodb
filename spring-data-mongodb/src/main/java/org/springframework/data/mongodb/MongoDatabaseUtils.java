@@ -34,7 +34,6 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @currentRead Shadow's Edge - Brent Weeks
  * @since 2.1
  */
 public class MongoDatabaseUtils {

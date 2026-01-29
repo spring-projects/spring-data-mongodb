@@ -113,7 +113,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Static factory method to create a Criteria using the provided path.
 	 *
-	 * @param path the path to the target property.
+	 * @param property the path to the target property.
 	 * @return new instance of {@link Criteria}.
 	 * @since 5.1
 	 */
@@ -1228,7 +1228,6 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 2.1
 	 * @see <a href=
 	 *      "https://docs.mongodb.com/manual/reference/operator/query-bitwise/">https://docs.mongodb.com/manual/reference/operator/query-bitwise/</a>
-	 * @currentRead Beyond the Shadows - Brent Weeks
 	 */
 	public interface BitwiseCriteriaOperators {
 

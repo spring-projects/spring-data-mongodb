@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.index;
 import org.jspecify.annotations.Nullable;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Jon Brisbin (jbrisbin&#64;vmware.com)
  */
 public abstract class IndexPredicate {
 

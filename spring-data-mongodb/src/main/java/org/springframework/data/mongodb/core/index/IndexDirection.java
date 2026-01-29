@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.index;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Jon Brisbin (jbrisbin&#64;vmware.com)
  */
 public enum IndexDirection {
 	ASCENDING, DESCENDING

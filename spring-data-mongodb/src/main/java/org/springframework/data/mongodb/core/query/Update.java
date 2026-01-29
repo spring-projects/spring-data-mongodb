@@ -136,7 +136,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $set} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param value can be {@literal null}. In this case the property remains in the db with a {@literal null} value. To
 	 *          remove it use {@link #unset(TypedPropertyPath)}.
 	 * @return this.
@@ -167,7 +167,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $setOnInsert} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param value can be {@literal null}.
 	 * @return this.
 	 * @see #setOnInsert(String, Object)
@@ -196,7 +196,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $unset} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @return this.
 	 * @see #unset(String)
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/unset/">MongoDB Update operator: $unset</a>
@@ -224,7 +224,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $inc} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param inc must not be {@literal null}.
 	 * @return this.
 	 * @see #inc(String, Number)
@@ -252,7 +252,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $inc} update modifier by one.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @return this.
 	 * @see #inc(String)
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/inc/">MongoDB Update operator: $inc</a>
@@ -280,7 +280,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $push} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param value can be {@literal null}.
 	 * @return this.
 	 * @see #push(String, Object)
@@ -318,7 +318,7 @@ public class Update implements UpdateDefinition {
 	 * Update using {@code $push} modifier. Allows creation of {@code $push} command for single or multiple (using
 	 * {@code $each}) values as well as using {@code $position}.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @return {@link PushOperatorBuilder} for given path
 	 * @see #push(String)
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
@@ -375,7 +375,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $addToSet} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param value can be {@literal null}.
 	 * @return this.
 	 * @see #addToSet(String, Object)
@@ -405,7 +405,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $pop} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param pos must not be {@literal null}.
 	 * @return this.
 	 * @see #pop(String, Position)
@@ -434,7 +434,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $pull} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param value can be {@literal null}.
 	 * @return this.
 	 * @see #pull(String, Object)
@@ -464,7 +464,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $pullAll} update modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param values must not be {@literal null}.
 	 * @return this.
 	 * @see #pullAll(String, Object[])
@@ -511,7 +511,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update given key to current date using {@literal $currentDate} modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @return this.
 	 * @see #currentDate(String)
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
@@ -542,7 +542,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @return this.
 	 * @see #currentTimestamp(String)
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
@@ -574,7 +574,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Multiply the value of given key by the given number.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param multiplier must not be {@literal null}.
 	 * @return this.
 	 * @see #multiply(String, Number)
@@ -607,7 +607,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update given key to the {@code value} if the {@code value} is greater than the current value of the field.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param value must not be {@literal null}.
 	 * @return this.
 	 * @see #max(String, Object)
@@ -641,7 +641,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update given key to the {@code value} if the {@code value} is less than the current value of the field.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @param value must not be {@literal null}.
 	 * @return this.
 	 * @see #min(String, Object)
@@ -669,7 +669,7 @@ public class Update implements UpdateDefinition {
 	/**
 	 * The operator supports bitwise {@code and}, bitwise {@code or}, and bitwise {@code xor} operations.
 	 *
-	 * @param path the property path.
+	 * @param property the property path.
 	 * @return this.
 	 * @see #bitwise(String)
 	 * @since 5.1

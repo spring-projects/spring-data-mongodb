@@ -138,7 +138,7 @@ public class CollectionOptions {
 	}
 
 	/**
-	 * Quick way to set up {@link CollectionOptions} for emitting (pre & post) change events.
+	 * Quick way to set up {@link CollectionOptions} for emitting (pre and post) change events.
 	 *
 	 * @return new instance of {@link CollectionOptions}.
 	 * @see #changeStream(CollectionChangeStreamOptions)

@@ -190,7 +190,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	public interface LetBuilder {
 
 		/**
-		 * Specifies {@link Let#getVariableNames() variables) that can be used in the
+		 * Specifies {@link Let#getVariableNames() variables} that can be used in the
 		 * {@link PipelineBuilder#pipeline(AggregationOperation...) pipeline stages}.
 		 *
 		 * @param let must not be {@literal null}.
@@ -200,7 +200,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		PipelineBuilder let(Let let);
 
 		/**
-		 * Specifies {@link Let#getVariableNames() variables) that can be used in the
+		 * Specifies {@link Let#getVariableNames() variables} that can be used in the
 		 * {@link PipelineBuilder#pipeline(AggregationOperation...) pipeline stages}.
 		 *
 		 * @param variables must not be {@literal null}.

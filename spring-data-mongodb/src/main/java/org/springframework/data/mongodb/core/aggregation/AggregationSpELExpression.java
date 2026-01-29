@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
  * <pre>
  * <code>
  * // { $and: [ { $gt: [ "$qty", 100 ] }, { $lt: [ "$qty", 250 ] } ] }
- * expressionOf("qty > 100 && qty < 250);
+ * expressionOf("qty &gt; 100 &amp;&amp; qty &lt; 250");
  *
  * // { $cond : { if : { $gte : [ "$a", 42 ]}, then : "answer", else : "no-answer" } }
  * expressionOf("cond(a >= 42, 'answer', 'no-answer')");

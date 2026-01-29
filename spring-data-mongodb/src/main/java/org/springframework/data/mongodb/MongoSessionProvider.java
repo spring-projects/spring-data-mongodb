@@ -24,7 +24,6 @@ import com.mongodb.client.ClientSession;
  * consistency and transactions.
  *
  * @author Christoph Strobl
- * @currentRead Shadow's Edge - Brent Weeks
  * @since 2.1
  */
 @FunctionalInterface

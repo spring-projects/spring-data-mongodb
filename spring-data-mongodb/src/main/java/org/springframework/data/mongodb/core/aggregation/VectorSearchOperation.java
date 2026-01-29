@@ -173,7 +173,7 @@ public class VectorSearchOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Number of nearest neighbors to use during the search. Value must be less than or equal to (<=) {@code 10000}. You
+	 * Number of nearest neighbors to use during the search. Value must be less than or equal to ({@code <=}) {@code 10000}. You
 	 * can't specify a number less than the number of documents to return (limit). This field is required if
 	 * {@link #searchType(SearchType)} is {@link SearchType#ANN} or {@link SearchType#DEFAULT}.
 	 *

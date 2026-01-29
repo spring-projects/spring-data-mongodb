@@ -54,7 +54,6 @@ import com.mongodb.client.ClientSession;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @currentRead Shadow's Edge - Brent Weeks
  * @since 2.1
  * @see <a href="https://www.mongodb.com/transactions">MongoDB Transaction Documentation</a>
  * @see MongoDatabaseUtils#getDatabase(MongoDatabaseFactory, SessionSynchronization)

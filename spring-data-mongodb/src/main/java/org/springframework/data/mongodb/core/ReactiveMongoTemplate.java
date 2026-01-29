@@ -361,7 +361,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * Used by {@link {@link #prepareCollection(MongoCollection)} to set the {@link ReadPreference} before any operations
+	 * Used by {@link #prepareCollection(MongoCollection)} to set the {@link ReadPreference} before any operations
 	 * are performed.
 	 *
 	 * @param readPreference
