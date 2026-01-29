@@ -377,25 +377,47 @@ public class DefaultBulkOperationsIntegrationTests {
 	@Test // GH-5087
 	void hackItOn() {
 
-
-
 		NamespaceBulkOperations bulkOps = operations.bulkOps(BulkMode.ORDERED);
 		bulkOps
-			.inNamespace(namespace("person"))
-				.update()
-					.one(Criteria.where("name").is("batman"), null)
-					.one(Criteria.where("name").is("joker"), null)
-				.insert()
-					.many(List.of(new Person()))
-			.inNamespace(namespace("log"))
-				.insert()
-					.one(new User())
-			.inNamespace(Score.class)
-				.insert().many(List.of())
-
-			.execute();
+			.inCollection(User.class)
+				.insert(List.of(new User()))
+				.upsert(Query.query(Criteria.where("name").is("batman")), new Update().set("actor", "..."))
+			.switchDatabase("db2")
+				.inCollection("sql")
+					.insert(List.of(new Document()));
 
 
+//
+//		NamespaceBulkOperations bulkOps = operations.bulkOps(BulkMode.ORDERED);
+//		bulkOps
+//			.inNamespace(namespace("person"))
+//				.update()
+//					.one(Criteria.where("name").is("batman"), null)
+//					.one(Criteria.where("name").is("joker"), null)
+//				.insert()
+//					.many(List.of(new Person()))
+//			.inNamespace(namespace("log"))
+//				.insert()
+//					.one(new User())
+//			.inNamespace(Score.class)
+//				.insert().many(List.of())
+//
+//			.execute();
+
+
+//		NamespaceBulkOps bulkOps1 = null;
+//		bulkOps1.inNamespace(namespace("person"))
+//			.andInNamespace(namespace("log"));
+
+	}
+
+//	interface NamespaceBulkOps {
+//		NamespaceBoundBulkOps inNamespace(Namespace namespace);
+//		CollectionBound
+//	}
+
+	interface NamespaceBoundBulkOps extends BulkOperations {
+		NamespaceBoundBulkOps andInNamespace(Namespace namespace);
 	}
 
 	@Test // GH-5087

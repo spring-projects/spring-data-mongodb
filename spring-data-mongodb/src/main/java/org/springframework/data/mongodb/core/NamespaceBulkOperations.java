@@ -36,6 +36,7 @@ import java.util.List;
 import com.mongodb.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 /**
@@ -44,31 +45,47 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
  */
 public interface NamespaceBulkOperations {
 
-	NamespacedBulkOperations<Object> inNamespace(Namespace namespace);
-	<T> NamespacedBulkOperations<T> inNamespace(Class<T> type);
+	NamespaceAwareBulkIOperations inCollection(Class<?> type);
+	NamespaceAwareBulkIOperations inCollection(String collection);
+	NamespaceBulkOperations switchDatabase(String databaseName);
 
-	interface NamespacedBulkOperations<T> {
-		NamespacedBulkInsertOperations<T> insert();
-		NamespacedBulkUpdateOperations<T> update();
-		NamespacedBulkDeleteOperations<T> delete();
-		NamespacedBulkOperations<Object> inNamespace(Namespace namespace);
-		<S> NamespacedBulkOperations<S> inNamespace(Class<S> type);
+	interface NamespaceAwareBulkIOperations extends BulkOperations, NamespaceBulkOperations {
 
-		BulkWriteResult execute();
+		NamespaceAwareBulkIOperations insert(List<? extends Object> documents);
+
+		@Override
+		default NamespaceAwareBulkIOperations upsert(Query query, Update update) {
+			upsert(query, (UpdateDefinition) update);
+			return this;
+		}
 	}
 
-	interface NamespacedBulkInsertOperations<T> extends NamespacedBulkOperations<T> {
-		NamespacedBulkInsertOperations<T> one(T object);
-		NamespacedBulkInsertOperations<T> many(List<T> object);
-	}
 
-	interface NamespacedBulkUpdateOperations<T> extends NamespacedBulkOperations<T> {
-		NamespacedBulkUpdateOperations<T> one(Query query, UpdateDefinition update);
-		NamespacedBulkUpdateOperations<T> one(CriteriaDefinition where, UpdateDefinition update);
-	}
-	interface NamespacedBulkDeleteOperations <T>{
-		NamespacedBulkDeleteOperations<T> delete(Query query);
-	}
+//	NamespacedBulkOperations<Object> inNamespace(Namespace namespace);
+//	<T> NamespacedBulkOperations<T> inNamespace(Class<T> type);
+//
+//	interface NamespacedBulkOperations<T> {
+//		NamespacedBulkInsertOperations<T> insert();
+//		NamespacedBulkUpdateOperations<T> update();
+//		NamespacedBulkDeleteOperations<T> delete();
+//		NamespacedBulkOperations<Object> inNamespace(Namespace namespace);
+//		<S> NamespacedBulkOperations<S> inNamespace(Class<S> type);
+//
+//		BulkWriteResult execute();
+//	}
+//
+//	interface NamespacedBulkInsertOperations<T> extends NamespacedBulkOperations<T> {
+//		NamespacedBulkInsertOperations<T> one(T object);
+//		NamespacedBulkInsertOperations<T> many(List<T> object);
+//	}
+//
+//	interface NamespacedBulkUpdateOperations<T> extends NamespacedBulkOperations<T> {
+//		NamespacedBulkUpdateOperations<T> one(Query query, UpdateDefinition update);
+//		NamespacedBulkUpdateOperations<T> one(CriteriaDefinition where, UpdateDefinition update);
+//	}
+//	interface NamespacedBulkDeleteOperations <T>{
+//		NamespacedBulkDeleteOperations<T> delete(Query query);
+//	}
 
 
 }
