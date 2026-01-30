@@ -44,30 +44,39 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
-import org.springframework.data.mongodb.core.NamespaceBulkOperations.NamespaceAwareBulkIOperations;
+import org.springframework.data.mongodb.core.NamespaceBulkOperations.NamespaceAwareBulkOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoCluster;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.model.bulk.ClientBulkWriteOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
+import com.mongodb.client.model.bulk.ClientDeleteManyOptions;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
+import com.mongodb.client.model.bulk.ClientReplaceOneOptions;
+import com.mongodb.client.model.bulk.ClientUpdateManyOptions;
+import com.mongodb.client.model.bulk.ClientUpdateOneOptions;
+import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateManyOptions;
+import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateOneOptions;
 
 /**
  * @author Christoph Strobl
  */
-class NamespacedBulkOperationSupport implements NamespaceAwareBulkIOperations {
+class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 
 	private final BulkMode bulkMode;
 	private final NamespacedBulkOperationContext ctx;
@@ -85,7 +94,7 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkIOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkIOperations insert(Object document) {
+	public NamespaceAwareBulkOperations insert(Object document) {
 
 		Assert.notNull(document, "Document must not be null");
 
@@ -99,55 +108,100 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkIOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkIOperations insert(List<?> documents) {
+	public NamespaceAwareBulkOperations insert(List<?> documents) {
 
 		documents.forEach(this::insert);
 		return this;
 	}
 
 	@Override
-	public BulkOperations updateOne(Query query, UpdateDefinition update) {
-		return null;
+	public NamespaceAwareBulkOperations updateOne(Query query, UpdateDefinition update) {
+		update(currentNamespace, query, update, false, false);
+		return this;
 	}
 
 	@Override
-	public BulkOperations updateOne(List<Pair<Query, UpdateDefinition>> updates) {
-		return null;
+	public NamespaceAwareBulkOperations updateOne(List<Pair<Query, UpdateDefinition>> updates) {
+
+		for (Pair<Query, UpdateDefinition> update : updates) {
+			update(currentNamespace, update.getFirst(), update.getSecond(), false, false);
+		}
+
+		return this;
 	}
 
 	@Override
-	public BulkOperations updateMulti(Query query, UpdateDefinition update) {
-		return null;
+	public NamespaceAwareBulkOperations updateMulti(Query query, UpdateDefinition update) {
+
+		update(currentNamespace, query, update, false, true);
+		return this;
 	}
 
 	@Override
-	public BulkOperations updateMulti(List<Pair<Query, UpdateDefinition>> updates) {
-		return null;
+	public NamespaceAwareBulkOperations updateMulti(List<Pair<Query, UpdateDefinition>> updates) {
+
+		for (Pair<Query, UpdateDefinition> update : updates) {
+			update(currentNamespace, update.getFirst(), update.getSecond(), false, true);
+		}
+
+		return this;
 	}
 
 	@Override
-	public BulkOperations upsert(Query query, UpdateDefinition update) {
-		return null;
+	public NamespaceAwareBulkOperations upsert(Query query, UpdateDefinition update) {
+		update(currentNamespace, query, update, true, true);
+		return this;
 	}
 
 	@Override
-	public BulkOperations upsert(List<Pair<Query, Update>> updates) {
-		return null;
+	public NamespaceAwareBulkOperations upsert(List<Pair<Query, Update>> updates) {
+		for (Pair<Query, Update> update : updates) {
+			upsert(update.getFirst(), update.getSecond());
+		}
+		return this;
 	}
 
 	@Override
-	public BulkOperations remove(Query remove) {
-		return null;
+	public NamespaceAwareBulkOperations remove(Query query) {
+
+		ClientDeleteManyOptions deleteOptions = ClientDeleteManyOptions.clientDeleteManyOptions();
+		query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
+
+		addModel(query,
+				ClientNamespacedWriteModel.deleteMany(mongoNamespace(currentNamespace), query.getQueryObject(), deleteOptions));
+
+		return this;
 	}
 
 	@Override
-	public BulkOperations remove(List<Query> removes) {
-		return null;
+	public NamespaceAwareBulkOperations remove(List<Query> removes) {
+		for (Query query : removes) {
+			remove(query);
+		}
+
+		return this;
 	}
 
 	@Override
-	public BulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
-		return null;
+	public NamespaceAwareBulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(replacement, "Replacement must not be null");
+		Assert.notNull(options, "Options must not be null");
+
+		ClientReplaceOneOptions replaceOptions = ClientReplaceOneOptions.clientReplaceOneOptions();
+		replaceOptions.upsert(options.isUpsert());
+		if (query.isSorted()) {
+			replaceOptions.sort(query.getSortObject());
+		}
+		query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
+
+		Namespace ns = currentNamespace;
+		maybeEmitEvent(new BeforeConvertEvent<>(replacement, ns.name()));
+		Object source = maybeInvokeBeforeConvertCallback(replacement, ns);
+		addModel(source, ClientNamespacedWriteModel.replaceOne(mongoNamespace(ns), query.getQueryObject(),
+				getMappedObject(source), replaceOptions));
+
+		return this;
 	}
 
 	@Override
@@ -169,12 +223,12 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkIOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkIOperations inCollection(Class<?> type) {
+	public NamespaceAwareBulkOperations inCollection(Class<?> type) {
 		return inCollection(operations.getCollectionName(type));
 	}
 
 	@Override
-	public NamespaceAwareBulkIOperations inCollection(String collection) {
+	public NamespaceAwareBulkOperations inCollection(String collection) {
 
 		this.currentNamespace = new Namespace(currentNamespace.database(), collection);
 		return this;
@@ -189,6 +243,75 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkIOperations {
 
 	protected void maybeEmitEvent(ApplicationEvent event) {
 		ctx.publishEvent(event);
+	}
+
+	/**
+	 * @param filterQuery The {@link Query} to read a potential {@link Collation} from. Must not be {@literal null}.
+	 * @param update The {@link Update} to apply
+	 * @param upsert flag to indicate if document should be upserted.
+	 * @param multi flag to indicate if update might affect multiple documents.
+	 * @return new instance of {@link UpdateOptions}.
+	 */
+	protected UpdateOptions computeUpdateOptions(Query filterQuery, UpdateDefinition update, boolean upsert,
+			boolean multi) {
+
+		UpdateOptions options = new UpdateOptions();
+		options.upsert(upsert);
+
+		if (update.hasArrayFilters()) {
+			List<Document> list = new ArrayList<>(update.getArrayFilters().size());
+			for (ArrayFilter arrayFilter : update.getArrayFilters()) {
+				list.add(arrayFilter.asDocument());
+			}
+			options.arrayFilters(list);
+		}
+
+		if (!multi && filterQuery.isSorted()) {
+			options.sort(filterQuery.getSortObject());
+		}
+
+		filterQuery.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+		return options;
+	}
+
+	/**
+	 * Performs update and upsert bulk operations.
+	 *
+	 * @param query the {@link Query} to determine documents to update.
+	 * @param update the {@link Update} to perform, must not be {@literal null}.
+	 * @param upsert whether to upsert.
+	 * @param multi whether to issue a multi-update.
+	 * @return the {@link BulkOperations} with the update registered.
+	 */
+	private void update(Namespace namespace, Query query, UpdateDefinition update, boolean upsert, boolean multi) {
+
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(update, "Update must not be null");
+
+		UpdateOptions options = computeUpdateOptions(query, update, upsert, multi);
+
+		if (multi) {
+
+			ClientUpdateManyOptions mayOptions = new ConcreteClientUpdateManyOptions();
+			mayOptions.arrayFilters(options.getArrayFilters());
+			mayOptions.collation(options.getCollation());
+			mayOptions.upsert(options.isUpsert());
+			mayOptions.hint(options.getHint());
+			mayOptions.hintString(options.getHintString());
+
+			addModel(update, ClientNamespacedWriteModel.updateMany(mongoNamespace(namespace), query.getQueryObject(),
+					update.getUpdateObject(), mayOptions));
+		} else {
+
+			ClientUpdateOneOptions mayOptions = new ConcreteClientUpdateOneOptions();
+			mayOptions.arrayFilters(options.getArrayFilters());
+			mayOptions.collation(options.getCollation());
+			mayOptions.upsert(options.isUpsert());
+			mayOptions.hint(options.getHint());
+			mayOptions.hintString(options.getHintString());
+			addModel(update, ClientNamespacedWriteModel.updateOne(mongoNamespace(namespace), query.getQueryObject(),
+					update.getUpdateObject(), mayOptions));
+		}
 	}
 
 	private Document getMappedObject(Object source) {
@@ -216,7 +339,7 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkIOperations {
 
 	record Namespace(String database, @Nullable String collection) {
 
-		public Object name() {
+		public String name() {
 			return String.format("%s.%s", database, collection != null ? collection : "n/a");
 		}
 	}

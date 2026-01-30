@@ -375,16 +375,40 @@ public class DefaultBulkOperationsIntegrationTests {
 	}
 
 	@Test // GH-5087
-	void hackItOn() {
+	void bulkWriteMultipleCollections() {
+
+		BaseDoc doc1 = new BaseDoc();
+		doc1.id = "id-doc1";
+		doc1.value = "value-doc1";
+
+		BaseDoc doc2 = new BaseDoc();
+		doc2.id = "id-doc2";
+		doc2.value = "value-doc2";
 
 		NamespaceBulkOperations bulkOps = operations.bulkOps(BulkMode.ORDERED);
 		bulkOps
-			.inCollection(User.class)
-				.insert(List.of(new User()))
-				.upsert(Query.query(Criteria.where("name").is("batman")), new Update().set("actor", "..."))
-			.switchDatabase("db2")
-				.inCollection("sql")
-					.insert(List.of(new Document()));
+			.inCollection(BaseDoc.class)
+				.insert(doc1)
+				.insert(doc2)
+				.upsert(where("_id", "id-doc3"), new Update().set("value", "upserted"))
+			.inCollection(SpecialDoc.class)
+				.insert(new SpecialDoc())
+			.execute();
+
+	}
+
+	@Test // GH-5087
+	void apiDesign() {
+
+//		NamespaceBulkOperations bulkOps = operations.bulkOps(BulkMode.ORDERED);
+//		bulkOps
+//			.inCollection(User.class)
+//				.insert(List.of(new User()))
+//				.upsert(Query.query(Criteria.where("name").is("batman")), new Update().set("actor", "..."))
+//			.switchDatabase("db2")
+//				.inCollection("sql")
+//					.insert(List.of(new Document()));
+//
 
 
 //
@@ -415,10 +439,6 @@ public class DefaultBulkOperationsIntegrationTests {
 //		NamespaceBoundBulkOps inNamespace(Namespace namespace);
 //		CollectionBound
 //	}
-
-	interface NamespaceBoundBulkOps extends BulkOperations {
-		NamespaceBoundBulkOps andInNamespace(Namespace namespace);
-	}
 
 	@Test // GH-5087
 	void exploreItOnClient() {
