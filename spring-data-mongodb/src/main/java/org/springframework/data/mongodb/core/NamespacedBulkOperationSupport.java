@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
@@ -76,7 +77,7 @@ import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateOneOptions;
 /**
  * @author Christoph Strobl
  */
-class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
+class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<T> {
 
 	private final BulkMode bulkMode;
 	private final NamespacedBulkOperationContext ctx;
@@ -94,7 +95,7 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations insert(Object document) {
+	public NamespaceAwareBulkOperations<T> insert(T document) {
 
 		Assert.notNull(document, "Document must not be null");
 
@@ -108,20 +109,20 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations insert(List<?> documents) {
+	public NamespaceAwareBulkOperations<T> insert(List<? extends T> documents) {
 
 		documents.forEach(this::insert);
 		return this;
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations updateOne(Query query, UpdateDefinition update) {
+	public NamespaceAwareBulkOperations<T> updateOne(Query query, UpdateDefinition update) {
 		update(currentNamespace, query, update, false, false);
 		return this;
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations updateOne(List<Pair<Query, UpdateDefinition>> updates) {
+	public NamespaceAwareBulkOperations<T> updateOne(List<Pair<Query, UpdateDefinition>> updates) {
 
 		for (Pair<Query, UpdateDefinition> update : updates) {
 			update(currentNamespace, update.getFirst(), update.getSecond(), false, false);
@@ -131,14 +132,14 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations updateMulti(Query query, UpdateDefinition update) {
+	public NamespaceAwareBulkOperations<T> updateMulti(Query query, UpdateDefinition update) {
 
 		update(currentNamespace, query, update, false, true);
 		return this;
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations updateMulti(List<Pair<Query, UpdateDefinition>> updates) {
+	public NamespaceAwareBulkOperations<T> updateMulti(List<Pair<Query, UpdateDefinition>> updates) {
 
 		for (Pair<Query, UpdateDefinition> update : updates) {
 			update(currentNamespace, update.getFirst(), update.getSecond(), false, true);
@@ -148,13 +149,13 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations upsert(Query query, UpdateDefinition update) {
+	public NamespaceAwareBulkOperations<T> upsert(Query query, UpdateDefinition update) {
 		update(currentNamespace, query, update, true, true);
 		return this;
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations upsert(List<Pair<Query, Update>> updates) {
+	public NamespaceAwareBulkOperations<T> upsert(List<Pair<Query, Update>> updates) {
 		for (Pair<Query, Update> update : updates) {
 			upsert(update.getFirst(), update.getSecond());
 		}
@@ -162,7 +163,7 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations remove(Query query) {
+	public NamespaceAwareBulkOperations<T> remove(Query query) {
 
 		ClientDeleteManyOptions deleteOptions = ClientDeleteManyOptions.clientDeleteManyOptions();
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
@@ -174,7 +175,7 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations remove(List<Query> removes) {
+	public NamespaceAwareBulkOperations<T> remove(List<Query> removes) {
 		for (Query query : removes) {
 			remove(query);
 		}
@@ -183,7 +184,7 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
+	public NamespaceAwareBulkOperations<T> replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(replacement, "Replacement must not be null");
 		Assert.notNull(options, "Options must not be null");
@@ -223,11 +224,29 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	}
 
 	@Override
-	public NamespaceAwareBulkOperations inCollection(Class<?> type) {
+	public <S> NamespaceAwareBulkOperations<S> inCollection(Class<S> type, Consumer<BulkOperationBase<S>> bulkActions) {
+		NamespaceAwareBulkOperations<S> ops = inCollection(type);
+		bulkActions.accept(ops);
+		return ops;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public NamespaceAwareBulkOperations<Object> inCollection(String collection,
+			Consumer<BulkOperationBase<Object>> bulkActions) {
+		NamespaceAwareBulkOperations<Object> ops = inCollection(collection);
+		bulkActions.accept(ops);
+		return ops;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <S> NamespaceAwareBulkOperations<S> inCollection(Class<S> type) {
 		return inCollection(operations.getCollectionName(type));
 	}
 
 	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public NamespaceAwareBulkOperations inCollection(String collection) {
 
 		this.currentNamespace = new Namespace(currentNamespace.database(), collection);
@@ -281,7 +300,6 @@ class NamespacedBulkOperationSupport implements NamespaceAwareBulkOperations {
 	 * @param update the {@link Update} to perform, must not be {@literal null}.
 	 * @param upsert whether to upsert.
 	 * @param multi whether to issue a multi-update.
-	 * @return the {@link BulkOperations} with the update registered.
 	 */
 	private void update(Namespace namespace, Query query, UpdateDefinition update, boolean upsert, boolean multi) {
 

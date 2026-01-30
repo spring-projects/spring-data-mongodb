@@ -32,6 +32,7 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -44,55 +45,59 @@ import com.mongodb.client.model.bulk.ClientBulkWriteResult;
  * @author Christoph Strobl
  * @since 2026/01
  */
-public interface NamespaceBulkOperations extends BulkOperationBase {
+public interface NamespaceBulkOperations {
 
-	NamespaceAwareBulkOperations inCollection(Class<?> type);
+	<S> NamespaceAwareBulkOperations<S> inCollection(Class<S> type);
 
-	NamespaceAwareBulkOperations inCollection(String collection);
+	<S> NamespaceAwareBulkOperations<S> inCollection(Class<S> type, Consumer<BulkOperationBase<S>> bulkActions);
+
+	NamespaceAwareBulkOperations<Object> inCollection(String collection);
+
+	NamespaceAwareBulkOperations<Object> inCollection(String collection, Consumer<BulkOperationBase<Object>> bulkActions);
 
 	NamespaceBulkOperations switchDatabase(String databaseName);
 
-	interface NamespaceAwareBulkOperations extends BulkOperationBase, NamespaceBulkOperations {
+	ClientBulkWriteResult execute();
 
-		NamespaceAwareBulkOperations insert(Object document);
+	interface NamespaceAwareBulkOperations<S> extends BulkOperationBase<S>, NamespaceBulkOperations {
 
-		@Override
-		NamespaceAwareBulkOperations insert(List<? extends Object> documents);
-
-		@Override
-		NamespaceAwareBulkOperations updateOne(Query query, UpdateDefinition update);
+		NamespaceAwareBulkOperations<S> insert(S document);
 
 		@Override
-		NamespaceAwareBulkOperations updateOne(List<Pair<Query, UpdateDefinition>> updates);
+		NamespaceAwareBulkOperations<S> insert(List<? extends S> documents);
 
 		@Override
-		NamespaceAwareBulkOperations updateMulti(Query query, UpdateDefinition update);
+		NamespaceAwareBulkOperations<S> updateOne(Query query, UpdateDefinition update);
 
 		@Override
-		NamespaceAwareBulkOperations updateMulti(List<Pair<Query, UpdateDefinition>> updates);
+		NamespaceAwareBulkOperations<S> updateOne(List<Pair<Query, UpdateDefinition>> updates);
 
 		@Override
-		NamespaceAwareBulkOperations upsert(Query query, UpdateDefinition update);
+		NamespaceAwareBulkOperations<S> updateMulti(Query query, UpdateDefinition update);
 
 		@Override
-		NamespaceAwareBulkOperations upsert(List<Pair<Query, Update>> updates);
+		NamespaceAwareBulkOperations<S> updateMulti(List<Pair<Query, UpdateDefinition>> updates);
 
 		@Override
-		NamespaceAwareBulkOperations remove(Query remove);
+		NamespaceAwareBulkOperations<S> upsert(Query query, UpdateDefinition update);
 
 		@Override
-		NamespaceAwareBulkOperations remove(List<Query> removes);
+		NamespaceAwareBulkOperations<S> upsert(List<Pair<Query, Update>> updates);
 
 		@Override
-		NamespaceAwareBulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options);
+		NamespaceAwareBulkOperations<S> remove(Query remove);
 
 		@Override
-		default NamespaceAwareBulkOperations upsert(Query query, Update update) {
+		NamespaceAwareBulkOperations<S> remove(List<Query> removes);
+
+		@Override
+		NamespaceAwareBulkOperations<S> replaceOne(Query query, Object replacement, FindAndReplaceOptions options);
+
+		@Override
+		default NamespaceAwareBulkOperations<S> upsert(Query query, Update update) {
 			upsert(query, (UpdateDefinition) update);
 			return this;
 		}
-
-		ClientBulkWriteResult execute();
 	}
 
 	// NamespacedBulkOperations<Object> inNamespace(Namespace namespace);

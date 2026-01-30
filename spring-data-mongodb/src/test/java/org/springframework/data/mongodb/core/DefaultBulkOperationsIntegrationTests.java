@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.data.domain.Sort.Direction.DESC;
-import static org.springframework.data.mongodb.core.Namespace.namespace;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,15 +26,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.bson.BsonBoolean;
-import org.bson.BsonInt32;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.data.domain.Score;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
@@ -56,15 +52,10 @@ import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.Pair;
 
 import com.mongodb.MongoBulkWriteException;
-import com.mongodb.MongoNamespace;
 import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.internal.client.model.bulk.ConcreteClientInsertOneModel;
-import com.mongodb.internal.client.model.bulk.ConcreteClientNamespacedInsertOneModel;
-import com.mongodb.internal.operation.ClientBulkWriteOperation;
 
 /**
  * Integration tests for {@link DefaultBulkOperations}.
@@ -372,113 +363,6 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		Document raw = operations.execute(COLLECTION_NAME, col -> col.find(new Document("_id", "4")).first());
 		assertThat(raw).containsEntry("value", target.value);
-	}
-
-	@Test // GH-5087
-	void bulkWriteMultipleCollections() {
-
-		BaseDoc doc1 = new BaseDoc();
-		doc1.id = "id-doc1";
-		doc1.value = "value-doc1";
-
-		BaseDoc doc2 = new BaseDoc();
-		doc2.id = "id-doc2";
-		doc2.value = "value-doc2";
-
-		NamespaceBulkOperations bulkOps = operations.bulkOps(BulkMode.ORDERED);
-		bulkOps
-			.inCollection(BaseDoc.class)
-				.insert(doc1)
-				.insert(doc2)
-				.upsert(where("_id", "id-doc3"), new Update().set("value", "upserted"))
-			.inCollection(SpecialDoc.class)
-				.insert(new SpecialDoc())
-			.execute();
-
-	}
-
-	@Test // GH-5087
-	void apiDesign() {
-
-//		NamespaceBulkOperations bulkOps = operations.bulkOps(BulkMode.ORDERED);
-//		bulkOps
-//			.inCollection(User.class)
-//				.insert(List.of(new User()))
-//				.upsert(Query.query(Criteria.where("name").is("batman")), new Update().set("actor", "..."))
-//			.switchDatabase("db2")
-//				.inCollection("sql")
-//					.insert(List.of(new Document()));
-//
-
-
-//
-//		NamespaceBulkOperations bulkOps = operations.bulkOps(BulkMode.ORDERED);
-//		bulkOps
-//			.inNamespace(namespace("person"))
-//				.update()
-//					.one(Criteria.where("name").is("batman"), null)
-//					.one(Criteria.where("name").is("joker"), null)
-//				.insert()
-//					.many(List.of(new Person()))
-//			.inNamespace(namespace("log"))
-//				.insert()
-//					.one(new User())
-//			.inNamespace(Score.class)
-//				.insert().many(List.of())
-//
-//			.execute();
-
-
-//		NamespaceBulkOps bulkOps1 = null;
-//		bulkOps1.inNamespace(namespace("person"))
-//			.andInNamespace(namespace("log"));
-
-	}
-
-//	interface NamespaceBulkOps {
-//		NamespaceBoundBulkOps inNamespace(Namespace namespace);
-//		CollectionBound
-//	}
-
-	@Test // GH-5087
-	void exploreItOnClient() {
-
-		ClientBulkWriteOperation op = null;
-		// op.execute()
-
-		mongoClient.getDatabase("test").getCollection("pizzas").drop();
-		mongoClient.getDatabase("test").getCollection("pizzaOrders").drop();
-
-		// command:
-		MongoDatabase db = operations.getDb();
-		MongoTemplate template = operations;
-
-		Document commandDocument = new Document("bulkWrite", new BsonInt32(1)).append("errorsOnly", BsonBoolean.TRUE)
-				.append("ordered", BsonBoolean.TRUE);
-		List<Document> bulkOperations = new ArrayList<>();
-		bulkOperations
-				.add(Document.parse("{ insert: 0, document: { _id: 5, type: 'sausage', size: 'small', price: 12 } }"));
-		bulkOperations.add(Document.parse("{ insert: 1, document: { _id: 4, type: 'vegan cheese', number: 16 } }"));
-		commandDocument.put("ops", bulkOperations);
-
-		List<Document> namespaceInfo = new ArrayList<>();
-		namespaceInfo.add(Document.parse("{ns: '%s.pizzas'}".formatted(template.getDb().getName())));
-		namespaceInfo.add(Document.parse("{ns: '%s.pizzaOrders'}".formatted(template.getDb().getName())));
-		commandDocument.put("nsInfo", namespaceInfo);
-
-		template.getMongoDatabaseFactory().getMongoDatabase("admin").runCommand(commandDocument);
-	}
-
-	@Test
-	void hackSomePotentialApi() {
-
-		MongoNamespace pizzasNamespace = new MongoNamespace(operations.getDb().getName(), "pizzas");
-
-		ConcreteClientNamespacedInsertOneModel insert1 = new ConcreteClientNamespacedInsertOneModel(pizzasNamespace,
-				new ConcreteClientInsertOneModel(
-						Document.parse("{ insert: 0, document: { _id: 5, type: 'sausage', size: 'small', price: 12 } }")));
-		insert1.getNamespace();
-		insert1.getModel();
 	}
 
 	private void testUpdate(BulkMode mode, boolean multi, int expectedUpdates) {

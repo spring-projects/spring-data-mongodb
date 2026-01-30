@@ -49,7 +49,7 @@ import com.mongodb.bulk.BulkWriteResult;
  * @author Minsu Kim
  * @since 1.9
  */
-public interface BulkOperations extends BulkOperationBase {
+public interface BulkOperations extends BulkOperationBase<Object> {
 
 	/**
 	 * Mode for bulk operation.

@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -27,7 +29,7 @@ import org.springframework.data.util.Pair;
  * @author Christoph Strobl
  * @since 2026/01
  */
-public interface BulkOperationBase {
+public interface BulkOperationBase<T> {
 
 	/**
 	 * Add a single insert to the bulk operation.
@@ -35,7 +37,7 @@ public interface BulkOperationBase {
 	 * @param documents the document to insert, must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the insert added, will never be {@literal null}.
 	 */
-	BulkOperationBase insert(Object documents);
+	BulkOperationBase<T> insert(T documents);
 
 	/**
 	 * Add a list of inserts to the bulk operation.
@@ -43,7 +45,11 @@ public interface BulkOperationBase {
 	 * @param documents List of documents to insert, must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the insert added, will never be {@literal null}.
 	 */
-	BulkOperationBase insert(List<? extends Object> documents);
+	BulkOperationBase<T> insert(List<? extends T> documents);
+
+	default BulkOperationBase<T> updateOne(CriteriaDefinition criteria, UpdateDefinition update) {
+		return updateOne(Query.query(criteria), update);
+	}
 
 	/**
 	 * Add a single update to the bulk operation. For the update request, only the first matching document is updated.
@@ -53,7 +59,7 @@ public interface BulkOperationBase {
 	 * @param update {@link Update} operation to perform, must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	default BulkOperationBase updateOne(Query query, Update update) {
+	default BulkOperationBase<T> updateOne(Query query, Update update) {
 		return updateOne(query, (UpdateDefinition) update);
 	}
 
@@ -66,7 +72,7 @@ public interface BulkOperationBase {
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 * @since 4.1
 	 */
-	BulkOperationBase updateOne(Query query, UpdateDefinition update);
+	BulkOperationBase<T> updateOne(Query query, UpdateDefinition update);
 
 	/**
 	 * Add a list of updates to the bulk operation. For each update request, only the first matching document is updated.
@@ -74,8 +80,11 @@ public interface BulkOperationBase {
 	 * @param updates Update operations to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperationBase updateOne(List<Pair<Query, UpdateDefinition>> updates);
+	BulkOperationBase<T> updateOne(List<Pair<Query, UpdateDefinition>> updates);
 
+	default BulkOperationBase<T> updateMulti(CriteriaDefinition criteria, UpdateDefinition update) {
+		return updateMulti(Query.query(criteria), update);
+	}
 	/**
 	 * Add a single update to the bulk operation. For the update request, all matching documents are updated.
 	 *
@@ -83,7 +92,7 @@ public interface BulkOperationBase {
 	 * @param update Update operation to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	default BulkOperationBase updateMulti(Query query, Update update) {
+	default BulkOperationBase<T> updateMulti(Query query, Update update) {
 		return updateMulti(query, (UpdateDefinition) update);
 	}
 
@@ -95,7 +104,7 @@ public interface BulkOperationBase {
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 * @since 4.1
 	 */
-	BulkOperationBase updateMulti(Query query, UpdateDefinition update);
+	BulkOperationBase<T> updateMulti(Query query, UpdateDefinition update);
 
 	/**
 	 * Add a list of updates to the bulk operation. For each update request, all matching documents are updated.
@@ -103,7 +112,11 @@ public interface BulkOperationBase {
 	 * @param updates Update operations to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperationBase updateMulti(List<Pair<Query, UpdateDefinition>> updates);
+	BulkOperationBase<T> updateMulti(List<Pair<Query, UpdateDefinition>> updates);
+
+	default BulkOperationBase<T> upsert(CriteriaDefinition criteria, UpdateDefinition update) {
+		return upsert(Query.query(criteria), update);
+	}
 
 	/**
 	 * Add a single upsert to the bulk operation. An upsert is an update if the set of matching documents is not empty,
@@ -113,7 +126,7 @@ public interface BulkOperationBase {
 	 * @param update Update operation to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	default BulkOperationBase upsert(Query query, Update update) {
+	default BulkOperationBase<T> upsert(Query query, Update update) {
 		return upsert(query, (UpdateDefinition) update);
 	}
 
@@ -126,7 +139,7 @@ public interface BulkOperationBase {
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 * @since 4.1
 	 */
-	BulkOperationBase upsert(Query query, UpdateDefinition update);
+	BulkOperationBase<T> upsert(Query query, UpdateDefinition update);
 
 	/**
 	 * Add a list of upserts to the bulk operation. An upsert is an update if the set of matching documents is not empty,
@@ -135,15 +148,18 @@ public interface BulkOperationBase {
 	 * @param updates Updates/insert operations to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperationBase upsert(List<Pair<Query, Update>> updates);
+	BulkOperationBase<T> upsert(List<Pair<Query, Update>> updates);
 
+	default BulkOperationBase<T> remove(CriteriaDefinition criteria) {
+		return remove(Query.query(criteria));
+	}
 	/**
 	 * Add a single remove operation to the bulk operation.
 	 *
 	 * @param remove the {@link Query} to select the documents to be removed, must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the removal added, will never be {@literal null}.
 	 */
-	BulkOperationBase remove(Query remove);
+	BulkOperationBase<T> remove(Query remove);
 
 	/**
 	 * Add a list of remove operations to the bulk operation.
@@ -151,7 +167,7 @@ public interface BulkOperationBase {
 	 * @param removes the remove operations to perform, must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the removal added, will never be {@literal null}.
 	 */
-	BulkOperationBase remove(List<Query> removes);
+	BulkOperationBase<T> remove(List<Query> removes);
 
 	/**
 	 * Add a single replace operation to the bulk operation.
@@ -162,7 +178,7 @@ public interface BulkOperationBase {
 	 * @return the current {@link BulkOperations} instance with the replacement added, will never be {@literal null}.
 	 * @since 2.2
 	 */
-	default BulkOperationBase replaceOne(Query query, Object replacement) {
+	default BulkOperationBase<T> replaceOne(Query query, Object replacement) {
 		return replaceOne(query, replacement, FindAndReplaceOptions.empty());
 	}
 
@@ -176,6 +192,6 @@ public interface BulkOperationBase {
 	 * @return the current {@link BulkOperations} instance with the replacement added, will never be {@literal null}.
 	 * @since 2.2
 	 */
-	BulkOperationBase replaceOne(Query query, Object replacement, FindAndReplaceOptions options);
+	BulkOperationBase<T> replaceOne(Query query, Object replacement, FindAndReplaceOptions options);
 
 }
