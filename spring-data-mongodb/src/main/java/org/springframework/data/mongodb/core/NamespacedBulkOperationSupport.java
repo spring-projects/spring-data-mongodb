@@ -209,6 +209,8 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 	@SuppressWarnings("unchecked")
 	public ClientBulkWriteResult execute() {
 
+		// TODO: exceptions need to be translated correctly
+
 		return operations.doWithClient(new MongoClusterCallback<>() {
 
 			@Override
@@ -256,7 +258,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 	@Override
 	public NamespaceBulkOperations switchDatabase(String databaseName) {
 
-		this.currentNamespace = new Namespace(currentNamespace.database(), null);
+		this.currentNamespace = new Namespace(databaseName, null);
 		return this;
 	}
 
