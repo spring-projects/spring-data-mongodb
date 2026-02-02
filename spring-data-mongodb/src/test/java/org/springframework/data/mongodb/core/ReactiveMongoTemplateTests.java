@@ -47,7 +47,6 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -71,6 +70,7 @@ import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -106,6 +106,13 @@ public class ReactiveMongoTemplateTests {
 
 		cfg.configureApplicationContext(it -> {
 			it.applicationContext(context);
+			context.addApplicationListener(new AbstractMongoEventListener<NonAutogeneratableId>() {
+
+				@Override
+				public void onBeforeConvert(BeforeConvertEvent<NonAutogeneratableId> event) {
+					event.getSource().setId(new IdObject("event", Instant.now().getEpochSecond()));
+				}
+			});
 		});
 	});
 
@@ -2065,5 +2072,71 @@ public class ReactiveMongoTemplateTests {
 		public String toString() {
 			return "ReactiveMongoTemplateTests.RawStringId(id=" + this.getId() + ", value=" + this.getValue() + ")";
 		}
+	}
+
+	@Test // GH-5155
+	public void doesNotFailOnInsertForEntityWithNonAutogeneratableId() {
+
+		NonAutogeneratableId source = new NonAutogeneratableId();
+		source.setValue("value");
+
+		template.insert(source).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+	}
+
+	@Test // GH-5155
+	public void doesNotFailOnInsertForEntityWithNonAutogeneratableId2() {
+
+		NonAutogeneratableId source = new NonAutogeneratableId();
+		source.setValue("value");
+
+		template.save(source).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+	}
+
+	@Test // GH-5155
+	public void doesNotFailOnInsertForEntityWithNonAutogeneratableId3() {
+
+		VersionedNonAutogeneratableId source = new VersionedNonAutogeneratableId();
+		source.setValue("value");
+
+		template.save(source).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+	}
+
+	static class NonAutogeneratableId {
+
+		@Id IdObject id;
+		String value;
+
+		public IdObject getId() {
+			return id;
+		}
+
+		public void setId(IdObject id) {
+			this.id = id;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+	}
+
+	static class VersionedNonAutogeneratableId extends NonAutogeneratableId {
+
+		@Version int version;
+
+		public int getVersion() {
+			return version;
+		}
+
+		public void setVersion(int version) {
+			this.version = version;
+		}
+	}
+
+	record IdObject(String value, long timestamp) {
+
 	}
 }
