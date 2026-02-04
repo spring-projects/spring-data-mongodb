@@ -53,6 +53,8 @@ public interface NamespaceBulkOperations {
 
 	NamespaceAwareBulkOperations<Object> inCollection(String collection);
 
+	<S> NamespaceAwareBulkOperations<S> inCollection(String collection, Class<S> type);
+
 	NamespaceAwareBulkOperations<Object> inCollection(String collection, Consumer<BulkOperationBase<Object>> bulkActions);
 
 	NamespaceBulkOperations switchDatabase(String databaseName);

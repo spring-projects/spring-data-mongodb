@@ -49,6 +49,7 @@ import org.springframework.data.mongodb.core.NamespaceBulkOperations.NamespaceAw
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -75,6 +76,7 @@ import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateManyOptions;
 import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateOneOptions;
 
 /**
+ * NOT THREAD SAFE!!!
  * @author Christoph Strobl
  */
 class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<T> {
@@ -90,7 +92,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		this.bulkMode = mode;
 		this.ctx = ctx;
-		this.currentNamespace = new Namespace(ctx.database(), null);
+		this.currentNamespace = new Namespace(ctx.database(), null, null);
 		this.operations = operations;
 	}
 
@@ -165,11 +167,12 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 	@Override
 	public NamespaceAwareBulkOperations<T> remove(Query query) {
 
+		Namespace namespace = currentNamespace;
 		ClientDeleteManyOptions deleteOptions = ClientDeleteManyOptions.clientDeleteManyOptions();
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
 
-		addModel(query,
-				ClientNamespacedWriteModel.deleteMany(mongoNamespace(currentNamespace), query.getQueryObject(), deleteOptions));
+		addModel(query, ClientNamespacedWriteModel.deleteMany(mongoNamespace(namespace),
+				getMappedQuery(query.getQueryObject(), namespace), deleteOptions));
 
 		return this;
 	}
@@ -196,11 +199,11 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
 
-		Namespace ns = currentNamespace;
-		maybeEmitEvent(new BeforeConvertEvent<>(replacement, ns.name()));
-		Object source = maybeInvokeBeforeConvertCallback(replacement, ns);
-		addModel(source, ClientNamespacedWriteModel.replaceOne(mongoNamespace(ns), query.getQueryObject(),
-				getMappedObject(source), replaceOptions));
+		Namespace namespace = currentNamespace;
+		maybeEmitEvent(new BeforeConvertEvent<>(replacement, namespace.name()));
+		Object source = maybeInvokeBeforeConvertCallback(replacement, namespace);
+		addModel(source, ClientNamespacedWriteModel.replaceOne(mongoNamespace(namespace),
+				getMappedQuery(query.getQueryObject(), namespace), getMappedObject(source), replaceOptions));
 
 		return this;
 	}
@@ -242,23 +245,31 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <S> NamespaceAwareBulkOperations<S> inCollection(Class<S> type) {
-		return inCollection(operations.getCollectionName(type));
+		return inCollection(operations.getCollectionName(type), type);
 	}
 
 	@Override
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public NamespaceAwareBulkOperations inCollection(String collection) {
+	@SuppressWarnings("unchecked")
+	public NamespaceAwareBulkOperations<Object> inCollection(String collection) {
+		return changeCollection(collection, null);
+	}
 
-		this.currentNamespace = new Namespace(currentNamespace.database(), collection);
+	@SuppressWarnings("unchecked")
+	public <S> NamespaceAwareBulkOperations<S> inCollection(String collection, @Nullable Class<S> type) {
+		return changeCollection(collection, type);
+	}
+
+	@SuppressWarnings({ "rawtypes" })
+	private NamespaceAwareBulkOperations changeCollection(String collection, @Nullable Class<?> type) {
+		this.currentNamespace = new Namespace(currentNamespace.database(), collection, type);
 		return this;
 	}
 
 	@Override
 	public NamespaceBulkOperations switchDatabase(String databaseName) {
 
-		this.currentNamespace = new Namespace(databaseName, null);
+		this.currentNamespace = new Namespace(databaseName, null, null);
 		return this;
 	}
 
@@ -319,8 +330,10 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			mayOptions.hint(options.getHint());
 			mayOptions.hintString(options.getHintString());
 
-			addModel(update, ClientNamespacedWriteModel.updateMany(mongoNamespace(namespace), query.getQueryObject(),
-					update.getUpdateObject(), mayOptions));
+			addModel(update,
+					ClientNamespacedWriteModel.updateMany(mongoNamespace(namespace),
+							getMappedQuery(query.getQueryObject(), namespace), getMappedUpdate(update.getUpdateObject(), namespace),
+							mayOptions));
 		} else {
 
 			ClientUpdateOneOptions mayOptions = new ConcreteClientUpdateOneOptions();
@@ -329,9 +342,31 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			mayOptions.upsert(options.isUpsert());
 			mayOptions.hint(options.getHint());
 			mayOptions.hintString(options.getHintString());
-			addModel(update, ClientNamespacedWriteModel.updateOne(mongoNamespace(namespace), query.getQueryObject(),
-					update.getUpdateObject(), mayOptions));
+			addModel(update,
+					ClientNamespacedWriteModel.updateOne(mongoNamespace(namespace),
+							getMappedQuery(query.getQueryObject(), namespace), getMappedUpdate(update.getUpdateObject(), namespace),
+							mayOptions));
 		}
+	}
+
+	private Document getMappedUpdate(Document updateObject, Namespace namespace) {
+		if (namespace.type() == null) {
+			return ctx.updateMapper().getMappedObject(updateObject, (MongoPersistentEntity<?>) null);
+		}
+		MongoPersistentEntity<?> persistentEntity = ctx.updateMapper().getMappingContext()
+				.getPersistentEntity(namespace.type());
+		return ctx.updateMapper().getMappedObject(updateObject, persistentEntity);
+	}
+
+	private Document getMappedQuery(Document query, Namespace namespace) {
+
+		if (namespace.type() == null) {
+			return ctx.queryMapper().getMappedObject(query, (MongoPersistentEntity<?>) null);
+		}
+
+		MongoPersistentEntity<?> persistentEntity = ctx.updateMapper().getMappingContext()
+				.getPersistentEntity(namespace.type());
+		return ctx.queryMapper().getMappedObject(query, persistentEntity);
 	}
 
 	private Document getMappedObject(Object source) {
@@ -357,7 +392,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		return namespaces.computeIfAbsent(namespace, key -> new MongoNamespace(key.database(), key.collection()));
 	}
 
-	record Namespace(String database, @Nullable String collection) {
+	record Namespace(String database, @Nullable String collection, @Nullable Class<?> type) {
 
 		public String name() {
 			return String.format("%s.%s", database, collection != null ? collection : "n/a");
