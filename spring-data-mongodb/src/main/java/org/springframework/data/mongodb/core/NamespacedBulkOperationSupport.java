@@ -26,20 +26,27 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.NamespaceBulkOperations.NamespaceAwareBulkOperations;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
-import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Pair;
 import org.springframework.lang.CheckReturnValue;
 import org.springframework.util.Assert;
@@ -51,11 +58,7 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import com.mongodb.client.model.bulk.ClientDeleteManyOptions;
-import com.mongodb.client.model.bulk.ClientNamespacedDeleteManyModel;
 import com.mongodb.client.model.bulk.ClientNamespacedInsertOneModel;
-import com.mongodb.client.model.bulk.ClientNamespacedReplaceOneModel;
-import com.mongodb.client.model.bulk.ClientNamespacedUpdateManyModel;
-import com.mongodb.client.model.bulk.ClientNamespacedUpdateOneModel;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
 import com.mongodb.client.model.bulk.ClientReplaceOneOptions;
 import com.mongodb.client.model.bulk.ClientUpdateOneOptions;
@@ -183,7 +186,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 				ClientBulkWriteOptions cbws = ClientBulkWriteOptions.clientBulkWriteOptions()
 						.ordered(NamespacedBulkOperationSupport.this.bulkMode.equals(BulkMode.ORDERED));
 
-				return cluster.bulkWrite(bulkOperationPipeline.writeModels(), cbws);
+				return cluster.bulkWrite(bulkOperationPipeline.models(), cbws);
 			}
 		});
 
@@ -323,7 +326,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		@CheckReturnValue
 		abstract NamespacedBulkOperation map(NamespacedBulkOperationContext context);
 
-		abstract ClientNamespacedWriteModel model();
+		abstract ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context);
 
 		MongoNamespace mongoNamespace() {
 			return new MongoNamespace(namespace.database(), namespace.collection());
@@ -344,7 +347,6 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		private final Object source;
 		private final @Nullable Document mappedObject;
-		private final Lazy<ClientNamespacedInsertOneModel> model;
 
 		public NamespacedBulkInsert(Namespace namespace, Object source) {
 			this(namespace, source, null);
@@ -354,9 +356,6 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			super(namespace);
 			this.source = source;
 			this.mappedObject = mappedObject;
-			this.model = mappedObject != null
-					? Lazy.of(() -> ClientNamespacedWriteModel.insertOne(mongoNamespace(), mappedObject))
-					: Lazy.empty();
 		}
 
 		public Document getMappedObject() {
@@ -383,8 +382,11 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		ClientNamespacedInsertOneModel model() {
-			return model.get();
+		ClientNamespacedInsertOneModel prepareForWrite(NamespacedBulkOperationContext context) {
+
+			context.publishEvent(new BeforeSaveEvent<>(source, mappedObject, namespace.name()));
+			context.callback(BeforeSaveCallback.class, source, mappedObject, namespace);
+			return ClientNamespacedWriteModel.insertOne(mongoNamespace(), mappedObject);
 		}
 	}
 
@@ -393,11 +395,11 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		protected final Query query;
 		protected final UpdateDefinition update;
 		protected final boolean upsert;
-		protected final @Nullable Document mappedUpdate;
+		protected final @Nullable Object mappedUpdate;
 		protected final @Nullable Document mappedQuery;
 
 		public BaseNamespacedBulkUpdate(Namespace namespace, Query query, UpdateDefinition source, boolean upsert,
-				@Nullable Document mappedUpdate, @Nullable Document mappedQuery) {
+				@Nullable Object mappedUpdate, @Nullable Document mappedQuery) {
 			super(namespace);
 			this.query = query;
 			this.update = source;
@@ -408,12 +410,27 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		protected static Document mapUpdate(NamespacedBulkOperationContext context, Document updateObject,
 				Namespace namespace) {
+
 			if (namespace.type() == null) {
 				return context.updateMapper().getMappedObject(updateObject, (MongoPersistentEntity<?>) null);
 			}
+
 			MongoPersistentEntity<?> persistentEntity = context.updateMapper().getMappingContext()
 					.getPersistentEntity(namespace.type());
 			return context.updateMapper().getMappedObject(updateObject, persistentEntity);
+		}
+
+		protected static List<Document> mapUpdatePipeline(NamespacedBulkOperationContext context, AggregationUpdate source,
+				Namespace namespace) {
+
+			Class<?> type = namespace.type();
+
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = context.queryMapper()
+					.getMappingContext();
+			AggregationOperationContext aggregationContext = new TypeBasedAggregationOperationContext(type, mappingContext,
+					context.queryMapper(), FieldLookupPolicy.relaxed());
+
+			return new AggregationUtil(context.queryMapper(), mappingContext).createPipeline(source, aggregationContext);
 		}
 
 		/**
@@ -444,84 +461,87 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 	static class NamespacedBulkUpdateOne extends BaseNamespacedBulkUpdate {
 
-		Lazy<ClientNamespacedUpdateOneModel> model;
-
 		public NamespacedBulkUpdateOne(Namespace namespace, Query query, UpdateDefinition source, boolean upsert) {
 			this(namespace, query, source, upsert, null, null);
 		}
 
 		public NamespacedBulkUpdateOne(Namespace namespace, Query query, UpdateDefinition source, boolean upsert,
-				@Nullable Document mappedUpdate, @Nullable Document mappedQuery) {
+				@Nullable Object mappedUpdate, @Nullable Document mappedQuery) {
 			super(namespace, query, source, upsert, mappedUpdate, mappedQuery);
-
-			model = mappedUpdate != null && mappedUpdate != null ? Lazy.of(() -> {
-
-				UpdateOptions options = updateOptions(false);
-				ClientUpdateOneOptions updateOneOptions = new ConcreteClientUpdateOneOptions();
-				updateOneOptions.arrayFilters(options.getArrayFilters());
-				updateOneOptions.collation(options.getCollation());
-				updateOneOptions.upsert(options.isUpsert());
-				updateOneOptions.hint(options.getHint());
-				updateOneOptions.hintString(options.getHintString());
-
-				return ClientNamespacedWriteModel.updateOne(mongoNamespace(), mappedQuery, mappedUpdate, updateOneOptions);
-			}) : Lazy.empty();
 		}
 
 		@Override
 		NamespacedBulkUpdateOne map(NamespacedBulkOperationContext context) {
 
-			Document mappedUpdate = mapUpdate(context, update.getUpdateObject(), namespace);
+			Object mappedUpdate = update instanceof AggregationUpdate aggregationUpdate
+					? mapUpdatePipeline(context, aggregationUpdate, namespace)
+					: mapUpdate(context, update.getUpdateObject(), namespace);
 			Document mappedQuery = mapQuery(context, query.getQueryObject(), namespace);
 
 			return new NamespacedBulkUpdateOne(namespace, query, update, upsert, mappedUpdate, mappedQuery);
 		}
 
 		@Override
-		ClientNamespacedWriteModel model() {
-			return model.get();
+		@SuppressWarnings("unchecked")
+		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
+			UpdateOptions options = updateOptions(false);
+			ClientUpdateOneOptions updateOneOptions = new ConcreteClientUpdateOneOptions();
+			updateOneOptions.arrayFilters(options.getArrayFilters());
+			updateOneOptions.collation(options.getCollation());
+			updateOneOptions.upsert(options.isUpsert());
+			updateOneOptions.hint(options.getHint());
+			updateOneOptions.hintString(options.getHintString());
+
+			if (mappedUpdate instanceof List<?> pipeline) {
+				return ClientNamespacedWriteModel.updateOne(mongoNamespace(), mappedQuery, (List<Document>) pipeline,
+						updateOneOptions);
+			}
+			return ClientNamespacedWriteModel.updateOne(mongoNamespace(), mappedQuery, (Document) mappedUpdate,
+					updateOneOptions);
 		}
 
 	}
 
 	static class NamespacedBulkUpdateMany extends BaseNamespacedBulkUpdate {
 
-		Lazy<ClientNamespacedUpdateManyModel> model;
-
 		public NamespacedBulkUpdateMany(Namespace namespace, Query query, UpdateDefinition source, boolean upsert) {
 			this(namespace, query, source, upsert, null, null);
 		}
 
 		public NamespacedBulkUpdateMany(Namespace namespace, Query query, UpdateDefinition source, boolean upsert,
-				@Nullable Document mappedUpdate, @Nullable Document mappedQuery) {
+				@Nullable Object mappedUpdate, @Nullable Document mappedQuery) {
 			super(namespace, query, source, upsert, mappedUpdate, mappedQuery);
-
-			model = mappedUpdate != null && mappedUpdate != null ? Lazy.of(() -> {
-
-				UpdateOptions options = updateOptions(true);
-				ConcreteClientUpdateManyOptions updateOneOptions = new ConcreteClientUpdateManyOptions();
-				updateOneOptions.arrayFilters(options.getArrayFilters());
-				updateOneOptions.collation(options.getCollation());
-				updateOneOptions.upsert(options.isUpsert());
-				updateOneOptions.hint(options.getHint());
-				updateOneOptions.hintString(options.getHintString());
-
-				return ClientNamespacedWriteModel.updateMany(mongoNamespace(), mappedQuery, mappedUpdate, updateOneOptions);
-			}) : Lazy.empty();
 		}
 
 		@Override
 		NamespacedBulkUpdateMany map(NamespacedBulkOperationContext context) {
 
-			Document mappedUpdate = mapUpdate(context, update.getUpdateObject(), namespace);
+			Object mappedUpdate = update instanceof AggregationUpdate aggregationUpdate
+					? mapUpdatePipeline(context, aggregationUpdate, namespace)
+					: mapUpdate(context, update.getUpdateObject(), namespace);
 			Document mappedQuery = mapQuery(context, query.getQueryObject(), namespace);
 
 			return new NamespacedBulkUpdateMany(namespace, query, update, upsert, mappedUpdate, mappedQuery);
 		}
 
 		@Override
-		ClientNamespacedWriteModel model() {
-			return model.get();
+		@SuppressWarnings("unchecked")
+		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
+
+			UpdateOptions options = updateOptions(true);
+			ConcreteClientUpdateManyOptions updateOneOptions = new ConcreteClientUpdateManyOptions();
+			updateOneOptions.arrayFilters(options.getArrayFilters());
+			updateOneOptions.collation(options.getCollation());
+			updateOneOptions.upsert(options.isUpsert());
+			updateOneOptions.hint(options.getHint());
+			updateOneOptions.hintString(options.getHintString());
+
+			if (mappedUpdate instanceof List<?> pipeline) {
+				return ClientNamespacedWriteModel.updateMany(mongoNamespace(), mappedQuery, (List<Document>) pipeline,
+						updateOneOptions);
+			}
+			return ClientNamespacedWriteModel.updateMany(mongoNamespace(), mappedQuery, (Document) mappedUpdate,
+					updateOneOptions);
 		}
 
 	}
@@ -530,7 +550,6 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		private final Query query;
 		private final @Nullable Document mappedQuery;
-		private final Lazy<ClientNamespacedDeleteManyModel> model;
 
 		public NamespacedBulkRemove(Namespace namespace, Query query) {
 			this(namespace, query, null);
@@ -540,13 +559,6 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			super(namespace);
 			this.query = query;
 			this.mappedQuery = mappedQuery;
-			this.model = mappedQuery != null ? Lazy.of(() -> {
-
-				ClientDeleteManyOptions deleteOptions = ClientDeleteManyOptions.clientDeleteManyOptions();
-				query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
-
-				return ClientNamespacedWriteModel.deleteMany(mongoNamespace(), mappedQuery, deleteOptions);
-			}) : Lazy.empty();
 		}
 
 		@Override
@@ -555,8 +567,12 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		ClientNamespacedWriteModel model() {
-			return model.get();
+		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
+
+			ClientDeleteManyOptions deleteOptions = ClientDeleteManyOptions.clientDeleteManyOptions();
+			query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
+
+			return ClientNamespacedWriteModel.deleteMany(mongoNamespace(), mappedQuery, deleteOptions);
 		}
 	}
 
@@ -568,8 +584,6 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		private final @Nullable Document mappedQuery;
 		private final @Nullable Document mappedReplacement;
-
-		Lazy<ClientNamespacedReplaceOneModel> model;
 
 		public NamespacedBulkReplace(Namespace namespace, Query query, Object replacement, FindAndReplaceOptions options) {
 			this(namespace, query, replacement, options, null, null);
@@ -583,17 +597,6 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			this.options = options;
 			this.mappedQuery = mappedQuery;
 			this.mappedReplacement = mappedReplacement;
-
-			model = mappedQuery != null ? Lazy.of(() -> {
-				ClientReplaceOneOptions replaceOptions = ClientReplaceOneOptions.clientReplaceOneOptions();
-				replaceOptions.upsert(options.isUpsert());
-				if (query.isSorted()) {
-					replaceOptions.sort(query.getSortObject());
-				}
-				query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
-
-				return ClientNamespacedWriteModel.replaceOne(mongoNamespace(), mappedQuery, mappedReplacement, replaceOptions);
-			}) : Lazy.empty();
 		}
 
 		@Override
@@ -613,8 +616,19 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		ClientNamespacedWriteModel model() {
-			return model.get();
+		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
+
+			ClientReplaceOneOptions replaceOptions = ClientReplaceOneOptions.clientReplaceOneOptions();
+			replaceOptions.upsert(options.isUpsert());
+			if (query.isSorted()) {
+				replaceOptions.sort(query.getSortObject());
+			}
+			query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
+
+			context.publishEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, namespace.name()));
+			context.callback(BeforeSaveCallback.class, replacement, mappedReplacement, namespace);
+
+			return ClientNamespacedWriteModel.replaceOne(mongoNamespace(), mappedQuery, mappedReplacement, replaceOptions);
 		}
 	}
 
@@ -628,13 +642,12 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		void append(NamespacedBulkOperation operation) {
-			pipeline.add(operation.map(bulkOperationContext)); // TODO: map here or later on execute?
+			pipeline.add(operation.map(bulkOperationContext));
 		}
 
-		List<ClientNamespacedWriteModel> writeModels() {
-			return pipeline.stream().map(NamespacedBulkOperation::model).toList();
+		List<ClientNamespacedWriteModel> models() {
+			return pipeline.stream().map(it -> it.prepareForWrite(bulkOperationContext)).toList();
 		}
-
 	}
 
 }
