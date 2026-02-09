@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import com.mongodb.client.MongoCluster;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -175,7 +176,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 		factory.setInterfaces(targetType);
 		factory.setOpaque(true);
 
-		factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class,
+		factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoCluster.class, ClientSession.class, MongoDatabase.class,
 				this::proxyDatabase, MongoCollection.class, this::proxyCollection));
 
 		return targetType.cast(factory.getProxy());

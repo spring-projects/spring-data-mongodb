@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.reactivestreams.client.MongoCluster;
 import reactor.core.publisher.Mono;
 
 import org.bson.codecs.configuration.CodecRegistry;
@@ -226,7 +227,7 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 			factory.setInterfaces(targetType);
 			factory.setOpaque(true);
 
-			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class,
+			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoCluster.class, ClientSession.class, MongoDatabase.class,
 					this::proxyDatabase, MongoCollection.class, this::proxyCollection));
 
 			return targetType.cast(factory.getProxy(target.getClass().getClassLoader()));

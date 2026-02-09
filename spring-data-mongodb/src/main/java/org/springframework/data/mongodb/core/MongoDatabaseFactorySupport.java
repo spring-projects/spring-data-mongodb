@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.client.MongoCluster;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -29,6 +27,7 @@ import org.springframework.util.Assert;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoCluster;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -126,7 +125,6 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	 */
 	protected abstract MongoDatabase doGetMongoDatabase(String dbName);
 
-
 	public void destroy() throws Exception {
 		if (mongoInstanceCreated) {
 			closeClient();
@@ -170,9 +168,7 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 
 		@Override
 		public MongoCluster getCluster() {
-
-			// TODO: we need to proxy the cluster and methods that accept a client session
-			return delegate.getCluster();
+			return proxyMongoCluster(delegate.getCluster());
 		}
 
 		@Override
@@ -209,6 +205,10 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
+		private MongoCluster proxyMongoCluster(MongoCluster cluster) {
+			return createProxyInstance(session, cluster, MongoCluster.class);
+		}
+
 		private MongoDatabase proxyDatabase(com.mongodb.session.ClientSession session, MongoDatabase database) {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
@@ -225,7 +225,7 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 			factory.setInterfaces(targetType);
 			factory.setOpaque(true);
 
-			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class,
+			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoCluster.class, ClientSession.class, MongoDatabase.class,
 					this::proxyDatabase, MongoCollection.class, this::proxyCollection));
 
 			return targetType.cast(factory.getProxy(target.getClass().getClassLoader()));

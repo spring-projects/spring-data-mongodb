@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -101,6 +102,18 @@ class SimpleMongoClientDatabaseFactoryUnitTests {
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
 
 		assertThat(singletonTarget).isSameAs(database);
+	}
+
+	@Test // GH-5087
+	void passesOnClientSessionWhenInvokingMethodsOnMongoCluster() {
+
+		MongoDatabaseFactory factory = MongoDatabaseFactory.create(mongo, "foo");
+		MongoDatabaseFactory wrapped = factory.withSession(clientSession);
+
+		assertThat(wrapped.getCluster()).isInstanceOf(Proxy.class);
+		wrapped.getCluster().bulkWrite(List.of());
+
+		verify(mongo).bulkWrite(eq(clientSession), any());
 	}
 
 	private void rejectsDatabaseName(String databaseName) {

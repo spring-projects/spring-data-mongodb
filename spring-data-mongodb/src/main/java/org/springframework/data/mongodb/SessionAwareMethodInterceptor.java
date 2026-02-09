@@ -54,6 +54,7 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 	private final ClientSessionOperator databaseDecorator;
 	private final Object target;
 	private final Class<?> targetType;
+	private final Class<?> clientType;
 	private final Class<?> collectionType;
 	private final Class<?> databaseType;
 	private final Class<? extends ClientSession> sessionType;
@@ -71,7 +72,7 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 	 *          {@code MongoCollection}.
 	 * @param <T> target object type.
 	 */
-	public <T> SessionAwareMethodInterceptor(ClientSession session, T target, Class<? extends ClientSession> sessionType,
+	public <T> SessionAwareMethodInterceptor(ClientSession session, T target, Class<?> clientType, Class<? extends ClientSession> sessionType,
 			Class<D> databaseType, ClientSessionOperator<D> databaseDecorator, Class<C> collectionType,
 			ClientSessionOperator<C> collectionDecorator) {
 
@@ -85,13 +86,22 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 
 		this.session = session;
 		this.target = target;
+		this.clientType = ClassUtils.getUserClass(clientType);
 		this.databaseType = ClassUtils.getUserClass(databaseType);
 		this.collectionType = ClassUtils.getUserClass(collectionType);
 		this.collectionDecorator = collectionDecorator;
 		this.databaseDecorator = databaseDecorator;
 
-		this.targetType = ClassUtils.isAssignable(databaseType, target.getClass()) ? databaseType : collectionType;
+		this.targetType = targetType(target.getClass());
 		this.sessionType = sessionType;
+	}
+
+	Class<?> targetType(@Nullable Class<?> targetType) {
+
+		if(ClassUtils.isAssignable(clientType, targetType)) {
+			return clientType;
+		}
+		return ClassUtils.isAssignable(databaseType, target.getClass()) ? databaseType : collectionType;
 	}
 
 	@Override
