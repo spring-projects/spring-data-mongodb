@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.bson.Document;
@@ -29,10 +30,10 @@ import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.NamespaceBulkOperations.NamespaceAwareBulkOperations;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
+import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
+import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
-import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
-import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
@@ -42,11 +43,9 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
-import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.util.Pair;
 import org.springframework.lang.CheckReturnValue;
 import org.springframework.util.Assert;
@@ -54,6 +53,7 @@ import org.springframework.util.Assert;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoCluster;
+import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
@@ -61,8 +61,8 @@ import com.mongodb.client.model.bulk.ClientDeleteManyOptions;
 import com.mongodb.client.model.bulk.ClientNamespacedInsertOneModel;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
 import com.mongodb.client.model.bulk.ClientReplaceOneOptions;
+import com.mongodb.client.model.bulk.ClientUpdateManyOptions;
 import com.mongodb.client.model.bulk.ClientUpdateOneOptions;
-import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateManyOptions;
 import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateOneOptions;
 
 /**
@@ -271,9 +271,68 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 	}
 
-	record NamespacedBulkOperationContext(String database, MongoConverter mongoConverter, QueryMapper queryMapper,
-			UpdateMapper updateMapper, @Nullable ApplicationEventPublisher eventPublisher,
-			@Nullable EntityCallbacks entityCallbacks) {
+	record SourceAwareMappedDocument<T>(T source, Document mapped) {
+
+	}
+
+	static final class NamespacedBulkOperationContext {
+
+		private final String database;
+		private final MongoConverter mongoConverter;
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final QueryMapper queryMapper;
+		private final UpdateMapper updateMapper;
+		private final @Nullable ApplicationEventPublisher eventPublisher;
+		private final @Nullable EntityCallbacks entityCallbacks;
+		private final QueryOperations queryOperations;
+
+		public NamespacedBulkOperationContext(String database, MongoConverter mongoConverter, QueryMapper queryMapper,
+				UpdateMapper updateMapper, @Nullable ApplicationEventPublisher eventPublisher,
+				@Nullable EntityCallbacks entityCallbacks) {
+
+			this.database = database;
+			this.mongoConverter = mongoConverter;
+			this.queryMapper = queryMapper;
+			this.updateMapper = updateMapper;
+			this.eventPublisher = eventPublisher;
+			this.entityCallbacks = entityCallbacks;
+			this.mappingContext = mongoConverter.getMappingContext();
+			this.queryOperations = new QueryOperations(queryMapper, updateMapper,
+					new EntityOperations(mongoConverter, queryMapper), new PropertyOperations(this.mappingContext),
+					mongoConverter);
+		}
+
+		<T> SourceAwareMappedDocument<T> mapDomainObject(Namespace namespace, T source) {
+
+			publishEvent(new BeforeConvertEvent<>(source, namespace.name()));
+			Object value = callback(BeforeConvertCallback.class, source, namespace);
+			if (value instanceof Document document) {
+				return new SourceAwareMappedDocument<>(source, document);
+			}
+			Document sink = new Document();
+			mongoConverter.write(value, sink);
+			return new SourceAwareMappedDocument<>(source, sink);
+		}
+
+		public Document mapQuery(Namespace namespace, Query query) {
+
+			QueryContext queryContext = queryOperations().createQueryContext(query);
+			if (namespace.type() == null) {
+				return queryContext.getMappedQuery(null);
+			}
+
+			MongoPersistentEntity<?> persistentEntity = this.mappingContext.getPersistentEntity(namespace.type());
+			return queryContext.getMappedQuery(persistentEntity);
+		}
+
+		public Object mapUpdate(Namespace namespace, Query query, UpdateDefinition updateDefinition, boolean upsert) {
+
+			UpdateContext updateContext = queryOperations.updateContext(updateDefinition, query, upsert);
+			if (updateDefinition instanceof AggregationUpdate aggregationUpdate) {
+				return updateContext.getUpdatePipeline(namespace.type());
+			}
+			return updateContext.getMappedUpdate(mappingContext.getPersistentEntity(namespace.type()));
+		}
 
 		public boolean skipEntityCallbacks() {
 			return entityCallbacks == null;
@@ -313,6 +372,73 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 			eventPublisher.publishEvent(event);
 		}
+
+		@Nullable
+		MongoPersistentEntity<?> entity(Class<?> type) {
+			if (type == null) {
+				return null;
+			}
+			return mappingContext().getPersistentEntity(type);
+		}
+
+		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext() {
+			return mongoConverter.getMappingContext();
+		}
+
+		public String database() {
+			return database;
+		}
+
+		public MongoConverter mongoConverter() {
+			return mongoConverter;
+		}
+
+		public QueryMapper queryMapper() {
+			return queryMapper;
+		}
+
+		public UpdateMapper updateMapper() {
+			return updateMapper;
+		}
+
+		public @Nullable ApplicationEventPublisher eventPublisher() {
+			return eventPublisher;
+		}
+
+		public @Nullable EntityCallbacks entityCallbacks() {
+			return entityCallbacks;
+		}
+
+		public QueryOperations queryOperations() {
+			return queryOperations;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (obj == null || obj.getClass() != this.getClass()) {
+				return false;
+			}
+			var that = (NamespacedBulkOperationContext) obj;
+			return Objects.equals(this.database, that.database) && Objects.equals(this.mongoConverter, that.mongoConverter)
+					&& Objects.equals(this.queryMapper, that.queryMapper) && Objects.equals(this.updateMapper, that.updateMapper)
+					&& Objects.equals(this.eventPublisher, that.eventPublisher)
+					&& Objects.equals(this.entityCallbacks, that.entityCallbacks);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(database, mongoConverter, queryMapper, updateMapper, eventPublisher, entityCallbacks);
+		}
+
+		@Override
+		public String toString() {
+			return "NamespacedBulkOperationContext[" + "database=" + database + ", " + "mongoConverter=" + mongoConverter
+					+ ", " + "queryMapper=" + queryMapper + ", " + "updateMapper=" + updateMapper + ", " + "eventPublisher="
+					+ eventPublisher + ", " + "entityCallbacks=" + entityCallbacks + ']';
+		}
 	}
 
 	abstract static class NamespacedBulkOperation {
@@ -332,15 +458,6 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			return new MongoNamespace(namespace.database(), namespace.collection());
 		}
 
-		protected static Document mapQuery(NamespacedBulkOperationContext context, Document query, Namespace namespace) {
-			if (namespace.type() == null) {
-				return context.queryMapper().getMappedObject(query, (MongoPersistentEntity<?>) null);
-			}
-
-			MongoPersistentEntity<?> persistentEntity = context.updateMapper().getMappingContext()
-					.getPersistentEntity(namespace.type());
-			return context.queryMapper().getMappedObject(query, persistentEntity);
-		}
 	}
 
 	static class NamespacedBulkInsert extends NamespacedBulkOperation {
@@ -371,14 +488,8 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 				return this;
 			}
 
-			context.publishEvent(new BeforeConvertEvent<>(source, namespace.name()));
-			Object value = context.callback(BeforeConvertCallback.class, source, namespace);
-			if (value instanceof Document document) {
-				return new NamespacedBulkInsert(namespace, value, document);
-			}
-			Document sink = new Document();
-			context.updateMapper().getConverter().write(value, sink);
-			return new NamespacedBulkInsert(namespace, value, sink);
+			SourceAwareMappedDocument<?> target = context.mapDomainObject(namespace, source);
+			return new NamespacedBulkInsert(namespace, target.source, target.mapped);
 		}
 
 		@Override
@@ -404,58 +515,18 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			this.query = query;
 			this.update = source;
 			this.upsert = upsert;
+
 			this.mappedUpdate = mappedUpdate;
 			this.mappedQuery = mappedQuery;
 		}
 
-		protected static Document mapUpdate(NamespacedBulkOperationContext context, Document updateObject,
-				Namespace namespace) {
-
-			if (namespace.type() == null) {
-				return context.updateMapper().getMappedObject(updateObject, (MongoPersistentEntity<?>) null);
-			}
-
-			MongoPersistentEntity<?> persistentEntity = context.updateMapper().getMappingContext()
-					.getPersistentEntity(namespace.type());
-			return context.updateMapper().getMappedObject(updateObject, persistentEntity);
-		}
-
-		protected static List<Document> mapUpdatePipeline(NamespacedBulkOperationContext context, AggregationUpdate source,
-				Namespace namespace) {
-
-			Class<?> type = namespace.type();
-
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = context.queryMapper()
-					.getMappingContext();
-			AggregationOperationContext aggregationContext = new TypeBasedAggregationOperationContext(type, mappingContext,
-					context.queryMapper(), FieldLookupPolicy.relaxed());
-
-			return new AggregationUtil(context.queryMapper(), mappingContext).createPipeline(source, aggregationContext);
-		}
-
 		/**
-		 * @param multi flag to indicate if update might affect multiple documents.
 		 * @return new instance of {@link UpdateOptions}.
 		 */
-		protected UpdateOptions updateOptions(boolean multi) {
+		protected UpdateOptions updateOptions(NamespacedBulkOperationContext context) {
 
-			UpdateOptions options = new UpdateOptions();
-			options.upsert(upsert);
-
-			if (update.hasArrayFilters()) {
-				List<Document> list = new ArrayList<>(update.getArrayFilters().size());
-				for (ArrayFilter arrayFilter : update.getArrayFilters()) {
-					list.add(arrayFilter.asDocument());
-				}
-				options.arrayFilters(list);
-			}
-
-			if (!multi && query.isSorted()) {
-				options.sort(query.getSortObject());
-			}
-
-			query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
-			return options;
+			UpdateContext updateContext = context.queryOperations().updateContext(update, query, upsert);
+			return updateContext.getUpdateOptions(namespace.type(), query);
 		}
 	}
 
@@ -473,18 +544,16 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		@Override
 		NamespacedBulkUpdateOne map(NamespacedBulkOperationContext context) {
 
-			Object mappedUpdate = update instanceof AggregationUpdate aggregationUpdate
-					? mapUpdatePipeline(context, aggregationUpdate, namespace)
-					: mapUpdate(context, update.getUpdateObject(), namespace);
-			Document mappedQuery = mapQuery(context, query.getQueryObject(), namespace);
-
+			Object mappedUpdate = context.mapUpdate(namespace, query, update, upsert);
+			Document mappedQuery = context.mapQuery(namespace, query);
 			return new NamespacedBulkUpdateOne(namespace, query, update, upsert, mappedUpdate, mappedQuery);
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
-			UpdateOptions options = updateOptions(false);
+
+			UpdateOptions options = updateOptions(context);
 			ClientUpdateOneOptions updateOneOptions = new ConcreteClientUpdateOneOptions();
 			updateOneOptions.arrayFilters(options.getArrayFilters());
 			updateOneOptions.collation(options.getCollation());
@@ -516,10 +585,8 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		@Override
 		NamespacedBulkUpdateMany map(NamespacedBulkOperationContext context) {
 
-			Object mappedUpdate = update instanceof AggregationUpdate aggregationUpdate
-					? mapUpdatePipeline(context, aggregationUpdate, namespace)
-					: mapUpdate(context, update.getUpdateObject(), namespace);
-			Document mappedQuery = mapQuery(context, query.getQueryObject(), namespace);
+			Object mappedUpdate = context.mapUpdate(namespace, query, update, upsert);
+			Document mappedQuery = context.mapQuery(namespace, query);
 
 			return new NamespacedBulkUpdateMany(namespace, query, update, upsert, mappedUpdate, mappedQuery);
 		}
@@ -528,8 +595,9 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		@SuppressWarnings("unchecked")
 		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
 
-			UpdateOptions options = updateOptions(true);
-			ConcreteClientUpdateManyOptions updateOneOptions = new ConcreteClientUpdateManyOptions();
+			UpdateOptions options = updateOptions(context);
+			ClientUpdateManyOptions updateOneOptions = ClientUpdateManyOptions.clientUpdateManyOptions();
+			;
 			updateOneOptions.arrayFilters(options.getArrayFilters());
 			updateOneOptions.collation(options.getCollation());
 			updateOneOptions.upsert(options.isUpsert());
@@ -563,16 +631,20 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		@Override
 		NamespacedBulkRemove map(NamespacedBulkOperationContext context) {
-			return new NamespacedBulkRemove(namespace, query, mapQuery(context, query.getQueryObject(), namespace));
+			return new NamespacedBulkRemove(namespace, query, context.mapQuery(namespace, query));
 		}
 
 		@Override
 		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
 
-			ClientDeleteManyOptions deleteOptions = ClientDeleteManyOptions.clientDeleteManyOptions();
-			query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
+			DeleteContext deleteContext = context.queryOperations().deleteQueryContext(query);
+			DeleteOptions deleteOptions = deleteContext.getDeleteOptions(namespace.type());
+			ClientDeleteManyOptions clientDeleteOptions = ClientDeleteManyOptions.clientDeleteManyOptions();
+			clientDeleteOptions.collation(deleteOptions.getCollation());
+			clientDeleteOptions.hint(deleteOptions.getHint());
+			clientDeleteOptions.hintString(deleteOptions.getHintString());
 
-			return ClientNamespacedWriteModel.deleteMany(mongoNamespace(), mappedQuery, deleteOptions);
+			return ClientNamespacedWriteModel.deleteMany(mongoNamespace(), mappedQuery, clientDeleteOptions);
 		}
 	}
 
@@ -602,28 +674,25 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		@Override
 		NamespacedBulkOperation map(NamespacedBulkOperationContext context) {
 
-			Document mappedQuery = mapQuery(context, query.getQueryObject(), namespace);
-			context.publishEvent(new BeforeConvertEvent<>(replacement, namespace.name()));
-			Object replacementSource = context.callback(BeforeConvertCallback.class, replacement, namespace);
+			SourceAwareMappedDocument<Object> target = context.mapDomainObject(namespace, replacement);
+			Document mappedQuery = context.mapQuery(namespace, query);
 
-			if (replacementSource instanceof Document mapped) {
-				return new NamespacedBulkReplace(namespace, query, replacementSource, options, mappedQuery, mapped);
-			}
-			Document sink = new Document();
-			context.updateMapper().getConverter().write(replacementSource, sink);
-
-			return new NamespacedBulkReplace(namespace, query, replacementSource, options, mappedQuery, sink);
+			return new NamespacedBulkReplace(namespace, query, target.source(), options, mappedQuery, target.mapped());
 		}
 
 		@Override
 		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
 
+			UpdateContext updateContext = context.queryOperations().replaceSingleContext(query,
+					MappedDocument.of(mappedReplacement), options.isUpsert());
+			UpdateOptions updateOptions = updateContext.getUpdateOptions(namespace.type(), query);
+
 			ClientReplaceOneOptions replaceOptions = ClientReplaceOneOptions.clientReplaceOneOptions();
-			replaceOptions.upsert(options.isUpsert());
-			if (query.isSorted()) {
-				replaceOptions.sort(query.getSortObject());
-			}
-			query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
+			replaceOptions.upsert(updateOptions.isUpsert());
+			replaceOptions.sort(updateOptions.getSort());
+			replaceOptions.hint(updateOptions.getHint());
+			replaceOptions.hintString(updateOptions.getHintString());
+			replaceOptions.collation(updateOptions.getCollation());
 
 			context.publishEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, namespace.name()));
 			context.callback(BeforeSaveCallback.class, replacement, mappedReplacement, namespace);
