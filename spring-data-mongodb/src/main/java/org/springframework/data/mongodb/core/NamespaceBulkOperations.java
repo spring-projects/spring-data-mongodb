@@ -56,10 +56,20 @@ public interface NamespaceBulkOperations {
 		NamespaceAwareBulkOperations<S> insert(List<? extends S> documents);
 
 		@Override
+		default NamespaceAwareBulkOperations<S> updateOne(Query query, Update update) {
+			return updateOne(query, (UpdateDefinition) update);
+		}
+
+		@Override
 		NamespaceAwareBulkOperations<S> updateOne(Query query, UpdateDefinition update);
 
 		@Override
 		NamespaceAwareBulkOperations<S> updateOne(List<Pair<Query, UpdateDefinition>> updates);
+
+		@Override
+		default NamespaceAwareBulkOperations<S> updateMulti(Query query, Update update) {
+			return updateMulti(query, (UpdateDefinition) update);
+		}
 
 		@Override
 		NamespaceAwareBulkOperations<S> updateMulti(Query query, UpdateDefinition update);
@@ -80,6 +90,11 @@ public interface NamespaceBulkOperations {
 		NamespaceAwareBulkOperations<S> remove(List<Query> removes);
 
 		@Override
+		default NamespaceAwareBulkOperations<S> replaceOne(Query query, Object replacement) {
+			return replaceOne(query, replacement, FindAndReplaceOptions.empty());
+		}
+
+		@Override
 		NamespaceAwareBulkOperations<S> replaceOne(Query query, Object replacement, FindAndReplaceOptions options);
 
 		@Override
@@ -88,31 +103,4 @@ public interface NamespaceBulkOperations {
 			return this;
 		}
 	}
-
-	// NamespacedBulkOperations<Object> inNamespace(Namespace namespace);
-	// <T> NamespacedBulkOperations<T> inNamespace(Class<T> type);
-	//
-	// interface NamespacedBulkOperations<T> {
-	// NamespacedBulkInsertOperations<T> insert();
-	// NamespacedBulkUpdateOperations<T> update();
-	// NamespacedBulkDeleteOperations<T> delete();
-	// NamespacedBulkOperations<Object> inNamespace(Namespace namespace);
-	// <S> NamespacedBulkOperations<S> inNamespace(Class<S> type);
-	//
-	// BulkWriteResult execute();
-	// }
-	//
-	// interface NamespacedBulkInsertOperations<T> extends NamespacedBulkOperations<T> {
-	// NamespacedBulkInsertOperations<T> one(T object);
-	// NamespacedBulkInsertOperations<T> many(List<T> object);
-	// }
-	//
-	// interface NamespacedBulkUpdateOperations<T> extends NamespacedBulkOperations<T> {
-	// NamespacedBulkUpdateOperations<T> one(Query query, UpdateDefinition update);
-	// NamespacedBulkUpdateOperations<T> one(CriteriaDefinition where, UpdateDefinition update);
-	// }
-	// interface NamespacedBulkDeleteOperations <T>{
-	// NamespacedBulkDeleteOperations<T> delete(Query query);
-	// }
-
 }

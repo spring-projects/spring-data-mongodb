@@ -39,6 +39,8 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
@@ -178,7 +180,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 	public ClientBulkWriteResult execute() {
 
 		// TODO: exceptions need to be translated correctly
-		return operations.doWithClient(new MongoClusterCallback<>() {
+		ClientBulkWriteResult result = operations.doWithClient(new MongoClusterCallback<>() {
 
 			@Override
 			public ClientBulkWriteResult doWithClient(MongoCluster cluster) throws MongoException, DataAccessException {
@@ -190,6 +192,8 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			}
 		});
 
+		bulkOperationPipeline.postProcess();
+		return result;
 	}
 
 	@Override
@@ -305,13 +309,13 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		<T> SourceAwareMappedDocument<T> mapDomainObject(Namespace namespace, T source) {
 
 			publishEvent(new BeforeConvertEvent<>(source, namespace.name()));
-			Object value = callback(BeforeConvertCallback.class, source, namespace);
+			T value = callback(BeforeConvertCallback.class, source, namespace);
 			if (value instanceof Document document) {
-				return new SourceAwareMappedDocument<>(source, document);
+				return new SourceAwareMappedDocument<>(value, document);
 			}
 			Document sink = new Document();
 			mongoConverter.write(value, sink);
-			return new SourceAwareMappedDocument<>(source, sink);
+			return new SourceAwareMappedDocument<>(value, sink);
 		}
 
 		public Document mapQuery(Namespace namespace, Query query) {
@@ -321,17 +325,16 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 				return queryContext.getMappedQuery(null);
 			}
 
-			MongoPersistentEntity<?> persistentEntity = this.mappingContext.getPersistentEntity(namespace.type());
-			return queryContext.getMappedQuery(persistentEntity);
+			return queryContext.getMappedQuery(entity(namespace));
 		}
 
 		public Object mapUpdate(Namespace namespace, Query query, UpdateDefinition updateDefinition, boolean upsert) {
 
 			UpdateContext updateContext = queryOperations.updateContext(updateDefinition, query, upsert);
-			if (updateDefinition instanceof AggregationUpdate aggregationUpdate) {
+			if (updateDefinition instanceof AggregationUpdate) {
 				return updateContext.getUpdatePipeline(namespace.type());
 			}
-			return updateContext.getMappedUpdate(mappingContext.getPersistentEntity(namespace.type()));
+			return updateContext.getMappedUpdate(entity(namespace));
 		}
 
 		public boolean skipEntityCallbacks() {
@@ -374,11 +377,11 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Nullable
-		MongoPersistentEntity<?> entity(Class<?> type) {
-			if (type == null) {
+		MongoPersistentEntity<?> entity(Namespace namespace) {
+			if (namespace.type() == null) {
 				return null;
 			}
-			return mappingContext().getPersistentEntity(type);
+			return mappingContext().getPersistentEntity(namespace.type());
 		}
 
 		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext() {
@@ -458,6 +461,9 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			return new MongoNamespace(namespace.database(), namespace.collection());
 		}
 
+		void finish(NamespacedBulkOperationContext context) {
+
+		}
 	}
 
 	static class NamespacedBulkInsert extends NamespacedBulkOperation {
@@ -498,6 +504,12 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			context.publishEvent(new BeforeSaveEvent<>(source, mappedObject, namespace.name()));
 			context.callback(BeforeSaveCallback.class, source, mappedObject, namespace);
 			return ClientNamespacedWriteModel.insertOne(mongoNamespace(), mappedObject);
+		}
+
+		@Override
+		void finish(NamespacedBulkOperationContext context) {
+			context.publishEvent(new AfterSaveEvent<>(source, mappedObject, namespace.name()));
+			context.callback(AfterSaveCallback.class, source, mappedObject, namespace);
 		}
 	}
 
@@ -597,7 +609,6 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 			UpdateOptions options = updateOptions(context);
 			ClientUpdateManyOptions updateOneOptions = ClientUpdateManyOptions.clientUpdateManyOptions();
-			;
 			updateOneOptions.arrayFilters(options.getArrayFilters());
 			updateOneOptions.collation(options.getCollation());
 			updateOneOptions.upsert(options.isUpsert());
@@ -699,6 +710,12 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 			return ClientNamespacedWriteModel.replaceOne(mongoNamespace(), mappedQuery, mappedReplacement, replaceOptions);
 		}
+
+		@Override
+		void finish(NamespacedBulkOperationContext context) {
+			context.publishEvent(new AfterSaveEvent<>(replacement, mappedReplacement, namespace.name()));
+			context.callback(AfterSaveCallback.class, replacement, mappedReplacement, namespace);
+		}
 	}
 
 	static class NamespacedBulkOperationPipeline {
@@ -716,6 +733,10 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		List<ClientNamespacedWriteModel> models() {
 			return pipeline.stream().map(it -> it.prepareForWrite(bulkOperationContext)).toList();
+		}
+
+		void postProcess() {
+			pipeline.forEach(it -> it.finish(bulkOperationContext));
 		}
 	}
 
