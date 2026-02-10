@@ -856,9 +856,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(mode, "BulkMode must not be null");
 		Assert.hasText(collectionName, "Collection name must not be null or empty");
 
+		MongoPersistentEntity<?> persistentEntity = entityType != null ? mappingContext.getPersistentEntity(entityType) : null;
+		BulkOperationContext bulkOperationContext = new BulkOperationContext(mode, persistentEntity, queryMapper, updateMapper,
+			eventPublisher, entityCallbacks, queryOperations, mongoConverter, collectionName);
+
 		DefaultBulkOperations operations = new DefaultBulkOperations(this, collectionName,
-				new BulkOperationContext(mode, Optional.ofNullable(getPersistentEntity(entityType)), queryMapper, updateMapper,
-						eventPublisher, entityCallbacks));
+				bulkOperationContext);
 
 		operations.setDefaultWriteConcern(writeConcern);
 

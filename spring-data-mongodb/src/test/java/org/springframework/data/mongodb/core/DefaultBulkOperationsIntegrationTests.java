@@ -23,10 +23,10 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -82,19 +82,19 @@ public class DefaultBulkOperationsIntegrationTests {
 	@Test // DATAMONGO-934
 	public void rejectsNullMongoOperations() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(null, COLLECTION_NAME,
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
+				createBulkOperationContext(BulkMode.ORDERED, null, COLLECTION_NAME)));
 	}
 
 	@Test // DATAMONGO-934
 	public void rejectsNullCollectionName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(operations, null,
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
+				createBulkOperationContext(BulkMode.ORDERED, null, COLLECTION_NAME)));
 	}
 
 	@Test // DATAMONGO-934
 	public void rejectsEmptyCollectionName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(operations, "",
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
+				createBulkOperationContext(BulkMode.ORDERED, null, COLLECTION_NAME)));
 	}
 
 	@Test // DATAMONGO-934
@@ -407,19 +407,34 @@ public class DefaultBulkOperationsIntegrationTests {
 		return createBulkOps(mode, null);
 	}
 
-	private BulkOperations createBulkOps(BulkMode mode, Class<?> entityType) {
+	private BulkOperations createBulkOps(BulkMode mode, @Nullable Class<?> entityType) {
 
-		Optional<? extends MongoPersistentEntity<?>> entity = entityType != null
-				? Optional.of(operations.getConverter().getMappingContext().getPersistentEntity(entityType))
-				: Optional.empty();
+		MongoPersistentEntity<?> entity =  entityType != null ? operations.getConverter().getMappingContext().getPersistentEntity(entityType) : null;
 
-		BulkOperationContext bulkOperationContext = new BulkOperationContext(mode, entity,
-				new QueryMapper(operations.getConverter()), new UpdateMapper(operations.getConverter()), null, null);
+		BulkOperationContext bulkOperationContext = createBulkOperationContext(mode, entity, COLLECTION_NAME);
 
 		DefaultBulkOperations bulkOps = new DefaultBulkOperations(operations, COLLECTION_NAME, bulkOperationContext);
 		bulkOps.setDefaultWriteConcern(WriteConcern.ACKNOWLEDGED);
 
 		return bulkOps;
+	}
+
+	/**
+	 * Create a {@link DefaultBulkOperations.BulkOperationContext} with custom event publisher and callbacks.
+	 * Package-private for use by tests.
+	 */
+	DefaultBulkOperations.BulkOperationContext createBulkOperationContext(BulkOperations.BulkMode mode,
+			@Nullable MongoPersistentEntity<?> entity, String collectionName) {
+
+		QueryMapper queryMapper = new QueryMapper(operations.getConverter());
+		UpdateMapper updateMapper = new UpdateMapper(operations.getConverter());
+		EntityOperations entityOperations = new EntityOperations(operations.getConverter(), queryMapper);
+		PropertyOperations propertyOperations = new PropertyOperations(operations.getConverter().getMappingContext());
+		QueryOperations queryOperations = new QueryOperations(queryMapper, updateMapper, entityOperations,
+				propertyOperations, operations.getConverter());
+
+		return new DefaultBulkOperations.BulkOperationContext(mode, entity, queryMapper, updateMapper, null, null,
+				queryOperations, operations.getConverter(), collectionName);
 	}
 
 	private void insertSomeDocuments() {

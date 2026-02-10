@@ -30,6 +30,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCluster;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Common base class for usage with both {@link com.mongodb.client.MongoClients} defining common properties such as
@@ -193,6 +194,11 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 
 		@Override
 		public MongoDatabaseFactory withSession(ClientSession session) {
+
+			if(ObjectUtils.nullSafeEquals(this.session, session)) {
+				return this;
+			}
+
 			return delegate.withSession(session);
 		}
 

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -77,14 +76,14 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 	private final BulkMode bulkMode;
 	private final MongoOperations operations;
 	private Namespace currentNamespace;
-	private final NamespacedBulkOperationPipeline bulkOperationPipeline;
+	private final BulkOperationPipelineSupport<NamespacedBulkOperationContext, ClientNamespacedWriteModel> pipeline;
 
 	public NamespacedBulkOperationSupport(BulkMode mode, NamespacedBulkOperationContext ctx, MongoOperations operations) {
 
 		this.bulkMode = mode;
 		this.currentNamespace = new Namespace(ctx.database(), null, null);
 		this.operations = operations;
-		this.bulkOperationPipeline = new NamespacedBulkOperationPipeline(ctx);
+		this.pipeline = new BulkOperationPipelineSupport<>(ctx);
 	}
 
 	@Override
@@ -92,7 +91,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		Assert.notNull(source, "Document must not be null");
 
-		bulkOperationPipeline.append(new NamespacedBulkInsert(currentNamespace, source));
+		pipeline.append(new NamespacedBulkInsert(currentNamespace, source));
 		return this;
 	}
 
@@ -152,7 +151,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 	@Override
 	public NamespaceAwareBulkOperations<T> remove(Query query) {
-		bulkOperationPipeline.append(new NamespacedBulkRemove(currentNamespace, query));
+		pipeline.append(new NamespacedBulkRemove(currentNamespace, query));
 		return this;
 	}
 
@@ -171,7 +170,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		Assert.notNull(replacement, "Replacement must not be null");
 		Assert.notNull(options, "Options must not be null");
 
-		this.bulkOperationPipeline.append(new NamespacedBulkReplace(currentNamespace, query, replacement, options));
+		this.pipeline.append(new NamespacedBulkReplace(currentNamespace, query, replacement, options));
 		return this;
 	}
 
@@ -188,11 +187,11 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 				ClientBulkWriteOptions cbws = ClientBulkWriteOptions.clientBulkWriteOptions()
 						.ordered(NamespacedBulkOperationSupport.this.bulkMode.equals(BulkMode.ORDERED));
 
-				return cluster.bulkWrite(bulkOperationPipeline.models(), cbws);
+				return cluster.bulkWrite(pipeline.models(), cbws);
 			}
 		});
 
-		bulkOperationPipeline.postProcess();
+		pipeline.postProcess();
 		return result;
 	}
 
@@ -262,9 +261,9 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		Assert.notNull(update, "Update must not be null");
 
 		if (multi) {
-			bulkOperationPipeline.append(new NamespacedBulkUpdateMany(namespace, query, update, upsert));
+			pipeline.append(new NamespacedBulkUpdateMany(namespace, query, update, upsert));
 		} else {
-			bulkOperationPipeline.append(new NamespacedBulkUpdateOne(namespace, query, update, upsert));
+			pipeline.append(new NamespacedBulkUpdateOne(namespace, query, update, upsert));
 		}
 	}
 
@@ -444,7 +443,8 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 	}
 
-	abstract static class NamespacedBulkOperation {
+	abstract static class NamespacedBulkOperation
+			implements BulkOperationPipelineSupport.BulkOperationPipelineItem<NamespacedBulkOperationContext, ClientNamespacedWriteModel> {
 
 		protected final Namespace namespace;
 
@@ -453,17 +453,18 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@CheckReturnValue
-		abstract NamespacedBulkOperation map(NamespacedBulkOperationContext context);
+		@Override
+		public abstract NamespacedBulkOperation map(NamespacedBulkOperationContext context);
 
-		abstract ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context);
+		@Override
+		public abstract ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context);
 
 		MongoNamespace mongoNamespace() {
 			return new MongoNamespace(namespace.database(), namespace.collection());
 		}
 
-		void finish(NamespacedBulkOperationContext context) {
-
-		}
+		@Override
+		public void finish(NamespacedBulkOperationContext context) {}
 	}
 
 	static class NamespacedBulkInsert extends NamespacedBulkOperation {
@@ -488,7 +489,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 			return mappedObject;
 		}
 
-		NamespacedBulkInsert map(NamespacedBulkOperationContext context) {
+		public NamespacedBulkInsert map(NamespacedBulkOperationContext context) {
 
 			if (mappedObject != null) {
 				return this;
@@ -499,7 +500,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		ClientNamespacedInsertOneModel prepareForWrite(NamespacedBulkOperationContext context) {
+		public ClientNamespacedInsertOneModel prepareForWrite(NamespacedBulkOperationContext context) {
 
 			context.publishEvent(new BeforeSaveEvent<>(source, mappedObject, namespace.name()));
 			context.callback(BeforeSaveCallback.class, source, mappedObject, namespace);
@@ -507,7 +508,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		void finish(NamespacedBulkOperationContext context) {
+		public void finish(NamespacedBulkOperationContext context) {
 			context.publishEvent(new AfterSaveEvent<>(source, mappedObject, namespace.name()));
 			context.callback(AfterSaveCallback.class, source, mappedObject, namespace);
 		}
@@ -554,7 +555,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		NamespacedBulkUpdateOne map(NamespacedBulkOperationContext context) {
+		public NamespacedBulkUpdateOne map(NamespacedBulkOperationContext context) {
 
 			Object mappedUpdate = context.mapUpdate(namespace, query, update, upsert);
 			Document mappedQuery = context.mapQuery(namespace, query);
@@ -563,7 +564,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		@Override
 		@SuppressWarnings("unchecked")
-		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
+		public ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
 
 			UpdateOptions options = updateOptions(context);
 			ClientUpdateOneOptions updateOneOptions = new ConcreteClientUpdateOneOptions();
@@ -595,7 +596,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		NamespacedBulkUpdateMany map(NamespacedBulkOperationContext context) {
+		public NamespacedBulkUpdateMany map(NamespacedBulkOperationContext context) {
 
 			Object mappedUpdate = context.mapUpdate(namespace, query, update, upsert);
 			Document mappedQuery = context.mapQuery(namespace, query);
@@ -605,7 +606,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 
 		@Override
 		@SuppressWarnings("unchecked")
-		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
+		public ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
 
 			UpdateOptions options = updateOptions(context);
 			ClientUpdateManyOptions updateOneOptions = ClientUpdateManyOptions.clientUpdateManyOptions();
@@ -641,12 +642,12 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		NamespacedBulkRemove map(NamespacedBulkOperationContext context) {
+		public NamespacedBulkRemove map(NamespacedBulkOperationContext context) {
 			return new NamespacedBulkRemove(namespace, query, context.mapQuery(namespace, query));
 		}
 
 		@Override
-		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
+		public ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
 
 			DeleteContext deleteContext = context.queryOperations().deleteQueryContext(query);
 			DeleteOptions deleteOptions = deleteContext.getDeleteOptions(namespace.type());
@@ -683,7 +684,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		NamespacedBulkOperation map(NamespacedBulkOperationContext context) {
+		public NamespacedBulkOperation map(NamespacedBulkOperationContext context) {
 
 			SourceAwareMappedDocument<Object> target = context.mapDomainObject(namespace, replacement);
 			Document mappedQuery = context.mapQuery(namespace, query);
@@ -692,7 +693,7 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
+		public ClientNamespacedWriteModel prepareForWrite(NamespacedBulkOperationContext context) {
 
 			UpdateContext updateContext = context.queryOperations().replaceSingleContext(query,
 					MappedDocument.of(mappedReplacement), options.isUpsert());
@@ -712,31 +713,9 @@ class NamespacedBulkOperationSupport<T> implements NamespaceAwareBulkOperations<
 		}
 
 		@Override
-		void finish(NamespacedBulkOperationContext context) {
+		public void finish(NamespacedBulkOperationContext context) {
 			context.publishEvent(new AfterSaveEvent<>(replacement, mappedReplacement, namespace.name()));
 			context.callback(AfterSaveCallback.class, replacement, mappedReplacement, namespace);
-		}
-	}
-
-	static class NamespacedBulkOperationPipeline {
-
-		List<NamespacedBulkOperation> pipeline = new ArrayList<>();
-		NamespacedBulkOperationContext bulkOperationContext;
-
-		public NamespacedBulkOperationPipeline(NamespacedBulkOperationContext bulkOperationContext) {
-			this.bulkOperationContext = bulkOperationContext;
-		}
-
-		void append(NamespacedBulkOperation operation) {
-			pipeline.add(operation.map(bulkOperationContext));
-		}
-
-		List<ClientNamespacedWriteModel> models() {
-			return pipeline.stream().map(it -> it.prepareForWrite(bulkOperationContext)).toList();
-		}
-
-		void postProcess() {
-			pipeline.forEach(it -> it.finish(bulkOperationContext));
 		}
 	}
 

@@ -15,19 +15,29 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +55,6 @@ import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
-import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -53,6 +62,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
@@ -118,10 +128,8 @@ class DefaultBulkOperationsUnitTests {
 		converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		template = new MongoTemplate(factory, converter);
 
-		ops = new DefaultBulkOperations(template, "collection-1",
-				new BulkOperationContext(BulkMode.ORDERED,
-						Optional.of(mappingContext.getPersistentEntity(SomeDomainType.class)), new QueryMapper(converter),
-						new UpdateMapper(converter), null, null));
+		ops = new DefaultBulkOperations(template, "collection-1", createBulkOperationContext(BulkMode.ORDERED,
+				mappingContext.getPersistentEntity(SomeDomainType.class), "collection-1", null, null));
 	}
 
 	@Test // DATAMONGO-1518
@@ -222,9 +230,8 @@ class DefaultBulkOperationsUnitTests {
 		AfterSavePersonCallback afterSaveCallback = spy(new AfterSavePersonCallback());
 
 		ops = new DefaultBulkOperations(template, "collection-1",
-				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
-						new QueryMapper(converter), new UpdateMapper(converter), null,
-						EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback, afterSaveCallback)));
+				createBulkOperationContext(BulkMode.ORDERED, mappingContext.getPersistentEntity(Person.class), "collection-1",
+						null, EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback, afterSaveCallback)));
 
 		Person entity = new Person("init");
 		ops.insert(entity);
@@ -250,9 +257,8 @@ class DefaultBulkOperationsUnitTests {
 
 		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
 
-		ops = new DefaultBulkOperations(template, "collection-1",
-				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
-						new QueryMapper(converter), new UpdateMapper(converter), eventPublisher, null));
+		ops = new DefaultBulkOperations(template, "collection-1", createBulkOperationContext(BulkMode.ORDERED,
+				mappingContext.getPersistentEntity(Person.class), "collection-1", eventPublisher, null));
 
 		ops.replaceOne(query(where("firstName").is("danerys")), new SomeDomainType());
 
@@ -271,9 +277,8 @@ class DefaultBulkOperationsUnitTests {
 
 		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
 
-		ops = new DefaultBulkOperations(template, "collection-1",
-				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
-						new QueryMapper(converter), new UpdateMapper(converter), eventPublisher, null));
+		ops = new DefaultBulkOperations(template, "collection-1", createBulkOperationContext(BulkMode.ORDERED,
+				mappingContext.getPersistentEntity(Person.class), "collection-1", eventPublisher, null));
 
 		ops.insert(new SomeDomainType());
 
@@ -294,9 +299,8 @@ class DefaultBulkOperationsUnitTests {
 		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoWriteException(
 				new WriteError(89, "NetworkTimeout", new BsonDocument("hi", new BsonString("there"))), null));
 
-		ops = new DefaultBulkOperations(template, "collection-1",
-				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
-						new QueryMapper(converter), new UpdateMapper(converter), eventPublisher, null));
+		ops = new DefaultBulkOperations(template, "collection-1", createBulkOperationContext(BulkMode.ORDERED,
+				mappingContext.getPersistentEntity(Person.class), "collection-1", eventPublisher, null));
 
 		ops.insert(new SomeDomainType());
 
@@ -359,9 +363,8 @@ class DefaultBulkOperationsUnitTests {
 	@Test // DATAMONGO-2502
 	void shouldRetainNestedArrayPathWithPlaceholdersForMappedEntity() {
 
-		DefaultBulkOperations ops = new DefaultBulkOperations(template, "collection-1",
-				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(OrderTest.class)),
-						new QueryMapper(converter), new UpdateMapper(converter), null, null));
+		DefaultBulkOperations ops = new DefaultBulkOperations(template, "collection-1", createBulkOperationContext(
+				BulkMode.ORDERED, mappingContext.getPersistentEntity(OrderTest.class), "collection-1", null, null));
 
 		ops.updateOne(new BasicQuery("{}"), Update.update("items.$.documents.0.fileId", "file-id")).execute();
 
@@ -375,9 +378,10 @@ class DefaultBulkOperationsUnitTests {
 	@Test // DATAMONGO-2285
 	public void translateMongoBulkOperationExceptionWithWriteConcernError() {
 
-		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoBulkWriteException(null,
-				Collections.emptyList(),
-				new WriteConcernError(42, "codename", "writeconcern error happened", new BsonDocument()), new ServerAddress(), Collections.emptySet()));
+		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class)))
+				.thenThrow(new MongoBulkWriteException(null, Collections.emptyList(),
+						new WriteConcernError(42, "codename", "writeconcern error happened", new BsonDocument()),
+						new ServerAddress(), Collections.emptySet()));
 
 		assertThatExceptionOfType(DataIntegrityViolationException.class)
 				.isThrownBy(() -> ops.insert(new SomeDomainType()).execute());
@@ -395,6 +399,26 @@ class DefaultBulkOperationsUnitTests {
 				.isThrownBy(() -> ops.insert(new SomeDomainType()).execute());
 	}
 
+	/**
+	 * Create a {@link DefaultBulkOperations.BulkOperationContext} with custom event publisher and callbacks.
+	 * Package-private for use by tests.
+	 */
+	DefaultBulkOperations.BulkOperationContext createBulkOperationContext(BulkOperations.BulkMode mode,
+			@Nullable MongoPersistentEntity<?> entity, String collectionName,
+			org.springframework.context.@Nullable ApplicationEventPublisher eventPublisher,
+			org.springframework.data.mapping.callback.@Nullable EntityCallbacks entityCallbacks) {
+
+		QueryMapper queryMapper = new QueryMapper(converter);
+		UpdateMapper updateMapper = new UpdateMapper(converter);
+		EntityOperations entityOperations = new EntityOperations(converter, queryMapper);
+		PropertyOperations propertyOperations = new PropertyOperations(mappingContext);
+		QueryOperations queryOperations = new QueryOperations(queryMapper, updateMapper, entityOperations,
+				propertyOperations, factory);
+
+		return new DefaultBulkOperations.BulkOperationContext(mode, entity, queryMapper, updateMapper, eventPublisher,
+				entityCallbacks, queryOperations, converter, collectionName);
+	}
+
 	static class OrderTest {
 
 		String id;
@@ -409,8 +433,7 @@ class DefaultBulkOperationsUnitTests {
 
 	static class OrderTestDocument {
 
-		@Field("the_file_id")
-		private String fileId;
+		@Field("the_file_id") private String fileId;
 	}
 
 	class SomeDomainType {
