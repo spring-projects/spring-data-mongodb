@@ -1371,7 +1371,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply settings like
-	 * withCodecRegistry() etc. Can be overridden in sub-classes.
+	 * withCodecRegistry() etc. Can be overridden in subclasses.
 	 *
 	 * @param collection
 	 */
@@ -1386,9 +1386,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Prepare the WriteConcern before any processing is done using it. This allows a convenient way to apply custom
-	 * settings in sub-classes. <br />
-	 * In case of using MongoDB Java driver version 3 the returned {@link WriteConcern} will be defaulted to
-	 * {@link WriteConcern#ACKNOWLEDGED} when {@link WriteResultChecking} is set to {@link WriteResultChecking#EXCEPTION}.
+	 * settings in subclasses. In case of using MongoDB Java driver version 3 the returned {@link WriteConcern} will be
+	 * defaulted to {@link WriteConcern#ACKNOWLEDGED} when {@link WriteResultChecking} is set to
+	 * {@link WriteResultChecking#EXCEPTION}.
 	 *
 	 * @param mongoAction any MongoAction already configured or null
 	 * @return The prepared WriteConcern or null
@@ -1418,9 +1418,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		T toConvert = maybeEmitEvent(event).getSource();
 		toConvert = maybeCallBeforeConvert(toConvert, collectionName);
 
-		AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
-		entity.assertUpdateableIdIfNotSet();
-
+		AdaptibleEntity<T> entity = operations.forEntityUpsert(toConvert, mongoConverter.getConversionService());
 		T initialized = entity.initializeVersionProperty();
 		Document dbDoc = entity.toMappedDocument(writer).getDocument();
 
@@ -1498,9 +1496,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			T toConvert = maybeEmitEvent(event).getSource();
 			toConvert = maybeCallBeforeConvert(toConvert, collectionName);
 
-			AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
-			entity.assertUpdateableIdIfNotSet();
-
+			AdaptibleEntity<T> entity = operations.forEntityUpsert(toConvert, mongoConverter.getConversionService());
 			T initialized = entity.initializeVersionProperty();
 			Document document = entity.toMappedDocument(writer).getDocument();
 			maybeEmitEvent(new BeforeSaveEvent<>(initialized, document, collectionName));
@@ -1601,9 +1597,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		objectToSave = maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName)).getSource();
 		objectToSave = maybeCallBeforeConvert(objectToSave, collectionName);
 
-		AdaptibleEntity<T> entity = operations.forEntity(objectToSave, mongoConverter.getConversionService());
-		entity.assertUpdateableIdIfNotSet();
-
+		AdaptibleEntity<T> entity = operations.forEntityUpsert(objectToSave, mongoConverter.getConversionService());
 		MappedDocument mapped = entity.toMappedDocument(writer);
 		Document dbDoc = mapped.getDocument();
 
