@@ -213,6 +213,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(page).contains(carter);
 	}
 
+	@Test // GH-5159
+	void allowsToScrollThroughEntriesWithoutAnyCriteria() {
+
+		Window<Person> page = repository.findAllBy(Limit.of(2), ScrollPosition.keyset());
+		assertThat(page.isLast()).isFalse();
+
+		while (!page.isLast()) {
+
+			assertThat(page.size()).isEqualTo(2);
+			page = repository.findAllBy(Limit.of(2), page.positionAt(1));
+		}
+	}
+
 	@Test // GH-4397
 	void appliesLimitToScrollingCorrectly() {
 
