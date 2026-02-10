@@ -367,6 +367,7 @@ public class Update implements UpdateDefinition {
 	 * @since 1.7
 	 */
 	public BitwiseOperatorBuilder bitwise(String key) {
+		Assert.notNull(key, "Key must not be null");
 		return new BitwiseOperatorBuilder(this, key);
 	}
 
@@ -990,91 +991,82 @@ public class Update implements UpdateDefinition {
 		 * @param key must not be {@literal null}
 		 */
 		protected BitwiseOperatorBuilder(Update reference, String key) {
-
-			Assert.notNull(reference, "Reference must not be null");
-			Assert.notNull(key, "Key must not be null");
-
 			this.reference = reference;
 			this.key = key;
 		}
 
 		/**
-		 * Updates to the result of a bitwise and operation between the current value and the given one.
+		 * Updates to the result of a bitwise {@code and} operation between the current field value and the given integer
+		 * {@code value}.
 		 *
-		 * @param value
-		 * @return never {@literal null}.
-		 */
-		public Update and(long value) {
-
-			addFieldOperation(BitwiseOperator.AND, value);
-			return reference;
-		}
-
-		/**
-		 * Updates to the result of a bitwise and operation between the current value and the given one.
-		 *
-		 * @param value
-		 * @return never {@literal null}.
+		 * @param value the value to apply the bitwise and operation with.
+		 * @return the {@link Update} object from which this builder was created.
 		 * @since 4.5.9
 		 */
 		public Update and(int value) {
-
-			addFieldOperation(BitwiseOperator.AND, value);
-			return reference;
+			return addFieldOperation(BitwiseOperator.AND, value);
 		}
 
 		/**
-		 * Updates to the result of a bitwise or operation between the current value and the given one.
+		 * Updates to the result of a bitwise {@code and} operation between the current field value and the given long
+		 * {@code value}.
 		 *
-		 * @param value
-		 * @return never {@literal null}.
+		 * @param value the value to apply the bitwise and operation with.
+		 * @return the {@link Update} object from which this builder was created.
 		 */
-		public Update or(long value) {
-
-			addFieldOperation(BitwiseOperator.OR, value);
-			return reference;
+		public Update and(long value) {
+			return addFieldOperation(BitwiseOperator.AND, value);
 		}
 
 		/**
-		 * Updates to the result of a bitwise or operation between the current value and the given one.
+		 * Updates to the result of a bitwise {@code or} operation between the current field value and the given integer
+		 * {@code value}.
 		 *
-		 * @param value
-		 * @return never {@literal null}.
+		 * @param value the value to apply the bitwise and operation with.
+		 * @return the {@link Update} object from which this builder was created.
 		 * @since 4.5.9
 		 */
 		public Update or(int value) {
-
-			addFieldOperation(BitwiseOperator.OR, value);
-			return reference;
+			return addFieldOperation(BitwiseOperator.OR, value);
 		}
 
 		/**
-		 * Updates to the result of a bitwise xor operation between the current value and the given one.
+		 * Updates to the result of a bitwise {@code or} operation between the current field value and the given long
+		 * {@code value}.
 		 *
-		 * @param value
-		 * @return never {@literal null}.
+		 * @param value the value to apply the bitwise and operation with.
+		 * @return the {@link Update} object from which this builder was created.
 		 */
-		public Update xor(long value) {
-
-			addFieldOperation(BitwiseOperator.XOR, value);
-			return reference;
+		public Update or(long value) {
+			return addFieldOperation(BitwiseOperator.OR, value);
 		}
 
 		/**
-		 * Updates to the result of a bitwise xor operation between the current value and the given one.
+		 * Updates to the result of a bitwise {@code xor} operation between the current field value and the given integer
+		 * {@code value}.
 		 *
-		 * @param value
-		 * @return never {@literal null}.
+		 * @param value the value to apply the bitwise and operation with.
+		 * @return the {@link Update} object from which this builder was created.
 		 * @since 4.5.9
 		 */
 		public Update xor(int value) {
-
-			addFieldOperation(BitwiseOperator.XOR, value);
-			return reference;
+			return addFieldOperation(BitwiseOperator.XOR, value);
 		}
 
-		private void addFieldOperation(BitwiseOperator operator, Number value) {
+		/**
+		 * Updates to the result of a bitwise {@code xor} operation between the current field value and the given long
+		 * {@code value}.
+		 *
+		 * @param value the value to apply the bitwise and operation with.
+		 * @return the {@link Update} object from which this builder was created.
+		 */
+		public Update xor(long value) {
+			return addFieldOperation(BitwiseOperator.XOR, value);
+		}
+
+		private Update addFieldOperation(BitwiseOperator operator, Number value) {
 			reference.addMultiFieldOperation(BIT_OPERATOR, key, new Document(operator.toString(), value));
+			return reference;
 		}
 	}
 }
