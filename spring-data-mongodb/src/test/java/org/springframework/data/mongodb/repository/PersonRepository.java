@@ -127,6 +127,15 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByAgeLessThan(int age, Sort sort);
 
 	/**
+	 * Returns a scroll of all {@link Person}s in natural order.
+	 *
+	 * @param limit window size
+	 * @param scrollPosition scroll position start from
+	 * @return
+	 */
+	Window<Person> findAllBy(Limit limit, ScrollPosition scrollPosition);
+
+	/**
 	 * Returns a scroll of {@link Person}s with a lastname matching the given one (*-wildcards supported).
 	 *
 	 * @param lastname
