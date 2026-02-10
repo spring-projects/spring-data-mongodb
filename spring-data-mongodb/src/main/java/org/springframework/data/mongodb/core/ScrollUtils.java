@@ -29,6 +29,7 @@ import org.springframework.data.domain.ScrollPosition.Direction;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.CheckReturnValue;
 import org.springframework.util.Assert;
 
 /**
@@ -48,7 +49,6 @@ class ScrollUtils {
 	 * @return
 	 */
 	static KeysetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
-
 
 		KeysetScrollPosition keyset = query.getKeyset();
 
@@ -145,6 +145,7 @@ class ScrollUtils {
 			return fieldsObject;
 		}
 
+		@CheckReturnValue
 		public Document createQuery(KeysetScrollPosition keyset, Document queryObject, Document sortObject) {
 
 			Map<String, Object> keysetValues = keyset.getKeys();
@@ -189,11 +190,13 @@ class ScrollUtils {
 				}
 			}
 
-			if (!or.isEmpty()) {
-				queryObject.put("$or", or);
+			if (or.isEmpty()) {
+				return queryObject;
 			}
 
-			return queryObject;
+			Document filterQuery = new Document(queryObject);
+			filterQuery.put("$or", or);
+			return filterQuery;
 		}
 
 		protected String getComparator(int sortOrder) {
