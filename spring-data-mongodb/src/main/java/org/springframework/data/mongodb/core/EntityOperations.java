@@ -178,6 +178,22 @@ class EntityOperations {
 	}
 
 	/**
+	 * Creates a new {@link AdaptibleEntity} for the given bean and {@link ConversionService} to be used for a save
+	 * operation including a {@link AdaptibleEntity#assertUpdateableIdIfNotSet()} check.
+	 *
+	 * @param entity must not be {@literal null}.
+	 * @param conversionService must not be {@literal null}.
+	 * @return new instance of {@link AdaptibleEntity}.
+	 * @since 4.5.9
+	 */
+	<T> AdaptibleEntity<T> forEntityUpsert(T entity, ConversionService conversionService) {
+
+		AdaptibleEntity<T> adaptibleEntity = forEntity(entity, conversionService);
+		adaptibleEntity.assertUpdateableIdIfNotSet();
+		return adaptibleEntity;
+	}
+
+	/**
 	 * @param source can be {@literal null}.
 	 * @return {@literal true} if the given value is an {@literal array}, {@link Collection} or {@link Iterator}.
 	 * @since 3.2
@@ -468,7 +484,7 @@ class EntityOperations {
 		MappedDocument toMappedDocument(MongoWriter<? super T> writer);
 
 		/**
-		 * Asserts that the identifier type is updatable in case its not already set.
+		 * Asserts that the identifier type is updatable in case it is not already set.
 		 */
 		default void assertUpdateableIdIfNotSet() {}
 

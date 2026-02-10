@@ -108,7 +108,6 @@ import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -1368,9 +1367,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.flatMap(it -> maybeCallBeforeConvert(it.getSource(), it.getCollection()).map(it::mutate)) //
 				.map(it -> {
 
-					AdaptibleEntity<T> entity = operations.forEntity(it.getSource(), mongoConverter.getConversionService());
-					entity.assertUpdateableIdIfNotSet();
-
+					AdaptibleEntity<T> entity = operations.forEntityUpsert(it.getSource(), mongoConverter.getConversionService());
 					PersistableEntityModel<T> model = PersistableEntityModel.of(entity.initializeVersionProperty(),
 							entity.toMappedDocument(writer).getDocument(), it.getCollection());
 
@@ -1440,9 +1437,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 					return maybeCallBeforeConvert(toConvert, collectionName).flatMap(it -> {
 
-						AdaptibleEntity<T> entity = operations.forEntity(it, mongoConverter.getConversionService());
-						entity.assertUpdateableIdIfNotSet();
-
+						AdaptibleEntity<T> entity = operations.forEntityUpsert(it, mongoConverter.getConversionService());
 						T initialized = entity.initializeVersionProperty();
 						MappedDocument mapped = entity.toMappedDocument(writer);
 
@@ -1558,9 +1553,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			return maybeCallBeforeConvert(toSave, collectionName).flatMap(toConvert -> {
 
-				AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
-				entity.assertUpdateableIdIfNotSet();
-
+				AdaptibleEntity<T> entity = operations.forEntityUpsert(toConvert, mongoConverter.getConversionService());
 				Document dbDoc = entity.toMappedDocument(writer).getDocument();
 				maybeEmitEvent(new BeforeSaveEvent<T>(toConvert, dbDoc, collectionName));
 
@@ -2623,7 +2616,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply settings like
-	 * withCodecRegistry() etc. Can be overridden in sub-classes.
+	 * withCodecRegistry() etc. Can be overridden in subclasses.
 	 *
 	 * @param collection
 	 */
@@ -2647,9 +2640,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Prepare the WriteConcern before any processing is done using it. This allows a convenient way to apply custom
-	 * settings in sub-classes. <br />
-	 * The returned {@link WriteConcern} will be defaulted to {@link WriteConcern#ACKNOWLEDGED} when
-	 * {@link WriteResultChecking} is set to {@link WriteResultChecking#EXCEPTION}.
+	 * settings in subclasses. The returned {@link WriteConcern} will be defaulted to {@link WriteConcern#ACKNOWLEDGED}
+	 * when {@link WriteResultChecking} is set to {@link WriteResultChecking#EXCEPTION}.
 	 *
 	 * @param mongoAction any WriteConcern already configured or {@literal null}.
 	 * @return The prepared WriteConcern or {@literal null}.
