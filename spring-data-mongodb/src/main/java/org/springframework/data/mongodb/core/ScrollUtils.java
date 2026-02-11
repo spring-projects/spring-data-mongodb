@@ -142,7 +142,6 @@ class ScrollUtils {
 		public Document createQuery(KeysetScrollPosition keyset, Document queryObject, Document sortObject) {
 
 			Map<String, Object> keysetValues = keyset.getKeys();
-			List<Document> or = (List<Document>) queryObject.getOrDefault("$or", new ArrayList<>());
 			List<String> sortKeys = new ArrayList<>(sortObject.keySet());
 
 			// first query doesn't come with a keyset
@@ -153,6 +152,21 @@ class ScrollUtils {
 			if (!keysetValues.keySet().containsAll(sortKeys)) {
 				throw new IllegalStateException("KeysetScrollPosition does not contain all keyset values");
 			}
+
+			List<Document> or = getKeysetCriteria(queryObject, sortObject, sortKeys, keysetValues);
+			if (or.isEmpty()) {
+				return queryObject;
+			}
+
+			Document filterQuery = new Document(queryObject);
+			filterQuery.put("$or", or);
+			return filterQuery;
+		}
+
+		private List<Document> getKeysetCriteria(Document queryObject, Document sortObject, List<String> sortKeys,
+				Map<String, Object> keysetValues) {
+
+			List<Document> or = new ArrayList<>((List<Document>) queryObject.getOrDefault("$or", Collections.emptyList()));
 
 			// build matrix query for keyset paging that contains sort^2 queries
 			// reflecting a query that follows sort order semantics starting from the last returned keyset
@@ -183,13 +197,7 @@ class ScrollUtils {
 				}
 			}
 
-			if (or.isEmpty()) {
-				return queryObject;
-			}
-
-			Document filterQuery = new Document(queryObject);
-			filterQuery.put("$or", or);
-			return filterQuery;
+			return or;
 		}
 
 		protected String getComparator(int sortOrder) {
