@@ -21,7 +21,6 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.convert.ConversionException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityConverter;
@@ -102,7 +101,7 @@ public interface MongoConverter
 	 * @throws IllegalArgumentException if {@literal targetType} is {@literal null}.
 	 * @since 2.1
 	 */
-	@SuppressWarnings({"unchecked","NullAway"})
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	default <S, T> @Nullable T mapValueToTargetType(S source, Class<T> targetType, DbRefResolver dbRefResolver) {
 
 		Assert.notNull(targetType, "TargetType must not be null");
@@ -158,6 +157,7 @@ public interface MongoConverter
 	 * @since 2.2
 	 */
 	@Nullable
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	default Object convertId(@Nullable Object id, Class<?> targetType) {
 
 		if (id == null || ClassUtils.isAssignableValue(targetType, id)) {
@@ -166,14 +166,10 @@ public interface MongoConverter
 
 		if (ClassUtils.isAssignable(ObjectId.class, targetType)) {
 
-			if (id instanceof String) {
+			if (objectIdConversion().isApplicable(id)) {
 
-				if (ObjectId.isValid(id.toString())) {
-					return new ObjectId(id.toString());
-				}
-
-				// avoid ConversionException as convertToMongoType will return String anyways.
-				return id;
+				Object converted = ((ObjectIdConversion) objectIdConversion()).convert(id);
+				return converted != null ? converted : id;
 			}
 		}
 
@@ -182,7 +178,93 @@ public interface MongoConverter
 					? getConversionService().convert(id, targetType)
 					: convertToMongoType(id, (TypeInformation<?>) null);
 		} catch (ConversionException o_O) {
-			return convertToMongoType(id,(TypeInformation<?>)  null);
+			return convertToMongoType(id, (TypeInformation<?>) null);
+		}
+	}
+
+	/**
+	 * @return the IdConversion to apply for {@link #convertId(Object, Class)}. A hex string to {@link ObjectId} enforcing
+	 *         conversion by default.
+	 * @since 5.1
+	 */
+	default ObjectIdConversion<?> objectIdConversion() {
+		return ObjectIdConversion.enforceHexStringAsObjectId();
+	}
+
+	/**
+	 * Conversion function to apply to non {@literal null} id values of {@link #sourceType()} that do not match the
+	 * desired store id type.
+	 *
+	 * @param <S>
+	 * @since 5.1
+	 */
+	interface ObjectIdConversion<S> {
+
+		/**
+		 * Converts a {@link String} value that represent a {@link ObjectId#isValid(String) valid ObjectId} into the
+		 * according {@link ObjectId}.
+		 */
+		ObjectIdConversion<String> hexToString = new ObjectIdConversion<>() {
+
+			@Override
+			public Class<String> sourceType() {
+				return String.class;
+			}
+
+			@Override
+			public @Nullable ObjectId convert(String source) {
+
+				if (!ObjectId.isValid(source)) {
+					return null;
+				}
+				return new ObjectId(source);
+			}
+		};
+
+		/**
+		 * Uses a raw {@link String} value no matter what by always returning {@literal null} for {@link #convert(Object)}.
+		 */
+		ObjectIdConversion<String> rawString = new ObjectIdConversion<>() {
+
+			@Override
+			public Class<String> sourceType() {
+				return String.class;
+			}
+
+			@Override
+			public @Nullable ObjectId convert(String source) {
+				return null;
+			}
+		};
+
+		static ObjectIdConversion<String> enforceHexStringAsObjectId() {
+			return hexToString;
+		}
+
+		static ObjectIdConversion<String> retainRawString() {
+			return rawString;
+		}
+
+		/**
+		 * @param source must not be {@literal null}.
+		 * @return {@literal null} to indicate (though {@link #isApplicable(Object)) that no conversion happened.
+		 */
+		@Nullable
+		ObjectId convert(S source);
+
+		/**
+		 * The source type for which a potential conversion should happen.
+		 *
+		 * @return must not be {@literal null}.
+		 */
+		Class<S> sourceType();
+
+		default boolean isApplicable(Object probe) {
+			return isApplicable(probe.getClass());
+		}
+
+		default boolean isApplicable(Class<?> probe) {
+			return ClassUtils.isAssignable(sourceType(), probe);
 		}
 	}
 
