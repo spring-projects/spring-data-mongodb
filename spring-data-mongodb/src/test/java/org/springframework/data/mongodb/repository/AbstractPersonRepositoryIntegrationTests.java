@@ -26,8 +26,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -93,6 +95,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Mark Paluch
  * @author Fırat KÜÇÜK
  * @author Edward Prentice
+ * @author Junhyeong Choi
  */
 @ExtendWith({ SpringExtension.class, DirtiesStateExtension.class })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -1842,5 +1845,118 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(repository.findAndPushShippingAddressByEmail(dave.getEmail(), address)).isEqualTo(1);
 		assertThat(repository.findById(dave.getId()).map(Person::getShippingAddresses))
 				.contains(Collections.singleton(address));
+	}
+
+	@Test // GH-4606
+	@DirtiesState
+	void findsByFirstnameIsEmpty() {
+
+		Person emptyFirstname = new Person("", "EmptyFirstname");
+		repository.save(emptyFirstname);
+
+		List<Person> result = repository.findByFirstnameIsEmpty();
+
+		assertThat(result).hasSize(1).contains(emptyFirstname);
+	}
+
+	@Test // GH-4606
+	void findsByFirstnameIsNotEmpty() {
+
+		List<Person> result = repository.findByFirstnameIsNotEmpty();
+
+		assertThat(result).hasSize(all.size()).containsAll(all);
+	}
+
+	@Test // GH-4606
+	@DirtiesState
+	void blankStringIsNotConsideredEmpty() {
+
+		Person blankFirstname = new Person("   ", "BlankFirstname");
+		repository.save(blankFirstname);
+
+		List<Person> emptyResult = repository.findByFirstnameIsEmpty();
+		List<Person> notEmptyResult = repository.findByFirstnameIsNotEmpty();
+
+		assertThat(emptyResult).doesNotContain(blankFirstname);
+		assertThat(notEmptyResult).contains(blankFirstname);
+	}
+
+	@Test // GH-4606
+	@DirtiesState
+	void findsBySkillsIsEmpty() {
+
+		Person emptySkills = new Person("Empty", "Skills");
+		emptySkills.setSkills(Collections.emptyList());
+		repository.save(emptySkills);
+
+		List<Person> result = repository.findBySkillsIsEmpty();
+
+		assertThat(result).contains(emptySkills).doesNotContain(carter, boyd);
+	}
+
+	@Test // GH-4606
+	void findsBySkillsIsNotEmpty() {
+
+		List<Person> result = repository.findBySkillsIsNotEmpty();
+
+		assertThat(result).contains(carter, boyd);
+	}
+
+	@Test // GH-4606
+	@DirtiesState
+	void findsByAddressIsEmpty() {
+
+		Person emptyAddress = new Person("Empty", "Address");
+		emptyAddress.setAddress(new Address());
+		repository.save(emptyAddress);
+
+		dave.setAddress(new Address("street", "zip", "city"));
+		repository.save(dave);
+
+		List<Person> result = repository.findByAddressIsEmpty();
+
+		assertThat(result).contains(emptyAddress).doesNotContain(dave);
+	}
+
+	@Test // GH-4606
+	@DirtiesState
+	void findsByAddressIsNotEmpty() {
+
+		dave.setAddress(new Address("street", "zip", "city"));
+		repository.save(dave);
+
+		List<Person> result = repository.findByAddressIsNotEmpty();
+
+		assertThat(result).contains(dave);
+	}
+
+	@Test // GH-4606
+	@DirtiesState
+	void findsByMetadataIsEmpty() {
+
+		dave.setMetadata(new HashMap<>());
+		repository.save(dave);
+
+		oliver.setMetadata(Map.of("key", "value"));
+		repository.save(oliver);
+
+		List<Person> result = repository.findByMetadataIsEmpty();
+
+		assertThat(result).contains(dave).doesNotContain(oliver);
+	}
+
+	@Test // GH-4606
+	@DirtiesState
+	void findsByMetadataIsNotEmpty() {
+
+		dave.setMetadata(new HashMap<>());
+		repository.save(dave);
+
+		oliver.setMetadata(Map.of("key", "value"));
+		repository.save(oliver);
+
+		List<Person> result = repository.findByMetadataIsNotEmpty();
+
+		assertThat(result).contains(oliver).doesNotContain(dave);
 	}
 }
