@@ -18,14 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup Java and Maven
-        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        uses: spring-projects/spring-data-build/actions/setup-maven@4.0.x
         with:
           java-version: ${{ matrix.java-version }}
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
       - name: Setup MongoDB Server
-        uses: spring-projects/spring-data-release/actions/setup-mongodb@main
+        uses: spring-projects/spring-data-build/actions/setup-mongodb@4.0.x
         with:
           version: '${{ matrix.mongodb-version }}'
           replica-set: 'rs0'
       - name: Build
-        uses: spring-projects/spring-data-release/actions/maven-build@main
+        uses: spring-projects/spring-data-build/actions/maven-build@4.0.x
