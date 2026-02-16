@@ -11,21 +11,21 @@ jobs:
   build-java:
     strategy:
       matrix:
-        java-version: [ base, main ]
-        mongodb-version: [ 'latest', '8.2', '8.0', '7.0' ]
+        java-version: [ base, next ]
+        mongodb-version: [ 'latest', '7.0', '6' ]
     name: Build project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Setup Java and Maven
-        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        uses: spring-projects/spring-data-build/actions/setup-maven@3.5.x
         with:
           java-version: ${{ matrix.java-version }}
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
       - name: Setup MongoDB Server
-        uses: spring-projects/spring-data-release/actions/setup-mongodb@main
+        uses: spring-projects/spring-data-build/actions/setup-mongodb@3.5.x
         with:
           version: '${{ matrix.mongodb-version }}'
           replica-set: 'rs0'
       - name: Build
-        uses: spring-projects/spring-data-release/actions/maven-build@main
+        uses: spring-projects/spring-data-build/actions/maven-build@3.5.x

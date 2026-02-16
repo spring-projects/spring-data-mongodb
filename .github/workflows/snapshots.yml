@@ -15,15 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup Java and Maven
-        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        uses: spring-projects/spring-data-build/actions/setup-maven@3.5.x
         with:
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
       - name: Setup MongoDB Server
-        uses: spring-projects/spring-data-release/actions/setup-mongodb@main
+        uses: spring-projects/spring-data-build/actions/setup-mongodb@3.5.x
         with:
           replica-set: 'rs0'
       - name: Deploy to Artifactory
-        uses: spring-projects/spring-data-release/actions/maven-artifactory-deploy@main
+        uses: spring-projects/spring-data-build/actions/maven-artifactory-deploy@3.5.x
         with:
           build-name: 'spring-data-mongodb'
           username: '${{ secrets.ARTIFACTORY_USERNAME }}'
