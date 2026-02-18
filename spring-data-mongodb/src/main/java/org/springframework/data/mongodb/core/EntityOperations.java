@@ -92,7 +92,7 @@ import com.mongodb.client.model.ValidationOptions;
  * @see MongoTemplate
  * @see ReactiveMongoTemplate
  */
-class EntityOperations {
+public class EntityOperations {
 
 	private static final String ID_FIELD = FieldName.ID.name();
 
@@ -109,7 +109,7 @@ class EntityOperations {
 		this(converter, new QueryMapper(converter));
 	}
 
-	EntityOperations(MongoConverter converter, QueryMapper queryMapper) {
+	public EntityOperations(MongoConverter converter, QueryMapper queryMapper) {
 		this(converter, converter.getMappingContext(), converter.getCustomConversions(), converter.getProjectionFactory(),
 				queryMapper);
 	}

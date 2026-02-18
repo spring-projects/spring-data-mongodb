@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.jspecify.annotations.Nullable;
+import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -28,6 +29,7 @@ import org.springframework.util.Assert;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoCluster;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -125,7 +127,6 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	 */
 	protected abstract MongoDatabase doGetMongoDatabase(String dbName);
 
-
 	public void destroy() throws Exception {
 		if (mongoInstanceCreated) {
 			closeClient();
@@ -146,7 +147,7 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	/**
 	 * @return the Mongo client object.
 	 */
-	protected C getMongoClient() {
+	public C getMongoCluster() {
 		return mongoClient;
 	}
 
@@ -164,8 +165,15 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	record ClientSessionBoundMongoDbFactory(ClientSession session,
-			MongoDatabaseFactory delegate) implements MongoDatabaseFactory {
+	static class ClientSessionBoundMongoDbFactory implements MongoDatabaseFactory {
+
+		private final ClientSession session;
+		private final MongoDatabaseFactory delegate;
+
+		ClientSessionBoundMongoDbFactory(ClientSession session, MongoDatabaseFactory delegate) {
+			this.session = session;
+			this.delegate = delegate;
+		}
 
 		@Override
 		public MongoDatabase getMongoDatabase() throws DataAccessException {
@@ -201,28 +209,59 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoDatabase proxyDatabase(com.mongodb.session.ClientSession session, MongoDatabase database) {
+		private static MongoDatabase proxyDatabase(com.mongodb.session.ClientSession session, MongoDatabase database) {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoCollection<?> proxyCollection(com.mongodb.session.ClientSession session,
+		private static MongoCollection<?> proxyCollection(com.mongodb.session.ClientSession session,
 				MongoCollection<?> collection) {
 			return createProxyInstance(session, collection, MongoCollection.class);
 		}
 
-		private <T> T createProxyInstance(com.mongodb.session.ClientSession session, T target, Class<T> targetType) {
+		protected static <T> T createProxyInstance(com.mongodb.session.ClientSession session, T target,
+				Class<T> targetType) {
 
 			ProxyFactory factory = new ProxyFactory();
 			factory.setTarget(target);
 			factory.setInterfaces(targetType);
 			factory.setOpaque(true);
 
-			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class,
-					this::proxyDatabase, MongoCollection.class, this::proxyCollection));
+			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoCluster.class, ClientSession.class,
+					MongoDatabase.class, ClientSessionBoundMongoDbFactory::proxyDatabase, MongoCollection.class,
+					ClientSessionBoundMongoDbFactory::proxyCollection));
 
 			return targetType.cast(factory.getProxy(target.getClass().getClassLoader()));
 		}
 
+		public ClientSession session() {
+			return session;
+		}
+
+		public MongoDatabaseFactory delegate() {
+			return delegate;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (obj == null || obj.getClass() != this.getClass()) {
+				return false;
+			}
+			var that = (ClientSessionBoundMongoDbFactory) obj;
+			return Objects.equals(this.session, that.session) && Objects.equals(this.delegate, that.delegate);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(session, delegate);
+		}
+
+		@Override
+		public String toString() {
+			return "ClientSessionBoundMongoDbFactory[" + "session=" + session + ", " + "delegate=" + delegate + ']';
+		}
 	}
 
 }

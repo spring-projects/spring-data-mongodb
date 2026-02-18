@@ -38,6 +38,9 @@ import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.bulk.Bulk;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
+import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.IndexOperations;
@@ -167,6 +170,16 @@ public interface MongoOperations extends FluentMongoOperations {
 	 */
 	@Nullable
 	<T> T execute(String collectionName, CollectionCallback<T> action);
+
+	/**
+	 * Executes the given {@link Bulk} to perform insert, update, and delete operations on multiple collections (requires
+	 * MongoDB 8.0+).
+	 *
+	 * @param bulk the {@link Bulk} to write.
+	 * @param options additional options applied to the execution.
+	 * @return never {@literal null}.
+	 */
+	BulkWriteResult bulkWrite(Bulk bulk, BulkWriteOptions options);
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding a new {@link ClientSession}
@@ -961,7 +974,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @since 2.1
 	 */
 	<R> List<R> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
-							 Class<R> resultClass);
+			Class<R> resultClass);
 
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and

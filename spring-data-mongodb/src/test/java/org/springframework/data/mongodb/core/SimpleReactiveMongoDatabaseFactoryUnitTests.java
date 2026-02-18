@@ -15,23 +15,30 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.util.List;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.aop.framework.AopProxyUtils;
+import org.springframework.data.mongodb.MongoClusterCapable;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCluster;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
@@ -61,6 +68,20 @@ class SimpleReactiveMongoDatabaseFactoryUnitTests {
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
 
 		assertThat(singletonTarget).isSameAs(database);
+	}
+
+	@Test // GH-5087
+	void passesOnClientSessionWhenInvokingMethodsOnMongoCluster() {
+
+		ReactiveMongoDatabaseFactory factory = ReactiveMongoDatabaseFactory.create(mongoClient, "foo");
+		ReactiveMongoDatabaseFactory wrapped = factory.withSession(clientSession);
+
+		assertThat(wrapped).asInstanceOf(InstanceOfAssertFactories.type(MongoClusterCapable.class))
+				.extracting(MongoClusterCapable::getMongoCluster).isInstanceOf(Proxy.class)
+				.asInstanceOf(InstanceOfAssertFactories.type(MongoCluster.class)).satisfies(cluster -> {
+					cluster.bulkWrite(List.of());
+					verify(mongoClient).bulkWrite(eq(clientSession), any());
+				});
 	}
 
 	@Test // DATAMONGO-1903

@@ -16,12 +16,15 @@
 package org.springframework.data.mongodb.core;
 
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.data.mongodb.MongoClusterCapable;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCluster;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -31,7 +34,7 @@ import com.mongodb.client.MongoDatabase;
  * @since 3.0
  */
 public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySupport<MongoClient>
-		implements DisposableBean {
+		implements MongoClusterCapable<MongoCluster>, DisposableBean {
 
 	/**
 	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance for the given {@code connectionString}. Using this
@@ -82,17 +85,49 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 
 	@Override
 	public ClientSession getSession(ClientSessionOptions options) {
-		return getMongoClient().startSession(options);
+		return getMongoCluster().startSession(options);
+	}
+
+	@Override
+	public MongoDatabaseFactory withSession(ClientSession session) {
+		return new ClientCapableSessionBoundDatabaseFactory(session, this);
 	}
 
 	@Override
 	protected void closeClient() {
-		getMongoClient().close();
+		getMongoCluster().close();
 	}
 
 	@Override
 	protected MongoDatabase doGetMongoDatabase(String dbName) {
-		return getMongoClient().getDatabase(dbName);
+		return getMongoCluster().getDatabase(dbName);
+	}
+
+	static class ClientCapableSessionBoundDatabaseFactory extends ClientSessionBoundMongoDbFactory
+			implements MongoClusterCapable<MongoCluster> {
+
+		private MongoClusterCapable<? extends MongoCluster> clusterCapable;
+
+		/**
+		 * Create a new session-bound factory that delegates to the given factory and exposes the cluster via
+		 * {@link MongoClusterCapable}.
+		 *
+		 * @param session the {@link ClientSession} to bind; must not be {@literal null}.
+		 * @param delegate the delegate factory; must not be {@literal null}.
+		 */
+		ClientCapableSessionBoundDatabaseFactory(ClientSession session, SimpleMongoClientDatabaseFactory delegate) {
+			super(session, delegate);
+			this.clusterCapable = delegate;
+		}
+
+		private MongoCluster proxyMongoCluster(MongoCluster cluster) {
+			return createProxyInstance(session(), cluster, MongoCluster.class);
+		}
+
+		@Override
+		public MongoCluster getMongoCluster() {
+			return proxyMongoCluster(clusterCapable.getMongoCluster());
+		}
 	}
 
 }

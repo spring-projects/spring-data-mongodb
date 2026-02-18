@@ -31,11 +31,11 @@ import org.springframework.data.util.Predicates;
  * @author Mark Paluch
  * @since 2.1
  */
-class PropertyOperations {
+public class PropertyOperations {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-	PropertyOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+	public PropertyOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 		this.mappingContext = mappingContext;
 	}
 
