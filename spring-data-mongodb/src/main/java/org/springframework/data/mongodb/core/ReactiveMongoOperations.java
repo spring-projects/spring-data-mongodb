@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -39,6 +40,8 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.bulk.Bulk;
+import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
@@ -158,6 +161,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @return a result object returned by the action or {@literal null}.
 	 */
 	<T> Flux<T> execute(String collectionName, ReactiveCollectionCallback<T> action);
+
+	/**
+	 * Executes the given {@link Bulk} to perform insert, update, and delete operations on multiple collections (requires
+	 * MongoDB 8.0+).
+	 *
+	 * @param bulk the {@link Bulk} to write.
+	 * @param options additional options applied to the execution.
+	 * @return never {@literal null}.
+	 */
+	Mono<BulkOperationResult<?>> bulkWrite(Bulk bulk, BulkWriteOptions options);
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
