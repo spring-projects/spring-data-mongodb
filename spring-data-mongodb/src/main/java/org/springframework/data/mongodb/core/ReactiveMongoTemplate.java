@@ -17,6 +17,9 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import com.mongodb.reactivestreams.client.MongoCluster;
+import org.springframework.data.mongodb.MongoClusterCapable;
+import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -78,6 +81,8 @@ import org.springframework.data.mongodb.core.CollectionPreparerSupport.ReactiveC
 import org.springframework.data.mongodb.core.DefaultReactiveBulkOperations.ReactiveBulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
+import org.springframework.data.mongodb.core.bulk.Bulk;
+import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
@@ -386,9 +391,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		prepareIndexCreator(applicationContext);
 
-		eventPublisher = applicationContext;
-		eventDelegate.setPublisher(eventPublisher);
-
+		setApplicationEventPublisher(applicationContext);
 		if (entityCallbacks == null) {
 			setEntityCallbacks(ReactiveEntityCallbacks.create(applicationContext));
 		}
@@ -397,6 +400,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			applicationEventPublisherAware.setApplicationEventPublisher(eventPublisher);
 		}
 	}
+
+	void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+		this.eventPublisher = applicationEventPublisher;
+		eventDelegate.setPublisher(this.eventPublisher);
+	}
+
 
 	/**
 	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking
@@ -818,6 +827,46 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected Mono<MongoDatabase> doGetDatabase() {
 		return ReactiveMongoDatabaseUtils.getDatabase(mongoDatabaseFactory, sessionSynchronization);
+	}
+
+	<T> Mono<T> doWithClient(Function<MongoCluster, Publisher<T>> callback) {
+
+		if (!(mongoDatabaseFactory instanceof MongoClusterCapable<?> clientAware)) {
+			return Mono.error(new IllegalStateException(
+					"Unable to obtain MongoCluster. Does your database factory implement MongoClusterCapable?"));
+		}
+
+		return Mono.from(callback.apply((MongoCluster) clientAware.getMongoCluster())).onErrorMap(translateException());
+	}
+
+	@Override
+	public Mono<BulkOperationResult<?>> bulkWrite(Bulk bulk, BulkWriteOptions options) {
+
+		return doGetDatabase()
+				.flatMap(db -> new ReactiveBulkWriter(this).write(db.getName(), bulk, options))
+				.map(BulkOperationResult::from);
+	}
+
+	public record SourceAwareDocument<T>(T source, Document document, String collectionName) {
+	}
+
+	<T> Mono<SourceAwareDocument<T>> prepareObjectForSaveReactive(String collectionName, T objectToSave,
+			MongoWriter<T> writer) {
+
+		T toConvert = maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName)).getSource();
+		return maybeCallBeforeConvert(toConvert, collectionName).map(initialized -> {
+
+			AdaptibleEntity<T> entity = operations.forEntityUpsert(initialized, mongoConverter.getConversionService());
+			T withVersion = entity.initializeVersionProperty();
+			Document dbDoc = entity.toMappedDocument(writer).getDocument();
+			maybeEmitEvent(new BeforeSaveEvent<>(withVersion, dbDoc, collectionName));
+			return new Object[] { withVersion, dbDoc };
+		}).flatMap(pair -> maybeCallBeforeSave((T) pair[0], (Document) pair[1], collectionName)
+				.map(saved -> new SourceAwareDocument<>(saved, (Document) pair[1], collectionName)));
+	}
+
+	QueryOperations getQueryOperations() {
+		return queryOperations;
 	}
 
 	@Override
@@ -2884,7 +2933,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return resolved == null ? ex : resolved;
 	}
 
-	private @Nullable MongoPersistentEntity<?> getPersistentEntity(@Nullable Class<?> type) {
+	@Nullable
+	MongoPersistentEntity<?> getPersistentEntity(@Nullable Class<?> type) {
 		return type == null ? null : mappingContext.getPersistentEntity(type);
 	}
 

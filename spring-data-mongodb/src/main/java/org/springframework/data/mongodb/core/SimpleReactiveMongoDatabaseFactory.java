@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.reactivestreams.client.MongoCluster;
+import org.springframework.data.mongodb.MongoClusterCapable;
 import reactor.core.publisher.Mono;
 
 import org.bson.codecs.configuration.CodecRegistry;
@@ -45,7 +47,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mathieu Ouellet
  * @since 2.0
  */
-public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, ReactiveMongoDatabaseFactory {
+public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, ReactiveMongoDatabaseFactory, MongoClusterCapable<MongoCluster> {
 
 	private final MongoClient mongo;
 	private final String databaseName;
@@ -99,6 +101,11 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 */
 	public void setExceptionTranslator(PersistenceExceptionTranslator exceptionTranslator) {
 		this.exceptionTranslator = exceptionTranslator;
+	}
+
+	@Override
+	public MongoClient getMongoCluster() {
+		return this.mongo;
 	}
 
 	@Override
@@ -169,7 +176,12 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * @since 2.1
 	 */
 	record ClientSessionBoundMongoDbFactory(ClientSession session,
-			ReactiveMongoDatabaseFactory delegate) implements ReactiveMongoDatabaseFactory {
+			ReactiveMongoDatabaseFactory delegate) implements ReactiveMongoDatabaseFactory, MongoClusterCapable<MongoCluster> {
+
+		@Override
+		public MongoCluster getMongoCluster() {
+			return delegate instanceof MongoClusterCapable<?> aware ? proxyCluster(session, (MongoCluster) aware.getMongoCluster()) : null;
+		}
 
 		@Override
 		public Mono<MongoDatabase> getMongoDatabase() throws DataAccessException {
@@ -210,24 +222,28 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoDatabase proxyDatabase(com.mongodb.session.ClientSession session, MongoDatabase database) {
+		private static MongoDatabase proxyDatabase(com.mongodb.session.ClientSession session, MongoDatabase database) {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoCollection<?> proxyCollection(com.mongodb.session.ClientSession session,
+		private static MongoCollection<?> proxyCollection(com.mongodb.session.ClientSession session,
 				MongoCollection<?> collection) {
 			return createProxyInstance(session, collection, MongoCollection.class);
 		}
 
-		private <T> T createProxyInstance(com.mongodb.session.ClientSession session, T target, Class<T> targetType) {
+		private static MongoCluster proxyCluster(com.mongodb.session.ClientSession session, MongoCluster client) {
+			return createProxyInstance(session, client, MongoCluster.class);
+		}
+
+		private static <T> T createProxyInstance(com.mongodb.session.ClientSession session, T target, Class<T> targetType) {
 
 			ProxyFactory factory = new ProxyFactory();
 			factory.setTarget(target);
 			factory.setInterfaces(targetType);
 			factory.setOpaque(true);
 
-			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class,
-					this::proxyDatabase, MongoCollection.class, this::proxyCollection));
+			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoCluster.class, ClientSession.class, MongoDatabase.class,
+				ClientSessionBoundMongoDbFactory::proxyDatabase, MongoCollection.class, ClientSessionBoundMongoDbFactory::proxyCollection));
 
 			return targetType.cast(factory.getProxy(target.getClass().getClassLoader()));
 		}

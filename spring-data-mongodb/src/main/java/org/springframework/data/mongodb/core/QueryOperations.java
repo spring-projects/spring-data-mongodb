@@ -81,7 +81,7 @@ import com.mongodb.client.model.UpdateOptions;
  * @author Florian Lüdiger
  * @since 3.0
  */
-class QueryOperations {
+public class QueryOperations {
 
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
@@ -101,7 +101,7 @@ class QueryOperations {
 	 * @param propertyOperations must not be {@literal null}.
 	 * @param codecRegistryProvider must not be {@literal null}.
 	 */
-	QueryOperations(QueryMapper queryMapper, UpdateMapper updateMapper, EntityOperations entityOperations,
+	public QueryOperations(QueryMapper queryMapper, UpdateMapper updateMapper, EntityOperations entityOperations,
 			PropertyOperations propertyOperations, CodecRegistryProvider codecRegistryProvider) {
 
 		this.queryMapper = queryMapper;
