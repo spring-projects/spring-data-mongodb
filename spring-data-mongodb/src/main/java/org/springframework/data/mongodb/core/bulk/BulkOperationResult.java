@@ -20,13 +20,13 @@ import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 
 /**
  * Result of a {@link Bulk} write execution. Exposes counts for inserted, modified, deleted, and upserted documents, and
- * whether the operation was acknowledged by the server.
+ * whether the operation was acknowledged by the server. Abstracts over both single-collection
+ * ({@link BulkWriteResult}) and multi-collection ({@link ClientBulkWriteResult}) driver results.
  *
- * @param <T> the type of the raw driver result (e.g. {@link ClientBulkWriteResult}).
  * @author Christoph Strobl
  * @since 5.1
  */
-public interface BulkOperationResult<T> {
+public interface BulkOperationResult {
 
 	/**
 	 * Creates a {@link BulkOperationResult} from a MongoDB driver {@link ClientBulkWriteResult}.
@@ -34,9 +34,9 @@ public interface BulkOperationResult<T> {
 	 * @param result the driver result; must not be {@literal null}.
 	 * @return a new {@link BulkOperationResult} wrapping the given result; never {@literal null}.
 	 */
-	static BulkOperationResult<ClientBulkWriteResult> from(ClientBulkWriteResult result) {
+	static BulkOperationResult from(ClientBulkWriteResult result) {
 
-		return new BulkOperationResult<>() {
+		return new BulkOperationResult() {
 			@Override
 			public long insertCount() {
 				return result.getInsertedCount();
@@ -66,11 +66,6 @@ public interface BulkOperationResult<T> {
 			public long matchedCount() {
 				return result.getMatchedCount();
 			}
-
-			@Override
-			public ClientBulkWriteResult rawResult() {
-				return result;
-			}
 		};
 	}
 
@@ -80,8 +75,8 @@ public interface BulkOperationResult<T> {
 	 * @param result the driver result; must not be {@literal null}.
 	 * @return a new {@link BulkOperationResult} wrapping the given result; never {@literal null}.
 	 */
-	static BulkOperationResult<BulkWriteResult> from(BulkWriteResult result) {
-		return new BulkOperationResult<>() {
+	static BulkOperationResult from(BulkWriteResult result) {
+		return new BulkOperationResult() {
 			@Override
 			public long insertCount() {
 				return result.getInsertedCount();
@@ -110,11 +105,6 @@ public interface BulkOperationResult<T> {
 			@Override
 			public long matchedCount() {
 				return result.getMatchedCount();
-			}
-
-			@Override
-			public BulkWriteResult rawResult() {
-				return result;
 			}
 		};
 	}
@@ -160,12 +150,5 @@ public interface BulkOperationResult<T> {
 	 * @return the matched count.
 	 */
 	long matchedCount();
-
-	/**
-	 * Returns the raw result from the MongoDB driver.
-	 *
-	 * @return the raw result.
-	 */
-	T rawResult();
 
 }

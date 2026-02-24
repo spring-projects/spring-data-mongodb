@@ -66,7 +66,7 @@ class BulkWriter {
 		this.template = template;
 	}
 
-	public BulkOperationResult<?> write(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
+	public BulkOperationResult write(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
 
 		Set<TypedNamespace> namespaces = bulk.operations().stream().map(it -> it.context().namespace())
 				.collect(Collectors.toSet());
@@ -76,7 +76,7 @@ class BulkWriter {
 		return writeToMultipleCollections(defaultDatabase, bulk, options);
 	}
 
-	private BulkOperationResult<BulkWriteResult> writeToSingleCollection(String defaultDatabase, Bulk bulk,
+	private BulkOperationResult writeToSingleCollection(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options, TypedNamespace namespace) {
 
 		MongoNamespace mongoNamespace = new MongoNamespace(defaultDatabase,
@@ -106,7 +106,7 @@ class BulkWriter {
 		}
 	}
 
-	private BulkOperationResult<ClientBulkWriteResult> writeToMultipleCollections(String defaultDatabase, Bulk bulk,
+	private BulkOperationResult writeToMultipleCollections(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options) {
 
 		MultiCollectionCollector collector = new MultiCollectionCollector(defaultDatabase);

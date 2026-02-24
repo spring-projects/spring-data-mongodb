@@ -177,7 +177,6 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationLevel;
 import com.mongodb.client.model.ValidationOptions;
-import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -687,7 +686,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public BulkOperationResult<?> bulkWrite(Bulk bulk, BulkWriteOptions options) {
+	public BulkOperationResult bulkWrite(Bulk bulk, BulkWriteOptions options) {
 		return new BulkWriter(this).write(getDb().getName(), bulk, options);
 	}
 

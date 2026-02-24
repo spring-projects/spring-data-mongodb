@@ -67,18 +67,17 @@ class ReactiveBulkWriter {
 		this.template = template;
 	}
 
-	public Mono<BulkOperationResult<?>> write(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
+	public Mono<BulkOperationResult> write(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
 
 		Set<TypedNamespace> namespaces = bulk.operations().stream().map(it -> it.context().namespace())
 				.collect(Collectors.toSet());
 		if (namespaces.size() == 1) {
-			return writeToSingleCollection(defaultDatabase, bulk, options, namespaces.iterator().next())
-					.map(r -> (BulkOperationResult<?>) r);
+			return writeToSingleCollection(defaultDatabase, bulk, options, namespaces.iterator().next());
 		}
-		return writeToMultipleCollections(defaultDatabase, bulk, options).map(r -> (BulkOperationResult<?>) r);
+		return writeToMultipleCollections(defaultDatabase, bulk, options);
 	}
 
-	private Mono<BulkOperationResult<BulkWriteResult>> writeToSingleCollection(String defaultDatabase, Bulk bulk,
+	private Mono<BulkOperationResult> writeToSingleCollection(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options, TypedNamespace namespace) {
 
 		MongoNamespace mongoNamespace = new MongoNamespace(defaultDatabase,
@@ -108,7 +107,7 @@ class ReactiveBulkWriter {
 		}));
 	}
 
-	private Mono<BulkOperationResult<ClientBulkWriteResult>> writeToMultipleCollections(String defaultDatabase, Bulk bulk,
+	private Mono<BulkOperationResult> writeToMultipleCollections(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options) {
 
 		MultiCollectionCollector collector = new MultiCollectionCollector(defaultDatabase);

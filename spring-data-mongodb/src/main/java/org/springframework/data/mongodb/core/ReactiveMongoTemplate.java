@@ -840,7 +840,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
-	public Mono<BulkOperationResult<?>> bulkWrite(Bulk bulk, BulkWriteOptions options) {
+	public Mono<BulkOperationResult> bulkWrite(Bulk bulk, BulkWriteOptions options) {
 
 		return doGetDatabase().flatMap(db -> new ReactiveBulkWriter(this).write(db.getName(), bulk, options));
 	}

@@ -170,7 +170,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param options additional options applied to the execution.
 	 * @return never {@literal null}.
 	 */
-	Mono<BulkOperationResult<?>> bulkWrite(Bulk bulk, BulkWriteOptions options);
+	Mono<BulkOperationResult> bulkWrite(Bulk bulk, BulkWriteOptions options);
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}

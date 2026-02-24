@@ -179,7 +179,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param options additional options applied to the execution.
 	 * @return never {@literal null}.
 	 */
-	BulkOperationResult<?> bulkWrite(Bulk bulk, BulkWriteOptions options);
+	BulkOperationResult bulkWrite(Bulk bulk, BulkWriteOptions options);
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding a new {@link ClientSession}
