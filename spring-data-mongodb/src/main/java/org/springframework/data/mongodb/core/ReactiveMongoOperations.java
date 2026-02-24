@@ -41,7 +41,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.bulk.Bulk;
-import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
@@ -170,7 +170,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param options additional options applied to the execution.
 	 * @return never {@literal null}.
 	 */
-	Mono<BulkOperationResult> bulkWrite(Bulk bulk, BulkWriteOptions options);
+	Mono<BulkWriteResult> bulkWrite(Bulk bulk, BulkWriteOptions options);
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}

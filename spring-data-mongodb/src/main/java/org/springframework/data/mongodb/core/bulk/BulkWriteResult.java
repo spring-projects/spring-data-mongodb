@@ -15,28 +15,27 @@
  */
 package org.springframework.data.mongodb.core.bulk;
 
-import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 
 /**
  * Result of a {@link Bulk} write execution. Exposes counts for inserted, modified, deleted, and upserted documents, and
  * whether the operation was acknowledged by the server. Abstracts over both single-collection
- * ({@link BulkWriteResult}) and multi-collection ({@link ClientBulkWriteResult}) driver results.
+ * ({@link com.mongodb.bulk.BulkWriteResult}) and multi-collection ({@link ClientBulkWriteResult}) driver results.
  *
  * @author Christoph Strobl
  * @since 5.1
  */
-public interface BulkOperationResult {
+public interface BulkWriteResult {
 
 	/**
-	 * Creates a {@link BulkOperationResult} from a MongoDB driver {@link ClientBulkWriteResult}.
+	 * Creates a {@link BulkWriteResult} from a MongoDB driver {@link ClientBulkWriteResult}.
 	 *
 	 * @param result the driver result; must not be {@literal null}.
-	 * @return a new {@link BulkOperationResult} wrapping the given result; never {@literal null}.
+	 * @return a new {@link BulkWriteResult} wrapping the given result; never {@literal null}.
 	 */
-	static BulkOperationResult from(ClientBulkWriteResult result) {
+	static BulkWriteResult from(ClientBulkWriteResult result) {
 
-		return new BulkOperationResult() {
+		return new BulkWriteResult() {
 			@Override
 			public long insertCount() {
 				return result.getInsertedCount();
@@ -70,13 +69,13 @@ public interface BulkOperationResult {
 	}
 
 	/**
-	 * Creates a {@link BulkOperationResult} from a MongoDB driver {@link BulkWriteResult}.
+	 * Creates a {@link BulkWriteResult} from a MongoDB driver {@link com.mongodb.bulk.BulkWriteResult}.
 	 *
 	 * @param result the driver result; must not be {@literal null}.
-	 * @return a new {@link BulkOperationResult} wrapping the given result; never {@literal null}.
+	 * @return a new {@link BulkWriteResult} wrapping the given result; never {@literal null}.
 	 */
-	static BulkOperationResult from(BulkWriteResult result) {
-		return new BulkOperationResult() {
+	static BulkWriteResult from(com.mongodb.bulk.BulkWriteResult result) {
+		return new BulkWriteResult() {
 			@Override
 			public long insertCount() {
 				return result.getInsertedCount();

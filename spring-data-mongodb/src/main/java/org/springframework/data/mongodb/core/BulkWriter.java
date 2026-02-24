@@ -35,7 +35,7 @@ import org.springframework.data.mongodb.core.bulk.BulkOperation.Replace;
 import org.springframework.data.mongodb.core.bulk.BulkOperation.Update;
 import org.springframework.data.mongodb.core.bulk.BulkOperation.UpdateFirst;
 import org.springframework.data.mongodb.core.bulk.BulkOperationContext.TypedNamespace;
-import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
@@ -43,7 +43,6 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoNamespace;
-import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.InsertOneModel;
 import com.mongodb.client.model.UpdateOptions;
@@ -66,7 +65,7 @@ class BulkWriter {
 		this.template = template;
 	}
 
-	public BulkOperationResult write(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
+	public BulkWriteResult write(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
 
 		Set<TypedNamespace> namespaces = bulk.operations().stream().map(it -> it.context().namespace())
 				.collect(Collectors.toSet());
@@ -76,7 +75,7 @@ class BulkWriter {
 		return writeToMultipleCollections(defaultDatabase, bulk, options);
 	}
 
-	private BulkOperationResult writeToSingleCollection(String defaultDatabase, Bulk bulk,
+	private BulkWriteResult writeToSingleCollection(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options, TypedNamespace namespace) {
 
 		MongoNamespace mongoNamespace = new MongoNamespace(defaultDatabase,
@@ -87,7 +86,7 @@ class BulkWriter {
 		buildWriteModels(bulk, collector);
 
 		try {
-			BulkWriteResult bulkWriteResult = template.execute(collector.getNamespace().getCollectionName(),
+			com.mongodb.bulk.BulkWriteResult bulkWriteResult = template.execute(collector.getNamespace().getCollectionName(),
 					collection -> collection.bulkWrite(collector.getWriteModels(), new com.mongodb.client.model.BulkWriteOptions()
 							.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))));
 
@@ -96,7 +95,7 @@ class BulkWriter {
 						.maybeEmitEvent(new AfterSaveEvent<>(callable.source(), callable.document(), callable.collectionName()));
 				template.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName());
 			});
-			return BulkOperationResult.from(bulkWriteResult);
+			return BulkWriteResult.from(bulkWriteResult);
 		} catch (MongoBulkWriteException e) {
 			DataAccessException dataAccessException = template.getExceptionTranslator().translateExceptionIfPossible(e);
 			if (dataAccessException != null) {
@@ -106,7 +105,7 @@ class BulkWriter {
 		}
 	}
 
-	private BulkOperationResult writeToMultipleCollections(String defaultDatabase, Bulk bulk,
+	private BulkWriteResult writeToMultipleCollections(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options) {
 
 		MultiCollectionCollector collector = new MultiCollectionCollector(defaultDatabase);
@@ -123,7 +122,7 @@ class BulkWriter {
 						.maybeEmitEvent(new AfterSaveEvent<>(callable.source(), callable.document(), callable.collectionName()));
 				template.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName());
 			});
-			return BulkOperationResult.from(clientBulkWriteResult);
+			return BulkWriteResult.from(clientBulkWriteResult);
 		} catch (MongoBulkWriteException e) {
 			DataAccessException dataAccessException = template.getExceptionTranslator().translateExceptionIfPossible(e);
 			if (dataAccessException != null) {

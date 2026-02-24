@@ -26,7 +26,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.bulk.Bulk;
-import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -98,7 +98,7 @@ public class MongoTemplateBulkTests {
 
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc2))
 				.inCollection(SpecialDoc.class).insert(specialDoc).build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.insertCount()).isEqualTo(3);
 
@@ -142,7 +142,7 @@ public class MongoTemplateBulkTests {
 
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc2))
 				.inCollection(SpecialDoc.class).insert(specialDoc).build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.unordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.unordered());
 
 		assertThat(result.insertCount()).isEqualTo(3);
 		Long baseCount = operations.execute(BaseDoc.class, MongoCollection::countDocuments);
@@ -190,7 +190,7 @@ public class MongoTemplateBulkTests {
 				.inCollection(BaseDoc.class, ops -> updatesBase.forEach(p -> ops.updateOne(p.getFirst(), p.getSecond())))
 				.inCollection(SpecialDoc.class, ops -> updatesSpecial.forEach(p -> ops.updateOne(p.getFirst(), p.getSecond())))
 				.build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.modifiedCount()).isEqualTo(2);
 
@@ -219,7 +219,7 @@ public class MongoTemplateBulkTests {
 				.inCollection(SpecialDoc.class,
 						ops -> updatesSpecial.forEach(p -> ops.updateMulti(p.getFirst(), p.getSecond())))
 				.build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.modifiedCount()).isEqualTo(8);
 
@@ -245,7 +245,7 @@ public class MongoTemplateBulkTests {
 				.inCollection(BaseDoc.class, ops -> ops.upsert(queryWhere("value", "value1"), set("value", "value2")))
 				.inCollection(SpecialDoc.class, ops -> ops.upsert(queryWhere("value", "value1"), set("value", "value2")))
 				.build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.matchedCount()).isEqualTo(4);
 		assertThat(result.modifiedCount()).isEqualTo(4);
@@ -260,7 +260,7 @@ public class MongoTemplateBulkTests {
 				.inCollection(BaseDoc.class, ops -> ops.upsert(queryWhere("_id", "new-id-1"), set("value", "upserted1")))
 				.inCollection(SpecialDoc.class, ops -> ops.upsert(queryWhere("_id", "new-id-2"), set("value", "upserted2")))
 				.build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.matchedCount()).isZero();
 		assertThat(result.modifiedCount()).isZero();
@@ -281,7 +281,7 @@ public class MongoTemplateBulkTests {
 
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> removesBase.forEach(ops::remove))
 				.inCollection(SpecialDoc.class, ops -> removesSpecial.forEach(ops::remove)).build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.deleteCount()).isEqualTo(6);
 
@@ -304,7 +304,7 @@ public class MongoTemplateBulkTests {
 		Bulk bulk = Bulk.builder()
 				.inCollection(BaseDoc.class, ops -> ops.replaceOne(queryWhere("_id", "1"), replacementBase))
 				.inCollection(SpecialDoc.class, ops -> ops.replaceOne(queryWhere("_id", "1"), replacementSpecial)).build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.matchedCount()).isEqualTo(2);
 		assertThat(result.modifiedCount()).isEqualTo(2);
@@ -322,7 +322,7 @@ public class MongoTemplateBulkTests {
 
 		Bulk bulk = Bulk.builder()
 				.inCollection(BaseDoc.class, ops -> ops.replaceOne(queryWhere("_id", "new-id"), replacement)).build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.matchedCount()).isZero();
 		assertThat(result.modifiedCount()).isZero();
@@ -342,7 +342,7 @@ public class MongoTemplateBulkTests {
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class,
 				ops -> ops.insert(doc1).updateOne(queryWhere("_id", "1"), set("value", "v2")).remove(queryWhere("value", "v2")))
 				.inCollection(SpecialDoc.class).insert(doc2).build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.insertCount()).isEqualTo(2);
 		assertThat(result.modifiedCount()).isOne();
@@ -371,7 +371,7 @@ public class MongoTemplateBulkTests {
 			updatesBase.forEach(p -> ops.updateMulti(p.getFirst(), p.getSecond()));
 			removesBase.forEach(ops::remove);
 		}).inCollection(SpecialDoc.class).insert(specialDoc).build();
-		BulkOperationResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.insertCount()).isEqualTo(4);
 		assertThat(result.modifiedCount()).isEqualTo(2);

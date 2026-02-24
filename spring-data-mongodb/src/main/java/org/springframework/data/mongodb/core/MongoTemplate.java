@@ -89,7 +89,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.bulk.Bulk;
-import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -686,7 +686,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public BulkOperationResult bulkWrite(Bulk bulk, BulkWriteOptions options) {
+	public BulkWriteResult bulkWrite(Bulk bulk, BulkWriteOptions options) {
 		return new BulkWriter(this).write(getDb().getName(), bulk, options);
 	}
 

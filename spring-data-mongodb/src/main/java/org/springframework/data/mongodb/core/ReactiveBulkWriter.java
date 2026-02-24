@@ -37,20 +37,18 @@ import org.springframework.data.mongodb.core.bulk.BulkOperation.Replace;
 import org.springframework.data.mongodb.core.bulk.BulkOperation.Update;
 import org.springframework.data.mongodb.core.bulk.BulkOperation.UpdateFirst;
 import org.springframework.data.mongodb.core.bulk.BulkOperationContext.TypedNamespace;
-import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoNamespace;
-import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.InsertOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.model.bulk.ClientBulkWriteOptions;
-import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
 
 /**
@@ -67,7 +65,7 @@ class ReactiveBulkWriter {
 		this.template = template;
 	}
 
-	public Mono<BulkOperationResult> write(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
+	public Mono<BulkWriteResult> write(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
 
 		Set<TypedNamespace> namespaces = bulk.operations().stream().map(it -> it.context().namespace())
 				.collect(Collectors.toSet());
@@ -77,7 +75,7 @@ class ReactiveBulkWriter {
 		return writeToMultipleCollections(defaultDatabase, bulk, options);
 	}
 
-	private Mono<BulkOperationResult> writeToSingleCollection(String defaultDatabase, Bulk bulk,
+	private Mono<BulkWriteResult> writeToSingleCollection(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options, TypedNamespace namespace) {
 
 		MongoNamespace mongoNamespace = new MongoNamespace(defaultDatabase,
@@ -96,7 +94,7 @@ class ReactiveBulkWriter {
 									new com.mongodb.client.model.BulkWriteOptions()
 											.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
 					.map(
-							BulkOperationResult::from)
+							BulkWriteResult::from)
 					.doOnSuccess(
 							v -> afterSaveCallables
 									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
@@ -107,7 +105,7 @@ class ReactiveBulkWriter {
 		}));
 	}
 
-	private Mono<BulkOperationResult> writeToMultipleCollections(String defaultDatabase, Bulk bulk,
+	private Mono<BulkWriteResult> writeToMultipleCollections(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options) {
 
 		MultiCollectionCollector collector = new MultiCollectionCollector(defaultDatabase);
@@ -121,7 +119,7 @@ class ReactiveBulkWriter {
 							ClientBulkWriteOptions
 									.clientBulkWriteOptions().ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
 					.map(
-							BulkOperationResult::from)
+							BulkWriteResult::from)
 					.doOnSuccess(
 							v -> afterSaveCallables
 									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),

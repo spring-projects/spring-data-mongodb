@@ -82,7 +82,7 @@ import org.springframework.data.mongodb.core.DefaultReactiveBulkOperations.React
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
 import org.springframework.data.mongodb.core.bulk.Bulk;
-import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
@@ -840,7 +840,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
-	public Mono<BulkOperationResult> bulkWrite(Bulk bulk, BulkWriteOptions options) {
+	public Mono<BulkWriteResult> bulkWrite(Bulk bulk, BulkWriteOptions options) {
 
 		return doGetDatabase().flatMap(db -> new ReactiveBulkWriter(this).write(db.getName(), bulk, options));
 	}

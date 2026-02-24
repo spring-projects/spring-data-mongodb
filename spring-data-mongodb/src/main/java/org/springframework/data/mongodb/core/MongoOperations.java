@@ -39,7 +39,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.bulk.Bulk;
-import org.springframework.data.mongodb.core.bulk.BulkOperationResult;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -179,7 +179,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param options additional options applied to the execution.
 	 * @return never {@literal null}.
 	 */
-	BulkOperationResult bulkWrite(Bulk bulk, BulkWriteOptions options);
+	BulkWriteResult bulkWrite(Bulk bulk, BulkWriteOptions options);
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding a new {@link ClientSession}
