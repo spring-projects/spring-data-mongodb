@@ -28,6 +28,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import reactor.core.publisher.Mono;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -59,12 +61,12 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
-import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
-import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
@@ -82,16 +84,22 @@ import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
-import reactor.core.publisher.Mono;
-
 /**
- * Unit tests for {@link ReactiveMongoOperations#bulkWrite}.
+ * Unit tests for {@link ReactiveMongoOperations#bulkWrite}. Tests use at least two collections so that
+ * {@code client.bulkWrite} is exercised (multi-collection path).
  *
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ReactiveMongoTemplateBulkUnitTests {
+
+	private static final String OTHER_COLLECTION = "other-collection";
+
+	/** Simple insert in another collection so bulk has multiple namespaces and client.bulkWrite is used. */
+	private static Document simpleInsertInOtherCollection() {
+		return new Document("_id", 1);
+	}
 
 	private ReactiveMongoTemplate template;
 	@Mock MongoClient client;
@@ -140,9 +148,32 @@ class ReactiveMongoTemplateBulkUnitTests {
 	}
 
 	@Test // GH-5087
+	void delegatesToCollectionOnSingleNamespace() {
+
+		Bulk bulk = ops.insert(new BaseDoc()).build();
+
+		template.bulkWrite(bulk, BulkWriteOptions.ordered()).subscribe();
+
+		verifyNoInteractions(client);
+		verify(collection).bulkWrite(anyList(), any());
+	}
+
+	@Test // GH-5087
+	void delegatesToClientOnMultiNamespace() {
+
+		Bulk bulk = ops.insert(new BaseDoc()).inCollection("other-collection").insert(new BaseDoc()).build();
+
+		template.bulkWrite(bulk, BulkWriteOptions.ordered()).subscribe();
+
+		verify(client).bulkWrite(anyList(), any());
+		verifyNoInteractions(collection);
+	}
+
+	@Test // GH-5087
 	void updateOneShouldUseCollationWhenPresent() {
 
-		Bulk bulk = ops
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("default-collection")
 				.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
 				.build();
 
@@ -151,14 +182,15 @@ class ReactiveMongoTemplateBulkUnitTests {
 		verify(client).bulkWrite(captor.capture(), any());
 
 		assertThat(
-				extractWriteModel(ConcreteClientUpdateOneModel.class, captor.getValue().get(0)).getOptions().getCollation())
+				extractWriteModel(ConcreteClientUpdateOneModel.class, captor.getValue().get(1)).getOptions().getCollation())
 				.contains(com.mongodb.client.model.Collation.builder().locale("de").build());
 	}
 
 	@Test // GH-5087
 	void updateManyShouldUseCollationWhenPresent() {
 
-		Bulk bulk = ops
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("default-collection")
 				.updateMulti(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
 				.build();
 
@@ -167,49 +199,53 @@ class ReactiveMongoTemplateBulkUnitTests {
 		verify(client).bulkWrite(captor.capture(), any());
 
 		assertThat(
-				extractWriteModel(ConcreteClientUpdateManyModel.class, captor.getValue().get(0)).getOptions().getCollation())
+				extractWriteModel(ConcreteClientUpdateManyModel.class, captor.getValue().get(1)).getOptions().getCollation())
 				.contains(com.mongodb.client.model.Collation.builder().locale("de").build());
 	}
 
 	@Test // GH-5087
 	void removeShouldUseCollationWhenPresent() {
 
-		Bulk bulk = ops.remove(new BasicQuery("{}").collation(Collation.of("de"))).build();
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("default-collection").remove(new BasicQuery("{}").collation(Collation.of("de"))).build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 
 		verify(client).bulkWrite(captor.capture(), any());
 
 		assertThat(
-				extractWriteModel(ConcreteClientDeleteManyModel.class, captor.getValue().get(0)).getOptions().getCollation())
+				extractWriteModel(ConcreteClientDeleteManyModel.class, captor.getValue().get(1)).getOptions().getCollation())
 				.contains(com.mongodb.client.model.Collation.builder().locale("de").build());
 	}
 
 	@Test // GH-5087
 	void replaceOneShouldUseCollationWhenPresent() {
 
-		Bulk bulk = ops.replaceOne(new BasicQuery("{}").collation(Collation.of("de")), new SomeDomainType()).build();
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("default-collection")
+				.replaceOne(new BasicQuery("{}").collation(Collation.of("de")), new SomeDomainType()).build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 
 		verify(client).bulkWrite(captor.capture(), any());
 
 		assertThat(
-				extractWriteModel(ConcreteClientReplaceOneModel.class, captor.getValue().get(0)).getOptions().getCollation())
+				extractWriteModel(ConcreteClientReplaceOneModel.class, captor.getValue().get(1)).getOptions().getCollation())
 				.contains(com.mongodb.client.model.Collation.builder().locale("de").build());
 	}
 
 	@Test // GH-5087
 	void bulkUpdateShouldMapQueryAndUpdateCorrectly() {
 
-		Bulk bulk = ops.inCollection("test", SomeDomainType.class)
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("test", SomeDomainType.class)
 				.updateOne(query(where("firstName").is("danerys")), Update.update("firstName", "queen danerys")).build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 		verify(client).bulkWrite(captor.capture(), any());
 
 		ConcreteClientUpdateOneModel updateModel = extractWriteModel(ConcreteClientUpdateOneModel.class,
-				captor.getValue().get(0));
+				captor.getValue().get(1));
 		assertThat(updateModel.getFilter()).isEqualTo(new Document("first_name", "danerys"));
 		assertThat(updateModel.getUpdate()).contains(new Document("$set", new Document("first_name", "queen danerys")));
 	}
@@ -217,13 +253,14 @@ class ReactiveMongoTemplateBulkUnitTests {
 	@Test // GH-5087
 	void bulkRemoveShouldMapQueryCorrectly() {
 
-		Bulk bulk = ops.inCollection("test", SomeDomainType.class).remove(query(where("firstName").is("danerys"))).build();
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("test", SomeDomainType.class).remove(query(where("firstName").is("danerys"))).build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 		verify(client).bulkWrite(captor.capture(), any());
 
 		ConcreteClientDeleteManyModel deleteModel = extractWriteModel(ConcreteClientDeleteManyModel.class,
-				captor.getValue().get(0));
+				captor.getValue().get(1));
 		assertThat(deleteModel.getFilter()).isEqualTo(new Document("first_name", "danerys"));
 	}
 
@@ -234,25 +271,26 @@ class ReactiveMongoTemplateBulkUnitTests {
 		replacement.firstName = "Minsu";
 		replacement.lastName = "Kim";
 
-		Bulk bulk = ops.inCollection("test", SomeDomainType.class)
-				.replaceOne(query(where("firstName").is("danerys")), replacement).build();
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("test", SomeDomainType.class).replaceOne(query(where("firstName").is("danerys")), replacement)
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 		verify(client).bulkWrite(captor.capture(), any());
 
 		ConcreteClientReplaceOneModel replaceModel = extractWriteModel(ConcreteClientReplaceOneModel.class,
-				captor.getValue().get(0));
+				captor.getValue().get(1));
 		assertThat(replaceModel.getFilter()).isEqualTo(new Document("first_name", "danerys"));
 		assertThat(replaceModel.getReplacement()).asInstanceOf(InstanceOfAssertFactories.map(String.class, Object.class))
-				.containsEntry("first_name", "Minsu")
-				.containsEntry("lastName", "Kim");
+				.containsEntry("first_name", "Minsu").containsEntry("lastName", "Kim");
 	}
 
 	@Test // GH-5087
 	void bulkInsertInvokesEntityCallbacks() {
 
 		Person entity = new Person("init");
-		Bulk bulk = ops.inCollection("person").insert(entity).build();
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("person").insert(entity).build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 
@@ -265,7 +303,7 @@ class ReactiveMongoTemplateBulkUnitTests {
 		verify(client).bulkWrite(captor.capture(), any());
 
 		ConcreteClientInsertOneModel insertModel = extractWriteModel(ConcreteClientInsertOneModel.class,
-				captor.getValue().get(0));
+				captor.getValue().get(1));
 		assertThat(insertModel.getDocument()).asInstanceOf(InstanceOfAssertFactories.map(String.class, Object.class))
 				.containsEntry("firstName", "after-save");
 	}
@@ -274,46 +312,57 @@ class ReactiveMongoTemplateBulkUnitTests {
 	@SuppressWarnings("rawtypes")
 	void bulkReplaceOneEmitsEventsCorrectly() {
 
-		ops.replaceOne(query(where("firstName").is("danerys")), new SomeDomainType());
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("default-collection").replaceOne(query(where("firstName").is("danerys")), new SomeDomainType())
+				.build();
 
 		verifyNoInteractions(applicationContext);
 
-		template.bulkWrite(ops.build(), BulkWriteOptions.ordered()).block();
+		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 
 		MockingDetails mockingDetails = Mockito.mockingDetails(applicationContext);
 		Collection<Invocation> invocations = mockingDetails.getInvocations();
-		assertThat(invocations).hasSize(3).extracting(tt -> tt.getArgument(0)).map(Object::getClass)
-				.containsExactly((Class) BeforeConvertEvent.class, (Class) BeforeSaveEvent.class, (Class) AfterSaveEvent.class);
+		// Insert in other-collection (3 events) + replace in default-collection (3 events)
+		assertThat(invocations).hasSize(6).extracting(tt -> tt.getArgument(0)).map(Object::getClass)
+				.containsExactlyInAnyOrder((Class) BeforeConvertEvent.class, (Class) BeforeConvertEvent.class,
+						(Class) BeforeSaveEvent.class, (Class) BeforeSaveEvent.class, (Class) AfterSaveEvent.class,
+						(Class) AfterSaveEvent.class);
 	}
 
 	@Test // GH-5087
 	@SuppressWarnings("rawtypes")
 	void bulkInsertEmitsEventsCorrectly() {
 
-		ops.insert(new SomeDomainType());
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("default-collection").insert(new SomeDomainType()).build();
 
 		verify(applicationContext, never()).publishEvent(any(BeforeConvertEvent.class));
 		verify(applicationContext, never()).publishEvent(any(BeforeSaveEvent.class));
 		verify(applicationContext, never()).publishEvent(any(AfterSaveEvent.class));
 
-		template.bulkWrite(ops.build(), BulkWriteOptions.ordered()).block();
+		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 
 		MockingDetails mockingDetails = Mockito.mockingDetails(applicationContext);
 		Collection<Invocation> invocations = mockingDetails.getInvocations();
-		assertThat(invocations).hasSize(3).extracting(tt -> tt.getArgument(0)).map(Object::getClass)
-				.containsExactly((Class) BeforeConvertEvent.class, (Class) BeforeSaveEvent.class, (Class) AfterSaveEvent.class);
+		// Two inserts (other-collection + default-collection) each emit BeforeConvert, BeforeSave, AfterSave
+		assertThat(invocations).hasSize(6).extracting(tt -> tt.getArgument(0)).map(Object::getClass)
+				.containsExactlyInAnyOrder((Class) BeforeConvertEvent.class, (Class) BeforeConvertEvent.class,
+						(Class) BeforeSaveEvent.class, (Class) BeforeSaveEvent.class, (Class) AfterSaveEvent.class,
+						(Class) AfterSaveEvent.class);
 	}
 
 	@Test // GH-5087
 	void appliesArrayFilterWhenPresent() {
 
-		Bulk bulk = ops.updateOne(new BasicQuery("{}"), new Update().filterArray(where("element").gte(100))).build();
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("default-collection")
+				.updateOne(new BasicQuery("{}"), new Update().filterArray(where("element").gte(100))).build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 		verify(client).bulkWrite(captor.capture(), any());
 
 		ConcreteClientUpdateOneModel updateModel = extractWriteModel(ConcreteClientUpdateOneModel.class,
-				captor.getValue().get(0));
+				captor.getValue().get(1));
 		assertThat(updateModel.getOptions().getArrayFilters().get()).satisfies(it -> {
 			assertThat((List<Document>) it).containsExactly(new Document("element", new Document("$gte", 100)));
 		});
@@ -322,13 +371,15 @@ class ReactiveMongoTemplateBulkUnitTests {
 	@Test // GH-5087
 	void shouldRetainNestedArrayPathWithPlaceholdersForNoMatchingPaths() {
 
-		Bulk bulk = ops.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")).build();
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("default-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")).build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 		verify(client).bulkWrite(captor.capture(), any());
 
 		ConcreteClientUpdateOneModel updateModel = extractWriteModel(ConcreteClientUpdateOneModel.class,
-				captor.getValue().get(0));
+				captor.getValue().get(1));
 		assertThat(updateModel.getUpdate())
 				.contains(new Document("$set", new Document("items.$.documents.0.fileId", "new-id")));
 	}
@@ -336,14 +387,15 @@ class ReactiveMongoTemplateBulkUnitTests {
 	@Test // GH-5087
 	void shouldRetainNestedArrayPathWithPlaceholdersForMappedEntity() {
 
-		Bulk bulk = ops.inCollection("collection-1", OrderTest.class)
+		Bulk bulk = Bulk.builder().inCollection(OTHER_COLLECTION).insert(simpleInsertInOtherCollection())
+				.inCollection("collection-1", OrderTest.class)
 				.updateOne(new BasicQuery("{}"), Update.update("items.$.documents.0.fileId", "file-id")).build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
 		verify(client).bulkWrite(captor.capture(), any());
 
 		ConcreteClientUpdateOneModel updateModel = extractWriteModel(ConcreteClientUpdateOneModel.class,
-				captor.getValue().get(0));
+				captor.getValue().get(1));
 		assertThat(updateModel.getUpdate())
 				.contains(new Document("$set", new Document("items.$.documents.0.the_file_id", "file-id")));
 	}

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.bulk;
 
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 
 /**
@@ -68,6 +69,51 @@ public interface BulkOperationResult<T> {
 
 			@Override
 			public ClientBulkWriteResult rawResult() {
+				return result;
+			}
+		};
+	}
+
+	/**
+	 * Creates a {@link BulkOperationResult} from a MongoDB driver {@link BulkWriteResult}.
+	 *
+	 * @param result the driver result; must not be {@literal null}.
+	 * @return a new {@link BulkOperationResult} wrapping the given result; never {@literal null}.
+	 */
+	static BulkOperationResult<BulkWriteResult> from(BulkWriteResult result) {
+		return new BulkOperationResult<>() {
+			@Override
+			public long insertCount() {
+				return result.getInsertedCount();
+			}
+
+			@Override
+			public long modifiedCount() {
+				return result.getModifiedCount();
+			}
+
+			@Override
+			public long deleteCount() {
+				return result.getDeletedCount();
+			}
+
+			@Override
+			public long upsertCount() {
+				return result.getUpserts().size();
+			}
+
+			@Override
+			public boolean acknowledged() {
+				return result.wasAcknowledged();
+			}
+
+			@Override
+			public long matchedCount() {
+				return result.getMatchedCount();
+			}
+
+			@Override
+			public BulkWriteResult rawResult() {
 				return result;
 			}
 		};

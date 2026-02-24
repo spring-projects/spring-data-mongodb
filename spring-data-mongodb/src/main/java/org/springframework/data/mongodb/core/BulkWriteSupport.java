@@ -17,15 +17,23 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 
-import com.mongodb.client.model.bulk.ClientDeleteOneOptions;
-import com.mongodb.client.model.bulk.ClientReplaceOneOptions;
 import org.bson.Document;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.MongoNamespace;
+import com.mongodb.client.model.DeleteManyModel;
+import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.ReplaceOneModel;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.UpdateManyModel;
+import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.model.bulk.ClientDeleteManyOptions;
+import com.mongodb.client.model.bulk.ClientDeleteOneOptions;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
+import com.mongodb.client.model.bulk.ClientReplaceOneOptions;
 import com.mongodb.client.model.bulk.ClientUpdateManyOptions;
 import com.mongodb.client.model.bulk.ClientUpdateOneOptions;
 
@@ -33,6 +41,50 @@ import com.mongodb.client.model.bulk.ClientUpdateOneOptions;
  * @author Christoph Strobl
  */
 abstract class BulkWriteSupport {
+
+	static WriteModel<Document> updateMany(Document query, Object update, UpdateOptions updateOptions) {
+
+		if (update instanceof List<?> pipeline) {
+			return new UpdateManyModel<>(query, (List<Document>) pipeline, updateOptions);
+		} else if (update instanceof Document updateDocument) {
+			return new UpdateManyModel<>(query, updateDocument, updateOptions);
+		} else {
+			throw new IllegalArgumentException(
+					"Update needs to be either a List or a Document, but was [%s]".formatted(ClassUtils.getUserClass(update)));
+		}
+	}
+
+	static WriteModel<Document> updateOne(Document query, Object update, UpdateOptions updateOptions) {
+
+		if (update instanceof List<?> pipeline) {
+			return new UpdateOneModel<>(query, (List<Document>) pipeline, updateOptions);
+		} else if (update instanceof Document updateDocument) {
+			return new UpdateOneModel<>(query, updateDocument, updateOptions);
+		} else {
+			throw new IllegalArgumentException(
+					"Update needs to be either a List or a Document, but was [%s]".formatted(ClassUtils.getUserClass(update)));
+		}
+	}
+
+	static WriteModel<Document> removeMany(Document query, DeleteOptions deleteOptions) {
+		return new DeleteManyModel<>(query, deleteOptions);
+	}
+
+	static WriteModel<Document> removeOne(Document query, DeleteOptions deleteOptions) {
+		return new DeleteOneModel<>(query, deleteOptions);
+	}
+
+	static WriteModel<Document> replaceOne(Document query, Document replacement, UpdateOptions updateOptions) {
+
+		ReplaceOptions replaceOptions = new ReplaceOptions();
+		replaceOptions.collation(updateOptions.getCollation());
+		replaceOptions.upsert(updateOptions.isUpsert());
+		replaceOptions.sort(updateOptions.getSort());
+		replaceOptions.hint(updateOptions.getHint());
+		replaceOptions.hintString(updateOptions.getHintString());
+
+		return new ReplaceOneModel<>(query, replacement, replaceOptions);
+	}
 
 	static ClientNamespacedWriteModel updateMany(MongoNamespace namespace, Document query, Object update,
 			UpdateOptions updateOptions) {
@@ -46,8 +98,11 @@ abstract class BulkWriteSupport {
 
 		if (update instanceof List<?> pipeline) {
 			return ClientNamespacedWriteModel.updateMany(namespace, query, (List<Document>) pipeline, updateManyOptions);
+		} else if (update instanceof Document updateDocument) {
+			return ClientNamespacedWriteModel.updateMany(namespace, query, updateDocument, updateManyOptions);
 		} else {
-			return ClientNamespacedWriteModel.updateMany(namespace, query, (Document) update, updateManyOptions);
+			throw new IllegalArgumentException(
+					"Update needs to be either a List or a Document, but was [%s]".formatted(ClassUtils.getUserClass(update)));
 		}
 	}
 
@@ -64,8 +119,11 @@ abstract class BulkWriteSupport {
 
 		if (update instanceof List<?> pipeline) {
 			return ClientNamespacedWriteModel.updateOne(namespace, query, (List<Document>) pipeline, updateOneOptions);
+		} else if (update instanceof Document updateDocument) {
+			return ClientNamespacedWriteModel.updateOne(namespace, query, updateDocument, updateOneOptions);
 		} else {
-			return ClientNamespacedWriteModel.updateOne(namespace, query, (Document) update, updateOneOptions);
+			throw new IllegalArgumentException(
+					"Update needs to be either a List or a Document, but was [%s]".formatted(ClassUtils.getUserClass(update)));
 		}
 	}
 
@@ -87,11 +145,11 @@ abstract class BulkWriteSupport {
 		clientDeleteOneOptions.hint(deleteOptions.getHint());
 		clientDeleteOneOptions.hintString(deleteOptions.getHintString());
 
-
 		return ClientNamespacedWriteModel.deleteOne(namespace, query, clientDeleteOneOptions);
 	}
 
-	static ClientNamespacedWriteModel replaceOne(MongoNamespace namespace, Document query, Document replacement, UpdateOptions updateOptions) {
+	static ClientNamespacedWriteModel replaceOne(MongoNamespace namespace, Document query, Document replacement,
+			UpdateOptions updateOptions) {
 
 		ClientReplaceOneOptions replaceOptions = ClientReplaceOneOptions.clientReplaceOneOptions();
 		replaceOptions.sort(updateOptions.getSort());
@@ -100,7 +158,6 @@ abstract class BulkWriteSupport {
 		replaceOptions.hintString(updateOptions.getHintString());
 		replaceOptions.collation(updateOptions.getCollation());
 
-		return ClientNamespacedWriteModel.replaceOne(namespace, query,
-			replacement, replaceOptions);
+		return ClientNamespacedWriteModel.replaceOne(namespace, query, replacement, replaceOptions);
 	}
 }

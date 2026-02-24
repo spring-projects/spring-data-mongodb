@@ -17,12 +17,14 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -135,10 +137,35 @@ class MongoTemplateBulkUnitTests {
 	}
 
 	@Test // GH-5087
+	void delegatesToCollectionOnSingleNamespace() {
+
+		Bulk bulk = ops.insert(new BaseDoc()).build();
+
+		template.bulkWrite(bulk, BulkWriteOptions.ordered());
+
+		verify(client).getDatabase(anyString());
+		verifyNoMoreInteractions(client);
+		verify(collection).bulkWrite(anyList(), any());
+	}
+
+	@Test // GH-5087
+	void delegatesToClientOnMultiNamespace() {
+
+		Bulk bulk = ops.insert(new BaseDoc()).inCollection("other-collection").insert(new BaseDoc()).build();
+
+		template.bulkWrite(bulk, BulkWriteOptions.ordered());
+
+		verify(client).bulkWrite(anyList(), any());
+		verifyNoInteractions(collection);
+	}
+
+	@Test // GH-5087
 	void updateOneShouldUseCollationWhenPresent() {
 
 		Bulk bulk = ops
-				.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
+				.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen")) //
+				.inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
 				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
@@ -155,6 +182,8 @@ class MongoTemplateBulkUnitTests {
 
 		Bulk bulk = ops
 				.updateMulti(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
+				.inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
 				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
@@ -169,7 +198,9 @@ class MongoTemplateBulkUnitTests {
 	@Test // GH-5087
 	void removeShouldUseCollationWhenPresent() {
 
-		Bulk bulk = ops.remove(new BasicQuery("{}").collation(Collation.of("de"))).build();
+		Bulk bulk = ops.remove(new BasicQuery("{}").collation(Collation.of("de"))).inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -183,7 +214,10 @@ class MongoTemplateBulkUnitTests {
 	@Test // GH-5087
 	void replaceOneShouldUseCollationWhenPresent() {
 
-		Bulk bulk = ops.replaceOne(new BasicQuery("{}").collation(Collation.of("de")), new SomeDomainType()).build();
+		Bulk bulk = ops.replaceOne(new BasicQuery("{}").collation(Collation.of("de")), new SomeDomainType()) //
+				.inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -198,7 +232,10 @@ class MongoTemplateBulkUnitTests {
 	void bulkUpdateShouldMapQueryAndUpdateCorrectly() {
 
 		Bulk bulk = ops.inCollection("test", SomeDomainType.class)
-				.updateOne(query(where("firstName").is("danerys")), Update.update("firstName", "queen danerys")).build();
+				.updateOne(query(where("firstName").is("danerys")), Update.update("firstName", "queen danerys")) //
+				.inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 		verify(client).bulkWrite(captor.capture(), any());
@@ -212,7 +249,10 @@ class MongoTemplateBulkUnitTests {
 	@Test // GH-5087
 	void bulkRemoveShouldMapQueryCorrectly() {
 
-		Bulk bulk = ops.inCollection("test", SomeDomainType.class).remove(query(where("firstName").is("danerys"))).build();
+		Bulk bulk = ops.inCollection("test", SomeDomainType.class).remove(query(where("firstName").is("danerys")))
+				.inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 		verify(client).bulkWrite(captor.capture(), any());
@@ -230,7 +270,9 @@ class MongoTemplateBulkUnitTests {
 		replacement.lastName = "Kim";
 
 		Bulk bulk = ops.inCollection("test", SomeDomainType.class)
-				.replaceOne(query(where("firstName").is("danerys")), replacement).build();
+				.replaceOne(query(where("firstName").is("danerys")), replacement).inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 		verify(client).bulkWrite(captor.capture(), any());
@@ -247,7 +289,9 @@ class MongoTemplateBulkUnitTests {
 	void bulkInsertInvokesEntityCallbacks() {
 
 		Person entity = new Person("init");
-		Bulk bulk = ops.inCollection("person").insert(entity).build();
+		Bulk bulk = ops.inCollection("person").insert(entity).inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -296,13 +340,16 @@ class MongoTemplateBulkUnitTests {
 		MockingDetails mockingDetails = Mockito.mockingDetails(eventPublisher);
 		Collection<Invocation> invocations = mockingDetails.getInvocations();
 		assertThat(invocations).hasSize(3).extracting(tt -> tt.getArgument(0)).map(Object::getClass)
-			.containsExactly((Class) BeforeConvertEvent.class, (Class) BeforeSaveEvent.class, (Class) AfterSaveEvent.class);
+				.containsExactly((Class) BeforeConvertEvent.class, (Class) BeforeSaveEvent.class, (Class) AfterSaveEvent.class);
 	}
 
 	@Test // GH-5087
 	void appliesArrayFilterWhenPresent() {
 
-		Bulk bulk = ops.updateOne(new BasicQuery("{}"), new Update().filterArray(where("element").gte(100))).build();
+		Bulk bulk = ops.updateOne(new BasicQuery("{}"), new Update().filterArray(where("element").gte(100))) //
+				.inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 		verify(client).bulkWrite(captor.capture(), any());
@@ -317,7 +364,10 @@ class MongoTemplateBulkUnitTests {
 	@Test // GH-5087
 	void shouldRetainNestedArrayPathWithPlaceholdersForNoMatchingPaths() {
 
-		Bulk bulk = ops.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")).build();
+		Bulk bulk = ops.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.inCollection("other-collection")
+				.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 		verify(client).bulkWrite(captor.capture(), any());
@@ -332,7 +382,10 @@ class MongoTemplateBulkUnitTests {
 	void shouldRetainNestedArrayPathWithPlaceholdersForMappedEntity() {
 
 		Bulk bulk = ops.inCollection("collection-1", OrderTest.class)
-				.updateOne(new BasicQuery("{}"), Update.update("items.$.documents.0.fileId", "file-id")).build();
+				.updateOne(new BasicQuery("{}"), Update.update("items.$.documents.0.fileId", "file-id")) //
+				.inCollection("collection-2", OrderTest.class)
+				.updateOne(new BasicQuery("{}"), Update.update("items.$.documents.0.fileId", "file-id")) //
+				.build();
 
 		template.bulkWrite(bulk, BulkWriteOptions.ordered());
 		verify(client).bulkWrite(captor.capture(), any());

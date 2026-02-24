@@ -688,9 +688,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public BulkOperationResult<?> bulkWrite(Bulk bulk, BulkWriteOptions options) {
-
-		ClientBulkWriteResult result = new BulkWriter(this).write(getDb().getName(), bulk, options);
-		return BulkOperationResult.from(result);
+		return new BulkWriter(this).write(getDb().getName(), bulk, options);
 	}
 
 	@Override
