@@ -28,7 +28,7 @@
 		<antora.javadoc-artifactId>spring-data-mongodb</antora.javadoc-artifactId>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>4.0.4-SNAPSHOT</springdata.commons>
-		<mongo>5.6.3</mongo>
+		<mongo>5.6.4</mongo>
 	</properties>
 
 	<developers>
