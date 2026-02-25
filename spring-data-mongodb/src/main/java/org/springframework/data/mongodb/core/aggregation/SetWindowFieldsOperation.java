@@ -518,7 +518,7 @@ public class SetWindowFieldsOperation
 			return from(UNBOUNDED);
 		}
 
-		@Contract("-> this")
+		@Contract("_ -> this")
 		public DocumentWindowBuilder to(String upper) {
 
 			this.upper = upper;

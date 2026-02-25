@@ -84,7 +84,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 	 * @param value the value to assign.
 	 * @return new instance of {@link AddFieldsOperation}.
 	 */
-	@Contract("_ -> new")
+	@Contract("_, _ -> new")
 	public AddFieldsOperation addField(Object field, Object value) {
 
 		LinkedHashMap<Object, Object> target = new LinkedHashMap<>(getValueMap());

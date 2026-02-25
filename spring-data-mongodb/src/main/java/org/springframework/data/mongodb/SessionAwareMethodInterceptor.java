@@ -165,6 +165,7 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 		 * @param targetClass
 		 * @return
 		 */
+		@SuppressWarnings("NullAway")
 		Optional<Method> lookup(Method method, Class<?> targetClass, Class<? extends ClientSession> sessionType) {
 
 			return cache.computeIfAbsent(new MethodClassKey(method, targetClass),

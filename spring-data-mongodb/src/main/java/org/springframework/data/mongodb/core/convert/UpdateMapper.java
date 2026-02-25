@@ -329,6 +329,7 @@ public class UpdateMapper extends QueryMapper {
 		 *
 		 * @author Christoph Strobl
 		 */
+		@SuppressWarnings("NullAway")
 		protected static class UpdateAssociationConverter extends AssociationConverter {
 
 			private final KeyMapper mapper;
@@ -347,7 +348,7 @@ public class UpdateMapper extends QueryMapper {
 			}
 
 			@Override
-			public @Nullable String convert(MongoPersistentProperty source) {
+			public String convert(MongoPersistentProperty source) {
 				return super.convert(source) == null ? null : mapper.mapPropertyName(source);
 			}
 		}

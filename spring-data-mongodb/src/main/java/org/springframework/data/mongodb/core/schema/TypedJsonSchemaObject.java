@@ -421,7 +421,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public ObjectJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
@@ -696,7 +696,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public NumericJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
@@ -1110,7 +1110,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public ArrayJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
@@ -1242,7 +1242,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public BooleanJsonSchemaObject generatedDescription() {
 			return new BooleanJsonSchemaObject(description, true, restrictions);
 		}

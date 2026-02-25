@@ -307,7 +307,7 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
-	@Contract("_ -> new")
+	@Contract("-> new")
 	public Collation backwardDiacriticSort() {
 		return backwards(true);
 	}

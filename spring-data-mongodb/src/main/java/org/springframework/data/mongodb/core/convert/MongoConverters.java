@@ -194,10 +194,11 @@ abstract class MongoConverters {
 	 *
 	 * @author Oliver Gierke
 	 */
-	enum StringToObjectIdConverter implements Converter<String, ObjectId> {
+	@SuppressWarnings("NullAway")
+	enum StringToObjectIdConverter implements Converter<String, @Nullable ObjectId> {
 		INSTANCE;
 
-		public @Nullable ObjectId convert(String source) {
+		public ObjectId convert(String source) {
 			return StringUtils.hasText(source) ? new ObjectId(source) : null;
 		}
 	}
@@ -262,10 +263,11 @@ abstract class MongoConverters {
 	}
 
 	@ReadingConverter
-	enum StringToBigDecimalConverter implements Converter<String, BigDecimal> {
+	@SuppressWarnings("NullAway")
+	enum StringToBigDecimalConverter implements Converter<String, @Nullable BigDecimal> {
 		INSTANCE;
 
-		public @Nullable BigDecimal convert(String source) {
+		public BigDecimal convert(String source) {
 			return StringUtils.hasText(source) ? new BigDecimal(source) : null;
 		}
 	}
@@ -292,10 +294,11 @@ abstract class MongoConverters {
 	}
 
 	@ReadingConverter
-	enum StringToBigIntegerConverter implements Converter<String, BigInteger> {
+	@SuppressWarnings("NullAway")
+	enum StringToBigIntegerConverter implements Converter<String, @Nullable BigInteger> {
 		INSTANCE;
 
-		public @Nullable BigInteger convert(String source) {
+		public BigInteger convert(String source) {
 			return StringUtils.hasText(source) ? new BigInteger(source) : null;
 		}
 	}
@@ -439,12 +442,13 @@ abstract class MongoConverters {
 	 * @since 1.9
 	 */
 	@ReadingConverter
-	enum StringToCurrencyConverter implements Converter<String, Currency> {
+	@SuppressWarnings("NullAway")
+	enum StringToCurrencyConverter implements Converter<String, @Nullable Currency> {
 
 		INSTANCE;
 
 		@Override
-		public @Nullable Currency convert(String source) {
+		public Currency convert(String source) {
 			return StringUtils.hasText(source) ? Currency.getInstance(source) : null;
 		}
 	}

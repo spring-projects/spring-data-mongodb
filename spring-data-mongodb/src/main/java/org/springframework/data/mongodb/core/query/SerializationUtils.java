@@ -149,6 +149,7 @@ public abstract class SerializationUtils {
 				entry -> String.format("\"%s\" : %s", entry.getKey(), serializeToJsonSafely(entry.getValue())));
 	}
 
+	@SuppressWarnings("NullAway")
 	private static String toString(Collection<?> source) {
 		return iterableToDelimitedString(source, "[ ", " ]", SerializationUtils::serializeToJsonSafely);
 	}

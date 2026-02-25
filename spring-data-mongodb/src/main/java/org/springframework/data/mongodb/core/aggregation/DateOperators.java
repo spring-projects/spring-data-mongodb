@@ -2717,7 +2717,7 @@ public class DateOperators {
 		 *
 		 * @return new instance of {@link DateToParts}.
 		 */
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public DateToParts iso8601() {
 			return new DateToParts(append("iso8601", true));
 		}

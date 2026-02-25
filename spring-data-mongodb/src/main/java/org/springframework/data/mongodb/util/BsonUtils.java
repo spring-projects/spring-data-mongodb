@@ -797,6 +797,7 @@ public class BsonUtils {
 				entry -> "\"" + entry.getKey() + "\" : " + toJson(entry.getValue()));
 	}
 
+	@SuppressWarnings("NullAway")
 	private static String toString(Collection<?> source) {
 		return iterableToDelimitedString(source, "[ ", " ]", BsonUtils::toJson);
 	}

@@ -151,7 +151,7 @@ public final class Fields implements Iterable<Field> {
 		return and(new AggregationField(name));
 	}
 
-	@Contract("_ -> new")
+	@Contract("_, _ -> new")
 	public Fields and(String name, String target) {
 		return and(new AggregationField(name, target));
 	}

@@ -197,7 +197,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#generateDescription()
 		 */
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public UntypedJsonSchemaProperty generatedDescription() {
 			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
@@ -354,7 +354,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#generateDescription()
 		 */
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public StringJsonSchemaProperty generatedDescription() {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
@@ -552,7 +552,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#generateDescription()
 		 */
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public ObjectJsonSchemaProperty generatedDescription() {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}

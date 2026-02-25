@@ -267,7 +267,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		/**
 		 * @return the build {@link ChangeStreamRequest}.
 		 */
-		@Contract("_ -> new")
+		@Contract("-> new")
 		public TailableCursorRequest<T> build() {
 
 			Assert.notNull(listener, "MessageListener must not be null");

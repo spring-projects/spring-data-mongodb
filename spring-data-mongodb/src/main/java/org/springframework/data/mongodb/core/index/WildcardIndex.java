@@ -115,7 +115,7 @@ public class WildcardIndex extends Index {
 	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
-	@Contract("-> fail")
+	@Contract("_ -> fail")
 	public Index expire(long seconds) {
 		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'");
 	}

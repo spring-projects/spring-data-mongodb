@@ -133,7 +133,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 	}
 
 	@Override
-	@Contract("_, _, _ -> this")
+	@Contract("_, _ -> this")
 	public ReactiveBulkOperations updateOne(Query query, UpdateDefinition update) {
 
 		Assert.notNull(query, "Query must not be null");

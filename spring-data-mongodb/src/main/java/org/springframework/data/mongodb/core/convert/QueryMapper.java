@@ -1595,7 +1595,8 @@ public class QueryMapper {
 	 *
 	 * @author Oliver Gierke
 	 */
-	protected static class AssociationConverter implements Converter<MongoPersistentProperty, String> {
+	@SuppressWarnings("NullAway")
+	protected static class AssociationConverter implements Converter<MongoPersistentProperty, @Nullable String> {
 
 		private final String name;
 		private final MongoPersistentProperty property;
@@ -1614,7 +1615,7 @@ public class QueryMapper {
 		}
 
 		@Override
-		public @Nullable String convert(MongoPersistentProperty source) {
+		public String convert(MongoPersistentProperty source) {
 
 			if (associationFound) {
 				return null;
