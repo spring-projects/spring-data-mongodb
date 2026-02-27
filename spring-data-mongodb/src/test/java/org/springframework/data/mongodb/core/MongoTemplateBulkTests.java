@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,9 +25,10 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.bulk.Bulk;
-import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -42,19 +43,21 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 
 /**
+ * Integration tests for {@link Bulk}.
+ *
  * @author Christoph Strobl
- * @since 2026/02
+ * @author Mark Paluch
  */
 @EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
-public class MongoTemplateBulkTests {
+class MongoTemplateBulkTests {
 
-	@Client static MongoClient mongoClient;
+	@Client private static MongoClient mongoClient;
 
 	@Template(initialEntitySet = { BaseDoc.class, SpecialDoc.class }) //
-	static MongoTestTemplate operations;
+	private static MongoTestTemplate operations;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		operations.flushDatabase();
 	}
 
@@ -72,12 +75,11 @@ public class MongoTemplateBulkTests {
 		doc2.value = "value-doc2";
 
 		Bulk bulk = Bulk
-				.create(
-						builder -> builder
+				.create(builder -> builder
 								.inCollection(BaseDoc.class,
 										ops -> ops.insert(doc1).insert(doc2).upsert(where("_id").is("id-doc3"),
 												new Update().set("value", "upserted")))
-								.inCollection(SpecialDoc.class).insert(new SpecialDoc()));
+						.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())));
 
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -97,7 +99,7 @@ public class MongoTemplateBulkTests {
 		specialDoc.value = "value-special";
 
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc2))
-				.inCollection(SpecialDoc.class).insert(specialDoc).build();
+				.inCollection(SpecialDoc.class, it -> it.insert(specialDoc)).build();
 		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.insertCount()).isEqualTo(3);
@@ -113,7 +115,7 @@ public class MongoTemplateBulkTests {
 
 		BaseDoc doc1 = newDoc("1");
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc1))
-				.inCollection(SpecialDoc.class).insert(new SpecialDoc()).build();
+				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())).build();
 
 		assertThatThrownBy(() -> operations.bulkWrite(bulk, BulkWriteOptions.ordered())) //
 				// .isInstanceOf(BulkOperationException.class) // TODO
@@ -141,7 +143,7 @@ public class MongoTemplateBulkTests {
 		specialDoc.id = "id-special";
 
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc2))
-				.inCollection(SpecialDoc.class).insert(specialDoc).build();
+				.inCollection(SpecialDoc.class, it -> it.insert(specialDoc)).build();
 		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.unordered());
 
 		assertThat(result.insertCount()).isEqualTo(3);
@@ -156,7 +158,7 @@ public class MongoTemplateBulkTests {
 
 		BaseDoc doc1 = newDoc("1");
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc1))
-				.inCollection(SpecialDoc.class).insert(new SpecialDoc()).build();
+				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())).build();
 
 		assertThatThrownBy(() -> operations.bulkWrite(bulk, BulkWriteOptions.unordered())) //
 				// .isInstanceOf(BulkOperationException.class) // TODO
@@ -189,6 +191,28 @@ public class MongoTemplateBulkTests {
 		Bulk bulk = Bulk.builder()
 				.inCollection(BaseDoc.class, ops -> updatesBase.forEach(p -> ops.updateOne(p.getFirst(), p.getSecond())))
 				.inCollection(SpecialDoc.class, ops -> updatesSpecial.forEach(p -> ops.updateOne(p.getFirst(), p.getSecond())))
+				.build();
+		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+
+		assertThat(result.modifiedCount()).isEqualTo(2);
+
+		Long baseWithValue3 = operations.execute(BaseDoc.class, col -> col.countDocuments(new Document("value", "value3")));
+		Long specialWithValue3 = operations.execute(SpecialDoc.class,
+				col -> col.countDocuments(new Document("value", "value3")));
+		assertThat(baseWithValue3).isEqualTo(1L);
+		assertThat(specialWithValue3).isEqualTo(1L);
+	}
+
+	@Test // GH-5087
+	void updateOneObject() {
+
+		insertSomeDocumentsIntoBaseDoc();
+		insertSomeDocumentsIntoSpecialDoc();
+
+		Bulk bulk = Bulk.builder()
+				.inCollection(BaseDoc.class, ops -> ops.replaceIfExists(queryWhere("value", "value1"), new BaseDoc("value3")))
+				.inCollection(SpecialDoc.class,
+						ops -> ops.replaceIfExists(queryWhere("value", "value2"), new SpecialDoc("value3")))
 				.build();
 		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -340,8 +364,8 @@ public class MongoTemplateBulkTests {
 		doc2.value = "v2";
 
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class,
-				ops -> ops.insert(doc1).updateOne(queryWhere("_id", "1"), set("value", "v2")).remove(queryWhere("value", "v2")))
-				.inCollection(SpecialDoc.class).insert(doc2).build();
+				ops -> ops.insert(doc1).updateOne(queryWhere("_id", "1"), set("value", "v2")).remove(queryWhere("value", "v2"))) //
+				.inCollection(SpecialDoc.class, it -> it.insert(doc2)).build();
 		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.insertCount()).isEqualTo(2);
@@ -370,7 +394,7 @@ public class MongoTemplateBulkTests {
 			ops.insertAll(insertsBase);
 			updatesBase.forEach(p -> ops.updateMulti(p.getFirst(), p.getSecond()));
 			removesBase.forEach(ops::remove);
-		}).inCollection(SpecialDoc.class).insert(specialDoc).build();
+		}).inCollection(SpecialDoc.class, it -> it.insert(specialDoc)).build();
 		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		assertThat(result.insertCount()).isEqualTo(4);
@@ -391,7 +415,7 @@ public class MongoTemplateBulkTests {
 		specialDoc.value = "normal-value";
 		specialDoc.specialValue = "special-value";
 
-		Bulk bulk = Bulk.builder().inCollection(SpecialDoc.class).insert(specialDoc).build();
+		Bulk bulk = Bulk.builder().inCollection(SpecialDoc.class, it -> it.insert(specialDoc)).build();
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
 		BaseDoc doc = operations.findOne(queryWhere("_id", specialDoc.id), BaseDoc.class,
@@ -407,7 +431,7 @@ public class MongoTemplateBulkTests {
 		mongoClient.getDatabase("bulk-ops-db-2").drop();
 		mongoClient.getDatabase("bulk-ops-db-3").drop();
 
-		Bulk bulk = Bulk.builder().inCollection("c1").insert(newDoc("c1-id-1", "v1")).build();
+		Bulk bulk = Bulk.builder().inCollection("c1", it -> it.insert(newDoc("c1-id-1", "v1"))).build();
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 		mongoClient.getDatabase("bulk-ops-db-2").getCollection("c1").insertOne(rawDoc("c1-id-1", "v1"));
 		mongoClient.getDatabase("bulk-ops-db-3").getCollection("c1").insertOne(rawDoc("c1-id-1", "v1"));

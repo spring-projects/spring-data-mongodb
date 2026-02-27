@@ -31,7 +31,7 @@ public interface BulkWriteResult {
 	 * Creates a {@link BulkWriteResult} from a MongoDB driver {@link ClientBulkWriteResult}.
 	 *
 	 * @param result the driver result; must not be {@literal null}.
-	 * @return a new {@link BulkWriteResult} wrapping the given result; never {@literal null}.
+	 * @return a new {@link BulkWriteResult} wrapping the given result.
 	 */
 	static BulkWriteResult from(ClientBulkWriteResult result) {
 
@@ -72,7 +72,7 @@ public interface BulkWriteResult {
 	 * Creates a {@link BulkWriteResult} from a MongoDB driver {@link com.mongodb.bulk.BulkWriteResult}.
 	 *
 	 * @param result the driver result; must not be {@literal null}.
-	 * @return a new {@link BulkWriteResult} wrapping the given result; never {@literal null}.
+	 * @return a new {@link BulkWriteResult} wrapping the given result.
 	 */
 	static BulkWriteResult from(com.mongodb.bulk.BulkWriteResult result) {
 		return new BulkWriteResult() {

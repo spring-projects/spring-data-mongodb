@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import com.mongodb.reactivestreams.client.MongoCluster;
-import org.springframework.data.mongodb.MongoClusterCapable;
-import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -50,6 +47,7 @@ import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -73,6 +71,7 @@ import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.ReactiveMongoClusterCapable;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
@@ -81,8 +80,6 @@ import org.springframework.data.mongodb.core.CollectionPreparerSupport.ReactiveC
 import org.springframework.data.mongodb.core.DefaultReactiveBulkOperations.ReactiveBulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
-import org.springframework.data.mongodb.core.bulk.Bulk;
-import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
@@ -99,6 +96,9 @@ import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.bulk.Bulk;
+import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -161,6 +161,7 @@ import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCluster;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
@@ -406,7 +407,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		eventDelegate.setPublisher(this.eventPublisher);
 	}
 
-
 	/**
 	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking
 	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the
@@ -502,6 +502,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return this.mongoConverter;
 	}
 
+	EntityOperations getEntityOperations() {
+		return operations;
+	}
+
+	QueryOperations getQueryOperations() {
+		return queryOperations;
+	}
+
 	@Override
 	public ReactiveIndexOperations indexOps(String collectionName) {
 		return new DefaultReactiveIndexOperations(this, collectionName, this.queryMapper);
@@ -555,6 +563,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(callback, "ReactiveCollectionCallback must not be null");
 
 		return createFlux(collectionName, callback);
+	}
+
+	<T> Mono<T> doWithCluster(Function<MongoCluster, Publisher<T>> callback) {
+
+		if (!(mongoDatabaseFactory instanceof ReactiveMongoClusterCapable clusterCapable)) {
+			return Mono.error(new IllegalStateException(
+					"Unable to obtain MongoCluster. Does your database factory implement ReactiveMongoClusterCapable?"));
+		}
+
+		return Mono.from(callback.apply(clusterCapable.getMongoCluster())).onErrorMap(translateException());
 	}
 
 	@Override
@@ -675,6 +693,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return collectionPublisher.flatMap(collection -> Mono.from(callback.doInCollection(collection)))
 				.onErrorMap(translateException());
+	}
+
+	@Override
+	public Mono<BulkWriteResult> bulkWrite(Bulk bulk, BulkWriteOptions options) {
+		return doGetDatabase().flatMap(db -> new ReactiveBulkWriter(this).write(db.getName(), bulk, options));
 	}
 
 	@Override
@@ -829,27 +852,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return ReactiveMongoDatabaseUtils.getDatabase(mongoDatabaseFactory, sessionSynchronization);
 	}
 
-	<T> Mono<T> doWithClient(Function<MongoCluster, Publisher<T>> callback) {
-
-		if (!(mongoDatabaseFactory instanceof MongoClusterCapable<?> clientAware)) {
-			return Mono.error(new IllegalStateException(
-					"Unable to obtain MongoCluster. Does your database factory implement MongoClusterCapable?"));
-		}
-
-		return Mono.from(callback.apply((MongoCluster) clientAware.getMongoCluster())).onErrorMap(translateException());
-	}
-
-	@Override
-	public Mono<BulkWriteResult> bulkWrite(Bulk bulk, BulkWriteOptions options) {
-
-		return doGetDatabase().flatMap(db -> new ReactiveBulkWriter(this).write(db.getName(), bulk, options));
-	}
-
-	public record SourceAwareDocument<T>(T source, Document document, String collectionName) {
+	<T> Mono<SourceAwareDocument<T>> prepareObjectForSaveReactive(String collectionName, T objectToSave) {
+		return prepareObjectForSaveReactive(collectionName, objectToSave, mongoConverter);
 	}
 
 	<T> Mono<SourceAwareDocument<T>> prepareObjectForSaveReactive(String collectionName, T objectToSave,
-			MongoWriter<T> writer) {
+			MongoWriter<? super Object> writer) {
 
 		T toConvert = maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName)).getSource();
 		return maybeCallBeforeConvert(toConvert, collectionName).map(initialized -> {
@@ -861,10 +869,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return new Object[] { withVersion, dbDoc };
 		}).flatMap(pair -> maybeCallBeforeSave((T) pair[0], (Document) pair[1], collectionName)
 				.map(saved -> new SourceAwareDocument<>(saved, (Document) pair[1], collectionName)));
-	}
-
-	QueryOperations getQueryOperations() {
-		return queryOperations;
 	}
 
 	@Override
@@ -1365,7 +1369,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return createMono(collectionName, collection -> {
 
 			CountContext countContext = queryOperations.countQueryContext(query);
-
 			CountOptions options = countContext.getCountOptions(entityClass);
 			Document filter = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
 
@@ -1806,7 +1809,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				}
 
 				publisher = deferredFilter.flatMapMany(
-						it -> collectionToUse.replaceOne(it, replacement, updateContext.getReplaceOptions(entityClass)));
+						it -> collectionToUse.replaceOne(it, replacement, updateContext.getReplaceOptions(entity)));
 			}
 
 			return Mono.from(publisher).map(o -> mapped.getId());
@@ -1829,10 +1832,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doUpdate(collectionName, query, update, entityClass, true, false);
 	}
 
-	/*
-	 * (non-Javadoc))
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateFirst(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class)
-	 */
 	@Override
 	public Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, false);
@@ -1876,7 +1875,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		updateContext.increaseVersionForUpdateIfNecessary(entity);
 
 		Document queryObj = updateContext.getMappedQuery(entity);
-		UpdateOptions updateOptions = updateContext.getUpdateOptions(entityClass, query);
+		UpdateOptions updateOptions = updateContext.getUpdateOptions(entity, query);
 
 		Flux<UpdateResult> result;
 
@@ -1932,7 +1931,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						deferredFilter = Mono.just(filter);
 					}
 
-					com.mongodb.client.model.ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
+					com.mongodb.client.model.ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entity);
 					return deferredFilter.flatMap(it -> Mono.from(collectionToUse.replaceOne(it, updateObj, replaceOptions)));
 				}
 
@@ -2020,7 +2019,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		DeleteContext deleteContext = queryOperations.deleteQueryContext(query);
 		Document queryObject = deleteContext.getMappedQuery(entity);
-		DeleteOptions deleteOptions = deleteContext.getDeleteOptions(entityClass);
+		DeleteOptions deleteOptions = deleteContext.getDeleteOptions(entity);
 		Document removeQuery = deleteContext.getMappedQuery(entity);
 		MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName, entityClass,
 				null, removeQuery);
@@ -2112,7 +2111,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			MongoCollection<Document> collectionToUse = createCollectionPreparer(query, action).prepare(collection);
 
 			return collectionToUse.replaceOne(updateContext.getMappedQuery(entity), mappedUpdate,
-					updateContext.getReplaceOptions(entityType, it -> {
+					updateContext.getReplaceOptions(entity, it -> {
 						it.upsert(options.isUpsert());
 					}));
 		});

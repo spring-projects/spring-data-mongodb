@@ -15,12 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -31,8 +27,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.AopProxyUtils;
-import org.springframework.data.mongodb.MongoClusterCapable;
+import org.springframework.data.mongodb.ReactiveMongoClusterCapable;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -46,6 +43,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Mark Paluch
  * @author Mathieu Ouellet
+ * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
 class SimpleReactiveMongoDatabaseFactoryUnitTests {
@@ -76,8 +74,8 @@ class SimpleReactiveMongoDatabaseFactoryUnitTests {
 		ReactiveMongoDatabaseFactory factory = ReactiveMongoDatabaseFactory.create(mongoClient, "foo");
 		ReactiveMongoDatabaseFactory wrapped = factory.withSession(clientSession);
 
-		assertThat(wrapped).asInstanceOf(InstanceOfAssertFactories.type(MongoClusterCapable.class))
-				.extracting(MongoClusterCapable::getMongoCluster).isInstanceOf(Proxy.class)
+		assertThat(wrapped).asInstanceOf(InstanceOfAssertFactories.type(ReactiveMongoClusterCapable.class))
+				.extracting(ReactiveMongoClusterCapable::getMongoCluster).isInstanceOf(Proxy.class)
 				.asInstanceOf(InstanceOfAssertFactories.type(MongoCluster.class)).satisfies(cluster -> {
 					cluster.bulkWrite(List.of());
 					verify(mongoClient).bulkWrite(eq(clientSession), any());

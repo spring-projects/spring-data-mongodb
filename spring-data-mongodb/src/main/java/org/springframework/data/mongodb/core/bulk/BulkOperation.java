@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 /**
- * A single operation (insert, update, replace, or remove) within a {@link Bulk} . Each operation has a
+ * A single operation (insert, update, replace, or remove) within a {@link Bulk}. Each operation has a
  * {@link #context()} that provides the target namespace (database and collection).
  *
  * @author Christoph Strobl
@@ -30,7 +30,7 @@ public interface BulkOperation {
 	/**
 	 * Returns the context for this operation.
 	 *
-	 * @return the {@link BulkOperationContext}; never {@literal null}.
+	 * @return the {@link BulkOperationContext}.
 	 */
 	BulkOperationContext context();
 
@@ -42,9 +42,10 @@ public interface BulkOperation {
 		/**
 		 * Returns the document to insert.
 		 *
-		 * @return the document; never {@literal null}.
+		 * @return the document.
 		 */
 		Object value();
+
 	}
 
 	/**
@@ -55,14 +56,14 @@ public interface BulkOperation {
 		/**
 		 * Returns the update definition to apply.
 		 *
-		 * @return the update; never {@literal null}.
+		 * @return the update.
 		 */
 		UpdateDefinition update();
 
 		/**
 		 * Returns the query that selects which documents to update.
 		 *
-		 * @return the query; never {@literal null}.
+		 * @return the query.
 		 */
 		Query query();
 
@@ -72,24 +73,31 @@ public interface BulkOperation {
 		 * @return {@literal true} for upsert.
 		 */
 		boolean upsert();
+
 	}
 
-	/** Update-one operation: update the first document matching the {@link #query()}. */
+	/**
+	 * Update-one operation: update the first document matching the {@link #query()}.
+	 */
 	interface UpdateFirst extends Update {}
 
 	/**
 	 * Remove operation: delete documents matching the {@link #query()}.
 	 */
 	interface Remove extends BulkOperation {
+
 		/**
 		 * Returns the query that selects which documents to remove.
 		 *
-		 * @return the query; never {@literal null}.
+		 * @return the query.
 		 */
 		Query query();
+
 	}
 
-	/** Remove-one operation: delete the first document matching the {@link #query()}. */
+	/**
+	 * Remove-one operation: delete the first document matching the {@link #query()}.
+	 */
 	interface RemoveFirst extends Remove {}
 
 	/**
@@ -100,14 +108,14 @@ public interface BulkOperation {
 		/**
 		 * Returns the query that selects the document to replace.
 		 *
-		 * @return the query; never {@literal null}.
+		 * @return the query.
 		 */
 		Query query();
 
 		/**
 		 * Returns the replacement document.
 		 *
-		 * @return the replacement; never {@literal null}.
+		 * @return the replacement.
 		 */
 		Object replacement();
 
@@ -117,5 +125,7 @@ public interface BulkOperation {
 		 * @return {@literal true} for upsert.
 		 */
 		boolean upsert();
+
 	}
+
 }

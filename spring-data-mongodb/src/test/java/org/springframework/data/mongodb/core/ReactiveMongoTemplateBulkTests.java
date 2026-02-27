@@ -15,8 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +27,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,20 +43,17 @@ import com.mongodb.ClientBulkWriteException;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
 /**
  * Reactive integration tests for {@link ReactiveMongoOperations#bulkWrite}.
  *
  * @author Christoph Strobl
  */
 @EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
-public class ReactiveMongoTemplateBulkTests {
+class ReactiveMongoTemplateBulkTests {
 
-	@Client static MongoClient mongoClient;
+	@Client private static MongoClient mongoClient;
 
-	@Template(initialEntitySet = { BaseDoc.class, SpecialDoc.class }) static ReactiveMongoTestTemplate operations;
+	@Template(initialEntitySet = { BaseDoc.class, SpecialDoc.class }) private static ReactiveMongoTestTemplate operations;
 
 	@BeforeEach
 	void setUp() {
@@ -71,9 +72,11 @@ public class ReactiveMongoTemplateBulkTests {
 		doc2.id = "id-doc2";
 		doc2.value = "value-doc2";
 
-		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class,
-				ops -> ops.insert(doc1).insert(doc2).upsert(where("_id").is("id-doc3"), new Update().set("value", "upserted")))
-				.inCollection(SpecialDoc.class).insert(new SpecialDoc()).build();
+		Bulk bulk = Bulk.create(builder -> builder
+				.inCollection(BaseDoc.class,
+						ops -> ops.insert(doc1).insert(doc2).upsert(where("_id").is("id-doc3"),
+								new Update().set("value", "upserted")))
+				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())));
 
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -92,8 +95,8 @@ public class ReactiveMongoTemplateBulkTests {
 		specialDoc.id = "id-special";
 		specialDoc.value = "value-special";
 
-		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, o -> o.insert(doc1).insert(doc2))
-				.inCollection(SpecialDoc.class).insert(specialDoc).build();
+		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc2))
+				.inCollection(SpecialDoc.class, it -> it.insert(specialDoc)).build();
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(StepVerifier::create)
 				.expectNextMatches(result -> result.insertCount() == 3).verifyComplete();
 
@@ -107,8 +110,8 @@ public class ReactiveMongoTemplateBulkTests {
 	void insertOrderedFailsStopsAtDuplicateInCollection() {
 
 		BaseDoc doc1 = newDoc("1");
-		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, o -> o.insert(doc1).insert(doc1))
-				.inCollection(SpecialDoc.class).insert(new SpecialDoc()).build();
+		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc1))
+				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())).build();
 
 		StepVerifier.create(operations.bulkWrite(bulk, BulkWriteOptions.ordered())).expectErrorMatches(throwable -> {
 			if (!(throwable.getCause() instanceof ClientBulkWriteException))
@@ -134,8 +137,8 @@ public class ReactiveMongoTemplateBulkTests {
 		SpecialDoc specialDoc = new SpecialDoc();
 		specialDoc.id = "id-special";
 
-		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, o -> o.insert(doc1).insert(doc2))
-				.inCollection(SpecialDoc.class).insert(specialDoc).build();
+		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc2))
+				.inCollection(SpecialDoc.class, it -> it.insert(specialDoc)).build();
 		operations.bulkWrite(bulk, BulkWriteOptions.unordered()).as(StepVerifier::create).expectNextMatches(result -> result.insertCount() == 3)
 				.verifyComplete();
 
@@ -149,8 +152,8 @@ public class ReactiveMongoTemplateBulkTests {
 	void insertUnOrderedContinuesOnErrorInOneCollection() {
 
 		BaseDoc doc1 = newDoc("1");
-		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, o -> o.insert(doc1).insert(doc1))
-				.inCollection(SpecialDoc.class).insert(new SpecialDoc()).build();
+		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class, ops -> ops.insert(doc1).insert(doc1))
+				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())).build();
 
 		StepVerifier.create(operations.bulkWrite(bulk, BulkWriteOptions.unordered())).expectErrorMatches(throwable -> {
 			if (!(throwable.getCause() instanceof ClientBulkWriteException))
@@ -180,8 +183,8 @@ public class ReactiveMongoTemplateBulkTests {
 				.asList(Pair.of(queryWhere("value", "value1"), set("value", "value3")));
 
 		Bulk bulk = Bulk.builder()
-				.inCollection(BaseDoc.class, o -> updatesBase.forEach(p -> o.updateOne(p.getFirst(), p.getSecond())))
-				.inCollection(SpecialDoc.class, o -> updatesSpecial.forEach(p -> o.updateOne(p.getFirst(), p.getSecond())))
+				.inCollection(BaseDoc.class, ops -> updatesBase.forEach(p -> ops.updateOne(p.getFirst(), p.getSecond())))
+				.inCollection(SpecialDoc.class, ops -> updatesSpecial.forEach(p -> ops.updateOne(p.getFirst(), p.getSecond())))
 				.build();
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(StepVerifier::create)
 				.expectNextMatches(result -> result.modifiedCount() == 2).verifyComplete();
@@ -323,10 +326,9 @@ public class ReactiveMongoTemplateBulkTests {
 		doc2.id = "2";
 		doc2.value = "v2";
 
-		Bulk bulk = Bulk.builder()
-				.inCollection(BaseDoc.class,
-						o -> o.insert(doc1).updateOne(queryWhere("_id", "1"), set("value", "v2")).remove(queryWhere("value", "v2")))
-				.inCollection(SpecialDoc.class).insert(doc2).build();
+		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class,
+				ops -> ops.insert(doc1).updateOne(queryWhere("_id", "1"), set("value", "v2")).remove(queryWhere("value", "v2"))) //
+				.inCollection(SpecialDoc.class, it -> it.insert(doc2)).build();
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(StepVerifier::create)
 				.expectNextMatches(
 						result -> result.insertCount() == 2 && result.modifiedCount() == 1 && result.deleteCount() == 1)
@@ -354,7 +356,7 @@ public class ReactiveMongoTemplateBulkTests {
 			o.insertAll(insertsBase);
 			updatesBase.forEach(p -> o.updateMulti(p.getFirst(), p.getSecond()));
 			removesBase.forEach(o::remove);
-		}).inCollection(SpecialDoc.class).insert(specialDoc).build();
+		}).inCollection(SpecialDoc.class, it -> it.insert(specialDoc)).build();
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(StepVerifier::create)
 				.expectNextMatches(
 						result -> result.insertCount() == 4 && result.modifiedCount() == 2 && result.deleteCount() == 1)
@@ -374,7 +376,7 @@ public class ReactiveMongoTemplateBulkTests {
 		specialDoc.value = "normal-value";
 		specialDoc.specialValue = "special-value";
 
-		Bulk bulk = Bulk.builder().inCollection(SpecialDoc.class).insert(specialDoc).build();
+		Bulk bulk = Bulk.builder().inCollection(SpecialDoc.class, it -> it.insert(specialDoc)).build();
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		operations.findOne(queryWhere("_id", specialDoc.id), BaseDoc.class, operations.getCollectionName(SpecialDoc.class))
@@ -389,7 +391,7 @@ public class ReactiveMongoTemplateBulkTests {
 		Mono.from(mongoClient.getDatabase("bulk-ops-db-2").drop()).block();
 		Mono.from(mongoClient.getDatabase("bulk-ops-db-3").drop()).block();
 
-		Bulk bulk = Bulk.builder().inCollection("c1").insert(newDoc("c1-id-1", "v1")).build();
+		Bulk bulk = Bulk.builder().inCollection("c1", it -> it.insert(newDoc("c1-id-1", "v1"))).build();
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		Mono.from(mongoClient.getDatabase("bulk-ops-db-2").getCollection("c1").insertOne(rawDoc("c1-id-1", "v1"))).block();
 		Mono.from(mongoClient.getDatabase("bulk-ops-db-3").getCollection("c1").insertOne(rawDoc("c1-id-1", "v1"))).block();

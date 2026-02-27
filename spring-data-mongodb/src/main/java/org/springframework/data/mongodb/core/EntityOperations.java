@@ -220,6 +220,11 @@ public class EntityOperations {
 					"No class parameter provided, entity collection can't be determined");
 		}
 
+		return getRequiredPersistentEntity(entityClass).getCollection();
+	}
+
+	MongoPersistentEntity<?> getRequiredPersistentEntity(Class<?> entityClass) {
+
 		MongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(entityClass);
 
 		if (persistentEntity == null) {
@@ -227,7 +232,7 @@ public class EntityOperations {
 					"Cannot determine collection name from type '%s'. Is it a store native type?", entityClass.getName()));
 		}
 
-		return persistentEntity.getCollection();
+		return persistentEntity;
 	}
 
 	public Query getByIdInQuery(Collection<?> entities) {
@@ -309,11 +314,16 @@ public class EntityOperations {
 		if (entityClass != null) {
 
 			MongoPersistentEntity<?> entity = context.getPersistentEntity(entityClass);
+			return forType(entity);
+		}
 
-			if (entity != null) {
-				return new TypedEntityOperations(entity, environment);
-			}
+		return UntypedOperations.instance();
+	}
 
+	public <T> TypedOperations<T> forType(@Nullable MongoPersistentEntity<?> entity) {
+
+		if (entity != null) {
+			return new TypedEntityOperations(entity, environment);
 		}
 		return UntypedOperations.instance();
 	}

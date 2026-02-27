@@ -91,6 +91,32 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		this.lookupPolicy = lookupPolicy;
 	}
 
+	/**
+	 * Creates a new {@link TypeBasedAggregationOperationContext} for the given type, {@link MappingContext} and
+	 * {@link QueryMapper}.
+	 *
+	 * @param persistentEntity must not be {@literal null}.
+	 * @param mappingContext must not be {@literal null}.
+	 * @param mapper must not be {@literal null}.
+	 * @param lookupPolicy must not be {@literal null}.
+	 * @since 5.1
+	 */
+	public TypeBasedAggregationOperationContext(MongoPersistentEntity<?> persistentEntity,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, QueryMapper mapper,
+			FieldLookupPolicy lookupPolicy) {
+
+		Assert.notNull(persistentEntity, "Type must not be null");
+		Assert.notNull(mappingContext, "MappingContext must not be null");
+		Assert.notNull(mapper, "QueryMapper must not be null");
+		Assert.notNull(lookupPolicy, "FieldLookupPolicy must not be null");
+
+		this.type = persistentEntity.getType();
+		this.mappingContext = mappingContext;
+		this.mapper = mapper;
+		this.entity = Lazy.of(() -> persistentEntity);
+		this.lookupPolicy = lookupPolicy;
+	}
+
 	@Override
 	public Document getMappedObject(Document document) {
 		return getMappedObject(document, type);

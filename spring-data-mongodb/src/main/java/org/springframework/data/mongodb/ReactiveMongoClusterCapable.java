@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
-import com.mongodb.client.MongoCluster;
+import com.mongodb.reactivestreams.client.MongoCluster;
 
 /**
  * Interface that can provide access to a MongoDB cluster.
@@ -23,10 +23,10 @@ import com.mongodb.client.MongoCluster;
  * @author Christoph Strobl
  * @since 5.1
  */
-public interface MongoClusterCapable {
+public interface ReactiveMongoClusterCapable {
 
 	/**
-	 * Return the {@link com.mongodb.client.MongoCluster} associated with this component.
+	 * Return the {@link MongoCluster} associated with this component.
 	 */
 	MongoCluster getMongoCluster();
 

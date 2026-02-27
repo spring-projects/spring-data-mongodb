@@ -15,13 +15,9 @@
  */
 package org.springframework.data.mongodb.core.bulk;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.springframework.data.mongodb.core.bulk.Bulk.BulkBuilder;
-import org.springframework.data.mongodb.core.bulk.Bulk.BulkBuilderBase;
-import org.springframework.data.mongodb.core.bulk.Bulk.NamespaceBoundBulkBuilder;
 import org.springframework.data.mongodb.core.bulk.BulkOperation.RemoveFirst;
 import org.springframework.data.mongodb.core.bulk.BulkOperation.UpdateFirst;
 import org.springframework.data.mongodb.core.bulk.BulkOperationContext.TypedNamespace;
@@ -29,120 +25,80 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 /**
- * Default implementation of {@link BulkBuilder} and {@link Bulk.NamespaceBoundBulkBuilder} that tracks the current
- * collection (namespace) and builds a list of {@link BulkOperation bulk operations} for execution. Supports bulk
- * writes across multiple collections as in MongoDB's bulk write model.
+ * Default implementation of {@link BulkBuilder} and {@link TypedBulkBuilder} that tracks the current collection
+ * (namespace) and builds a list of {@link BulkOperation bulk operations} for execution. Supports bulk writes across
+ * multiple collections as in MongoDB's bulk write model.
  *
  * @author Christoph Strobl
  * @since 5.1
  */
-class NamespaceAwareBulkBuilder<T> implements BulkBuilder, NamespaceBoundBulkBuilder<T> {
+abstract class BulkBuilderSupport implements Bulk.BulkSpec {
 
-	TypedNamespace namespace;
-	List<BulkOperation> bulkOperations = new ArrayList<>();
+	final List<BulkOperation> bulkOperations;
+
+	public BulkBuilderSupport(List<BulkOperation> bulkOperations) {
+		this.bulkOperations = bulkOperations;
+	}
+
+	abstract TypedNamespace getNamespace();
 
 	@Override
-	public NamespaceBoundBulkBuilder<T> insert(T object) {
-		bulkOperations.add(new BulkInsert(object, namespace));
+	public Bulk.BulkSpec insert(Object object) {
+		bulkOperations.add(new BulkInsert(object, getNamespace()));
 		return this;
 	}
 
 	@Override
-	public NamespaceBoundBulkBuilder<T> insertAll(Iterable<? extends T> objects) {
+	public Bulk.BulkSpec insertAll(Iterable<? extends Object> objects) {
 		objects.forEach(this::insert);
 		return this;
 	}
 
 	@Override
-	public NamespaceBoundBulkBuilder<T> updateOne(Query filter, UpdateDefinition update) {
-		bulkOperations.add(new BulkUpdateFirst(filter, update, false, namespace));
+	public Bulk.BulkSpec updateOne(Query filter, UpdateDefinition update) {
+		bulkOperations.add(new BulkUpdateFirst(filter, update, false, getNamespace()));
 		return this;
 	}
 
 	@Override
-	public NamespaceBoundBulkBuilder<T> updateMulti(Query filter, UpdateDefinition update) {
-		bulkOperations.add(new BulkUpdate(filter, update, false, namespace));
+	public Bulk.BulkSpec updateMulti(Query filter, UpdateDefinition update) {
+		bulkOperations.add(new BulkUpdate(filter, update, false, getNamespace()));
 		return this;
 	}
 
 	@Override
-	public NamespaceBoundBulkBuilder<T> upsert(Query filter, UpdateDefinition update) {
-		bulkOperations.add(new BulkUpdate(filter, update, true, namespace));
+	public Bulk.BulkSpec upsert(Query filter, UpdateDefinition update) {
+		bulkOperations.add(new BulkUpdate(filter, update, true, getNamespace()));
 		return this;
 	}
 
 	@Override
-	public NamespaceBoundBulkBuilder<T> remove(Query filter) {
-		bulkOperations.add(new BulkRemove(filter, namespace));
+	public Bulk.BulkSpec remove(Query filter) {
+		bulkOperations.add(new BulkRemove(filter, getNamespace()));
 		return this;
 	}
 
 	@Override
-	public NamespaceBoundBulkBuilder<T> replaceOne(Query filter, Object replacement) {
-		bulkOperations.add(new BulkReplace(filter, replacement, true, namespace));
+	public Bulk.BulkSpec replaceOne(Query filter, Object replacement) {
+		bulkOperations.add(new BulkReplace(filter, replacement, true, getNamespace()));
 		return this;
 	}
 
 	@Override
-	public NamespaceBoundBulkBuilder<T> replaceIfExists(Query filter, Object replacement) {
-		bulkOperations.add(new BulkReplace(filter, replacement, false, namespace));
-		return this;
-	}
-
-	@Override
-	public BulkBuilder inCollection(String collectionName, Consumer<BulkBuilderBase<Object>> scoped) {
-
-		TypedNamespace currentNamespace = this.namespace;
-
-		NamespaceBoundBulkBuilder<Object> builder = inCollection(collectionName);
-		scoped.accept(builder);
-
-		this.namespace = currentNamespace;
-		return this;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <S> NamespaceBoundBulkBuilder<S> inCollection(Class<S> type) {
-		this.namespace = new TypedNamespace(type, null, null);
-		return (NamespaceBoundBulkBuilder<S>) this;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public NamespaceBoundBulkBuilder<Object> inCollection(String collectionName) {
-		this.namespace = new TypedNamespace(null, null, collectionName);
-		return (NamespaceBoundBulkBuilder<Object>) this;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <S> NamespaceBoundBulkBuilder<S> inCollection(String collectionName, Class<S> type) {
-		this.namespace = new TypedNamespace(type, null, collectionName);
-		return (NamespaceBoundBulkBuilder<S>) this;
-	}
-
-	@Override
-	public Bulk build() {
-		return () -> List.copyOf(NamespaceAwareBulkBuilder.this.bulkOperations);
-	}
-
-	@Override
-	public <S> BulkBuilder inCollection(Class<S> type, Consumer<BulkBuilderBase<S>> scoped) {
-		TypedNamespace currentNamespace = this.namespace;
-
-		NamespaceBoundBulkBuilder<S> builder = inCollection(type);
-		scoped.accept(builder);
-
-		this.namespace = currentNamespace;
+	public Bulk.BulkSpec replaceIfExists(Query filter, Object replacement) {
+		bulkOperations.add(new BulkReplace(filter, replacement, false, getNamespace()));
 		return this;
 	}
 
 	private static class ContextAware {
 
-		protected BulkOperationContext context;
+		protected final BulkOperationContext context;
 
-		public void setContext(BulkOperationContext context) {
+		public ContextAware(TypedNamespace namespace) {
+			this(new DefaultBulkOperationContext(namespace));
+		}
+
+		public ContextAware(BulkOperationContext context) {
 			this.context = context;
 		}
 
@@ -170,9 +126,8 @@ class NamespaceAwareBulkBuilder<T> implements BulkBuilder, NamespaceBoundBulkBui
 		private final Object value;
 
 		public BulkInsert(Object value, TypedNamespace namespace) {
-
+			super(namespace);
 			this.value = value;
-			setContext(new DefaultBulkOperationContext(namespace));
 		}
 
 		@Override
@@ -188,10 +143,11 @@ class NamespaceAwareBulkBuilder<T> implements BulkBuilder, NamespaceBoundBulkBui
 		private final boolean upsert;
 
 		public BulkUpdate(Query query, UpdateDefinition update, boolean upsert, TypedNamespace namespace) {
+
+			super(namespace);
 			this.query = query;
 			this.update = update;
 			this.upsert = upsert;
-			setContext(new DefaultBulkOperationContext(namespace));
 		}
 
 		@Override
@@ -223,8 +179,8 @@ class NamespaceAwareBulkBuilder<T> implements BulkBuilder, NamespaceBoundBulkBui
 		private final Query query;
 
 		public BulkRemove(Query query, TypedNamespace namespace) {
+			super(namespace);
 			this.query = query;
-			setContext(new DefaultBulkOperationContext(namespace));
 		}
 
 		@Override
@@ -247,10 +203,12 @@ class NamespaceAwareBulkBuilder<T> implements BulkBuilder, NamespaceBoundBulkBui
 		private final boolean upsert;
 
 		BulkReplace(Query query, Object replacement, boolean upsert, TypedNamespace namespace) {
+
+			super(namespace);
+
 			this.query = query;
 			this.replacement = replacement;
 			this.upsert = upsert;
-			setContext(new DefaultBulkOperationContext(namespace));
 		}
 
 		@Override

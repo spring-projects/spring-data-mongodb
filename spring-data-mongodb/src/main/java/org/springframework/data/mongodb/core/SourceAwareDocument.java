@@ -1,5 +1,5 @@
 /*
- * Copyright 2026-present the original author or authors.
+ * Copyright 2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
+package org.springframework.data.mongodb.core;
 
-import com.mongodb.client.MongoCluster;
+import org.bson.Document;
 
-/**
- * Interface that can provide access to a MongoDB cluster.
- *
- * @author Christoph Strobl
- * @since 5.1
- */
-public interface MongoClusterCapable {
-
-	/**
-	 * Return the {@link com.mongodb.client.MongoCluster} associated with this component.
-	 */
-	MongoCluster getMongoCluster();
-
+record SourceAwareDocument<T>(T source, Document document, String collectionName) {
 }
