@@ -309,11 +309,16 @@ public class EntityOperations {
 		if (entityClass != null) {
 
 			MongoPersistentEntity<?> entity = context.getPersistentEntity(entityClass);
+			return forType(entity);
+		}
 
-			if (entity != null) {
-				return new TypedEntityOperations(entity, environment);
-			}
+		return UntypedOperations.instance();
+	}
 
+	public <T> TypedOperations<T> forType(@Nullable MongoPersistentEntity<?> entity) {
+
+		if (entity != null) {
+			return new TypedEntityOperations(entity, environment);
 		}
 		return UntypedOperations.instance();
 	}

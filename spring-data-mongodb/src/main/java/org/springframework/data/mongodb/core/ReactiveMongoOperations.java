@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,6 +27,7 @@ import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
+
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.bulk.Bulk;
+import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -163,16 +164,6 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> execute(String collectionName, ReactiveCollectionCallback<T> action);
 
 	/**
-	 * Executes the given {@link Bulk} to perform insert, update, and delete operations on multiple collections (requires
-	 * MongoDB 8.0+).
-	 *
-	 * @param bulk the {@link Bulk} to write.
-	 * @param options additional options applied to the execution.
-	 * @return never {@literal null}.
-	 */
-	Mono<BulkWriteResult> bulkWrite(Bulk bulk, BulkWriteOptions options);
-
-	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
 	 * provided by the given {@link Supplier} to each and every command issued against MongoDB. <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
@@ -225,6 +216,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @since 2.1
 	 */
 	ReactiveMongoOperations withSession(ClientSession session);
+
+	/**
+	 * Executes the given {@link Bulk} to perform insert, update, and delete operations on multiple collections (requires
+	 * MongoDB 8.0+).
+	 *
+	 * @param bulk the {@link Bulk} to write.
+	 * @param options additional options applied to the execution.
+	 * @return never {@literal null}.
+	 */
+	Mono<BulkWriteResult> bulkWrite(Bulk bulk, BulkWriteOptions options);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.

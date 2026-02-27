@@ -34,7 +34,7 @@ import com.mongodb.client.MongoDatabase;
  * @since 3.0
  */
 public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySupport<MongoClient>
-		implements MongoClusterCapable<MongoCluster>, DisposableBean {
+		implements MongoClusterCapable, DisposableBean {
 
 	/**
 	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance for the given {@code connectionString}. Using this
@@ -104,9 +104,9 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 	}
 
 	static class ClientCapableSessionBoundDatabaseFactory extends ClientSessionBoundMongoDbFactory
-			implements MongoClusterCapable<MongoCluster> {
+			implements MongoClusterCapable {
 
-		private MongoClusterCapable<? extends MongoCluster> clusterCapable;
+		private final MongoClusterCapable delegate;
 
 		/**
 		 * Create a new session-bound factory that delegates to the given factory and exposes the cluster via
@@ -117,7 +117,7 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 		 */
 		ClientCapableSessionBoundDatabaseFactory(ClientSession session, SimpleMongoClientDatabaseFactory delegate) {
 			super(session, delegate);
-			this.clusterCapable = delegate;
+			this.delegate = delegate;
 		}
 
 		private MongoCluster proxyMongoCluster(MongoCluster cluster) {
@@ -126,7 +126,7 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 
 		@Override
 		public MongoCluster getMongoCluster() {
-			return proxyMongoCluster(clusterCapable.getMongoCluster());
+			return proxyMongoCluster(delegate.getMongoCluster());
 		}
 	}
 

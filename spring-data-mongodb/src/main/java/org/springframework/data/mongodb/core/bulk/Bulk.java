@@ -22,6 +22,7 @@ import org.springframework.data.mongodb.core.bulk.BulkWriteOptions.Order;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.util.Assert;
 
 /**
  * Container for an ordered list of {@link BulkOperation bulk operations} that modify documents in one or more
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
  * {@link Order#UNORDERED unordered} (possibly parallel, continue on errors).
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 5.1
  */
 public interface Bulk {
@@ -36,19 +38,22 @@ public interface Bulk {
 	/**
 	 * Returns the ordered list of bulk operations to execute.
 	 *
-	 * @return the ordered list of {@link BulkOperation operations}; never {@literal null}.
+	 * @return the ordered list of {@link BulkOperation operations}.
 	 */
 	List<BulkOperation> operations();
 
 	/**
-	 * Creates a new {@link Bulk} by applying the given consumer to a fresh {@link BulkBuilder}.
+	 * Creates a new {@link Bulk} by applying the given builder customizer to a fresh {@link BulkBuilder}.
 	 *
-	 * @param consumer the consumer that configures the builder with operations; must not be {@literal null}.
-	 * @return a new {@link Bulk} instance; never {@literal null}.
+	 * @param builderCustomizer the customizer that configures the builder with operations.
+	 * @return a new {@link Bulk} instance.
 	 */
-	static Bulk create(Consumer<BulkBuilder> consumer) {
+	static Bulk create(Consumer<BulkBuilder> builderCustomizer) {
+
+		Assert.notNull(builderCustomizer, "Bulk builderCustomizer must not be null");
+
 		BulkBuilder bulkBuilder = Bulk.builder();
-		consumer.accept(bulkBuilder);
+		builderCustomizer.accept(bulkBuilder);
 		return bulkBuilder.build();
 	}
 
@@ -57,15 +62,15 @@ public interface Bulk {
 	 *
 	 * <pre class="code">
 	 * Bulk bulk = Bulk.builder()
-	 *     .inCollection(Person.class).insert(p1).upsert(where(....
-	 *     .inCollection("user").update(where(...
+	 *     .inCollection(Person.class, it -&gt; it..insert(p1).upsert(where(...)))
+	 *     .inCollection("user", it -&gt; it.update(where(...), ...)
 	 *     .build();
 	 * </pre>
 	 *
-	 * @return a new {@link BulkBuilder}; never {@literal null}.
+	 * @return a new {@link BulkBuilder}.
 	 */
 	static BulkBuilder builder() {
-		return new NamespaceAwareBulkBuilder<>();
+		return new DefaultBulkBuilder();
 	}
 
 	/**
@@ -77,219 +82,169 @@ public interface Bulk {
 		 * Adds operations for the given collection name within a scoped consumer.
 		 *
 		 * @param collectionName the target collection name; must not be {@literal null} or empty.
-		 * @param scoped the consumer that defines operations for that collection; must not be {@literal null}.
-		 * @return this.
+		 * @param builderCustomizer the consumer that defines operations for that collection.
+		 * @return this builder.
 		 */
-		BulkBuilder inCollection(String collectionName, Consumer<BulkBuilderBase<Object>> scoped);
+		BulkBuilder inCollection(String collectionName, Consumer<BulkSpec> builderCustomizer);
 
 		/**
 		 * Adds operations for the collection mapped to the given domain type within a scoped consumer.
 		 *
-		 * @param type the domain type used to resolve the collection; must not be {@literal null}.
-		 * @param scoped the consumer that defines operations for that collection; must not be {@literal null}.
+		 * @param type the domain type used to resolve the collection.
+		 * @param builderCustomizer the consumer that defines operations for that collection.
 		 * @param <T> the domain type.
-		 * @return this.
+		 * @return this builder.
 		 */
-		<T> BulkBuilder inCollection(Class<T> type, Consumer<BulkBuilderBase<T>> scoped);
+		<T> BulkBuilder inCollection(Class<T> type, Consumer<BulkSpec> builderCustomizer);
 
 		/**
-		 * Switches the target to the given collection by name. Subsequent operations apply to this collection until another
-		 * collection is selected.
+		 * Adds operations for the collection mapped to the given domain type within a scoped consumer.
 		 *
+		 * @param type the domain type used to map domain objects.
 		 * @param collectionName the target collection name; must not be {@literal null} or empty.
-		 * @return a collection bound builder; never {@literal null}.
-		 */
-		NamespaceBoundBulkBuilder<Object> inCollection(String collectionName);
-
-		/**
-		 * Switches the target to the collection mapped to the given domain type.
-		 *
-		 * @param type the domain type used to resolve the collection; must not be {@literal null}.
+		 * @param builderCustomizer the consumer that defines operations for that collection.
 		 * @param <T> the domain type.
-		 * @return a collection bound builder; never {@literal null}.
+		 * @return this builder.
 		 */
-		<T> NamespaceBoundBulkBuilder<T> inCollection(Class<T> type);
-
-		/**
-		 * Switches the target to the given collection name, using the given type for mapping.
-		 *
-		 * @param collectionName the target collection name; must not be {@literal null} or empty.
-		 * @param type the domain type used for mapping; must not be {@literal null}.
-		 * @param <T> the domain type.
-		 * @return a collection bound builder; never {@literal null}.
-		 */
-		<T> NamespaceBoundBulkBuilder<T> inCollection(String collectionName, Class<T> type);
+		<T> BulkBuilder inCollection(Class<T> type, String collectionName, Consumer<BulkSpec> builderCustomizer);
 
 		/**
 		 * Builds the {@link Bulk} with all operations added so far.
 		 *
-		 * @return the built {@link Bulk}; never {@literal null}.
+		 * @return the built {@link Bulk}.
 		 */
 		Bulk build();
+
 	}
 
 	/**
 	 * Builder for adding bulk operations (insert, update, replace, remove) to a single collection.
-	 *
-	 * @param <T> the domain type for the target collection.
 	 */
-	interface BulkBuilderBase<T> {
+	interface BulkSpec {
 
 		/**
 		 * Adds an insert of the given document.
 		 *
-		 * @param object the document to insert; must not be {@literal null}.
-		 * @return this.
+		 * @param object the document to insert.
+		 * @return this builder.
 		 */
-		BulkBuilderBase<T> insert(T object);
+		BulkSpec insert(Object object);
 
 		/**
 		 * Adds inserts for all given documents.
 		 *
-		 * @param objects the documents to insert; must not be {@literal null}.
-		 * @return this.
+		 * @param objects the documents to insert.
+		 * @return this builder.
 		 */
-		BulkBuilderBase<T> insertAll(Iterable<? extends T> objects);
+		BulkSpec insertAll(Iterable<? extends Object> objects);
 
-		/** Adds an update-one operation (update at most one document matching the criteria). */
-		default BulkBuilderBase<T> updateOne(CriteriaDefinition where, UpdateDefinition update) {
+		/**
+		 * Adds an update-one operation (update at most one document matching the criteria).
+		 *
+		 * @param where criteria to select the document.
+		 * @param update the update to apply.
+		 * @return this builder.
+		 */
+		default BulkSpec updateOne(CriteriaDefinition where, UpdateDefinition update) {
 			return updateOne(Query.query(where), update);
 		}
 
 		/**
 		 * Adds an update-one operation (update at most one document matching the filter).
 		 *
-		 * @param filter the query to select the document; must not be {@literal null}.
-		 * @param update the update to apply; must not be {@literal null}.
-		 * @return this.
+		 * @param filter the query to select the document.
+		 * @param update the update to apply.
+		 * @return this builder.
 		 */
-		BulkBuilderBase<T> updateOne(Query filter, UpdateDefinition update);
+		BulkSpec updateOne(Query filter, UpdateDefinition update);
 
-		/** Adds an update-many operation (update all documents matching the criteria). */
-		default BulkBuilderBase<T> updateMulti(CriteriaDefinition where, UpdateDefinition update) {
+		/**
+		 * Adds an update-many operation (update all documents matching the criteria).
+		 *
+		 * @param where criteria to select the document.
+		 * @param update the update to apply.
+		 * @return this builder.
+		 */
+		default BulkSpec updateMulti(CriteriaDefinition where, UpdateDefinition update) {
 			return updateMulti(Query.query(where), update);
 		}
 
 		/**
 		 * Adds an update-many operation (update all documents matching the filter).
 		 *
-		 * @param filter the query to select documents; must not be {@literal null}.
-		 * @param update the update to apply; must not be {@literal null}.
-		 * @return this.
+		 * @param filter the query to select documents.
+		 * @param update the update to apply.
+		 * @return this builder.
 		 */
-		BulkBuilderBase<T> updateMulti(Query filter, UpdateDefinition update);
+		BulkSpec updateMulti(Query filter, UpdateDefinition update);
 
 		/** Adds an upsert operation (update if a document matches, otherwise insert). */
-		default BulkBuilderBase<T> upsert(CriteriaDefinition where, UpdateDefinition update) {
+		default BulkSpec upsert(CriteriaDefinition where, UpdateDefinition update) {
 			return upsert(Query.query(where), update);
 		}
 
 		/**
 		 * Adds an upsert operation (update if a document matches the filter, otherwise insert).
 		 *
-		 * @param filter the query to find an existing document; must not be {@literal null}.
-		 * @param update the update to apply or use for the new document; must not be {@literal null}.
-		 * @return this.
+		 * @param filter the query to find an existing document.
+		 * @param update the update to apply or use for the new document.
+		 * @return this builder.
 		 */
-		BulkBuilderBase<T> upsert(Query filter, UpdateDefinition update);
+		BulkSpec upsert(Query filter, UpdateDefinition update);
 
 		/** Adds a remove operation (delete all documents matching the criteria). */
-		default BulkBuilderBase<T> remove(CriteriaDefinition where) {
+		default BulkSpec remove(CriteriaDefinition where) {
 			return remove(Query.query(where));
 		}
 
 		/**
 		 * Adds a remove operation (delete all documents matching the filter).
 		 *
-		 * @param filter the query to select documents to delete; must not be {@literal null}.
-		 * @return this.
+		 * @param filter the query to select documents to delete.
+		 * @return this builder.
 		 */
-		BulkBuilderBase<T> remove(Query filter);
+		BulkSpec remove(Query filter);
 
-		/** Adds a replace-one operation (replace at most one document matching the criteria). */
-		default BulkBuilderBase<T> replaceOne(CriteriaDefinition where, Object replacement) {
+		/**
+		 * Adds a replace-one operation (replace at most one document matching the criteria).
+		 *
+		 * @param where the criteria to select the document.
+		 * @param replacement the replacement document.
+		 * @return this builder.
+		 */
+		default BulkSpec replaceOne(CriteriaDefinition where, Object replacement) {
 			return replaceOne(Query.query(where), replacement);
 		}
 
 		/**
 		 * Adds a replace-one operation (replace at most one document matching the filter).
 		 *
-		 * @param filter the query to select the document; must not be {@literal null}.
-		 * @param replacement the replacement document; must not be {@literal null}.
-		 * @return this.
+		 * @param filter the query to select the document.
+		 * @param replacement the replacement document.
+		 * @return this builder.
 		 */
-		BulkBuilderBase<T> replaceOne(Query filter, Object replacement);
+		BulkSpec replaceOne(Query filter, Object replacement);
 
-		/** Adds a replace-one-if-exists operation (replace only if a document matches the criteria). */
-		default BulkBuilderBase<T> replaceIfExists(CriteriaDefinition where, Object replacement) {
+		/**
+		 * Adds a replace-one-if-exists operation (replace only if a document matches the criteria).
+		 *
+		 * @param where the criteria to select the document.
+		 * @param replacement the replacement document.
+		 * @return this builder.
+		 */
+		default BulkSpec replaceIfExists(CriteriaDefinition where, Object replacement) {
 			return replaceIfExists(Query.query(where), replacement);
 		}
 
 		/**
 		 * Adds a replace-one-if-exists operation (replace only if a document matches the filter).
 		 *
-		 * @param filter the query to select the document; must not be {@literal null}.
-		 * @param replacement the replacement document; must not be {@literal null}.
-		 * @return this.
+		 * @param filter the query to select the document.
+		 * @param replacement the replacement document.
+		 * @return this builder.
 		 */
-		BulkBuilderBase<T> replaceIfExists(Query filter, Object replacement);
-	}
+		BulkSpec replaceIfExists(Query filter, Object replacement);
 
-	/**
-	 * Builder for bulk operations that is bound to a specific collection (namespace). Extends both {@link BulkBuilder}
-	 * (to switch collection or build) and {@link BulkBuilderBase} (to add operations in the current collection).
-	 *
-	 * @param <T> the domain type for the bound collection.
-	 */
-	interface NamespaceBoundBulkBuilder<T> extends BulkBuilderBase<T>, BulkBuilder {
-
-		@Override
-		NamespaceBoundBulkBuilder<T> insert(T object);
-
-		@Override
-		NamespaceBoundBulkBuilder<T> insertAll(Iterable<? extends T> objects);
-
-		default NamespaceBoundBulkBuilder<T> updateOne(CriteriaDefinition where, UpdateDefinition update) {
-			return updateOne(Query.query(where), update);
-		}
-
-		@Override
-		NamespaceBoundBulkBuilder<T> updateOne(Query filter, UpdateDefinition update);
-
-		default NamespaceBoundBulkBuilder<T> updateMulti(CriteriaDefinition where, UpdateDefinition update) {
-			return updateMulti(Query.query(where), update);
-		}
-
-		@Override
-		NamespaceBoundBulkBuilder<T> updateMulti(Query filter, UpdateDefinition update);
-
-		default NamespaceBoundBulkBuilder<T> upsert(CriteriaDefinition where, UpdateDefinition update) {
-			return upsert(Query.query(where), update);
-		}
-
-		@Override
-		NamespaceBoundBulkBuilder<T> upsert(Query filter, UpdateDefinition update);
-
-		default NamespaceBoundBulkBuilder<T> remove(CriteriaDefinition where) {
-			return remove(Query.query(where));
-		}
-
-		@Override
-		NamespaceBoundBulkBuilder<T> remove(Query filter);
-
-		default NamespaceBoundBulkBuilder<T> replaceOne(CriteriaDefinition where, Object replacement) {
-			return replaceOne(Query.query(where), replacement);
-		}
-
-		@Override
-		NamespaceBoundBulkBuilder<T> replaceOne(Query filter, Object replacement);
-
-		default NamespaceBoundBulkBuilder<T> replaceIfExists(CriteriaDefinition where, Object replacement) {
-			return replaceIfExists(Query.query(where), replacement);
-		}
-
-		@Override
-		NamespaceBoundBulkBuilder<T> replaceIfExists(Query filter, Object replacement);
 	}
 
 }

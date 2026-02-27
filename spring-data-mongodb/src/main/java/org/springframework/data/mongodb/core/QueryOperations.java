@@ -445,6 +445,22 @@ public class QueryOperations {
 		}
 
 		/**
+		 * Apply the {@link com.mongodb.client.model.Collation} if present extracted from the {@link Query} or fall back to
+		 * the {@literal domain types} default {@link org.springframework.data.mongodb.core.mapping.Document#collation()
+		 * collation}.
+		 *
+		 * @param domainType can be {@literal null}.
+		 * @param consumer must not be {@literal null}.
+		 */
+		void applyCollation(@Nullable MongoPersistentEntity<?> domainType,
+				Consumer<com.mongodb.client.model.Collation> consumer) {
+			if (domainType != null) {
+
+			}
+			getCollation(domainType).ifPresent(consumer);
+		}
+
+		/**
 		 * Get the {@link com.mongodb.client.model.Collation} extracted from the {@link Query} if present or fall back to
 		 * the {@literal domain types} default {@link org.springframework.data.mongodb.core.mapping.Document#collation()
 		 * collation}.
@@ -455,6 +471,20 @@ public class QueryOperations {
 		Optional<com.mongodb.client.model.Collation> getCollation(@Nullable Class<?> domainType) {
 
 			return entityOperations.forType(domainType).getCollation(query) //
+					.map(Collation::toMongoCollation);
+		}
+
+		/**
+		 * Get the {@link com.mongodb.client.model.Collation} extracted from the {@link Query} if present or fall back to
+		 * the {@literal domain types} default {@link org.springframework.data.mongodb.core.mapping.Document#collation()
+		 * collation}.
+		 *
+		 * @param entity can be {@literal null}.
+		 * @return never {@literal null}.
+		 */
+		Optional<com.mongodb.client.model.Collation> getCollation(@Nullable MongoPersistentEntity<?> entity) {
+
+			return entityOperations.forType(entity).getCollation(query) //
 					.map(Collation::toMongoCollation);
 		}
 
@@ -658,11 +688,11 @@ public class QueryOperations {
 		/**
 		 * Get the {@link DeleteOptions} applicable for the {@link Query}.
 		 *
-		 * @param domainType must not be {@literal null}.
+		 * @param entity
 		 * @return never {@literal null}.
 		 */
-		DeleteOptions getDeleteOptions(@Nullable Class<?> domainType) {
-			return getDeleteOptions(domainType, null);
+		DeleteOptions getDeleteOptions(@Nullable MongoPersistentEntity<?> entity) {
+			return getDeleteOptions(entity, null);
 		}
 
 		/**
@@ -672,7 +702,8 @@ public class QueryOperations {
 		 * @param callback a callback to modify the generated options. Can be {@literal null}.
 		 * @return
 		 */
-		DeleteOptions getDeleteOptions(@Nullable Class<?> domainType, @Nullable Consumer<DeleteOptions> callback) {
+		DeleteOptions getDeleteOptions(@Nullable MongoPersistentEntity<?> domainType,
+				@Nullable Consumer<DeleteOptions> callback) {
 
 			DeleteOptions options = new DeleteOptions();
 			applyCollation(domainType, options::collation);
@@ -748,21 +779,22 @@ public class QueryOperations {
 		/**
 		 * Get the {@link UpdateOptions} applicable for the {@link Query}.
 		 *
-		 * @param domainType can be {@literal null}.
+		 * @param entity can be {@literal null}.
 		 * @return never {@literal null}.
 		 */
-		UpdateOptions getUpdateOptions(@Nullable Class<?> domainType) {
-			return getUpdateOptions(domainType, null);
+		UpdateOptions getUpdateOptions(@Nullable MongoPersistentEntity<?> entity) {
+			return getUpdateOptions(entity, null);
 		}
 
 		/**
 		 * Get the {@link UpdateOptions} applicable for the {@link Query}.
 		 *
-		 * @param domainType can be {@literal null}.
+		 * @param entity can be {@literal null}.
 		 * @param query can be {@literal null}
 		 * @return never {@literal null}.
 		 */
-		UpdateOptions getUpdateOptions(@Nullable Class<?> domainType, @Nullable Query query) {
+		UpdateOptions getUpdateOptions(@Nullable MongoPersistentEntity<?> entity, @Nullable Query query) {
+
 			UpdateOptions options = new UpdateOptions();
 			options.upsert(upsert);
 
@@ -772,11 +804,11 @@ public class QueryOperations {
 			}
 
 			if (query != null && query.isSorted()) {
-				options.sort(getMappedSort(domainType != null ? mappingContext.getPersistentEntity(domainType) : null));
+				options.sort(getMappedSort(entity));
 			}
 
 			HintFunction.from(getQuery().getHint()).ifPresent(codecRegistryProvider, options::hintString, options::hint);
-			applyCollation(domainType, options::collation);
+			applyCollation(entity, options::collation);
 
 			return options;
 		}
@@ -784,30 +816,31 @@ public class QueryOperations {
 		/**
 		 * Get the {@link ReplaceOptions} applicable for the {@link Query}.
 		 *
-		 * @param domainType must not be {@literal null}.
+		 * @param entity must not be {@literal null}.
 		 * @return never {@literal null}.
 		 */
-		ReplaceOptions getReplaceOptions(@Nullable Class<?> domainType) {
-			return getReplaceOptions(domainType, null);
+		ReplaceOptions getReplaceOptions(@Nullable MongoPersistentEntity<?> entity) {
+			return getReplaceOptions(entity, null);
 		}
 
 		/**
 		 * Get the {@link ReplaceOptions} applicable for the {@link Query}.
 		 *
-		 * @param domainType can be {@literal null}.
+		 * @param entity can be {@literal null}.
 		 * @param callback a callback to modify the generated options. Can be {@literal null}.
 		 * @return
 		 */
-		ReplaceOptions getReplaceOptions(@Nullable Class<?> domainType, @Nullable Consumer<ReplaceOptions> callback) {
+		ReplaceOptions getReplaceOptions(@Nullable MongoPersistentEntity<?> entity,
+				@Nullable Consumer<ReplaceOptions> callback) {
 
-			UpdateOptions updateOptions = getUpdateOptions(domainType);
+			UpdateOptions updateOptions = getUpdateOptions(entity);
 
 			ReplaceOptions options = new ReplaceOptions();
 			options.collation(updateOptions.getCollation());
 			options.upsert(updateOptions.isUpsert());
 			applyHint(options::hintString, options::hint);
 			if (!isMulti() && getQuery().isSorted()) {
-				options.sort(getMappedSort(domainType != null ? mappingContext.getPersistentEntity(domainType) : null));
+				options.sort(getMappedSort(entity));
 			}
 
 			if (callback != null) {
@@ -901,6 +934,25 @@ public class QueryOperations {
 
 			AggregationOperationContext context = new TypeBasedAggregationOperationContext(type, mappingContext, queryMapper,
 					FieldLookupPolicy.relaxed());
+			return aggregationUtil.createPipeline((AggregationUpdate) update, context);
+		}
+
+		/**
+		 * Get the already mapped aggregation pipeline to use with an {@link #isAggregationUpdate()}.
+		 *
+		 * @param entity must not be {@literal null}.
+		 * @return never {@literal null}.
+		 */
+		List<Document> getUpdatePipeline(@Nullable MongoPersistentEntity<?> entity) {
+
+			Assert.isInstanceOf(AggregationUpdate.class, update);
+
+			if (entity == null) {
+				return getUpdatePipeline((Class<?>) null);
+			}
+
+			AggregationOperationContext context = new TypeBasedAggregationOperationContext(entity, mappingContext,
+					queryMapper, FieldLookupPolicy.relaxed());
 			return aggregationUtil.createPipeline((AggregationUpdate) update, context);
 		}
 

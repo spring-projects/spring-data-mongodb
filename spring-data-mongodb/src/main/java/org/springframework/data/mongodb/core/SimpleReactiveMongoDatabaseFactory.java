@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.reactivestreams.client.MongoCluster;
-import org.springframework.data.mongodb.MongoClusterCapable;
 import reactor.core.publisher.Mono;
 
 import org.bson.codecs.configuration.CodecRegistry;
@@ -26,6 +24,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mongodb.ReactiveMongoClusterCapable;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.util.Assert;
@@ -36,6 +35,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.reactivestreams.client.MongoCluster;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
@@ -47,7 +47,8 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mathieu Ouellet
  * @since 2.0
  */
-public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, ReactiveMongoDatabaseFactory, MongoClusterCapable<MongoCluster> {
+public class SimpleReactiveMongoDatabaseFactory
+		implements DisposableBean, ReactiveMongoDatabaseFactory, ReactiveMongoClusterCapable {
 
 	private final MongoClient mongo;
 	private final String databaseName;
@@ -176,11 +177,13 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * @since 2.1
 	 */
 	record ClientSessionBoundMongoDbFactory(ClientSession session,
-			ReactiveMongoDatabaseFactory delegate) implements ReactiveMongoDatabaseFactory, MongoClusterCapable<MongoCluster> {
+			ReactiveMongoDatabaseFactory delegate) implements ReactiveMongoDatabaseFactory, ReactiveMongoClusterCapable {
 
 		@Override
 		public MongoCluster getMongoCluster() {
-			return delegate instanceof MongoClusterCapable<?> aware ? proxyCluster(session, (MongoCluster) aware.getMongoCluster()) : null;
+			return delegate instanceof ReactiveMongoClusterCapable aware
+					? proxyCluster(session, (MongoCluster) aware.getMongoCluster())
+					: null;
 		}
 
 		@Override
