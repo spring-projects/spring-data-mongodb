@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.function.Function;
+
+import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -32,6 +36,11 @@ class CollectionNames {
 		@Override
 		public String getCollectionName() {
 			return collectionName;
+		}
+
+		@Override
+		public String getCollectionName(Function<Class<?>, @Nullable MongoPersistentEntity<?>> entityLookup) {
+			return getCollectionName();
 		}
 
 		@Override
@@ -65,6 +74,13 @@ class CollectionNames {
 		public String getCollectionName() {
 			return MergedAnnotations.from(entityClass).get(Document.class).getValue("collection", String.class)
 					.orElseGet(() -> MongoCollectionUtils.getPreferredCollectionName(entityClass));
+		}
+
+		@Override
+		public String getCollectionName(Function<Class<?>, @Nullable MongoPersistentEntity<?>> entityLookup) {
+
+			MongoPersistentEntity<?> entity = entityLookup.apply(getEntityClass());
+			return entity != null ? entity.getCollection() : getCollectionName();
 		}
 
 		@Override

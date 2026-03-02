@@ -69,13 +69,8 @@ abstract class BulkWriterSupport {
 	String resolveCollectionName(TypedNamespace namespace) {
 
 		if (namespace.hasCollectionName()) {
-			CollectionName collectionName = namespace.getRequiredCollectionName();
-			if (collectionName.getEntityClass() == Object.class) {
-				return collectionName.getCollectionName();
-			}
-			return entityOperations.determineCollectionName(collectionName.getEntityClass());
+			return namespace.getRequiredCollectionName().getCollectionName(entityOperations::getRequiredPersistentEntity);
 		}
-
 		return entityOperations.determineCollectionName(namespace.type());
 	}
 

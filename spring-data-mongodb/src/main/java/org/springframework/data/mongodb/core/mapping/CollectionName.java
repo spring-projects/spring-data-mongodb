@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.function.Function;
+
+import org.jspecify.annotations.Nullable;
+
 import org.springframework.util.Assert;
 
 /**
@@ -30,6 +34,11 @@ public interface CollectionName {
 	 * Returns the collection name.
 	 */
 	String getCollectionName();
+
+	/**
+	 * Returns the collection name, potentially by considering a {@link MongoPersistentEntity}.
+	 */
+	String getCollectionName(Function<Class<?>, @Nullable MongoPersistentEntity<?>> entityLookup);
 
 	/**
 	 * Returns the entity class for which the collection name is derived.
