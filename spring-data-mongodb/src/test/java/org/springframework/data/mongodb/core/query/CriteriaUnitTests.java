@@ -53,6 +53,13 @@ class CriteriaUnitTests {
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\"}");
 	}
 
+	@Test // GH-4606
+	void testEqualsCriteria() {
+
+		Criteria c = new Criteria("name").eq("Bubba");
+		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : { \"$eq\" :  \"Bubba\"} }");
+	}
+
 	@Test // GH-4850
 	void testCombiningSimpleCriteria() {
 
@@ -66,6 +73,34 @@ class CriteriaUnitTests {
 
 		c = Criteria.where("name") //
 				.type(Type.INT_64).is(123);
+
+		assertThat(c.getCriteriaObject()).isEqualTo(expected);
+	}
+
+	@Test // GH-4606
+	void testCombiningSimpleAndNegatedEqCriteria() {
+
+		Document expected = Document.parse("{ name : { $eq : 123, $type : ['long'], $not : { $eq : 'foo' } } }");
+
+		Criteria c = Criteria.where("name") //
+			.is(123) //
+			.type(Type.INT_64)
+			.not()
+			.eq("foo");
+
+		assertThat(c.getCriteriaObject()).isEqualTo(expected);
+	}
+
+	@Test // GH-4606
+	void testCombiningSimpleAndNegatedIsCriteria() {
+
+		Document expected = Document.parse("{ name : { $eq : 123, $type : ['long'], $not : { $eq : 'foo' } } }");
+
+		Criteria c = Criteria.where("name") //
+			.is(123) //
+			.type(Type.INT_64)
+			.not()
+			.is("foo");
 
 		assertThat(c.getCriteriaObject()).isEqualTo(expected);
 	}
@@ -92,6 +127,20 @@ class CriteriaUnitTests {
 	void testNotEqualCriteria() {
 		Criteria c = new Criteria("name").ne("Bubba");
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : { \"$ne\" : \"Bubba\"}}");
+	}
+
+	@Test // GH-4606
+	void testNotIsCriteria() {
+
+		Criteria c = new Criteria("name").not().is("Bubba");
+		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : { \"$not\" : { \"$eq\" : \"Bubba\"} } }");
+	}
+
+	@Test // GH-4606
+	void testNegatedEqualsCriteria() {
+
+		Criteria c = new Criteria("name").not().eq("Bubba");
+		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : { \"$not\" : { \"$eq\" : \"Bubba\"} } }");
 	}
 
 	@Test
