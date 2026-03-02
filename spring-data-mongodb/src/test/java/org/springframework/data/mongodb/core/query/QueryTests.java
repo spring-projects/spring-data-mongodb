@@ -58,13 +58,6 @@ class QueryTests {
 	}
 
 	@Test
-	void testInvalidQueryWithNotIs() {
-
-		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class)
-				.isThrownBy(() -> new Query(where("name").not().is("Thomas")));
-	}
-
-	@Test
 	void testOrQuery() {
 
 		Query q = new Query(new Criteria().orOperator(where("name").is("Sven").and("age").lt(50), where("age").lt(50),

@@ -200,13 +200,13 @@ public class Criteria implements CriteriaDefinition {
 	@Contract("_ -> this")
 	public Criteria is(@Nullable Object value) {
 
+		if (lastOperatorWasNot()) {
+			return eq(value);
+		}
+
 		if (!NOT_SET.equals(isValue)) {
 			throw new InvalidMongoDbApiUsageException(
 					"Multiple 'is' values declared; You need to use 'and' with multiple criteria");
-		}
-
-		if (lastOperatorWasNot()) {
-			throw new InvalidMongoDbApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead");
 		}
 
 		this.isValue = value;
@@ -251,6 +251,21 @@ public class Criteria implements CriteriaDefinition {
 
 	private boolean lastOperatorWasNot() {
 		return !this.criteria.isEmpty() && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1]);
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $eq} operator.
+	 *
+	 * @param value can be {@literal null}.
+	 * @return this.
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/eq/">MongoDB Query operator: $eq</a>
+	 * @since 5.0.4
+	 */
+	@Contract("_ -> this")
+	public Criteria eq(Object value) {
+
+		criteria.put("$eq", value);
+		return this;
 	}
 
 	/**
