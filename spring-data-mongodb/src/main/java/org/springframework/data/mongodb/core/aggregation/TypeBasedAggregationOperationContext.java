@@ -95,10 +95,11 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 * Creates a new {@link TypeBasedAggregationOperationContext} for the given type, {@link MappingContext} and
 	 * {@link QueryMapper}.
 	 *
-	 * @param type must not be {@literal null}.
+	 * @param persistentEntity must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 * @param mapper must not be {@literal null}.
 	 * @param lookupPolicy must not be {@literal null}.
+	 * @since 5.1
 	 */
 	public TypeBasedAggregationOperationContext(MongoPersistentEntity<?> persistentEntity,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, QueryMapper mapper,
