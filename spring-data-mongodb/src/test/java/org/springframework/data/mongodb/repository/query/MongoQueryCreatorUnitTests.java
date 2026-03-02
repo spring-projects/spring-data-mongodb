@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.repository.query.StubParameterAcc
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -50,6 +51,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -679,7 +681,7 @@ class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 
 		Query query = creator.createQuery();
-		assertThat(query).isEqualTo(query(where("firstName").is("")));
+		assertThat(query).isEqualTo(query(where("firstName").eq("")));
 	}
 
 	@Test // GH-4606
@@ -689,7 +691,7 @@ class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 
 		Query query = creator.createQuery();
-		assertThat(query).isEqualTo(query(where("firstName").ne("")));
+		assertThat(query).isEqualTo(query(where("firstName").not().eq("")));
 	}
 
 	@Test // GH-4606
@@ -720,7 +722,7 @@ class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 
 		Query query = creator.createQuery();
-		assertThat(query).isEqualTo(query(where("metadata").is(new Document())));
+		assertThat(query).isEqualTo(query(where("metadata").eq(new Document())));
 	}
 
 	@Test // GH-4606
@@ -730,7 +732,7 @@ class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 
 		Query query = creator.createQuery();
-		assertThat(query).isEqualTo(query(where("metadata").ne(new Document())));
+		assertThat(query).isEqualTo(query(where("metadata").not().eq(new Document())));
 	}
 
 	@Test // GH-4606
@@ -740,7 +742,7 @@ class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 
 		Query query = creator.createQuery();
-		assertThat(query).isEqualTo(query(where("address").is(new Document())));
+		assertThat(query).isEqualTo(query(where("address").eq(new Document())));
 	}
 
 	@Test // GH-4606
@@ -750,7 +752,17 @@ class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 
 		Query query = creator.createQuery();
-		assertThat(query).isEqualTo(query(where("address").ne(new Document())));
+		assertThat(query).isEqualTo(query(where("address").not().eq(new Document())));
+	}
+
+	@Test // GH-4606
+	void isEmptyPartHonorsTargetFieldTypeCorrectly() {
+
+		PartTree tree = new PartTree("findByRegistrationDateIsEmpty", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("registrationDate").eq("")));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
@@ -765,6 +777,9 @@ class MongoQueryCreatorUnitTests {
 		@Field("foo") String username;
 
 		@DBRef User creator;
+
+		@Field(targetType = FieldType.STRING)
+		Date registrationDate;
 
 		List<String> emailAddresses;
 

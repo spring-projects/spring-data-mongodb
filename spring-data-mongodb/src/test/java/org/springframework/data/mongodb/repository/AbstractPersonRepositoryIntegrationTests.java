@@ -1883,6 +1883,23 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 	@Test // GH-4606
 	@DirtiesState
+	void dbNullValueIsNotConsideredEmpty() {
+
+		operations.execute(Person.class, collection -> {
+			collection.insertOne(new Document("_id", "null-value-firstname").append("firstname", null).append("lastname",
+					"NullValueFirstname"));
+			return null;
+		});
+
+		List<Person> emptyResult = repository.findByFirstnameIsEmpty();
+		List<Person> notEmptyResult = repository.findByFirstnameIsNotEmpty();
+
+		assertThat(emptyResult).extracting(Person::getId).doesNotContain("null-value-firstname");
+		assertThat(notEmptyResult).extracting(Person::getId).contains("null-value-firstname");
+	}
+
+	@Test // GH-4606
+	@DirtiesState
 	void findsBySkillsIsEmpty() {
 
 		Person emptySkills = new Person("Empty", "Skills");
