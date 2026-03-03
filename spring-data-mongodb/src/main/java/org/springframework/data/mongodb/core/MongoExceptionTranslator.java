@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Set;
 
+import com.mongodb.ClientBulkWriteException;
 import org.bson.BsonInvalidOperationException;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
@@ -27,6 +28,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.TransientClientSessionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -63,7 +65,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = Set.of("MongoInternalException");
 
 	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = Set.of("WriteConcernException", "MongoWriteException",
-			"MongoBulkWriteException");
+			"MongoBulkWriteException", "ClientBulkWriteException");
 
 	private static final Set<String> SECURITY_EXCEPTIONS = Set.of("MongoCryptException");
 
@@ -112,6 +114,9 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 							return new DuplicateKeyException(ex.getMessage(), ex);
 						}
 					}
+					return new BulkOperationException(ex.getMessage(), bulkException);
+				} else if (ex instanceof ClientBulkWriteException clientBulkWriteException) {
+					return new BulkOperationException(ex.getMessage(), clientBulkWriteException);
 				}
 			}
 

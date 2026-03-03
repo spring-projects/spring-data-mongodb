@@ -67,6 +67,7 @@ class BulkWriter extends BulkWriterSupport {
 		return writeToMultipleCollections(defaultDatabase, bulk, options);
 	}
 
+	@SuppressWarnings("NullAway")
 	private BulkWriteResult writeToSingleCollection(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options, TypedNamespace namespace) {
 
@@ -96,6 +97,7 @@ class BulkWriter extends BulkWriterSupport {
 		}
 	}
 
+	@SuppressWarnings("NullAway")
 	private BulkWriteResult writeToMultipleCollections(String defaultDatabase, Bulk bulk,
 			BulkWriteOptions options) {
 

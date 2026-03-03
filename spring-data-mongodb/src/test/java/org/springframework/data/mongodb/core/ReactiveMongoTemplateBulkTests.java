@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import org.springframework.data.mongodb.BulkOperationException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -87,6 +88,31 @@ class ReactiveMongoTemplateBulkTests {
 	}
 
 	@Test // GH-5087
+	void bulkWriteRawDocument() {
+
+		Document doc1 = new Document();
+		doc1.append("_id", "id-doc1");
+		doc1.append("value", "value-doc1");
+
+		Document doc2 = new Document();
+		doc2.append("_id", "id-doc2");
+		doc2.append("value", "value-doc2");
+
+		Bulk bulk = Bulk.create(builder -> builder
+				.inCollection(Object.class, operations.getCollectionName(BaseDoc.class),
+						ops -> ops.insert(doc1).insert(doc2).upsert(where("_id").is("id-doc3"),
+								new Update().set("value", "upserted")))
+				.inCollection(operations.getCollectionName(SpecialDoc.class), it -> it.insert(new Document())));
+
+		operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		operations.execute(BaseDoc.class, MongoCollection::countDocuments).as(StepVerifier::create).expectNext(3L)
+				.verifyComplete();
+		operations.execute(SpecialDoc.class, MongoCollection::countDocuments).as(StepVerifier::create).expectNext(1L)
+				.verifyComplete();
+	}
+
+	@Test // GH-5087
 	void insertOrderedAcrossCollections() {
 
 		BaseDoc doc1 = newDoc("1");
@@ -114,9 +140,12 @@ class ReactiveMongoTemplateBulkTests {
 				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())).build();
 
 		StepVerifier.create(operations.bulkWrite(bulk, BulkWriteOptions.ordered())).expectErrorMatches(throwable -> {
-			if (!(throwable.getCause() instanceof ClientBulkWriteException))
+
+			assertThat(throwable).isInstanceOf(BulkOperationException.class);
+
+			if (!(throwable.getCause() instanceof ClientBulkWriteException ex)) {
 				return false;
-			ClientBulkWriteException ex = (ClientBulkWriteException) throwable.getCause();
+			}
 			assertThat(ex.getPartialResult().get().getInsertedCount()).isOne();
 			assertThat(ex.getWriteErrors()).isNotNull();
 			assertThat(ex.getWriteErrors().size()).isOne();
@@ -156,9 +185,12 @@ class ReactiveMongoTemplateBulkTests {
 				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())).build();
 
 		StepVerifier.create(operations.bulkWrite(bulk, BulkWriteOptions.unordered())).expectErrorMatches(throwable -> {
-			if (!(throwable.getCause() instanceof ClientBulkWriteException))
+
+			assertThat(throwable).isInstanceOf(BulkOperationException.class);
+
+			if (!(throwable.getCause() instanceof ClientBulkWriteException ex)) {
 				return false;
-			ClientBulkWriteException ex = (ClientBulkWriteException) throwable.getCause();
+			}
 			assertThat(ex.getPartialResult().get().getInsertedCount()).isEqualTo(2);
 			assertThat(ex.getWriteErrors()).isNotNull();
 			assertThat(ex.getWriteErrors().size()).isOne();

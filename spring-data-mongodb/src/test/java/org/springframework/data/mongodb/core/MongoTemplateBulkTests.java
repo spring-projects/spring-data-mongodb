@@ -26,6 +26,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
@@ -64,8 +65,6 @@ class MongoTemplateBulkTests {
 	@Test // GH-5087
 	void bulkWriteMultipleCollections() {
 
-		operations.flushDatabase();
-
 		BaseDoc doc1 = new BaseDoc();
 		doc1.id = "id-doc1";
 		doc1.value = "value-doc1";
@@ -80,6 +79,32 @@ class MongoTemplateBulkTests {
 										ops -> ops.insert(doc1).insert(doc2).upsert(where("_id").is("id-doc3"),
 												new Update().set("value", "upserted")))
 						.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())));
+
+		operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+
+		Long inBaseDocCollection = operations.execute(BaseDoc.class, MongoCollection::countDocuments);
+		Long inSpecialCollection = operations.execute(SpecialDoc.class, MongoCollection::countDocuments);
+		assertThat(inBaseDocCollection).isEqualTo(3L);
+		assertThat(inSpecialCollection).isOne();
+	}
+
+	@Test // GH-5087
+	void bulkWriteRawDocument() {
+
+		Document doc1 = new Document();
+		doc1.append("_id", "id-doc1");
+		doc1.append("value", "value-doc1");
+
+		Document doc2 = new Document();
+		doc2.append("_id", "id-doc2");
+		doc2.append("value", "value-doc2");
+
+		Bulk bulk = Bulk
+			.create(builder -> builder
+				.inCollection(Object.class, operations.getCollectionName(BaseDoc.class),
+					ops -> ops.insert(doc1).insert(doc2).upsert(where("_id").is("id-doc3"),
+						new Update().set("value", "upserted")))
+				.inCollection(operations.getCollectionName(SpecialDoc.class), it -> it.insert(new Document())));
 
 		operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -118,7 +143,7 @@ class MongoTemplateBulkTests {
 				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())).build();
 
 		assertThatThrownBy(() -> operations.bulkWrite(bulk, BulkWriteOptions.ordered())) //
-				// .isInstanceOf(BulkOperationException.class) // TODO
+				.isInstanceOf(BulkOperationException.class)
 				.hasCauseInstanceOf(ClientBulkWriteException.class) //
 				.extracting(Throwable::getCause) //
 				.satisfies(it -> {
@@ -161,7 +186,7 @@ class MongoTemplateBulkTests {
 				.inCollection(SpecialDoc.class, it -> it.insert(new SpecialDoc())).build();
 
 		assertThatThrownBy(() -> operations.bulkWrite(bulk, BulkWriteOptions.unordered())) //
-				// .isInstanceOf(BulkOperationException.class) // TODO
+				.isInstanceOf(BulkOperationException.class)
 				.hasCauseInstanceOf(ClientBulkWriteException.class) //
 				.extracting(Throwable::getCause) //
 				.satisfies(it -> {

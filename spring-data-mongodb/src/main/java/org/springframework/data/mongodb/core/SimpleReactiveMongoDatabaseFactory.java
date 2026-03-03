@@ -177,13 +177,11 @@ public class SimpleReactiveMongoDatabaseFactory
 	 * @since 2.1
 	 */
 	record ClientSessionBoundMongoDbFactory(ClientSession session,
-			ReactiveMongoDatabaseFactory delegate) implements ReactiveMongoDatabaseFactory, ReactiveMongoClusterCapable {
+			SimpleReactiveMongoDatabaseFactory delegate) implements ReactiveMongoDatabaseFactory, ReactiveMongoClusterCapable {
 
 		@Override
 		public MongoCluster getMongoCluster() {
-			return delegate instanceof ReactiveMongoClusterCapable aware
-					? proxyCluster(session, (MongoCluster) aware.getMongoCluster())
-					: null;
+			return proxyCluster(session, delegate.getMongoCluster());
 		}
 
 		@Override

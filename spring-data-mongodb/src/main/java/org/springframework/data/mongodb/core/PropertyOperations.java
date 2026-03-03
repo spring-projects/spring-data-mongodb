@@ -31,7 +31,7 @@ import org.springframework.data.util.Predicates;
  * @author Mark Paluch
  * @since 2.1
  */
-public class PropertyOperations {
+class PropertyOperations {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 

@@ -1,7 +1,7 @@
 [[mongo-template.save-update-remove]]
 = Saving, Updating, and Removing Documents
 
-`MongoTemplate` / `ReactiveMongoTemplatge` let you save, update, and delete your domain objects and map those objects to documents stored in MongoDB.
+`MongoTemplate` / `ReactiveMongoTemplate` let you save, update, and delete your domain objects and map those objects to documents stored in MongoDB.
 The API signatures of the imperative and reactive API are mainly the same only differing in their return types.
 While the synchronous API uses `void`, single `Object` and `List` the reactive counterpart consists of `Mono<Void>`, `Mono<Object>` and `Flux`.
 
@@ -287,7 +287,7 @@ BulkWrite allows you to perform insert, update, and delete operations using a si
 MongoDB 8.0 introduced BulkWrite across multiple collections. +
 
 Use `bulkWrite(Bulk, BulkWriteOptions)` when you need a single request with mixed insert, update, and delete operations, optionally across multiple collections (MongoDB 8.0+).
-For a single collection only, you can instead use the classic `bulkOps(BulkMode, Class)` API.
+If your targeting a single collection you'll still be able to leverage the new `bulkWrite` method with older MongoDB server version, or keep using the classic `bulkOps(BulkMode, Class)` API.
 ====
 
 .BulkWrite (multiple collections)
@@ -297,28 +297,26 @@ Imperative::
 +
 [source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
-Bulk bulk = Bulk.create(builder -> builder.inCollection(Person.class)
-        .insert(person1)
-        .insert(person2)
-        .upsert(where("_id").is("..."), new Update().set("firstname", "..."))
-        .inCollection(User.class)
-        .insert(new User("..."))
-);
+Bulk bulk = Bulk.create(builder -> builder
+        .inCollection(Person.class, spec -> spec
+                .insert(person1)
+                .insert(person2)
+                .upsert(where("_id").is("..."), new Update().set("firstname", "...")))
+        .inCollection(User.class, spec -> spec.insert(new User("..."))));
 
-template.bulkWrite(bulk, BulkWriteOptions.ordered());
+BulkWriteResult result = template.bulkWrite(bulk, BulkWriteOptions.ordered());
 ----
 
 Reactive::
 +
 [source,java,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
-Bulk bulk = Bulk.create(builder -> builder.inCollection(Person.class)
-        .insert(person1)
-        .insert(person2)
-        .upsert(where("_id").is("..."), new Update().set("firstname", "..."))
-        .inCollection(User.class)
-        .insert(new User("..."))
-);
+Bulk bulk = Bulk.create(builder -> builder
+        .inCollection(Person.class, spec -> spec
+                .insert(person1)
+                .insert(person2)
+                .upsert(where("_id").is("..."), new Update().set("firstname", "...")))
+        .inCollection(User.class, spec -> spec.insert(new User("..."))));
 
 template.bulkWrite(bulk, BulkWriteOptions.ordered()).subscribe();
 ----
@@ -362,7 +360,7 @@ Read more in the xref:mongodb/template-crud-operations.adoc#mongo-template.optim
 [[mongodb-template-update]]
 == Update
 
-For updates, you can update the first document found by using `MongoOperation.updateFirst` or you can update all documents that were found to match the query by using the `MongoOperation.updateMulti` method or `all` on the fluent API.
+For updates, you can update the first document found by using `MongoOperations.updateFirst` or you can update all documents that were found to match the query by using the `MongoOperations.updateMulti` method or `all` on the fluent API.
 The following example shows an update of all `SAVINGS` accounts where we are adding a one-time $50.00 bonus to the balance by using the `$inc` operator:
 
 .Updating documents by using the `MongoTemplate` / `ReactiveMongoTemplate`
@@ -676,7 +674,7 @@ However this might not always be feasible.
 [source,java]
 ----
 Optional<User> result = template.update(Person.class)      <1>
-    .matching(query(where("firstame").is("Tom")))          <2>
+    .matching(query(where("firstname").is("Tom")))          <2>
     .replaceWith(new Person("Dick"))
     .withOptions(FindAndReplaceOptions.options().upsert()) <3>
     .as(User.class)                                        <4>

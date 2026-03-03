@@ -98,9 +98,9 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 		this.sessionType = sessionType;
 	}
 
-	Class<?> targetType(@Nullable Class<?> targetType) {
+	Class<?> targetType(Class<?> targetType) {
 
-		if(ClassUtils.isAssignable(clientType, targetType)) {
+		if (ClassUtils.isAssignable(clientType, targetType)) {
 			return clientType;
 		}
 		return ClassUtils.isAssignable(databaseType, targetType) ? databaseType : collectionType;

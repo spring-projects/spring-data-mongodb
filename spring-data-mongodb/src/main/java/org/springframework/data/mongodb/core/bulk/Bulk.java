@@ -178,9 +178,15 @@ public interface Bulk {
 		 */
 		BulkSpec updateMulti(Query filter, UpdateDefinition update);
 
-		/** Adds an upsert operation (update if a document matches, otherwise insert). */
-		default BulkSpec upsert(CriteriaDefinition where, UpdateDefinition update) {
-			return upsert(Query.query(where), update);
+		/**
+		 * Adds an upsert operation (update if a document matches the criteria, otherwise insert).
+		 *
+		 * @param criteria the match criteria to find an existing document.
+		 * @param update the update to apply or use for the new dozcument.
+		 * @return this builder.
+		 */
+		default BulkSpec upsert(CriteriaDefinition criteria, UpdateDefinition update) {
+			return upsert(Query.query(criteria), update);
 		}
 
 		/**
@@ -192,9 +198,14 @@ public interface Bulk {
 		 */
 		BulkSpec upsert(Query filter, UpdateDefinition update);
 
-		/** Adds a remove operation (delete all documents matching the criteria). */
-		default BulkSpec remove(CriteriaDefinition where) {
-			return remove(Query.query(where));
+		/**
+		 * Adds a remove operation (delete all documents matching the criteria).
+		 *
+		 * @param criteria the match criteria for documents to delete.
+		 * @return this builder.
+		 */
+		default BulkSpec remove(CriteriaDefinition criteria) {
+			return remove(Query.query(criteria));
 		}
 
 		/**

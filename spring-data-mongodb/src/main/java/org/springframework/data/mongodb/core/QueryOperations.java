@@ -81,7 +81,7 @@ import com.mongodb.client.model.UpdateOptions;
  * @author Florian Lüdiger
  * @since 3.0
  */
-public class QueryOperations {
+class QueryOperations {
 
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;

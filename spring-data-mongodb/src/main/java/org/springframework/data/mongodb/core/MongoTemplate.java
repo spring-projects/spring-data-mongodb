@@ -376,7 +376,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			setEntityCallbacks(EntityCallbacks.create(applicationContext));
 		}
 
-		if (mappingContext instanceof ApplicationEventPublisherAware applicationEventPublisherAware) {
+		if (eventPublisher != null && mappingContext instanceof ApplicationEventPublisherAware applicationEventPublisherAware) {
 			applicationEventPublisherAware.setApplicationEventPublisher(eventPublisher);
 		}
 

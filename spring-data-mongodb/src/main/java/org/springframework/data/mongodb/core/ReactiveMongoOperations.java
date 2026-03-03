@@ -218,12 +218,14 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	ReactiveMongoOperations withSession(ClientSession session);
 
 	/**
-	 * Executes the given {@link Bulk} to perform insert, update, and delete operations on multiple collections (requires
-	 * MongoDB 8.0+).
+	 * Executes the given {@link Bulk} to perform insert, update, and delete operations.
+	 * <p>
+	 * <strong>NOTE:</strong> targeting multiple collections requires MongoDB 8.0+.
 	 *
 	 * @param bulk the {@link Bulk} to write.
 	 * @param options additional options applied to the execution.
-	 * @return never {@literal null}.
+	 * @return a {@link Mono} emitting the result of the bulk write. Never {@literal null}.
+	 * @since 5.1
 	 */
 	Mono<BulkWriteResult> bulkWrite(Bulk bulk, BulkWriteOptions options);
 

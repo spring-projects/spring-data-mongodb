@@ -288,7 +288,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 5.0.4
 	 */
 	@Contract("_ -> this")
-	public Criteria eq(Object value) {
+	public Criteria eq(@Nullable Object value) {
 
 		criteria.put("$eq", value);
 		return this;

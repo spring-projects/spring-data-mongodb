@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.mongodb.bulk.BulkWriteResult;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
@@ -384,12 +385,13 @@ class DefaultBulkOperationsUnitTests {
 
 	}
 
-	@Test // DATAMONGO-2285
+	@Test // DATAMONGO-2285, GH-5087
 	public void translateMongoBulkOperationExceptionWithoutWriteConcernError() {
 
-		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoBulkWriteException(null,
-				Collections.singletonList(new BulkWriteError(42, "a write error happened", new BsonDocument(), 49)), null,
-				new ServerAddress(), Collections.emptySet()));
+		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class)))
+				.thenThrow(new MongoBulkWriteException(mock(BulkWriteResult.class),
+						Collections.singletonList(new BulkWriteError(42, "a write error happened", new BsonDocument(), 49)), null,
+						new ServerAddress(), Collections.emptySet()));
 
 		assertThatExceptionOfType(BulkOperationException.class)
 				.isThrownBy(() -> ops.insert(new SomeDomainType()).execute());

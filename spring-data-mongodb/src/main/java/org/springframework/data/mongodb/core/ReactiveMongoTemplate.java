@@ -397,7 +397,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			setEntityCallbacks(ReactiveEntityCallbacks.create(applicationContext));
 		}
 
-		if (mappingContext instanceof ApplicationEventPublisherAware applicationEventPublisherAware) {
+		if (eventPublisher != null && mappingContext instanceof ApplicationEventPublisherAware applicationEventPublisherAware) {
 			applicationEventPublisherAware.setApplicationEventPublisher(eventPublisher);
 		}
 	}

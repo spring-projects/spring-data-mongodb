@@ -54,6 +54,7 @@ public interface BulkOperationContext {
 			return collectionName != null;
 		}
 
+		@SuppressWarnings("NullAway")
 		public CollectionName getRequiredCollectionName() {
 			Assert.state(hasCollectionName(), "Collection name is required but not present");
 			return collectionName;

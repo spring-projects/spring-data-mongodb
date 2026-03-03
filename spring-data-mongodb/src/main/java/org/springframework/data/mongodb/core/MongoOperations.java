@@ -172,12 +172,14 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T execute(String collectionName, CollectionCallback<T> action);
 
 	/**
-	 * Executes the given {@link Bulk} to perform insert, update, and delete operations on multiple collections (requires
-	 * MongoDB 8.0+).
+	 * Executes the given {@link Bulk} to perform insert, update, and delete operations.
+	 * <p>
+	 * <strong>NOTE:</strong> targeting multiple collections requires MongoDB 8.0+.
 	 *
 	 * @param bulk the {@link Bulk} to write.
 	 * @param options additional options applied to the execution.
-	 * @return never {@literal null}.
+	 * @return the result of the bulk write operation. Never {@literal null}.
+	 * @since 5.1
 	 */
 	BulkWriteResult bulkWrite(Bulk bulk, BulkWriteOptions options);
 

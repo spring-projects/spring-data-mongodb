@@ -92,7 +92,7 @@ import com.mongodb.client.model.ValidationOptions;
  * @see MongoTemplate
  * @see ReactiveMongoTemplate
  */
-public class EntityOperations {
+class EntityOperations {
 
 	private static final String ID_FIELD = FieldName.ID.name();
 
