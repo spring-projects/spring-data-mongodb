@@ -167,6 +167,16 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
+	public @Nullable MongoPersistentProperty getTransientProperty(String name) {
+		return delegate.getTransientProperty(name);
+	}
+
+	@Override
+	public boolean isTransient(String property) {
+		return delegate.isTransient(property);
+	}
+
+	@Override
 	public boolean hasIdProperty() {
 		return delegate.hasIdProperty();
 	}
