@@ -16,9 +16,13 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +42,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
 
+import com.mongodb.client.model.CreateIndexOptions;
+import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
@@ -66,7 +72,7 @@ public class DefaultReactiveIndexOperationsUnitTests {
 		when(factory.getMongoDatabase()).thenReturn(Mono.just(db));
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(any(), any(Class.class))).thenReturn(collection);
-		when(collection.createIndex(any(), any(IndexOptions.class))).thenReturn(publisher);
+		when(collection.createIndexes(anyList(), any(CreateIndexOptions.class))).thenReturn(Flux.just("OK"));
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = spy(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
@@ -78,10 +84,10 @@ public class DefaultReactiveIndexOperationsUnitTests {
 
 		indexOpsFor(Jedi.class).ensureIndex(new Index("firstname", Direction.DESC)).subscribe();
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+		verify(collection).createIndexes(captor.capture(), any(CreateIndexOptions.class));
 
-		assertThat(options.getValue().getCollation()).isNull();
+		assertThat(captor.getValue().get(0).getOptions().getCollation()).isNull();
 	}
 
 	@Test // DATAMONGO-1854
@@ -89,10 +95,10 @@ public class DefaultReactiveIndexOperationsUnitTests {
 
 		indexOpsFor(Sith.class).ensureIndex(new Index("firstname", Direction.DESC)).subscribe();
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+		verify(collection).createIndexes(captor.capture(), any(CreateIndexOptions.class));
 
-		assertThat(options.getValue().getCollation())
+		assertThat(captor.getValue().get(0).getOptions().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
@@ -102,11 +108,28 @@ public class DefaultReactiveIndexOperationsUnitTests {
 		indexOpsFor(Sith.class).ensureIndex(new Index("firstname", Direction.DESC).collation(Collation.of("en_US")))
 				.subscribe();
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+		verify(collection).createIndexes(captor.capture(), any(CreateIndexOptions.class));
 
-		assertThat(options.getValue().getCollation())
+		assertThat(captor.getValue().get(0).getOptions().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("en_US").build());
+	}
+
+	@Test // GH-4422
+	void shouldPassCreateIndexOptionsToDriver() {
+
+		CreateIndexOptions createIndexOptions = new CreateIndexOptions()
+				.commitQuorum(com.mongodb.CreateIndexCommitQuorum.MAJORITY);
+
+		DefaultReactiveIndexOperations operations = new DefaultReactiveIndexOperations(template,
+				template.getCollectionName(Jedi.class), new QueryMapper(template.getConverter()), Jedi.class,
+				createIndexOptions);
+
+		operations.ensureIndex(new Index("firstname", Direction.DESC)).subscribe();
+
+		ArgumentCaptor<CreateIndexOptions> optionsCaptor = ArgumentCaptor.forClass(CreateIndexOptions.class);
+		verify(collection).createIndexes(anyList(), optionsCaptor.capture());
+		assertThat(optionsCaptor.getValue()).isSameAs(createIndexOptions);
 	}
 
 	private DefaultReactiveIndexOperations indexOpsFor(Class<?> type) {
