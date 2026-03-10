@@ -90,7 +90,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 			MongoPersistentEntity<?> entity = getConfiguredEntity();
 
-			IndexOptions indexOptions = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
+			IndexOptions indexOptions = IndexConverters.toIndexOptions(indexDefinition);
 
 			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
 			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
@@ -141,7 +141,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	public Flux<IndexInfo> getIndexInfo() {
 
 		return mongoOperations.execute(collectionName, collection -> collection.listIndexes(Document.class)) //
-				.map(IndexConverters.documentToIndexInfoConverter()::convert);
+				.map(IndexInfo::indexInfoOf);
 	}
 
 	private @Nullable MongoPersistentEntity<?> getConfiguredEntity() {

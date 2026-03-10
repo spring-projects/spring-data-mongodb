@@ -122,7 +122,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 			MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
 
-			IndexOptions indexOptions = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
+			IndexOptions indexOptions = IndexConverters.toIndexOptions(indexDefinition);
 
 			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
 			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
@@ -201,7 +201,7 @@ public class DefaultIndexOperations implements IndexOperations {
 				while (cursor.hasNext()) {
 
 					Document ix = cursor.next();
-					IndexInfo indexInfo = IndexConverters.documentToIndexInfoConverter().convert(ix);
+					IndexInfo indexInfo = IndexInfo.indexInfoOf(ix);
 					indexInfoList.add(indexInfo);
 				}
 
