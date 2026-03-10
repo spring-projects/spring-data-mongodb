@@ -821,13 +821,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public IndexOperations indexOps(String collectionName, @Nullable Class<?> type) {
-		return new DefaultIndexOperations(this, collectionName, type);
+	public IndexOperations indexOps(String collectionName, @Nullable Class<?> entityClass) {
+		return createIndexOperations(collectionName, this.queryMapper, entityClass);
 	}
 
 	@Override
 	public IndexOperations indexOps(Class<?> entityClass) {
 		return indexOps(getCollectionName(entityClass), entityClass);
+	}
+
+	protected IndexOperations createIndexOperations(String collectionName, QueryMapper queryMapper,
+			@Nullable Class<?> entityClass) {
+		return new DefaultIndexOperations(this, collectionName, queryMapper, entityClass);
 	}
 
 	@Override

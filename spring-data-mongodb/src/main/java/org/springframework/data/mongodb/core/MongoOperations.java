@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -39,8 +40,8 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.bulk.Bulk;
-import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.IndexOperations;
@@ -450,16 +451,26 @@ public interface MongoOperations extends FluentMongoOperations {
 	void dropCollection(String collectionName);
 
 	/**
-	 * Returns the operations that can be performed on indexes
+	 * Returns the operations that can be performed on indexes.
 	 *
-	 * @return index operations on the named collection
+	 * @return index operations on the named collection.
 	 */
 	IndexOperations indexOps(String collectionName);
 
 	/**
-	 * Returns the operations that can be performed on indexes
+	 * Returns the operations that can be performed on indexes.
 	 *
-	 * @return index operations on the named collection associated with the given entity class
+	 * @param collectionName name of the MongoDB collection, must not be {@literal null}.
+	 * @param entityClass the entityClass used for field mapping.
+	 * @return index operations on the named collection.
+	 * @since 5.1
+	 */
+	IndexOperations indexOps(String collectionName, Class<?> entityClass);
+
+	/**
+	 * Returns the operations that can be performed on indexes.
+	 *
+	 * @return index operations on the named collection associated with the given entity class.
 	 */
 	IndexOperations indexOps(Class<?> entityClass);
 

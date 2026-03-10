@@ -44,7 +44,7 @@ class DefaultIndexOperationsProvider implements IndexOperationsProvider {
 	}
 
 	@Override
-	public IndexOperations indexOps(String collectionName, @Nullable Class<?> type) {
-		return new DefaultIndexOperations(mongoDbFactory, collectionName, mapper, type);
+	public IndexOperations indexOps(String collectionName, @Nullable Class<?> entityClass) {
+		return new DefaultIndexOperations(mongoDbFactory, collectionName, mapper, entityClass);
 	}
 }

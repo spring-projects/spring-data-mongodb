@@ -18,20 +18,15 @@ package org.springframework.data.mongodb.core;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collection;
-
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-import org.springframework.data.mongodb.UncategorizedMongoDbException;
+
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.CollectionName;
 import org.springframework.util.Assert;
-import org.springframework.util.NumberUtils;
-
-import com.mongodb.client.model.IndexOptions;
 
 /**
  * Default implementation of {@link ReactiveIndexOperations}.
@@ -40,17 +35,12 @@ import com.mongodb.client.model.IndexOptions;
  * @author Christoph Strobl
  * @since 2.0
  */
-public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
-
-	private static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
+public class DefaultReactiveIndexOperations extends IndexOperationsSupport implements ReactiveIndexOperations {
 
 	private final ReactiveMongoOperations mongoOperations;
-	private final String collectionName;
-	private final QueryMapper queryMapper;
-	private final @Nullable Class<?> type;
 
 	/**
-	 * Creates a new {@link DefaultReactiveIndexOperations}.
+	 * Creates a new {@code DefaultReactiveIndexOperations}.
 	 *
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param collectionName must not be {@literal null}.
@@ -62,41 +52,43 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	}
 
 	/**
-	 * Creates a new {@link DefaultReactiveIndexOperations}.
+	 * Creates a new {@code DefaultReactiveIndexOperations}.
 	 *
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param collectionName must not be {@literal null}.
 	 * @param queryMapper must not be {@literal null}.
-	 * @param type used for mapping potential partial index filter expression, must not be {@literal null}.
+	 * @param type used for mapping potential partial index filter expression.
 	 */
 	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
 			QueryMapper queryMapper, @Nullable Class<?> type) {
+		this(mongoOperations, CollectionName.just(collectionName), queryMapper, type);
+	}
+
+	/**
+	 * Creates a new {@code DefaultReactiveIndexOperations}.
+	 *
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param queryMapper must not be {@literal null}.
+	 * @param type used for mapping potential partial index filter expression.
+	 */
+	protected DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, CollectionName collectionName,
+			QueryMapper queryMapper, @Nullable Class<?> type) {
+
+		super(collectionName, queryMapper, type);
 
 		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null");
-		Assert.notNull(collectionName, "Collection must not be null");
-		Assert.notNull(queryMapper, "QueryMapper must not be null");
-
 		this.mongoOperations = mongoOperations;
-		this.collectionName = collectionName;
-		this.queryMapper = queryMapper;
-		this.type = type;
 	}
 
 	@Override
 	@SuppressWarnings("NullAway")
 	public Mono<String> createIndex(IndexDefinition indexDefinition) {
 
-		return mongoOperations.execute(collectionName, collection -> {
+		return mongoOperations.execute(getCollectionName(), collection -> {
 
-			MongoPersistentEntity<?> entity = getConfiguredEntity();
-
-			IndexOptions indexOptions = IndexConverters.toIndexOptions(indexDefinition);
-
-			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
-			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
-
-			return collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
-
+			CreateIndexCommand command = toCreateIndexCommand(indexDefinition);
+			return collection.createIndexes(command.toIndexModels(), command.createIndexOptions());
 		}).next();
 	}
 
@@ -104,32 +96,16 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	public Mono<Void> alterIndex(String name, org.springframework.data.mongodb.core.index.IndexOptions options) {
 
 		return mongoOperations.execute(db -> {
-			Document indexOptions = new Document("name", name);
-			indexOptions.putAll(options.toDocument());
-
-			return Flux.from(db.runCommand(new Document("collMod", collectionName).append("index", indexOptions)))
+			return Flux.from(db.runCommand(alterIndexCommand(name, options)))
 					.doOnNext(result -> {
-						if (NumberUtils.convertNumberToTargetClass(result.get("ok", (Number) 0), Integer.class) != 1) {
-							throw new UncategorizedMongoDbException(
-									"Index '%s' could not be modified. Response was %s".formatted(name, result.toJson()), null);
-						}
+						validateAlterIndexResponse(name, result);
 					});
 		}).then();
 	}
 
-	private @Nullable MongoPersistentEntity<?> lookupPersistentEntity(String collection) {
-
-		Collection<? extends MongoPersistentEntity<?>> entities = queryMapper.getMappingContext().getPersistentEntities();
-
-		return entities.stream() //
-				.filter(entity -> entity.getCollection().equals(collection)) //
-				.findFirst() //
-				.orElse(null);
-	}
-
 	@Override
 	public Mono<Void> dropIndex(String name) {
-		return mongoOperations.execute(collectionName, collection -> collection.dropIndex(name)).then();
+		return mongoOperations.execute(getCollectionName(), collection -> collection.dropIndex(name)).then();
 	}
 
 	@Override
@@ -139,39 +115,8 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 	@Override
 	public Flux<IndexInfo> getIndexInfo() {
-
-		return mongoOperations.execute(collectionName, collection -> collection.listIndexes(Document.class)) //
+		return mongoOperations.execute(getCollectionName(), collection -> collection.listIndexes(Document.class)) //
 				.map(IndexInfo::indexInfoOf);
 	}
 
-	private @Nullable MongoPersistentEntity<?> getConfiguredEntity() {
-
-		if (type != null) {
-			return queryMapper.getMappingContext().getRequiredPersistentEntity(type);
-		}
-		return lookupPersistentEntity(collectionName);
-	}
-
-	private IndexOptions addPartialFilterIfPresent(IndexOptions ops, Document sourceOptions,
-			@Nullable MongoPersistentEntity<?> entity) {
-
-		if (!sourceOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
-			return ops;
-		}
-
-		Assert.isInstanceOf(Document.class, sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
-		return ops.partialFilterExpression(
-				queryMapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
-	}
-
-	@SuppressWarnings("NullAway")
-	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops,
-			@Nullable MongoPersistentEntity<?> entity) {
-
-		if (ops.getCollation() != null || entity == null || !entity.hasCollation()) {
-			return ops;
-		}
-
-		return ops.collation(entity.getCollation().toMongoCollation());
-	}
 }
