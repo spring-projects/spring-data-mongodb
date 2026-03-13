@@ -95,6 +95,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Returns the reactive operations that can be performed on indexes
 	 *
+	 * @param collectionName name of the MongoDB collection, must not be {@literal null}.
+	 * @param entityClass the entityClass used for field mapping.
+	 * @return index operations on the named collection.
+	 * @since 5.1
+	 */
+	ReactiveIndexOperations indexOps(String collectionName, Class<?> entityClass);
+
+	/**
+	 * Returns the reactive operations that can be performed on indexes
+	 *
 	 * @param entityClass must not be {@literal null}.
 	 * @return index operations on the named collection associated with the given entity class
 	 */
