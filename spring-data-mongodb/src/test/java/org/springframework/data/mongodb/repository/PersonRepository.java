@@ -67,6 +67,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	List<Person> findByLastname(String lastname);
 
+	List<ExtendedPerson> findExtendedPersonByLastname(String lastname);
+
 	List<Person> findByLastnameStartsWith(String prefix);
 
 	List<Person> findByLastnameEndsWith(String postfix);

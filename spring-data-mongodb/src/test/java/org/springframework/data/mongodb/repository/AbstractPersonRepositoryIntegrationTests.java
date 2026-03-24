@@ -15,12 +15,10 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assumptions.assumeThat;
-import static org.springframework.data.geo.Metrics.KILOMETERS;
+import static java.util.Arrays.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assumptions.*;
+import static org.springframework.data.geo.Metrics.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,22 +38,13 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.*;
 import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatcher;
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Range;
-import org.springframework.data.domain.ScrollPosition;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -183,6 +172,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 		List<Person> result = repository.findByLastname("Beauford");
 		assertThat(result).hasSize(1).contains(carter);
+	}
+
+	@Test // GH-5178
+	@SuppressWarnings("rawtypes")
+	void findsExtendedPersonsByLastname() {
+
+		List<ExtendedPerson> result = repository.findExtendedPersonByLastname("Beauford");
+		assertThat(result).hasSize(1).extracting(ExtendedPerson::getClass).contains((Class) ExtendedPerson.class);
 	}
 
 	@Test
