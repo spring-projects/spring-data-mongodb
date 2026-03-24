@@ -23,6 +23,7 @@ import org.jspecify.annotations.NullUnmarked;
 
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.javapoet.TypeNames;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.annotation.Collation;
@@ -39,6 +40,7 @@ import org.springframework.data.repository.aot.generate.MethodReturn;
 import org.springframework.data.util.Lazy;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
+import org.springframework.javapoet.TypeName;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
@@ -76,26 +78,25 @@ class QueryBlocks {
 			MongoEntityMetadata<?> entityMetadata = queryMethod.getEntityInformation();
 
 			Builder builder = CodeBlock.builder();
-
-			boolean isProjecting = context.getReturnedType().isProjecting();
 			boolean hasDynamicProjection = queryMethod.getParameters().hasDynamicProjection();
 			Class<?> queryType = entityMetadata.getCollectionEntity().getType();
-			Class<?> entityType = entityMetadata.getJavaType();
-			Object actualReturnType = hasDynamicProjection || isProjecting
-					? methodReturn.getActualTypeName()
-					: entityType;
+			boolean isDocumentReturn = methodReturn.getActualReturnClass().equals(Document.class);
+			boolean isProjecting = context.getReturnedType().isProjecting()
+					|| !queryType.equals(entityMetadata.getJavaType());
+			TypeName actualReturnType = isDocumentReturn ? methodReturn.getActualClassName()
+					: TypeNames.typeNameOrWrapper(methodReturn.getActualType());
 
 			builder.add("\n");
 
 			if (hasDynamicProjection) {
-				builder.addStatement("$T<$T> $L = $L.query($T.class).as($L)", FindWithQuery.class, actualReturnType,
+				builder.addStatement("$1T<$2T> $3L = $4L.query($5T.class).as($6L)", FindWithQuery.class, actualReturnType,
 						context.localVariable("finder"), mongoOpsRef, queryType, context.getDynamicProjectionParameterName());
-			} else if (isProjecting || !queryType.equals(entityType)) {
-				builder.addStatement("$T<$T> $L = $L.query($T.class).as($T.class)", FindWithQuery.class, actualReturnType,
-						context.localVariable("finder"), mongoOpsRef, queryType, actualReturnType);
-			} else {
-				builder.addStatement("$T<$T> $L = $L.query($T.class)", FindWithQuery.class, actualReturnType,
+			} else if (isProjecting) {
+				builder.addStatement("$1T<$2T> $3L = $4L.query($5T.class).as($2T.class)", FindWithQuery.class, actualReturnType,
 						context.localVariable("finder"), mongoOpsRef, queryType);
+			} else {
+				builder.addStatement("$1T<$2T> $3L = $4L.query($2T.class)", FindWithQuery.class, queryType,
+						context.localVariable("finder"), mongoOpsRef);
 			}
 
 			String terminatingMethod;
