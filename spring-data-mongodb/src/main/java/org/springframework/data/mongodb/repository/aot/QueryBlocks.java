@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.DiskUse;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
+import org.springframework.data.mongodb.repository.query.MongoEntityMetadata;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
@@ -44,6 +45,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Tomasz Forys
  * @since 5.0
  */
 class QueryBlocks {
@@ -71,27 +73,29 @@ class QueryBlocks {
 
 			MethodReturn methodReturn = context.getMethodReturn();
 			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
+			MongoEntityMetadata<?> entityMetadata = queryMethod.getEntityInformation();
 
 			Builder builder = CodeBlock.builder();
 
 			boolean isProjecting = context.getReturnedType().isProjecting();
-			Class<?> domainType = context.getRepositoryInformation().getDomainType();
-			Object actualReturnType = queryMethod.getParameters().hasDynamicProjection() || isProjecting
+			boolean hasDynamicProjection = queryMethod.getParameters().hasDynamicProjection();
+			Class<?> queryType = entityMetadata.getCollectionEntity().getType();
+			Class<?> entityType = entityMetadata.getJavaType();
+			Object actualReturnType = hasDynamicProjection || isProjecting
 					? methodReturn.getActualTypeName()
-					: domainType;
+					: entityType;
 
 			builder.add("\n");
 
-			if (queryMethod.getParameters().hasDynamicProjection()) {
+			if (hasDynamicProjection) {
 				builder.addStatement("$T<$T> $L = $L.query($T.class).as($L)", FindWithQuery.class, actualReturnType,
-						context.localVariable("finder"), mongoOpsRef, domainType, context.getDynamicProjectionParameterName());
-			} else if (isProjecting) {
+						context.localVariable("finder"), mongoOpsRef, queryType, context.getDynamicProjectionParameterName());
+			} else if (isProjecting || !queryType.equals(entityType)) {
 				builder.addStatement("$T<$T> $L = $L.query($T.class).as($T.class)", FindWithQuery.class, actualReturnType,
-						context.localVariable("finder"), mongoOpsRef, domainType, actualReturnType);
+						context.localVariable("finder"), mongoOpsRef, queryType, actualReturnType);
 			} else {
-
 				builder.addStatement("$T<$T> $L = $L.query($T.class)", FindWithQuery.class, actualReturnType,
-						context.localVariable("finder"), mongoOpsRef, domainType);
+						context.localVariable("finder"), mongoOpsRef, queryType);
 			}
 
 			String terminatingMethod;

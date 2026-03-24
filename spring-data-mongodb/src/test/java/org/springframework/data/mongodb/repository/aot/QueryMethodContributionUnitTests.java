@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Assertions;
@@ -47,6 +48,7 @@ import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.repository.Hint;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.repository.Repository;
@@ -61,6 +63,7 @@ import org.springframework.javapoet.MethodSpec;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Tomasz Forys
  */
 class QueryMethodContributionUnitTests {
 
@@ -406,6 +409,30 @@ class QueryMethodContributionUnitTests {
 				.containsSubsequence("return", "Streamable.of(", "getMappedResults())");
 	}
 
+	@Test // GH-5178
+	void rendersAnnotatedQueryUsingSubtypeAsCollectionAndResultType() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepoWithMeta.class, "findSpecialUserByLastname", String.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence("FindWithQuery<", ".SpecialUser> finder =")
+				.containsSubsequence(".query(",".SpecialUser.class)")
+				.doesNotContain(".query(example.aot.User.class)")
+				.contains("return finder.matching(filterQuery).all()");
+	}
+
+	@Test // GH-5178
+	void rendersOptionalAnnotatedQueryUsingSubtypeAsCollectionAndResultType() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepoWithMeta.class, "findOptionalSubtypeByUsername", String.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence("FindWithQuery<", ".SpecialUser> finder =")
+				.containsSubsequence(".query(",".SpecialUser.class)")
+				.doesNotContain(".query(example.aot.User.class)")
+				.contains("return finder.matching(filterQuery).one()");
+	}
+
 	private static MethodSpec codeOf(Class<?> repository, String methodName, Class<?>... args)
 			throws NoSuchMethodException {
 
@@ -445,6 +472,8 @@ class QueryMethodContributionUnitTests {
 		}
 	}
 
+	static class SpecialUser extends User {}
+
 	interface UserRepoWithMeta extends Repository<User, String> {
 
 		@Hint("fn-idx")
@@ -460,5 +489,11 @@ class QueryMethodContributionUnitTests {
 		@VectorSearch(indexName = "embedding.vector_cos", limit = "#{5+5}")
 		SearchResults<User> searchWithLimitAsExpressionByLastnameAndEmbeddingWithinOrderByFirstname(String lastname,
 				Vector vector, Range<Similarity> distance);
+
+		@Query("{ 'lastname' : { '$regex' : '^?0' } }")
+		List<SpecialUser> findSpecialUserByLastname(String lastname);
+
+		@Query("{ 'username' : ?0 }")
+		Optional<SpecialUser> findOptionalSubtypeByUsername(String username);
 	}
 }
