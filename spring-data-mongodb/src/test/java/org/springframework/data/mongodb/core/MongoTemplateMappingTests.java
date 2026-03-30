@@ -23,15 +23,16 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
@@ -47,35 +48,35 @@ import com.mongodb.client.model.geojson.Position;
  * @author Thomas Risberg
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration("classpath:template-mapping.xml")
-public class MongoTemplateMappingTests {
+class MongoTemplateMappingTests {
 
 	@Autowired @Qualifier("mongoTemplate1") MongoTemplate template1;
 
 	@Autowired @Qualifier("mongoTemplate2") MongoTemplate template2;
 
-	@Before
-	public void setUp() {
-		template1.dropCollection(template1.getCollectionName(Person.class));
+	@BeforeEach
+	void setUp() {
+		template1.dropCollection("person");
 	}
 
 	@Test
-	public void insertsEntityCorrectly1() {
+	void insertsEntityCorrectly1() {
 
 		addAndRetrievePerson(template1);
 		checkPersonPersisted(template1);
 	}
 
 	@Test
-	public void insertsEntityCorrectly2() {
+	void insertsEntityCorrectly2() {
 
 		addAndRetrievePerson(template2);
 		checkPersonPersisted(template2);
 	}
 
 	@Test // DATAMONGO-2357
-	public void writesAndReadsEntityWithNativeMongoGeoJsonTypesCorrectly() {
+	void writesAndReadsEntityWithNativeMongoGeoJsonTypesCorrectly() {
 
 		WithMongoGeoJson source = new WithMongoGeoJson();
 		source.id = "id-2";
@@ -88,7 +89,7 @@ public class MongoTemplateMappingTests {
 	}
 
 	@Test // DATAMONGO-2357
-	public void writesAndReadsEntityWithOpenNativeMongoGeoJsonTypesCorrectly() {
+	void writesAndReadsEntityWithOpenNativeMongoGeoJsonTypesCorrectly() {
 
 		WithOpenMongoGeoJson source = new WithOpenMongoGeoJson();
 		source.id = "id-2";
@@ -109,7 +110,7 @@ public class MongoTemplateMappingTests {
 			return this.id;
 		}
 
-		public MultiPolygon getMultiPolygon() {
+		MultiPolygon getMultiPolygon() {
 			return this.multiPolygon;
 		}
 
@@ -149,13 +150,13 @@ public class MongoTemplateMappingTests {
 		@Id String id;
 		Geometry geometry;
 
-		public WithOpenMongoGeoJson() {}
+		WithOpenMongoGeoJson() {}
 
 		public String getId() {
 			return this.id;
 		}
 
-		public Geometry getGeometry() {
+		Geometry getGeometry() {
 			return this.geometry;
 		}
 
