@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -28,7 +27,7 @@
 		<antora.javadoc-artifactId>spring-data-mongodb</antora.javadoc-artifactId>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>4.0.5-SNAPSHOT</springdata.commons>
-		<mongo>5.6.4</mongo>
+		<mongo>5.6.5</mongo>
 	</properties>
 
 	<developers>
