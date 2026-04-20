@@ -173,6 +173,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			expressionParser);
 	private final CachingValueExpressionEvaluatorFactory expressionEvaluatorFactory = new CachingValueExpressionEvaluatorFactory(
 			expressionParser, this, o -> spELContext.getEvaluationContext(o));
+	private ObjectIdConversion<?> objectIdConversion = ObjectIdConversion.enforceHexStringAsObjectId();
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
@@ -303,6 +304,10 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		return mappingContext;
 	}
 
+	public void setObjectIdConversion(ObjectIdConversion<?> objectIdConversion) {
+		this.objectIdConversion = objectIdConversion;
+	}
+
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
@@ -331,6 +336,11 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			environment = new StandardEnvironment();
 		}
 		return environment;
+	}
+
+	@Override
+	public ObjectIdConversion<?> objectIdConversion() {
+		return objectIdConversion;
 	}
 
 	/**
