@@ -78,7 +78,7 @@ This method uses class proxies to determine the property.
 Make sure that neither the class nor the accessors are `final` as otherwise this approach doesn't work.
 ====
 
-WARNING: Dot notation (such as `registerConverter(Person.class, "address.street", …)`) for nagivating across properties into subdocuments is *not* supported when registering converters.
+WARNING: Dot notation (such as `registerConverter(Person.class, "address.street", …)`) for navigating across properties into subdocuments is *not* supported when registering converters.
 
 TIP: `MongoValueConverter` offers a pre-typed `PropertyValueConverter` interface that uses `MongoConversionContext`.
 
