@@ -183,7 +183,7 @@ mongoDbFactory.setExceptionTranslator(myCustomExceptionTranslator);
 ====
 
 A motivation to customize exception can be MongoDB's behavior during transactions where some failures (such as write conflicts) can become transient and where a retry could lead to a successful operation.
-In such a case, you could wrap exceptions with a specific MongoDB label and apply a different exception translation stragegy.
+In such a case, you could wrap exceptions with a specific MongoDB label and apply a different exception translation strategy.
 
 [[mongo-template.type-mapping]]
 == Domain Type Mapping

@@ -44,7 +44,7 @@ container.register(request, User.class);                                        
 
 container.stop();                                                                   <7>
 ----
-<1> Starting the container intializes the resources and starts `Task` instances for already registered `SubscriptionRequest` instances. Requests added after startup are ran immediately.
+<1> Starting the container initializes the resources and starts `Task` instances for already registered `SubscriptionRequest` instances. Requests added after startup are ran immediately.
 <2> Define the listener called when a `Message` is received. The `Message#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
 <3> Set the collection to listen to.
 <4> Provide an optional filter for documents to receive.
