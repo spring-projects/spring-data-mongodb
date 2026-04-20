@@ -35,6 +35,8 @@ import org.springframework.util.NumberUtils;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.CreateIndexOptions;
+import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -53,6 +55,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	private final String collectionName;
 	private final QueryMapper mapper;
 	private final @Nullable Class<?> type;
+	private final CreateIndexOptions createIndexOptions;
 
 	private final MongoOperations mongoOperations;
 
@@ -92,6 +95,7 @@ public class DefaultIndexOperations implements IndexOperations {
 		this.collectionName = collectionName;
 		this.mapper = queryMapper;
 		this.type = type;
+		this.createIndexOptions = new CreateIndexOptions();
 		this.mongoOperations = new MongoTemplate(mongoDbFactory);
 	}
 
@@ -104,14 +108,30 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @since 2.1
 	 */
 	public DefaultIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
+		this(mongoOperations, collectionName, type, new CreateIndexOptions());
+	}
+
+	/**
+	 * Creates a new {@link DefaultIndexOperations}.
+	 *
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @param type can be {@literal null}.
+	 * @param createIndexOptions must not be {@literal null}.
+	 * @since 4.5
+	 */
+	public DefaultIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type,
+			CreateIndexOptions createIndexOptions) {
 
 		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 		Assert.hasText(collectionName, "Collection name must not be null or empty");
+		Assert.notNull(createIndexOptions, "CreateIndexOptions must not be null");
 
 		this.mongoOperations = mongoOperations;
 		this.mapper = new QueryMapper(mongoOperations.getConverter());
 		this.collectionName = collectionName;
 		this.type = type;
+		this.createIndexOptions = createIndexOptions;
 	}
 
 	@Override
@@ -128,7 +148,8 @@ public class DefaultIndexOperations implements IndexOperations {
 			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
 
 			Document mappedKeys = mapper.getMappedSort(indexDefinition.getIndexKeys(), entity);
-			return collection.createIndex(mappedKeys, indexOptions);
+			IndexModel indexModel = new IndexModel(mappedKeys, indexOptions);
+			return collection.createIndexes(List.of(indexModel), createIndexOptions).get(0);
 		});
 	}
 
