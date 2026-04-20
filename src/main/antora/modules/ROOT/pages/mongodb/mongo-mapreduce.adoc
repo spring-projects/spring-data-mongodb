@@ -28,7 +28,7 @@ function () {
 }
 ----
 
-The follwing reduce function sums up the occurrence of each letter across all the documents:
+The following reduce function sums up the occurrence of each letter across all the documents:
 
 [source,java]
 ----
@@ -60,7 +60,7 @@ for (ValueObject valueObject : results) {
 }
 ----
 
-The preceding exmaple produces the following output:
+The preceding example produces the following output:
 
 [source]
 ----

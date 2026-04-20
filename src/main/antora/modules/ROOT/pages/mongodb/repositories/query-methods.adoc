@@ -833,7 +833,7 @@ and `Document` (eg. new Document("locale", "en_US"))
 NOTE: In case you enabled the automatic index creation for repository finder methods a potential static collation definition,
 as shown in (1) and (2), will be included when creating the index.
 
-TIP: The most specifc `Collation` outrules potentially defined others. Which means Method argument over query method annotation over domain type annotation.
+TIP: The most specific `Collation` outrules potentially defined others. Which means Method argument over query method annotation over domain type annotation.
 ====
 
 To streamline usage of collation attributes throughout the codebase it is also possible to use the `@Collation` annotation, which serves as a meta annotation for the ones mentioned above.
