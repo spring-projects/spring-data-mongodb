@@ -2,7 +2,7 @@
 = Index Creation
 
 Spring Data MongoDB can automatically create indexes for entity types annotated with `@Document`.
-Index creation must be explicitly enabled since version 3.0 to prevent undesired effects with collection lifecyle and performance impact.
+Index creation must be explicitly enabled since version 3.0 to prevent undesired effects with collection lifecycle and performance impact.
 Indexes are automatically created for the initial entity set on application startup and when accessing an entity type for the first time while the application runs.
 
 We generally recommend explicit index creation for application-based control of indexes as Spring Data cannot automatically create indexes for collections that were recreated while the application was running.
@@ -166,7 +166,7 @@ public class DomainType {
 
 Hashed indexes can be created next to other index definitions like shown below, in that case both indices are created:
 
-.Example Hashed Index Usage togehter with simple index
+.Example Hashed Index Usage together with simple index
 ====
 [source,java]
 ----

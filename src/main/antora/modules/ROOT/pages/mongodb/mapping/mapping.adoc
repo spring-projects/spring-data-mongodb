@@ -691,7 +691,7 @@ class OrderItem {
     this.unitPrice = unitPrice;
   }
 
-  // getters/setters ommitted
+  // getters/setters omitted
 }
 
 Document input = new Document("id", "4711");

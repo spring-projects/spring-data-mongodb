@@ -89,7 +89,7 @@ template.createCollection(Person.class, CollectionOptions.empty().schema(schema)
 [[mongo.jsonSchema.generated]]
 == Generating a Schema
 
-Setting up a schema can be a time consuming task and we encourage everyone who decides to do so, to really take the time it takes.
+Setting up a schema can be a time-consuming task, and we encourage everyone who decides to do so, to really take the time it takes.
 It's important, schema changes can be hard.
 However, there might be times when one does not want to balked with it, and that is where `JsonSchemaCreator` comes into play.
 
@@ -115,7 +115,7 @@ public class Person {
         this.age = age;
     }
 
-    // gettter / setter omitted
+    // getter / setter omitted
 }
 
 MongoJsonSchema schema = MongoJsonSchemaCreator.create(mongoOperations.getConverter())
@@ -146,7 +146,7 @@ template.createCollection(Person.class, CollectionOptions.empty().schema(schema)
      }
 }
 ----
-<1> Simple object properties are consideres regular properties.
+<1> Simple object properties are considers regular properties.
 <2> Primitive types are considered required properties
 <3> Enums are restricted to possible values.
 <4> Object type properties are inspected and represented as nested documents.
@@ -158,7 +158,7 @@ NOTE: `_id` properties using types that can be converted into `ObjectId` like `S
 unless there is more specific information available via the `@MongoId` annotation.
 
 [cols="2,2,6", options="header"]
-.Sepcial Schema Generation rules
+.Special Schema Generation rules
 |===
 | Java
 | Schema Type
