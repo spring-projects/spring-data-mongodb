@@ -28,6 +28,8 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.Contract;
 import org.springframework.util.ObjectUtils;
 
+import org.bson.json.JsonWriterSettings;
+
 /**
  * Utility methods for JSON serialization.
  *
@@ -36,6 +38,8 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  */
 public abstract class SerializationUtils {
+	
+	private static final JsonWriterSettings DEFAULT_JSON_WRITER_SETTINGS = JsonWriterSettings.builder().build();
 
 	private SerializationUtils() {
 
@@ -112,46 +116,67 @@ public abstract class SerializationUtils {
 	 */
 	@Contract("null -> null; !null -> !null")
 	public static @Nullable String serializeToJsonSafely(@Nullable Object value) {
+		return serializeToJsonSafely(value, DEFAULT_JSON_WRITER_SETTINGS);
+	}
+	
+	public static @Nullable String serializeToJsonSafely(@Nullable Object value, JsonWriterSettings settings) {
 
 		if (value == null) {
 			return null;
 		}
 
 		try {
-			String json = value instanceof Document document ? document.toJson() : serializeValue(value);
+			String json = value instanceof Document document ? document.toJson(settings) : serializeValue(value, settings);
 			return json.replaceAll("\":", "\" :").replaceAll("\\{\"", "{ \"");
 		} catch (Exception e) {
 
-			if (value instanceof Collection<?> collection) {
-				return toString(collection);
-			} else if (value instanceof Map<?,?> map) {
-				return toString(map);
+			if (value instanceof Collection collection) {
+				return toString(collection, settings);
+			} else if (value instanceof Map<?, ?> map) {
+				return toString(map, settings);
 			} else if (ObjectUtils.isArray(value)) {
-				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)));
+				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)), settings);
 			} else {
 				return String.format("{ \"$java\" : %s }", value);
 			}
 		}
 	}
 
+
 	public static String serializeValue(@Nullable Object value) {
+		return serializeValue(value, DEFAULT_JSON_WRITER_SETTINGS);
+	}
+
+	public static String serializeValue(@Nullable Object value, JsonWriterSettings settings) {
 
 		if (value == null) {
 			return "null";
 		}
 
-		String documentJson = new Document("toBeEncoded", value).toJson();
+		String documentJson = new Document("toBeEncoded", value).toJson(settings);
 		return documentJson.substring(documentJson.indexOf(':') + 1, documentJson.length() - 1).trim();
 	}
 
 	private static String toString(Map<?, ?> source) {
-		return iterableToDelimitedString(source.entrySet(), "{ ", " }",
-				entry -> String.format("\"%s\" : %s", entry.getKey(), serializeToJsonSafely(entry.getValue())));
+		return toString(source, DEFAULT_JSON_WRITER_SETTINGS);
 	}
+
+	private static String toString(Map<?, ?> source, JsonWriterSettings settings) {
+
+		return iterableToDelimitedString(source.entrySet(), "{ ", " }",
+				entry -> String.format("\"%s\" : %s", entry.getKey(),
+						serializeToJsonSafely(entry.getValue(), settings)));
+	}
+
 
 	@SuppressWarnings("NullAway")
 	private static String toString(Collection<?> source) {
-		return iterableToDelimitedString(source, "[ ", " ]", SerializationUtils::serializeToJsonSafely);
+		return toString(source, DEFAULT_JSON_WRITER_SETTINGS);
+	}
+
+	@SuppressWarnings("NullAway")
+	private static String toString(Collection<?> source, JsonWriterSettings settings) {
+		return iterableToDelimitedString(source, "[ ", " ]", value -> serializeToJsonSafely(value, settings));
 	}
 
 	/**
