@@ -42,6 +42,8 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
+ * Integration tests for {@link DefaultReactiveIndexOperations}.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Mathieu Ouellet
@@ -49,22 +51,22 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 public class DefaultReactiveIndexOperationsTests {
 
 	@Template(initialEntitySet = DefaultIndexOperationsIntegrationTestsSample.class) //
-	static ReactiveMongoTestTemplate template;
+	private static ReactiveMongoTestTemplate template;
 
-	String collectionName = template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
+	private String collectionName = template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
 
-	DefaultReactiveIndexOperations indexOps = new DefaultReactiveIndexOperations(template, collectionName,
-			new QueryMapper(template.getConverter()));
+	private DefaultReactiveIndexOperations indexOps = new DefaultReactiveIndexOperations(template, collectionName,
+			new QueryMapper(template.getConverter()), DefaultIndexOperationsIntegrationTestsSample.class);
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		template.getCollection(collectionName).flatMapMany(MongoCollection::dropIndexes) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1518
-	public void shouldCreateIndexWithCollationCorrectly() {
+	void shouldCreateIndexWithCollationCorrectly() {
 
 		IndexDefinition id = new Index().named("with-collation").on("xyz", Direction.ASC)
 				.collation(Collation.of("de_AT").caseFirst(CaseFirst.off()));
@@ -96,7 +98,7 @@ public class DefaultReactiveIndexOperationsTests {
 	}
 
 	@Test // DATAMONGO-1682, DATAMONGO-2198
-	public void shouldApplyPartialFilterCorrectly() {
+	void shouldApplyPartialFilterCorrectly() {
 
 		IndexDefinition id = new Index().named("partial-with-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("q-t-y").gte(10)));
@@ -112,7 +114,7 @@ public class DefaultReactiveIndexOperationsTests {
 	}
 
 	@Test // DATAMONGO-1682, DATAMONGO-2198
-	public void shouldApplyPartialFilterWithMappedPropertyCorrectly() {
+	void shouldApplyPartialFilterWithMappedPropertyCorrectly() {
 
 		IndexDefinition id = new Index().named("partial-with-mapped-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("quantity").gte(10)));
@@ -127,7 +129,7 @@ public class DefaultReactiveIndexOperationsTests {
 	}
 
 	@Test // DATAMONGO-1682, DATAMONGO-2198
-	public void shouldApplyPartialDBOFilterCorrectly() {
+	void shouldApplyPartialDBOFilterCorrectly() {
 
 		IndexDefinition id = new Index().named("partial-with-dbo").on("k3y", Direction.ASC)
 				.partial(of(new org.bson.Document("qty", new org.bson.Document("$gte", 10))));
@@ -144,7 +146,7 @@ public class DefaultReactiveIndexOperationsTests {
 	}
 
 	@Test // DATAMONGO-1682, DATAMONGO-2198
-	public void shouldFavorExplicitMappingHintViaClass() {
+	void shouldFavorExplicitMappingHintViaClass() {
 
 		IndexDefinition id = new Index().named("partial-with-inheritance").on("k3y", Direction.ASC)
 				.partial(of(where("age").gte(10)));

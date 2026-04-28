@@ -15,12 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.data.Index.*;
 import static org.assertj.core.data.Index.atIndex;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import org.junit.jupiter.api.RepeatedTest;
-import org.junitpioneer.jupiter.RetryingTest;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -32,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junitpioneer.jupiter.RetryingTest;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
