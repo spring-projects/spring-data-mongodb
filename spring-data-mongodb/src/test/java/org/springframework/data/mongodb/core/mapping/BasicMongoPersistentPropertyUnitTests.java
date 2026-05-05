@@ -50,6 +50,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Divya Srivastava
+ * @author dragonfsky
  */
 public class BasicMongoPersistentPropertyUnitTests {
 
@@ -168,6 +169,30 @@ public class BasicMongoPersistentPropertyUnitTests {
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation.class,
 				"id");
 		assertThat(property.isIdProperty()).isTrue();
+	}
+
+	@Test // GH-3351
+	void shouldRestrictImplicitIdPropertyMappingToDocumentTypes() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setAutoIdFieldMappingOnlyForDocumentTypes(true);
+
+		MongoPersistentEntity<?> documentEntity = context.getRequiredPersistentEntity(DocumentWithImplicitIdProperty.class);
+		MongoPersistentEntity<?> nestedEntity = context.getRequiredPersistentEntity(NestedTypeWithImplicitIdProperty.class);
+
+		assertThat(documentEntity.getRequiredPersistentProperty("id").isIdProperty()).isTrue();
+		assertThat(nestedEntity.getRequiredPersistentProperty("id").isIdProperty()).isFalse();
+	}
+
+	@Test // GH-3351
+	void shouldKeepExplicitIdPropertyWhenRestrictingImplicitIdPropertyMapping() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setAutoIdFieldMappingOnlyForDocumentTypes(true);
+
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(NestedTypeWithExplicitIdProperty.class);
+
+		assertThat(entity.getRequiredPersistentProperty("id").isIdProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-1373
@@ -342,6 +367,22 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		@Id
 		@org.springframework.data.mongodb.core.mapping.Field("id") String id;
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document
+	static class DocumentWithImplicitIdProperty {
+
+		String id;
+	}
+
+	static class NestedTypeWithImplicitIdProperty {
+
+		String id;
+	}
+
+	static class NestedTypeWithExplicitIdProperty {
+
+		@Id String id;
 	}
 
 	static class DocumentWithComposedAnnotations {
