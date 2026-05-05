@@ -126,6 +126,7 @@ import com.mongodb.DBRef;
  * @author Roman Puchkovskiy
  * @author Heesu Jung
  * @author Julia Lee
+ * @author dragonfsky
  */
 @ExtendWith(MockitoExtension.class)
 class MappingMongoConverterUnitTests {
@@ -1550,6 +1551,40 @@ class MappingMongoConverterUnitTests {
 
 		assertThat(result).isNotNull();
 		assertThat(result.box).isEqualTo(object.box);
+	}
+
+	@Test // GH-4997
+	void shouldReadEntityWithGeoPointFromArrayCoordinates() {
+
+		org.bson.Document document = new org.bson.Document("point", Arrays.asList(-73.99171, 40.738868));
+
+		ClassWithArrayBackedGeoPoint result = converter.read(ClassWithArrayBackedGeoPoint.class, document);
+
+		assertThat(result.point).isEqualTo(new Point(-73.99171, 40.738868));
+	}
+
+	@Test // GH-4997
+	void shouldWriteArrayBackedGeoPointAsArrayCoordinates() {
+
+		ClassWithArrayBackedGeoPoint object = new ClassWithArrayBackedGeoPoint();
+		object.point = new Point(-73.99171, 40.738868);
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
+
+		assertThat(document.get("point")).isEqualTo(Arrays.asList(-73.99171, 40.738868));
+	}
+
+	@Test // GH-4997
+	void shouldKeepDefaultGeoPointRepresentation() {
+
+		ClassWithGeoPoint object = new ClassWithGeoPoint();
+		object.point = new Point(-73.99171, 40.738868);
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
+
+		assertThat(document.get("point")).isEqualTo(toDocument(object.point));
 	}
 
 	@Test // DATAMONGO-858
@@ -4057,6 +4092,16 @@ class MappingMongoConverterUnitTests {
 	class ClassWithGeoBox {
 
 		Box box;
+	}
+
+	class ClassWithGeoPoint {
+
+		Point point;
+	}
+
+	class ClassWithArrayBackedGeoPoint {
+
+		@Field(targetType = FieldType.ARRAY) Point point;
 	}
 
 	class ClassWithGeoCircle {
