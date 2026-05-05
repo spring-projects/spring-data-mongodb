@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
@@ -41,6 +42,7 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author dragonfsky
  */
 public class IndexInfo {
 
@@ -182,16 +184,80 @@ public class IndexInfo {
 	}
 
 	/**
-	 * Returns whether the index is covering exactly the fields given independently of the order.
+	 * Returns whether the index contains all given field keys independently of their position. Field keys are compared as
+	 * a set and therefore repeated input keys are ignored.
 	 *
 	 * @param keys must not be {@literal null}.
 	 * @return
+	 * @since 5.1
 	 */
-	public boolean isIndexForFields(Collection<String> keys) {
+	public boolean containsAllFields(Collection<String> keys) {
 
 		Assert.notNull(keys, "Collection of keys must not be null");
 
-		return this.indexFields.stream().map(IndexField::getKey).collect(Collectors.toSet()).containsAll(keys);
+		return getIndexFieldKeys().containsAll(keys);
+	}
+
+	/**
+	 * Returns whether the index contains all given field keys independently of their position. Field keys are compared as
+	 * a set and therefore repeated input keys are ignored.
+	 *
+	 * @param keys must not be {@literal null}.
+	 * @return
+	 * @deprecated since 5.1. Use {@link #containsAllFields(Collection)}, {@link #isIndexForFieldsExactly(Collection)}, or
+	 *             {@link #coversFields(Collection)} to express the intended index field matching semantics.
+	 */
+	@Deprecated(since = "5.1")
+	public boolean isIndexForFields(Collection<String> keys) {
+		return containsAllFields(keys);
+	}
+
+	/**
+	 * Returns whether the index matches exactly the given field keys independently of their order. Field keys are compared
+	 * as a set and therefore repeated input keys are ignored.
+	 *
+	 * @param keys must not be {@literal null}.
+	 * @return
+	 * @since 5.1
+	 */
+	public boolean isIndexForFieldsExactly(Collection<String> keys) {
+
+		Assert.notNull(keys, "Collection of keys must not be null");
+
+		Set<String> indexFieldKeys = getIndexFieldKeys();
+		Set<String> keysToCheck = keys.stream().collect(Collectors.toSet());
+
+		return indexFieldKeys.size() == keysToCheck.size() && indexFieldKeys.containsAll(keysToCheck);
+	}
+
+	/**
+	 * Returns whether the given field keys are covered by this index according to compound-index prefix field matching.
+	 * Field keys are compared as a set and therefore repeated input keys are ignored. This method matches
+	 * {@link IndexField#getKey() index field keys} only and does not evaluate special query semantics of text, geo, or
+	 * wildcard indexes.
+	 *
+	 * @param keys must not be {@literal null}.
+	 * @return
+	 * @since 5.1
+	 */
+	public boolean coversFields(Collection<String> keys) {
+
+		Assert.notNull(keys, "Collection of keys must not be null");
+
+		Set<String> keysToCheck = keys.stream().collect(Collectors.toSet());
+
+		if (keysToCheck.size() > indexFields.size()) {
+			return false;
+		}
+
+		Set<String> indexFieldPrefix = indexFields.stream().limit(keysToCheck.size()).map(IndexField::getKey)
+				.collect(Collectors.toSet());
+
+		return indexFieldPrefix.containsAll(keysToCheck);
+	}
+
+	private Set<String> getIndexFieldKeys() {
+		return this.indexFields.stream().map(IndexField::getKey).collect(Collectors.toSet());
 	}
 
 	public String getName() {
