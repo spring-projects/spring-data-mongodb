@@ -30,6 +30,7 @@ import org.springframework.data.domain.Sort.Direction;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Stefan Tirea
+ * @author dragonfsky
  */
 class IndexInfoUnitTests {
 
@@ -50,14 +51,52 @@ class IndexInfoUnitTests {
 			   }
 			""";
 
-	@Test
-	void isIndexForFieldsCorrectly() {
+	@Test // GH-5187
+	@SuppressWarnings("deprecation")
+	void isIndexForFieldsRetainsContainsAllBehavior() {
 
 		IndexField fooField = IndexField.create("foo", Direction.ASC);
 		IndexField barField = IndexField.create("bar", Direction.DESC);
 
 		IndexInfo info = new IndexInfo(Arrays.asList(fooField, barField), "myIndex", false, false, "");
 		assertThat(info.isIndexForFields(Arrays.asList("foo", "bar"))).isTrue();
+		assertThat(info.isIndexForFields(Arrays.asList("foo"))).isTrue();
+	}
+
+	@Test // GH-5187
+	void containsAllFieldsReturnsTrueForFieldSubset() {
+
+		IndexInfo info = new IndexInfo(Arrays.asList(IndexField.create("foo", Direction.ASC),
+				IndexField.create("bar", Direction.DESC)), "myIndex", false, false, "");
+
+		assertThat(info.containsAllFields(Arrays.asList("foo"))).isTrue();
+		assertThat(info.containsAllFields(Arrays.asList("bar", "foo"))).isTrue();
+		assertThat(info.containsAllFields(Arrays.asList("foo", "baz"))).isFalse();
+	}
+
+	@Test // GH-5187
+	void isIndexForFieldsExactlyRequiresSameFields() {
+
+		IndexInfo info = new IndexInfo(Arrays.asList(IndexField.create("foo", Direction.ASC),
+				IndexField.create("bar", Direction.DESC)), "myIndex", false, false, "");
+
+		assertThat(info.isIndexForFieldsExactly(Arrays.asList("foo", "bar"))).isTrue();
+		assertThat(info.isIndexForFieldsExactly(Arrays.asList("bar", "foo"))).isTrue();
+		assertThat(info.isIndexForFieldsExactly(Arrays.asList("foo"))).isFalse();
+		assertThat(info.isIndexForFieldsExactly(Arrays.asList("foo", "bar", "baz"))).isFalse();
+	}
+
+	@Test // GH-5187
+	void coversFieldsOnlyMatchesIndexPrefixes() {
+
+		IndexInfo info = new IndexInfo(Arrays.asList(IndexField.create("foo", Direction.ASC),
+				IndexField.create("bar", Direction.DESC), IndexField.create("baz", Direction.ASC)), "myIndex", false,
+				false, "");
+
+		assertThat(info.coversFields(Arrays.asList("foo"))).isTrue();
+		assertThat(info.coversFields(Arrays.asList("bar", "foo"))).isTrue();
+		assertThat(info.coversFields(Arrays.asList("bar"))).isFalse();
+		assertThat(info.coversFields(Arrays.asList("foo", "baz"))).isFalse();
 	}
 
 	@Test // DATAMONGO-2170
