@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import org.springframework.data.geo.Point;
  */
 public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 
+	@Serial
 	private static final long serialVersionUID = -8026303425147474002L;
 
 	private static final String TYPE = "Point";
