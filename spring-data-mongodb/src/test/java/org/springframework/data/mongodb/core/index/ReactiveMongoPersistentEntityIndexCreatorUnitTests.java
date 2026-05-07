@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.mongodb.MongoException;
+import com.mongodb.client.model.CreateIndexOptions;
+import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
@@ -62,6 +65,7 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<org.bson.Document> collection;
 
+	private ArgumentCaptor<List<IndexModel>> indexModelCaptor;
 	private ArgumentCaptor<org.bson.Document> keysCaptor;
 	private ArgumentCaptor<IndexOptions> optionsCaptor;
 	private ArgumentCaptor<String> collectionCaptor;
@@ -79,8 +83,11 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 		keysCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
 		optionsCaptor = ArgumentCaptor.forClass(IndexOptions.class);
 		collectionCaptor = ArgumentCaptor.forClass(String.class);
+		indexModelCaptor = ArgumentCaptor.forClass(List.class);
 
 		when(collection.createIndex(keysCaptor.capture(), optionsCaptor.capture())).thenReturn(Mono.just("OK"));
+		when(collection.createIndexes(indexModelCaptor.capture(), any(CreateIndexOptions.class)))
+				.thenReturn(Mono.just("OK"));
 	}
 
 	@Test // DATAMONGO-1928
@@ -94,16 +101,18 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 
 		publisher.as(StepVerifier::create).verifyComplete();
 
-		assertThat(keysCaptor.getValue()).isNotNull().containsKey("fieldname");
-		assertThat(optionsCaptor.getValue().getName()).isEqualTo("indexName");
-		assertThat(optionsCaptor.getValue().isBackground()).isFalse();
-		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS)).isNull();
+		IndexModel indexModel = indexModelCaptor.getValue().get(0);
+
+		assertThat(indexModel.getKeys().toBsonDocument()).isNotNull().containsKey("fieldname");
+		assertThat(indexModel.getOptions().getName()).isEqualTo("indexName");
+		assertThat(indexModel.getOptions().isBackground()).isFalse();
+		assertThat(indexModel.getOptions().getExpireAfter(TimeUnit.SECONDS)).isNull();
 	}
 
 	@Test // DATAMONGO-1928
 	void createIndexShouldUsePersistenceExceptionTranslatorForNonDataIntegrityConcerns() {
 
-		when(collection.createIndex(any(org.bson.Document.class), any(IndexOptions.class)))
+		when(collection.createIndexes(indexModelCaptor.capture(), any(CreateIndexOptions.class)))
 				.thenReturn(Mono.error(new MongoException(6, "HostUnreachable")));
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
@@ -116,7 +125,7 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 	@Test // DATAMONGO-1928
 	void createIndexShouldNotConvertUnknownExceptionTypes() {
 
-		when(collection.createIndex(any(org.bson.Document.class), any(IndexOptions.class)))
+		when(collection.createIndexes(any(List.class), any(CreateIndexOptions.class)))
 				.thenReturn(Mono.error(new ClassCastException("o_O")));
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);

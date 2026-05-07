@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +47,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.CreateIndexOptions;
+import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -67,16 +70,14 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	private @Mock MongoCollection<org.bson.Document> collection;
 	private MongoTemplate mongoTemplate;
 
-	private ArgumentCaptor<org.bson.Document> keysCaptor;
-	private ArgumentCaptor<IndexOptions> optionsCaptor;
+	private ArgumentCaptor<List<IndexModel>> indexModelCaptor;
 	private ArgumentCaptor<String> collectionCaptor;
 
 	@BeforeEach
 	void setUp() {
 
-		keysCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
-		optionsCaptor = ArgumentCaptor.forClass(IndexOptions.class);
 		collectionCaptor = ArgumentCaptor.forClass(String.class);
+		indexModelCaptor = ArgumentCaptor.forClass(List.class);
 
 		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
@@ -84,8 +85,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 				.thenReturn((MongoCollection) collection);
 
 		mongoTemplate = new MongoTemplate(factory);
-
-		when(collection.createIndex(keysCaptor.capture(), optionsCaptor.capture())).thenReturn("OK");
+		when(collection.createIndexes(indexModelCaptor.capture(), any(CreateIndexOptions.class))).thenReturn(List.of("OK"));
 	}
 
 	@Test
@@ -95,10 +95,12 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue()).isNotNull().containsKey("fieldname");
-		assertThat(optionsCaptor.getValue().getName()).isEqualTo("indexName");
-		assertThat(optionsCaptor.getValue().isBackground()).isFalse();
-		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS)).isNull();
+		IndexModel indexModel = indexModelCaptor.getValue().get(0);
+
+		assertThat(indexModel.getKeys().toBsonDocument()).isNotNull().containsKey("fieldname");
+		assertThat(indexModel.getOptions().getName()).isEqualTo("indexName");
+		assertThat(indexModel.getOptions().isBackground()).isFalse();
+		assertThat(indexModel.getOptions().getExpireAfter(TimeUnit.SECONDS)).isNull();
 	}
 
 	@Test
@@ -135,10 +137,12 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(AnotherPerson.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue()).isNotNull().containsKey("lastname");
-		assertThat(optionsCaptor.getValue().getName()).isEqualTo("lastname");
-		assertThat(optionsCaptor.getValue().isBackground()).isTrue();
-		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS)).isNull();
+		IndexModel indexModel = indexModelCaptor.getValue().get(0);
+
+		assertThat(indexModel.getKeys().toBsonDocument()).isNotNull().containsKey("lastname");
+		assertThat(indexModel.getOptions().getName()).isEqualTo("lastname");
+		assertThat(indexModel.getOptions().isBackground()).isTrue();
+		assertThat(indexModel.getOptions().getExpireAfter(TimeUnit.SECONDS)).isNull();
 	}
 
 	@Test // DATAMONGO-544
@@ -147,8 +151,10 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(Milk.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue()).isNotNull().containsKey("expiry");
-		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(60);
+		IndexModel indexModel = indexModelCaptor.getValue().get(0);
+
+		assertThat(indexModel.getKeys().toBsonDocument()).isNotNull().containsKey("expiry");
+		assertThat(indexModel.getOptions().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(60);
 	}
 
 	@Test // DATAMONGO-899
@@ -157,9 +163,11 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(Wrapper.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue()).isEqualTo(new org.bson.Document("company.address.location", "2d"));
+		IndexModel indexModel = indexModelCaptor.getValue().get(0);
 
-		IndexOptions opts = optionsCaptor.getValue();
+		assertThat(indexModel.getKeys()).isEqualTo(new org.bson.Document("company.address.location", "2d"));
+
+		IndexOptions opts = indexModel.getOptions();
 		assertThat(opts.getName()).isEqualTo("company.address.location");
 		assertThat(opts.getMin()).isCloseTo(-180d, offset(0d));
 		assertThat(opts.getMax()).isCloseTo(180d, offset(0d));
@@ -172,8 +180,10 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(EntityWithGeneratedIndexName.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue()).doesNotContainKey("name").containsKey("lastname");
-		assertThat(optionsCaptor.getValue().getName()).isNull();
+		IndexModel indexModel = indexModelCaptor.getValue().get(0);
+
+		assertThat(indexModel.getKeys().toBsonDocument()).doesNotContainKey("name").containsKey("lastname");
+		assertThat(indexModel.getOptions().getName()).isNull();
 	}
 
 	@Test // DATAMONGO-367
@@ -203,8 +213,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	@Test // DATAMONGO-1125
 	void createIndexShouldUsePersistenceExceptionTranslatorForNonDataIntegrityConcerns() {
 
-		doThrow(new MongoException(6, "HostUnreachable")).when(collection).createIndex(any(org.bson.Document.class),
-				any(IndexOptions.class));
+		doThrow(new MongoException(6, "HostUnreachable")).when(collection).createIndexes(anyList(),
+				any(CreateIndexOptions.class));
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
 
@@ -215,8 +225,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	@Test // DATAMONGO-1125
 	void createIndexShouldNotConvertUnknownExceptionTypes() {
 
-		doThrow(new ClassCastException("o_O")).when(collection).createIndex(any(org.bson.Document.class),
-				any(IndexOptions.class));
+		doThrow(new ClassCastException("o_O")).when(collection).createIndexes(anyList(), any(CreateIndexOptions.class));
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
 

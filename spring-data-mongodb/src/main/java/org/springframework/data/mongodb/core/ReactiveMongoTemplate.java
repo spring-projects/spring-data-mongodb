@@ -510,14 +510,25 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return queryOperations;
 	}
 
+
 	@Override
 	public ReactiveIndexOperations indexOps(String collectionName) {
-		return new DefaultReactiveIndexOperations(this, collectionName, this.queryMapper);
+		return createIndexOperations(collectionName, this.queryMapper, null);
+	}
+
+	@Override
+	public ReactiveIndexOperations indexOps(String collectionName, @Nullable Class<?> entityClass) {
+		return createIndexOperations(collectionName, this.queryMapper, entityClass);
 	}
 
 	@Override
 	public ReactiveIndexOperations indexOps(Class<?> entityClass) {
-		return new DefaultReactiveIndexOperations(this, getCollectionName(entityClass), this.queryMapper, entityClass);
+		return indexOps(getCollectionName(entityClass), entityClass);
+	}
+
+	protected ReactiveIndexOperations createIndexOperations(String collectionName, QueryMapper queryMapper,
+			@Nullable Class<?> entityClass) {
+		return new DefaultReactiveIndexOperations(this, collectionName, queryMapper, entityClass);
 	}
 
 	@Override

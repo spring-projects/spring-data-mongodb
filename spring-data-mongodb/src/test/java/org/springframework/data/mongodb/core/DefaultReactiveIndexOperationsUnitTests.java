@@ -20,7 +20,11 @@ import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.function.BiConsumer;
+
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +32,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -38,13 +43,18 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
 
+import com.mongodb.client.model.CreateIndexOptions;
+import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
+ * Unit tests for {@link DefaultReactiveIndexOperations}.
+ *
  * @author Christoph Strobl
  * @author Mathieu Ouellet
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 public class DefaultReactiveIndexOperationsUnitTests {
@@ -66,7 +76,7 @@ public class DefaultReactiveIndexOperationsUnitTests {
 		when(factory.getMongoDatabase()).thenReturn(Mono.just(db));
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(any(), any(Class.class))).thenReturn(collection);
-		when(collection.createIndex(any(), any(IndexOptions.class))).thenReturn(publisher);
+		when(collection.createIndexes(anyList(), any(CreateIndexOptions.class))).thenReturn(publisher);
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = spy(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
@@ -78,10 +88,7 @@ public class DefaultReactiveIndexOperationsUnitTests {
 
 		indexOpsFor(Jedi.class).ensureIndex(new Index("firstname", Direction.DESC)).subscribe();
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
-
-		assertThat(options.getValue().getCollation()).isNull();
+		verifyCreateIndex((keys, options) -> assertThat(options.getCollation()).isNull());
 	}
 
 	@Test // DATAMONGO-1854
@@ -89,11 +96,8 @@ public class DefaultReactiveIndexOperationsUnitTests {
 
 		indexOpsFor(Sith.class).ensureIndex(new Index("firstname", Direction.DESC)).subscribe();
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
-
-		assertThat(options.getValue().getCollation())
-				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
+		verifyCreateIndex((keys, options) -> assertThat(options.getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
 	}
 
 	@Test // DATAMONGO-1854
@@ -102,11 +106,19 @@ public class DefaultReactiveIndexOperationsUnitTests {
 		indexOpsFor(Sith.class).ensureIndex(new Index("firstname", Direction.DESC).collation(Collation.of("en_US")))
 				.subscribe();
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
 
-		assertThat(options.getValue().getCollation())
-				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("en_US").build());
+		verifyCreateIndex((keys, options) -> assertThat(options.getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("en_US").build()));
+	}
+
+	private void verifyCreateIndex(BiConsumer<Bson, IndexOptions> consumer) {
+
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+
+		verify(collection).createIndexes(captor.capture(), any());
+
+		IndexModel indexModel = captor.getValue().get(0);
+		consumer.accept(indexModel.getKeys(), indexModel.getOptions());
 	}
 
 	private DefaultReactiveIndexOperations indexOpsFor(Class<?> type) {
