@@ -2095,6 +2095,20 @@ class MappingMongoConverterUnitTests {
 		assertThat(converter.convertId(source.toHexString(), ObjectId.class)).isEqualTo(source);
 	}
 
+	@Test // GH-5092
+	void doNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObjectIdButConfigTellsOtherwise() {
+
+		ObjectId source = new ObjectId();
+		converter = new MappingMongoConverter(resolver, mappingContext) {
+			@Override
+			public ObjectIdConversion<?> objectIdConversion() {
+				return ObjectIdConversion.retainRawString();
+			}
+		};
+		converter.afterPropertiesSet();
+		assertThat(converter.convertId(source.toHexString(), ObjectId.class)).isEqualTo(source.toHexString());
+	}
+
 	@Test // DATAMONGO-1798
 	void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsString() {
 
