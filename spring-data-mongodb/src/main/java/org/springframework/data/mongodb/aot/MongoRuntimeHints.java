@@ -24,6 +24,7 @@ import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.aot.hint.TypeReference;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
@@ -47,6 +48,7 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Omer Celik
  * @since 4.0
  */
 class MongoRuntimeHints implements RuntimeHintsRegistrar {
@@ -56,7 +58,8 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 
 		hints.reflection().registerTypes(
 				Arrays.asList(TypeReference.of(BeforeConvertCallback.class), TypeReference.of(BeforeSaveCallback.class),
-						TypeReference.of(AfterConvertCallback.class), TypeReference.of(AfterSaveCallback.class)),
+						TypeReference.of(AfterConvertCallback.class), TypeReference.of(AfterSaveCallback.class),
+						TypeReference.of(AggregationOperation.class)),
 				builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 						MemberCategory.INVOKE_PUBLIC_METHODS));
 
