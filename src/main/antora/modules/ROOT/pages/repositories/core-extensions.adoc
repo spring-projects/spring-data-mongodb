@@ -215,7 +215,9 @@ Gradle::
 [source,groovy,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 dependencies {
-    implementation "com.querydsl:querydsl-mongodb:$querydslVersion"
+    implementation("com.querydsl:querydsl-mongodb:$querydslVersion") {
+        exclude group: "org.mongodb", module: "mongo-java-driver"
+    }
 
     annotationProcessor "com.querydsl:querydsl-apt:$querydslVersion:jakarta"
     annotationProcessor "org.springframework.data:spring-data-mongodb"
