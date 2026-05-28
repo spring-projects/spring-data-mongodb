@@ -215,12 +215,12 @@ Gradle::
 [source,groovy,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 dependencies {
-    implementation "com.querydsl:querydsl-mongodb:${querydslVersion}"
+    implementation "com.querydsl:querydsl-mongodb:$querydslVersion"
 
-    annotationProcessor "com.querydsl:querydsl-apt:${querydslVersion}:jakarta"
+    annotationProcessor "com.querydsl:querydsl-apt:$querydslVersion:jakarta"
     annotationProcessor "org.springframework.data:spring-data-mongodb"
 
-    testAnnotationProcessor "com.querydsl:querydsl-apt:${querydslVersion}:jakarta"
+    testAnnotationProcessor "com.querydsl:querydsl-apt:$querydslVersion:jakarta"
     testAnnotationProcessor "org.springframework.data:spring-data-mongodb"
 }
 
