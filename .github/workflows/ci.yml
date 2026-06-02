@@ -29,3 +29,5 @@ jobs:
           replica-set: 'rs0'
       - name: Build
         uses: spring-projects/spring-data-build/actions/maven-build@3.5.x
+        with:
+          settings-xml: '${{ vars.SETTINGS_XML }}'
