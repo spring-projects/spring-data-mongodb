@@ -41,6 +41,8 @@ import com.mongodb.client.MongoCursor;
  */
 abstract class CursorReadingTask<T, R> implements Task {
 
+	// ensure happens-before ordering to avoid asynchronous operations leak while
+	// synchronous operations such as close suggest a completed state.
 	private final Lock lock = Lock.of(new ReentrantLock());
 
 	private final MongoTemplate template;
@@ -49,7 +51,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	private final ErrorHandler errorHandler;
 	private final CountDownLatch awaitStart = new CountDownLatch(1);
 
-	private State state = State.CREATED;
+	private volatile State state = State.CREATED;
 
 	private @Nullable MongoCursor<T> cursor;
 
@@ -177,7 +179,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	@Override
 	public State getState() {
-		return lock.execute(() -> state);
+		return state;
 	}
 
 	@Override

@@ -21,8 +21,12 @@ import static org.mockito.Mockito.*;
 
 import edu.umd.cs.mtc.MultithreadedTestCase;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -121,6 +125,40 @@ public class CursorReadingTaskUnitTests {
 		task.run();
 		verify(errorHandler).handleError(errorCaptor.capture());
 		assertThat(errorCaptor.getValue()).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test // GH-5201
+	public void getStateDoesNotBlockWhileReadingFromCursor() throws Exception {
+
+		when(cursor.getServerCursor()).thenReturn(new ServerCursor(10, new ServerAddress("mock")));
+
+		CountDownLatch tryNextEntered = new CountDownLatch(1);
+		CountDownLatch releaseTryNext = new CountDownLatch(1);
+
+		when(cursor.tryNext()).thenAnswer(invocation -> {
+
+			tryNextEntered.countDown();
+			assertThat(releaseTryNext.await(5, TimeUnit.SECONDS)).isTrue();
+			return null;
+		});
+
+		Thread taskThread = new Thread(task::run, "cursor-reading-task-test");
+		taskThread.start();
+
+		try {
+
+			assertThat(task.awaitStart(Duration.ofSeconds(5))).isTrue();
+			assertThat(tryNextEntered.await(5, TimeUnit.SECONDS)).isTrue();
+
+			CompletableFuture<State> state = CompletableFuture.supplyAsync(task::getState);
+
+			assertThat(state.get(1, TimeUnit.SECONDS)).isEqualTo(State.RUNNING);
+		} finally {
+
+			releaseTryNext.countDown();
+			task.cancel();
+			taskThread.join(5000);
+		}
 	}
 
 	private static class MultithreadedStopRunningWhileEmittingMessages extends MultithreadedTestCase {
