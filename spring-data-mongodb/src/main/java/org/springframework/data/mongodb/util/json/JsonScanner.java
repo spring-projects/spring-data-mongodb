@@ -595,7 +595,9 @@ class JsonScanner {
 							}
 							break;
 						default:
-							throw new JsonParseException("Invalid escape sequence in JSON string '\\%c'.", c);
+							sb.append('\\');
+							sb.append((char)c);
+							break;
 					}
 					break;
 
