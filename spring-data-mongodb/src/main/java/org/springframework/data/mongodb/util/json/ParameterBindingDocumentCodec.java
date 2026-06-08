@@ -221,9 +221,9 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 				return document;
 			} else if (bindingReader.currentValue instanceof String stringValue) {
 				try {
-					return decode(stringValue);
-				} catch (JsonParseException jsonParseException) {
-					throw new IllegalArgumentException("Expression result is not a valid json document", jsonParseException);
+					return Document.parse(stringValue);
+				} catch (JsonParseException | BsonInvalidOperationException jsonParseException) {
+					throw new IllegalArgumentException("Expression result is not a valid json document!", jsonParseException);
 				}
 			} else if (bindingReader.currentValue instanceof Map) {
 				return new Document((Map) bindingReader.currentValue);
