@@ -72,11 +72,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 	private static final Pattern SPEL_PARAMETER_BINDING_PATTERN = Pattern.compile("('\\?(\\d+)'|\\?(\\d+))");
 
 	private static final String QUOTE_START = "\\Q";
-	private static final String ESCAPED_QUOTE_START = "\\" + QUOTE_START;
-	private static final String QUOTE_REPLACEMENT_QUOTE_START = Matcher.quoteReplacement(ESCAPED_QUOTE_START);
 	private static final String QUOTE_END = "\\E";
 	private static final String ESCAPED_QUOTE_END = "\\" + QUOTE_END;
-	private static final String QUOTE_REPLACEMENT_QUOTE_END = Matcher.quoteReplacement(ESCAPED_QUOTE_END);
+	private static final String QUOTE_REPLACEMENT_QUOTE_END = QUOTE_END + ESCAPED_QUOTE_END + QUOTE_START;
 
 	private final ParameterBindingContext bindingContext;
 
@@ -452,12 +450,20 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				}
 			}
 
-			computedValue = computedValue.replace(binding,
-					nullSafeToString(evaluateExpression(expressionString, innerSpelVariables)));
+			String spelReplacement =
+					nullSafeToString(evaluateExpression(expressionString, innerSpelVariables));
 
-			bindableValue.setValue(computedValue);
-			bindableValue.setType(BsonType.STRING);
+			if (isRegularExpression) {
 
+				computedValue = computedValue.replace(binding, escapeIfQuoted(tokenValue, spelReplacement));
+				bindableValue.setValue(new BsonRegularExpression(computedValue));
+				bindableValue.setType(BsonType.REGULAR_EXPRESSION);
+			} else {
+
+				computedValue = computedValue.replace(binding, spelReplacement);
+				bindableValue.setValue(computedValue);
+				bindableValue.setType(BsonType.STRING);
+			}
 			return bindableValue;
 		}
 
@@ -466,11 +472,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			String group = matcher.group();
 			int index = computeParameterIndex(group);
 
-			String bindValue = nullSafeToString(getBindableValueForIndex(index));
-			if(isQuoted(tokenValue)) {
-				bindValue = bindValue.replaceAll(ESCAPED_QUOTE_START, QUOTE_REPLACEMENT_QUOTE_START) //
-					.replaceAll(ESCAPED_QUOTE_END, QUOTE_REPLACEMENT_QUOTE_END);
-			}
+			String bindValue = escapeIfQuoted(tokenValue,
+				nullSafeToString(getBindableValueForIndex(index)));
 			computedValue = computedValue.replace(group, bindValue);
 		}
 
@@ -499,6 +502,14 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	private static boolean isQuoted(String value) {
 		return value.contains(QUOTE_START) || value.contains(QUOTE_END);
+	}
+
+	private static String escapeIfQuoted(String fullToken, String fragment) {
+
+		if (!isQuoted(fullToken)) {
+			return fragment;
+		}
+		return fragment.replace(QUOTE_END, QUOTE_REPLACEMENT_QUOTE_END);
 	}
 
 	private static int computeParameterIndex(String parameter) {

@@ -604,13 +604,14 @@ class ParameterBindingJsonReaderUnitTests {
 
 	static Stream<Arguments> treatNestedStringParametersArgs() {
 		return Stream.of( //
-				Arguments.of("{ 'value': '/^?0$/i' }", "foo", "/^foo$/i"),
+				Arguments.of("{ 'value': '^\\Q:#{?0}\\E' }", "\\E.", "^\\Q\\E.\\E"),Arguments.of("{ 'value': '/^?0$/i' }", "foo", "/^foo$/i"),
 				Arguments.of("{ 'value': /^true$/i }", null, new BsonRegularExpression("^true$", "i")),
 				Arguments.of("{ 'value': /^?0$/i }", "foo", new BsonRegularExpression("^foo$", "i")), //
 				Arguments.of("{ 'value': '/^?0$/i' }", "\\Qfoo\\E", "/^\\Qfoo\\E$/i"),
 				Arguments.of("{ 'value': '?0' }", "/^foo$/i", "/^foo$/i"), //
 				Arguments.of("{ 'value': /^\\Q?0\\E/}", "foo", new BsonRegularExpression("^\\Qfoo\\E")), //
-				Arguments.of("{ 'value': /^\\Q?0\\E/}", "\\E.*", new BsonRegularExpression("^\\Q\\\\E.*\\E")), //
+				Arguments.of("{ 'value': /^\\Q?0\\E/}", "\\E.*", new BsonRegularExpression("^\\Q\\E\\\\E\\Q.*\\E")), //
+			Arguments.of("{ 'value': /^\\Q:#{?0}\\E/ }", "\\E.*", new BsonRegularExpression("^\\Q\\E\\\\E\\Q.*\\E")),
 				Arguments.of("{ 'value': ?0 }", "/^foo$/i", "/^foo$/i"), //
 				Arguments.of("{ 'value': { '$regex' : '^(?0)'} }", "foo", new Document("$regex", "^(foo)")) //
 		);
