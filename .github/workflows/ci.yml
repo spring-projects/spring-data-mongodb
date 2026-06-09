@@ -3,7 +3,7 @@ name: CI Build
 on:
   workflow_dispatch:
   push:
-    branches: [ main, 'issue/**' ]
+    branches: [ 5.1.x, 'issue/5.1.x/**' ]
 
 permissions: read-all
 
@@ -18,16 +18,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup Java and Maven
-        uses: spring-projects/spring-data-build/actions/setup-maven@main
+        uses: spring-projects/spring-data-build/actions/setup-maven@4.1.x
         with:
           java-version: ${{ matrix.java-version }}
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
       - name: Setup MongoDB Server
-        uses: spring-projects/spring-data-build/actions/setup-mongodb@main
+        uses: spring-projects/spring-data-build/actions/setup-mongodb@4.1.x
         with:
           version: '${{ matrix.mongodb-version }}'
           replica-set: 'rs0'
       - name: Build
-        uses: spring-projects/spring-data-build/actions/maven-build@main
+        uses: spring-projects/spring-data-build/actions/maven-build@4.1.x
         with:
           settings-xml: '${{ vars.SETTINGS_XML }}'

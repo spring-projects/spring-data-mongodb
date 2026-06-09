@@ -3,7 +3,7 @@ name: Snapshots
 on:
   workflow_dispatch:
   push:
-    branches: [ main, 'issue/**' ]
+    branches: [ 5.1.x, 'issue/5.1.x/**' ]
 
 permissions: read-all
 
@@ -15,15 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup Java and Maven
-        uses: spring-projects/spring-data-build/actions/setup-maven@main
+        uses: spring-projects/spring-data-build/actions/setup-maven@4.1.x
         with:
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
       - name: Setup MongoDB Server
-        uses: spring-projects/spring-data-build/actions/setup-mongodb@main
+        uses: spring-projects/spring-data-build/actions/setup-mongodb@4.1.x
         with:
           replica-set: 'rs0'
       - name: Deploy to Artifactory
-        uses: spring-projects/spring-data-build/actions/maven-artifactory-deploy@main
+        uses: spring-projects/spring-data-build/actions/maven-artifactory-deploy@4.1.x
         with:
           build-name: 'spring-data-mongodb'
           username: '${{ secrets.ARTIFACTORY_USERNAME }}'
