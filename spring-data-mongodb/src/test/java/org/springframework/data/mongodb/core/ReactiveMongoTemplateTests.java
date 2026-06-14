@@ -71,6 +71,8 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
+import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -89,6 +91,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Sujay HK
  */
 public class ReactiveMongoTemplateTests {
 
@@ -2101,6 +2104,28 @@ public class ReactiveMongoTemplateTests {
 		template.save(source).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
+	@Test // GH-5166
+	void beforeConvertCallbackIsAppliedOnReplace() {
+
+		PersonWithConvertedName person = new PersonWithConvertedName("sujay");
+		template.insert(person).block();
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(
+				(ReactiveBeforeConvertCallback<PersonWithConvertedName>) (entity, collection) -> {
+					entity.name = entity.name.toUpperCase();
+					return Mono.just(entity);
+				}
+		));
+
+		PersonWithConvertedName replacement = new PersonWithConvertedName("sujay");
+		replacement.id = person.id;
+
+		template.replace(query(where("id").is(person.id)), replacement).block();
+
+		PersonWithConvertedName found = template.findById(person.id, PersonWithConvertedName.class).block();
+		assertThat(found.name).isEqualTo("SUJAY");
+	}
+
 	static class NonAutogeneratableId {
 
 		@Id IdObject id;
@@ -2133,6 +2158,17 @@ public class ReactiveMongoTemplateTests {
 
 		public void setVersion(int version) {
 			this.version = version;
+		}
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document
+	static class PersonWithConvertedName {
+
+		@Id String id;
+		String name;
+
+		PersonWithConvertedName(String name) {
+			this.name = name;
 		}
 	}
 
