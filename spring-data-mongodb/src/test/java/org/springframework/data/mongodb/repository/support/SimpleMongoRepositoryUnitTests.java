@@ -203,7 +203,7 @@ public class SimpleMongoRepositoryUnitTests {
 		assertThat(query.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
 	}
 
-	@Test // GH-XXXX
+	@Test // GH-5220
 	void saveAllUsesBulkOperationsForExistingNonVersionedEntities() {
 
 		when(entityInformation.isVersioned()).thenReturn(false);
@@ -230,7 +230,7 @@ public class SimpleMongoRepositoryUnitTests {
 		verify(mongoOperations, never()).save(any(), anyString());
 	}
 
-	@Test // GH-XXXX
+	@Test // GH-5220
 	void saveAllFallsBackToPerEntitySaveForVersionedEntities() {
 
 		when(entityInformation.isVersioned()).thenReturn(true);
