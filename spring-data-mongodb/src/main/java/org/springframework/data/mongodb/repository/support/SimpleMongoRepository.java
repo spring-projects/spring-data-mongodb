@@ -66,6 +66,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mehran Behnam
  * @author Jens Schauder
  * @author Kirill Egorov
+ * @author sangyeop jeong
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
