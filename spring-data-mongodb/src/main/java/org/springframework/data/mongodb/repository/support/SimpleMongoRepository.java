@@ -37,7 +37,10 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.mongodb.core.BulkOperations;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
+import org.springframework.data.mongodb.core.FindAndReplaceOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -106,16 +109,41 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null");
 
-		Streamable<S> source = Streamable.of(entities);
-		boolean allNew = source.stream().allMatch(entityInformation::isNew);
+		List<S> source = Streamable.of(entities).stream().collect(Collectors.toList());
 
-		if (allNew) {
-
-			List<S> result = source.stream().collect(Collectors.toList());
-			return new ArrayList<>(mongoOperations.insert(result, entityInformation.getCollectionName()));
+		if (source.stream().allMatch(entityInformation::isNew)) {
+			return new ArrayList<>(mongoOperations.insert(source, entityInformation.getCollectionName()));
 		}
 
-		return source.stream().map(this::save).collect(Collectors.toList());
+		if (entityInformation.isVersioned()) {
+			return source.stream().map(this::save).collect(Collectors.toList());
+		}
+
+		List<S> newEntities = new ArrayList<>();
+		List<S> existingEntities = new ArrayList<>();
+
+		for (S entity : source) {
+			(entityInformation.isNew(entity) ? newEntities : existingEntities).add(entity);
+		}
+
+		if (!newEntities.isEmpty()) {
+			mongoOperations.insert(newEntities, entityInformation.getCollectionName());
+		}
+
+		if (!existingEntities.isEmpty()) {
+
+			BulkOperations bulkOps = mongoOperations.bulkOps(BulkMode.ORDERED, entityInformation.getJavaType(),
+					entityInformation.getCollectionName());
+
+			for (S entity : existingEntities) {
+				Query query = new Query(where(entityInformation.getIdAttribute()).is(entityInformation.getId(entity)));
+				bulkOps.replaceOne(query, entity, FindAndReplaceOptions.options().upsert());
+			}
+
+			bulkOps.execute();
+		}
+
+		return source;
 	}
 
 	@Override

@@ -437,6 +437,26 @@ class SimpleMongoRepositoryTests implements StateFunctions {
 		assertThat(repository.findAll()).containsExactlyInAnyOrder(first, second);
 	}
 
+	@Test // GH-XXXX
+	@DirtiesState
+	void saveAllUpdatesExistingAndInsertsNewEntities() {
+
+		dave.setFirstname("Davinator");
+
+		Person newcomer = new Person("New", "Comer", 24);
+		newcomer.setId(null);
+
+		List<Person> saved = repository.saveAll(asList(dave, newcomer));
+
+		assertThat(saved).containsExactly(dave, newcomer);
+		assertThat(newcomer.getId()).isNotNull();
+
+		assertThat(repository.findById(dave.getId())) //
+				.hasValueSatisfying(it -> assertThat(it.getFirstname()).isEqualTo("Davinator"));
+		assertThat(repository.findById(newcomer.getId())).contains(newcomer);
+		assertThat(repository.count()).isEqualTo(all.size() + 1);
+	}
+
 	@Test // DATAMONGO-2130
 	@EnableIfReplicaSetAvailable
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")

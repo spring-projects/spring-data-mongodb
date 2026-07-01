@@ -15,10 +15,12 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -34,7 +36,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.BulkOperations;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
+import org.springframework.data.mongodb.core.FindAndReplaceOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
@@ -196,6 +201,48 @@ public class SimpleMongoRepositoryUnitTests {
 		verify(finder).matching(query.capture());
 
 		assertThat(query.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
+	}
+
+	@Test // GH-XXXX
+	void saveAllUsesBulkOperationsForExistingNonVersionedEntities() {
+
+		when(entityInformation.isVersioned()).thenReturn(false);
+		when(entityInformation.getJavaType()).thenReturn(Object.class);
+		when(entityInformation.getCollectionName()).thenReturn("persons");
+		when(entityInformation.getIdAttribute()).thenReturn("id");
+
+		Object existing = new Object();
+		Object fresh = new Object();
+
+		when(entityInformation.isNew(existing)).thenReturn(false);
+		when(entityInformation.isNew(fresh)).thenReturn(true);
+		when(entityInformation.getId(existing)).thenReturn("id-1");
+
+		BulkOperations bulkOperations = mock(BulkOperations.class);
+		when(mongoOperations.bulkOps(BulkMode.ORDERED, Object.class, "persons")).thenReturn(bulkOperations);
+
+		repository.saveAll(asList(existing, fresh));
+
+		verify(mongoOperations).insert(List.of(fresh), "persons");
+		verify(bulkOperations).replaceOne(any(Query.class), eq(existing), any(FindAndReplaceOptions.class));
+		verify(bulkOperations).execute();
+		verify(mongoOperations, never()).save(any());
+		verify(mongoOperations, never()).save(any(), anyString());
+	}
+
+	@Test // GH-XXXX
+	void saveAllFallsBackToPerEntitySaveForVersionedEntities() {
+
+		when(entityInformation.isVersioned()).thenReturn(true);
+		when(entityInformation.getCollectionName()).thenReturn("persons");
+
+		Object existing = new Object();
+		when(entityInformation.isNew(existing)).thenReturn(false);
+
+		repository.saveAll(List.of(existing));
+
+		verify(mongoOperations).save(existing, "persons");
+		verify(mongoOperations, never()).bulkOps(any(BulkMode.class), any(Class.class), anyString());
 	}
 
 	private static Stream<Arguments> findAllCalls() {
