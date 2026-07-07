@@ -220,14 +220,39 @@ public class SimpleMongoRepositoryUnitTests {
 
 		BulkOperations bulkOperations = mock(BulkOperations.class);
 		when(mongoOperations.bulkOps(BulkMode.ORDERED, Object.class, "persons")).thenReturn(bulkOperations);
+		when(mongoOperations.insert(List.of(fresh), "persons")).thenReturn(List.of(fresh));
 
 		repository.saveAll(asList(existing, fresh));
 
 		verify(mongoOperations).insert(List.of(fresh), "persons");
 		verify(bulkOperations).replaceOne(any(Query.class), eq(existing), any(FindAndReplaceOptions.class));
 		verify(bulkOperations).execute();
-		verify(mongoOperations, never()).save(any());
 		verify(mongoOperations, never()).save(any(), anyString());
+	}
+
+	@Test // GH-5220
+	void saveAllReturnsInsertedInstancesInOriginalOrder() {
+
+		when(entityInformation.isVersioned()).thenReturn(false);
+		when(entityInformation.getJavaType()).thenReturn(Object.class);
+		when(entityInformation.getCollectionName()).thenReturn("persons");
+		when(entityInformation.getIdAttribute()).thenReturn("id");
+
+		Object existing = new Object();
+		Object fresh = new Object();
+		Object insertedFresh = new Object();
+
+		when(entityInformation.isNew(existing)).thenReturn(false);
+		when(entityInformation.isNew(fresh)).thenReturn(true);
+		when(entityInformation.getId(existing)).thenReturn("id-1");
+
+		BulkOperations bulkOperations = mock(BulkOperations.class);
+		when(mongoOperations.bulkOps(BulkMode.ORDERED, Object.class, "persons")).thenReturn(bulkOperations);
+		when(mongoOperations.insert(List.of(fresh), "persons")).thenReturn(List.of(insertedFresh));
+
+		List<Object> saved = repository.saveAll(asList(existing, fresh));
+
+		assertThat(saved).containsExactly(existing, insertedFresh);
 	}
 
 	@Test // GH-5220

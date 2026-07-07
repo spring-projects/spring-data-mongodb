@@ -20,7 +20,10 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -128,7 +131,15 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		}
 
 		if (!newEntities.isEmpty()) {
-			mongoOperations.insert(newEntities, entityInformation.getCollectionName());
+
+			Iterator<S> inserted = mongoOperations.insert(newEntities, entityInformation.getCollectionName()).iterator();
+			Map<S, S> insertedEntities = new IdentityHashMap<>(newEntities.size());
+
+			for (S entity : newEntities) {
+				insertedEntities.put(entity, inserted.next());
+			}
+
+			source.replaceAll(entity -> insertedEntities.getOrDefault(entity, entity));
 		}
 
 		if (!existingEntities.isEmpty()) {
@@ -137,8 +148,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 					entityInformation.getCollectionName());
 
 			for (S entity : existingEntities) {
-				Query query = new Query(where(entityInformation.getIdAttribute()).is(entityInformation.getId(entity)));
-				bulkOps.replaceOne(query, entity, FindAndReplaceOptions.options().upsert());
+				bulkOps.replaceOne(getIdQuery(entityInformation.getId(entity)), entity,
+						FindAndReplaceOptions.options().upsert());
 			}
 
 			bulkOps.execute();
