@@ -548,7 +548,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		}
 
 		/**
-		 * Define a hint that is used by query optimizer to to fulfill the aggregation.
+		 * Define a hint that is used by query optimizer to fulfill the aggregation.
 		 *
 		 * @param hint can be {@literal null}.
 		 * @return this.
@@ -562,7 +562,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		}
 
 		/**
-		 * Define a hint that is used by query optimizer to to fulfill the aggregation.
+		 * Define a hint that is used by query optimizer to fulfill the aggregation.
 		 *
 		 * @param indexName can be {@literal null}.
 		 * @return this.
