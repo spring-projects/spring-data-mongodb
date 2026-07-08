@@ -881,7 +881,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the numeric value divided by
 		 * the given numeric value in the argument.
 		 *
 		 * @param value the numeric value
@@ -896,7 +896,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the numeric value divided by
 		 * the given field reference in the argument.
 		 *
 		 * @param fieldReference the numeric value
@@ -910,7 +910,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the numeric value divided by
 		 * the given {@link AggregationExpression} in the argument.
 		 *
 		 * @param expression the expression evaluating to a numeric value

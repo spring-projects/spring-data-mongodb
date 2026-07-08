@@ -2334,7 +2334,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Specify the {@link AggregationExpression} evaluating to the the string to search for within the given input
+		 * Specify the {@link AggregationExpression} evaluating to the string to search for within the given input
 		 * field.
 		 *
 		 * @param expression must not be {@literal null}.
