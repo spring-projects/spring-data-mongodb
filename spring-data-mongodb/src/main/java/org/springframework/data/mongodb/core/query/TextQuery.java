@@ -41,7 +41,7 @@ public class TextQuery extends Query {
 	private int sortByScoreIndex = 0;
 
 	/**
-	 * Creates new {@link TextQuery} using the the given {@code wordsAndPhrases} with {@link TextCriteria}
+	 * Creates new {@link TextQuery} using the given {@code wordsAndPhrases} with {@link TextCriteria}
 	 *
 	 * @param wordsAndPhrases
 	 * @see TextCriteria#matching(String)

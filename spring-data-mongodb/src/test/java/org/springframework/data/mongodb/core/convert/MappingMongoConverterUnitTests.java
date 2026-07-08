@@ -2414,7 +2414,7 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 
-		// need to compare the the timestamp as ObjectId has an internal counter
+		// need to compare the timestamp as ObjectId has an internal counter
 		assertThat(target.get("dateAsObjectId", ObjectId.class).getTimestamp())
 				.isEqualTo(new ObjectId(source.dateAsObjectId).getTimestamp());
 	}

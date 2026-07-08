@@ -82,7 +82,7 @@ import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
  * </code>
  * </pre>
  *
- * {@link Message Messges} passed to the {@link MessageListener} contain the {@link ChangeStreamDocument} within their
+ * {@link Message Messages} passed to the {@link MessageListener} contain the {@link ChangeStreamDocument} within their
  * {@link Message#getRaw() raw value} while the {@code fullDocument} is extracted into the {@link Message#getBody()
  * messages body}. Unless otherwise specified (via {@link ChangeStreamOptions#getFullDocumentLookup()} the
  * {@link Message#getBody() message body} for {@code update events} will be empty for a {@link Document} target type.

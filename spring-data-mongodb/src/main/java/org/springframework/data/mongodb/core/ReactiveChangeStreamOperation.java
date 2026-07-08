@@ -93,7 +93,7 @@ public interface ReactiveChangeStreamOperation {
 		ChangeStreamWithFilterAndProjection<T> watchCollection(String collection);
 
 		/**
-		 * Set the the collection to watch. Collection name is derived from the {@link Class entityClass}.<br />
+		 * Set the collection to watch. Collection name is derived from the {@link Class entityClass}.<br />
 		 * Skip this step to watch all collections within the database.
 		 *
 		 * @param entityClass must not be {@literal null}.
