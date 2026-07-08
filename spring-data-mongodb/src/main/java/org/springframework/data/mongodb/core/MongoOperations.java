@@ -535,7 +535,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
-	 * @param collectionName The name of the input collection to use for the aggreation.
+	 * @param collectionName The name of the input collection to use for the aggregation.
 	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
@@ -592,7 +592,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
-	 * @param collectionName The name of the input collection to use for the aggreation.
+	 * @param collectionName The name of the input collection to use for the aggregation.
 	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
 	 *         through a try-with-resources clause).

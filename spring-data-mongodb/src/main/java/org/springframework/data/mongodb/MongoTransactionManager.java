@@ -204,7 +204,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * If a commit operation encounters an error, the MongoDB driver throws a {@link MongoException} holding
 	 * {@literal error labels}. <br />
 	 * By default those labels are ignored, nevertheless one might check for
-	 * {@link MongoException#UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL transient commit errors labels} and retry the the
+	 * {@link MongoException#UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL transient commit errors labels} and retry the
 	 * commit. <br />
 	 *
 	 * <pre>
