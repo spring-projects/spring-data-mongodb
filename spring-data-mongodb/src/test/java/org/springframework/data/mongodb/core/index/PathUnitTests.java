@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.index;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,9 +27,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import org.springframework.core.ResolvableType;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.CycleGuard.Path;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
@@ -87,16 +89,28 @@ public class PathUnitTests {
 		assertThat(Path.of(foo).append(bar).append(bar2).isCycle()).isFalse();
 	}
 
+	/**
+	 * Uses real mapping properties so equality matches production: {@code Selection.include} is backed by the same
+	 * reflected field for every parameterization of {@code Selection}, which is what triggered the GH-5213 false cycle.
+	 */
 	@Test // GH-5213
 	public void isCycleShouldReturnFalseForSamePropertyNameOnGenericOwnersWithDifferentTypeArguments() {
 
-		TypeInformation<?> selectionOfBasket = parameterized(Selection.class, FruitBasket.class);
-		TypeInformation<?> selectionOfString = parameterized(Selection.class, String.class);
+		MongoMappingContext context = createMappingContext(FruitShop.class);
 
-		MongoPersistentProperty includeBasket = createPersistentPropertyMock(mockOwner(selectionOfBasket), "include");
-		MongoPersistentProperty fruit = createPersistentPropertyMock(mockOwner(TypeInformation.of(FruitBasket.class)),
-				"fruit");
-		MongoPersistentProperty includeString = createPersistentPropertyMock(mockOwner(selectionOfString), "include");
+		MongoPersistentProperty fruitBaskets = context.getRequiredPersistentEntity(FruitShop.class)
+				.getRequiredPersistentProperty("fruitBaskets");
+		MongoPersistentProperty includeBasket = context.getRequiredPersistentEntity(fruitBaskets.getTypeInformation())
+				.getRequiredPersistentProperty("include");
+		MongoPersistentProperty fruit = context.getRequiredPersistentEntity(includeBasket.getTypeInformation())
+				.getRequiredPersistentProperty("fruit");
+		MongoPersistentProperty includeString = context.getRequiredPersistentEntity(fruit.getTypeInformation())
+				.getRequiredPersistentProperty("include");
+
+		// Precondition of the bug: property equality collapses generic type arguments.
+		assertThat(includeBasket).isEqualTo(includeString);
+		assertThat(includeBasket.getOwner().getTypeInformation())
+				.isNotEqualTo(includeString.getOwner().getTypeInformation());
 
 		Path path = Path.of(includeBasket).append(fruit).append(includeString);
 
@@ -105,24 +119,35 @@ public class PathUnitTests {
 		assertThat(path.toString()).isEqualTo("include -> fruit -> include");
 	}
 
+	/**
+	 * Genuine recursion through the same parameterized type must still be reported as a cycle. Real mapping properties
+	 * are used so the path is built the same way index resolution walks the entity graph.
+	 */
 	@Test // GH-5213
 	public void isCycleShouldReturnTrueForSamePropertyNameOnGenericOwnersWithSameTypeArguments() {
 
-		TypeInformation<?> selectionOfNode = parameterized(Selection.class, TreeNode.class);
+		MongoMappingContext context = createMappingContext(TreeNode.class);
 
-		MongoPersistentProperty includeOne = createPersistentPropertyMock(mockOwner(selectionOfNode), "include");
-		MongoPersistentProperty child = createPersistentPropertyMock(mockOwner(TypeInformation.of(TreeNode.class)),
-				"child");
-		MongoPersistentProperty includeTwo = createPersistentPropertyMock(mockOwner(selectionOfNode), "include");
+		MongoPersistentProperty child = context.getRequiredPersistentEntity(TreeNode.class)
+				.getRequiredPersistentProperty("child");
+		MongoPersistentProperty include = context.getRequiredPersistentEntity(child.getTypeInformation())
+				.getRequiredPersistentProperty("include");
 
-		Path path = Path.of(includeOne).append(child).append(includeTwo);
+		// Re-entering Selection<TreeNode> yields the same property (equal and same TypeInformation).
+		assertThat(include.getOwner().getTypeInformation()).isEqualTo(child.getTypeInformation());
+
+		Path path = Path.of(include).append(child).append(include);
 
 		assertThat(path.isCycle()).isTrue();
 		assertThat(path.toCyclePath()).isEqualTo("include -> child -> include");
 	}
 
-	private static TypeInformation<?> parameterized(Class<?> rawType, Class<?> typeArgument) {
-		return TypeInformation.of(ResolvableType.forClassWithGenerics(rawType, typeArgument));
+	private static MongoMappingContext createMappingContext(Class<?>... types) {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setInitialEntitySet(Set.of(types));
+		context.afterPropertiesSet();
+		return context;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -144,12 +169,16 @@ public class PathUnitTests {
 		return property;
 	}
 
-	static class Selection<T> {
-		T include;
+	static class FruitShop {
+		Selection<FruitBasket> fruitBaskets;
 	}
 
 	static class FruitBasket {
 		Selection<String> fruit;
+	}
+
+	static class Selection<T> {
+		T include;
 	}
 
 	static class TreeNode {
