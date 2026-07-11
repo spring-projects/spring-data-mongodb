@@ -66,6 +66,7 @@ import org.springframework.mock.env.MockEnvironment;
  * @author Mark Paluch
  * @author Dave Perryman
  * @author Stefan Tirea
+ * @author Kamil Krzywanski
  */
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
@@ -1235,6 +1236,27 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions).isEmpty();
 		}
 
+		@Test // GH-5213
+		public void shouldNotDetectCycleForGenericTypeUsedWithDifferentTypeArguments() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(FruitShop.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection("fruitBaskets.include.fruit.include.name", "fruitShop", indexDefinitions.get(0));
+		}
+
+		@Test // GH-5213
+		public void shouldStillDetectGenuineCycleThroughGenericType() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					GenericTreeDocument.class);
+
+			// Indexes on the first occurrence of the generic type are kept; further recursion into the same
+			// parameterized type is treated as a cycle and stops.
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection("children.name", "genericTreeDocument", indexDefinitions.get(0));
+		}
+
 		@Test // DATAMONGO-962
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void shouldCatchCyclicReferenceExceptionOnRoot() {
@@ -1669,6 +1691,43 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<SelfCyclingViaCollectionType> cyclic;
 
+		}
+
+		/**
+		 * Reproducer for GH-5213: the same generic type appears twice with different type arguments.
+		 * That is not a structural cycle and nested {@link Indexed} fields must still be discovered.
+		 */
+		@Document
+		static class FruitShop {
+
+			Selection<FruitBasket> fruitBaskets;
+		}
+
+		static class FruitBasket {
+			Selection<IndexedItem> fruit;
+		}
+
+		static class IndexedItem {
+			@Indexed String name;
+		}
+
+		static class Selection<T> {
+			T include;
+		}
+
+		/**
+		 * Genuine cycle through a generic type: {@code GenericTreeDocument -> Box<GenericTreeDocument> -> GenericTreeDocument}.
+		 * Index resolution must still stop recursion after discovering indexes one level into the cycle.
+		 */
+		@Document
+		static class GenericTreeDocument {
+
+			Box<GenericTreeDocument> children;
+		}
+
+		static class Box<T> {
+			@Indexed String name;
+			T value;
 		}
 
 		@Document
