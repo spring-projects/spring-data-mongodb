@@ -25,6 +25,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import org.springframework.core.ResolvableType;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.CycleGuard.Path;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -34,6 +36,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Kamil Krzywanski
  */
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PathUnitTests {
@@ -44,6 +47,7 @@ public class PathUnitTests {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void setUp() {
 		when(entityMock.getType()).thenReturn((Class) Object.class);
+		doReturn(TypeInformation.of(Object.class)).when(entityMock).getTypeInformation();
 	}
 
 	@Test // DATAMONGO-962, DATAMONGO-1782
@@ -77,9 +81,56 @@ public class PathUnitTests {
 
 		MongoPersistentProperty foo = createPersistentPropertyMock(entityMock, "foo");
 		MongoPersistentProperty bar = createPersistentPropertyMock(entityMock, "bar");
-		MongoPersistentProperty bar2 = createPersistentPropertyMock(mock(MongoPersistentEntity.class), "bar");
+
+		MongoPersistentProperty bar2 = createPersistentPropertyMock(mockOwner(TypeInformation.of(String.class)), "bar");
 
 		assertThat(Path.of(foo).append(bar).append(bar2).isCycle()).isFalse();
+	}
+
+	@Test // GH-5213
+	public void isCycleShouldReturnFalseForSamePropertyNameOnGenericOwnersWithDifferentTypeArguments() {
+
+		TypeInformation<?> selectionOfBasket = parameterized(Selection.class, FruitBasket.class);
+		TypeInformation<?> selectionOfString = parameterized(Selection.class, String.class);
+
+		MongoPersistentProperty includeBasket = createPersistentPropertyMock(mockOwner(selectionOfBasket), "include");
+		MongoPersistentProperty fruit = createPersistentPropertyMock(mockOwner(TypeInformation.of(FruitBasket.class)),
+				"fruit");
+		MongoPersistentProperty includeString = createPersistentPropertyMock(mockOwner(selectionOfString), "include");
+
+		Path path = Path.of(includeBasket).append(fruit).append(includeString);
+
+		assertThat(path.isCycle()).isFalse();
+		assertThat(path.toCyclePath()).isEqualTo("");
+		assertThat(path.toString()).isEqualTo("include -> fruit -> include");
+	}
+
+	@Test // GH-5213
+	public void isCycleShouldReturnTrueForSamePropertyNameOnGenericOwnersWithSameTypeArguments() {
+
+		TypeInformation<?> selectionOfNode = parameterized(Selection.class, TreeNode.class);
+
+		MongoPersistentProperty includeOne = createPersistentPropertyMock(mockOwner(selectionOfNode), "include");
+		MongoPersistentProperty child = createPersistentPropertyMock(mockOwner(TypeInformation.of(TreeNode.class)),
+				"child");
+		MongoPersistentProperty includeTwo = createPersistentPropertyMock(mockOwner(selectionOfNode), "include");
+
+		Path path = Path.of(includeOne).append(child).append(includeTwo);
+
+		assertThat(path.isCycle()).isTrue();
+		assertThat(path.toCyclePath()).isEqualTo("include -> child -> include");
+	}
+
+	private static TypeInformation<?> parameterized(Class<?> rawType, Class<?> typeArgument) {
+		return TypeInformation.of(ResolvableType.forClassWithGenerics(rawType, typeArgument));
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static MongoPersistentEntity<?> mockOwner(TypeInformation<?> typeInformation) {
+
+		MongoPersistentEntity owner = mock(MongoPersistentEntity.class);
+		doReturn(typeInformation).when(owner).getTypeInformation();
+		return owner;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -91,5 +142,17 @@ public class PathUnitTests {
 		when(property.getName()).thenReturn(fieldname);
 
 		return property;
+	}
+
+	static class Selection<T> {
+		T include;
+	}
+
+	static class FruitBasket {
+		Selection<String> fruit;
+	}
+
+	static class TreeNode {
+		Selection<TreeNode> child;
 	}
 }
