@@ -1257,6 +1257,27 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertIndexPathAndCollection("children.name", "genericTreeDocument", indexDefinitions.get(0));
 		}
 
+		@Test // GH-5213
+		public void shouldDetectCycleThroughGenericTypeWithExpandingTypeArguments() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					ExpandingGenericRoot.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection("node.name", "expandingGenericRoot", indexDefinitions.get(0));
+		}
+
+		@Test // GH-5213
+		public void shouldResolveIndexesThroughNestedGenericTypeArguments() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					NestedSelectionDocument.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection("selection.include.include.name", "nestedSelectionDocument",
+					indexDefinitions.get(0));
+		}
+
 		@Test // DATAMONGO-962
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void shouldCatchCyclicReferenceExceptionOnRoot() {
@@ -1728,6 +1749,21 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class Box<T> {
 			@Indexed String name;
 			T value;
+		}
+
+		@Document
+		static class ExpandingGenericRoot {
+			ExpandingNode<String> node;
+		}
+
+		static class ExpandingNode<T> {
+			@Indexed String name;
+			ExpandingNode<List<T>> next;
+		}
+
+		@Document
+		static class NestedSelectionDocument {
+			Selection<Selection<IndexedItem>> selection;
 		}
 
 		@Document

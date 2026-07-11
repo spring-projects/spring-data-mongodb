@@ -907,7 +907,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				elements.addAll(this.elements);
 				elements.add(breadcrumb);
 
-				return new Path(elements, containsCycleCandidate(this.elements, breadcrumb));
+				return new Path(elements, indexOf(this.elements, breadcrumb, 0) != -1);
 			}
 
 			/**
@@ -938,7 +938,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				for (int i = 0; i < this.elements.size(); i++) {
 
-					int index = indexOfCycleCandidate(this.elements, this.elements.get(i), i + 1);
+					int index = indexOf(this.elements, this.elements.get(i), i + 1);
 
 					if (index != -1) {
 						return toPath(this.elements.subList(i, index + 1).iterator());
@@ -948,32 +948,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				return toString();
 			}
 
-			/**
-			 * Cycle detection cannot rely on {@link PersistentProperty#equals(Object)} alone: that equality is based on the
-			 * reflected field and therefore collapses generic types that share the same raw owner type (for example
-			 * {@code Selection<FruitBasket>} vs {@code Selection<String>}). Comparing the property name together with the
-			 * owner's resolved {@link TypeInformation} keeps genuine recursion (same parameterized type reappearing) while
-			 * allowing the same generic type to appear with different type arguments.
-			 *
-			 * @see <a href="https://github.com/spring-projects/spring-data-mongodb/issues/5213">GH-5213</a>
-			 */
-			private static boolean containsCycleCandidate(List<PersistentProperty<?>> elements,
-					PersistentProperty<?> breadcrumb) {
-
-				for (PersistentProperty<?> element : elements) {
-					if (isSameCycleCandidate(element, breadcrumb)) {
-						return true;
-					}
-				}
-
-				return false;
-			}
-
-			private static int indexOfCycleCandidate(List<PersistentProperty<?>> haystack, PersistentProperty<?> needle,
-					int offset) {
+			private static int indexOf(List<PersistentProperty<?>> haystack, PersistentProperty<?> needle, int offset) {
 
 				for (int i = offset; i < haystack.size(); i++) {
-					if (isSameCycleCandidate(haystack.get(i), needle)) {
+					if (isSameSegment(haystack.get(i), needle)) {
 						return i;
 					}
 				}
@@ -981,18 +959,16 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				return -1;
 			}
 
-			private static boolean isSameCycleCandidate(PersistentProperty<?> left, PersistentProperty<?> right) {
-
-				if (left == right) {
-					return true;
-				}
-
-				if (!ObjectUtils.nullSafeEquals(left.getName(), right.getName())) {
-					return false;
-				}
-
-				return ObjectUtils.nullSafeEquals(left.getOwner().getTypeInformation(),
-						right.getOwner().getTypeInformation());
+			/**
+			 * Two path segments are considered equal if they refer to the same property and resolve to the same actual
+			 * type. {@link PersistentProperty#equals(Object)} alone does not consider generics, so a generic property such
+			 * as {@code Selection<T>.include} would be considered a cycle when used as {@code Selection<FruitBasket>} and
+			 * {@code Selection<String>} within the same path. Comparing fully resolved types instead would not terminate for
+			 * recursive types that expand their type arguments (e.g. {@code Node<T>} declaring {@code Node<List<T>> next})
+			 * while the set of raw types is finite.
+			 */
+			private static boolean isSameSegment(PersistentProperty<?> left, PersistentProperty<?> right) {
+				return left.equals(right) && ObjectUtils.nullSafeEquals(left.getActualType(), right.getActualType());
 			}
 
 			private static String toPath(Iterator<PersistentProperty<?>> iterator) {
