@@ -94,7 +94,7 @@ public class Criteria implements CriteriaDefinition {
 
 	protected Criteria(List<Criteria> criteriaChain, String key) {
 
-		this.criteriaChain = new ArrayList<>(criteriaChain);
+		this.criteriaChain = criteriaChain;
 		this.criteriaChain.add(this);
 		this.key = key;
 	}

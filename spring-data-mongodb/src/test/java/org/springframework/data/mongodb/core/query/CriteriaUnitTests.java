@@ -159,6 +159,17 @@ class CriteriaUnitTests {
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}");
 	}
 
+	@Test // GH-5214
+	void andOnRetainedReferenceShouldAffectOriginalCriteria() {
+
+		Criteria criteria = Criteria.where("ID1").is("1");
+		criteria.and("ID2").is("2");
+
+		Query query = Query.query(criteria);
+
+		assertThat(query.getQueryObject()).isEqualTo(Document.parse("{ \"ID1\" : \"1\", \"ID2\" : \"2\" }"));
+	}
+
 	@Test
 	void testCriteriaWithMultipleConditionsForSameKey() {
 
@@ -549,14 +560,5 @@ class CriteriaUnitTests {
 		Criteria partialCriteria = new Criteria("alpha").is("a").and("beta");
 
 		assertThat(criteria).isNotEqualTo(partialCriteria);
-	}
-
-	@Test // GH-5135
-	void criteriaIsImmutable() {
-
-		Criteria base = new Criteria("alpha").is("a");
-		Criteria mutated = base.and("beta");
-
-		assertThat(base).isNotEqualTo(mutated);
 	}
 }
