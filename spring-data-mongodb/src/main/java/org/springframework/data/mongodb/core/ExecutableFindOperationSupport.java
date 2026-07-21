@@ -162,7 +162,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		@Override
 		public Window<T> scroll(ScrollPosition scrollPosition) {
-			return template.doScroll(query.with(scrollPosition), domainType, returnType, resultConverter,
+			return template.doScroll(Query.of(query).with(scrollPosition), domainType, returnType, resultConverter,
 					getCollectionName());
 		}
 
