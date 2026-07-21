@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.BsonString;
@@ -79,6 +80,7 @@ import com.mongodb.client.model.SearchIndexType;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author maryantocinn
  */
 @Testcontainers(disabledWithoutDocker = true)
 @SpringJUnitConfig(classes = MongoRepositoryContributorTests.MongoRepositoryContributorConfiguration.class)
@@ -198,6 +200,15 @@ class MongoRepositoryContributorTests {
 
 		List<User> users = fragment.findUserNoArgumentsBy();
 		assertThat(users).hasSize(7).hasOnlyElementsOfType(User.class);
+	}
+
+	@Test // GH-5225
+	void testDerivedQueryAsSet() {
+
+		Set<User> users = fragment.findUserSetBy();
+
+		assertThat(users).isInstanceOf(Set.class).extracting(User::getUsername).containsExactlyInAnyOrder("luke", "leia",
+				"han", "chewbacca", "yoda", "vader", "kylo");
 	}
 
 	@Test
@@ -561,6 +572,14 @@ class MongoRepositoryContributorTests {
 
 		List<UserProjection> users = fragment.findUserProjectionByLastnameStartingWith("S");
 		assertThat(users).extracting(UserProjection::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
+	}
+
+	@Test // GH-5225
+	void testDerivedQueryReturningSetOfProjections() {
+
+		Set<UserProjection> users = fragment.findUserProjectionSetByLastnameStartingWith("S");
+		assertThat(users).isInstanceOf(Set.class).extracting(UserProjection::getUsername)
+				.containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
 	}
 
 	@Test
