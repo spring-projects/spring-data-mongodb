@@ -158,6 +158,17 @@ class CriteriaUnitTests {
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}");
 	}
 
+	@Test // GH-5214
+	void andOnRetainedReferenceShouldAffectOriginalCriteria() {
+
+		Criteria criteria = Criteria.where("ID1").is("1");
+		criteria.and("ID2").is("2");
+
+		Query query = Query.query(criteria);
+
+		assertThat(query.getQueryObject()).isEqualTo(Document.parse("{ \"ID1\" : \"1\", \"ID2\" : \"2\" }"));
+	}
+
 	@Test
 	void testCriteriaWithMultipleConditionsForSameKey() {
 		Criteria c = new Criteria("name").gte("M").and("name").ne("A");
@@ -524,5 +535,23 @@ class CriteriaUnitTests {
 				new Criteria("bar").regex("value"));
 
 		assertThat(left).isEqualTo(right);
+	}
+
+	@Test // GH-5135
+	void equalsConsidersPartialCriteria() {
+
+		Criteria criteria = new Criteria("alpha").is("a");
+		Criteria partialCriteria = new Criteria("alpha");
+
+		assertThat(criteria).isNotEqualTo(partialCriteria);
+	}
+
+	@Test // GH-5135
+	void equalsConsidersPartialCriteriaChain() {
+
+		Criteria criteria = new Criteria("alpha").is("a").and("beta").is("b");
+		Criteria partialCriteria = new Criteria("alpha").is("a").and("beta");
+
+		assertThat(criteria).isNotEqualTo(partialCriteria);
 	}
 }

@@ -155,7 +155,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 		@Override
 		public Mono<Window<T>> scroll(ScrollPosition scrollPosition) {
-			return template.doScroll(query.with(scrollPosition), domainType, returnType, resultConverter,
+			return template.doScroll(Query.of(query).with(scrollPosition), domainType, returnType, resultConverter,
 					getCollectionName());
 		}
 
