@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
@@ -48,6 +49,7 @@ import org.springframework.util.StringUtils;
  * {@link CodeBlock} generator for common tasks.
  *
  * @author Christoph Strobl
+ * @author maryantocinn
  * @since 5.0
  */
 class MongoCodeBlocks {
@@ -237,8 +239,8 @@ class MongoCodeBlocks {
 	}
 
 	/**
-	 * Wraps the given {@link CodeBlock} representing an {@link Iterable} into a {@link Streamable} if the
-	 * {@link MethodReturn} indicates so.
+	 * Adapts the given {@link CodeBlock} representing an {@link Iterable} to the declared collection return type if
+	 * necessary.
 	 */
 	public static CodeBlock potentiallyWrapStreamable(MethodReturn methodReturn, CodeBlock returningIterable) {
 
@@ -253,6 +255,11 @@ class MongoCodeBlocks {
 			return CodeBlock.of(
 					"($1T) $2T.getSharedInstance().convert($3T.of($4L), $5T.valueOf($3T.class), $5T.valueOf($1T.class))",
 					returnType, DefaultConversionService.class, Streamable.class, returningIterable, TypeDescriptor.class);
+		}
+
+		if (ClassUtils.isAssignable(Set.class, returnType)) {
+			return CodeBlock.of("$2T.getSharedInstance().convert($3L, $1T.class)", returnType,
+					DefaultConversionService.class, returningIterable);
 		}
 
 		return returningIterable;

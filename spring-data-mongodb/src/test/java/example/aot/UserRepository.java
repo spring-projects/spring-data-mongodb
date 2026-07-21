@@ -52,12 +52,15 @@ import org.springframework.data.util.Streamable;
 
 /**
  * @author Christoph Strobl
+ * @author maryantocinn
  */
 public interface UserRepository extends CrudRepository<User, String> {
 
 	/* Derived Queries */
 
 	List<User> findUserNoArgumentsBy();
+
+	Set<User> findUserSetBy();
 
 	Streamable<User> streamUserNoArgumentsBy();
 
@@ -233,6 +236,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 	/* Projecting Queries */
 
 	List<UserProjection> findUserProjectionByLastnameStartingWith(String lastname);
+
+	Set<UserProjection> findUserProjectionSetByLastnameStartingWith(String lastname);
 
 	Page<UserProjection> findUserProjectionByLastnameStartingWith(String lastname, Pageable page);
 
