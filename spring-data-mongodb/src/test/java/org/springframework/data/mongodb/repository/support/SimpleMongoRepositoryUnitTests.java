@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,11 +37,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.BulkOperations;
-import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
-import org.springframework.data.mongodb.core.FindAndReplaceOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.bulk.Bulk;
+import org.springframework.data.mongodb.core.bulk.BulkOperation;
+import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
@@ -53,6 +58,7 @@ import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuer
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Sangyeop Jeong
  */
 @ExtendWith(MockitoExtension.class)
 public class SimpleMongoRepositoryUnitTests {
@@ -60,6 +66,9 @@ public class SimpleMongoRepositoryUnitTests {
 	SimpleMongoRepository<Object, Object> repository;
 	@Mock MongoOperations mongoOperations;
 	@Mock MongoEntityInformation<Object, Object> entityInformation;
+	@Mock MongoConverter mongoConverter;
+	@Mock MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	@Mock MongoPersistentEntity<?> mongoPersistentEntity;
 
 	@BeforeEach
 	public void setUp() {
@@ -204,62 +213,58 @@ public class SimpleMongoRepositoryUnitTests {
 	}
 
 	@Test // GH-5220
-	void saveAllUsesBulkOperationsForExistingNonVersionedEntities() {
-
-		when(entityInformation.isVersioned()).thenReturn(false);
-		when(entityInformation.getJavaType()).thenReturn(Object.class);
-		when(entityInformation.getCollectionName()).thenReturn("persons");
-		when(entityInformation.getIdAttribute()).thenReturn("id");
+	void saveAllUsesSingleBulkWriteInsertingNewAndReplacingExistingEntities() {
 
 		Object existing = new Object();
 		Object fresh = new Object();
 
+		stubNonVersionedEntityInformation();
 		when(entityInformation.isNew(existing)).thenReturn(false);
 		when(entityInformation.isNew(fresh)).thenReturn(true);
 		when(entityInformation.getId(existing)).thenReturn("id-1");
-
-		BulkOperations bulkOperations = mock(BulkOperations.class);
-		when(mongoOperations.bulkOps(BulkMode.ORDERED, Object.class, "persons")).thenReturn(bulkOperations);
-		when(mongoOperations.insert(List.of(fresh), "persons")).thenReturn(List.of(fresh));
 
 		repository.saveAll(asList(existing, fresh));
 
-		verify(mongoOperations).insert(List.of(fresh), "persons");
-		verify(bulkOperations).replaceOne(any(Query.class), eq(existing), any(FindAndReplaceOptions.class));
-		verify(bulkOperations).execute();
+		ArgumentCaptor<Bulk> bulk = ArgumentCaptor.forClass(Bulk.class);
+		ArgumentCaptor<BulkWriteOptions> options = ArgumentCaptor.forClass(BulkWriteOptions.class);
+		verify(mongoOperations).bulkWrite(bulk.capture(), options.capture());
+
+		assertThat(options.getValue().getOrder()).isEqualTo(BulkWriteOptions.Order.ORDERED);
+		assertThat(bulk.getValue().operations()).satisfiesExactly(first -> {
+
+			assertThat(first).isInstanceOf(BulkOperation.Replace.class);
+			assertThat(((BulkOperation.Replace) first).replacement()).isSameAs(existing);
+		}, second -> {
+
+			assertThat(second).isInstanceOf(BulkOperation.Insert.class);
+			assertThat(((BulkOperation.Insert) second).value()).isSameAs(fresh);
+		});
+
 		verify(mongoOperations, never()).save(any(), anyString());
+		verify(mongoOperations, never()).insert(anyList(), anyString());
 	}
 
 	@Test // GH-5220
-	void saveAllReturnsInsertedInstancesInOriginalOrder() {
-
-		when(entityInformation.isVersioned()).thenReturn(false);
-		when(entityInformation.getJavaType()).thenReturn(Object.class);
-		when(entityInformation.getCollectionName()).thenReturn("persons");
-		when(entityInformation.getIdAttribute()).thenReturn("id");
+	void saveAllReturnsEntitiesInSourceOrder() {
 
 		Object existing = new Object();
 		Object fresh = new Object();
-		Object insertedFresh = new Object();
 
+		stubNonVersionedEntityInformation();
 		when(entityInformation.isNew(existing)).thenReturn(false);
 		when(entityInformation.isNew(fresh)).thenReturn(true);
 		when(entityInformation.getId(existing)).thenReturn("id-1");
 
-		BulkOperations bulkOperations = mock(BulkOperations.class);
-		when(mongoOperations.bulkOps(BulkMode.ORDERED, Object.class, "persons")).thenReturn(bulkOperations);
-		when(mongoOperations.insert(List.of(fresh), "persons")).thenReturn(List.of(insertedFresh));
-
 		List<Object> saved = repository.saveAll(asList(existing, fresh));
 
-		assertThat(saved).containsExactly(existing, insertedFresh);
+		assertThat(saved).containsExactly(existing, fresh);
 	}
 
 	@Test // GH-5220
 	void saveAllFallsBackToPerEntitySaveForVersionedEntities() {
 
-		when(entityInformation.isVersioned()).thenReturn(true);
 		when(entityInformation.getCollectionName()).thenReturn("persons");
+		stubEntityWithVersionProperty();
 
 		Object existing = new Object();
 		when(entityInformation.isNew(existing)).thenReturn(false);
@@ -267,7 +272,40 @@ public class SimpleMongoRepositoryUnitTests {
 		repository.saveAll(List.of(existing));
 
 		verify(mongoOperations).save(existing, "persons");
-		verify(mongoOperations, never()).bulkOps(any(BulkMode.class), any(Class.class), anyString());
+		verify(mongoOperations, never()).bulkWrite(any(Bulk.class), any(BulkWriteOptions.class));
+	}
+
+	@Test // GH-5220
+	void saveAllDoesNotIssueBulkWriteForEmptyIterable() {
+
+		assertThat(repository.saveAll(List.of())).isEmpty();
+
+		verify(mongoOperations, never()).bulkWrite(any(Bulk.class), any(BulkWriteOptions.class));
+	}
+
+	private void stubNonVersionedEntityInformation() {
+
+		when(entityInformation.getJavaType()).thenReturn(Object.class);
+		when(entityInformation.getCollectionName()).thenReturn("persons");
+		when(entityInformation.getIdAttribute()).thenReturn("id");
+		stubEntityWithoutVersionProperty();
+	}
+
+	private void stubEntityWithoutVersionProperty() {
+		stubMappingContext(null);
+	}
+
+	private void stubEntityWithVersionProperty() {
+
+		stubMappingContext(mongoPersistentEntity);
+		when(mongoPersistentEntity.hasVersionProperty()).thenReturn(true);
+	}
+
+	private void stubMappingContext(@Nullable MongoPersistentEntity<?> persistentEntity) {
+
+		when(mongoOperations.getConverter()).thenReturn(mongoConverter);
+		doReturn(mappingContext).when(mongoConverter).getMappingContext();
+		doReturn(persistentEntity).when(mappingContext).getPersistentEntity(any(Class.class));
 	}
 
 	private static Stream<Arguments> findAllCalls() {

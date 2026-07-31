@@ -20,10 +20,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -40,12 +37,12 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
-import org.springframework.data.mongodb.core.BulkOperations;
-import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
-import org.springframework.data.mongodb.core.FindAndReplaceOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.bulk.Bulk;
+import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -115,47 +112,50 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		List<S> source = Streamable.of(entities).stream().collect(Collectors.toList());
 
-		if (source.stream().allMatch(entityInformation::isNew)) {
-			return new ArrayList<>(mongoOperations.insert(source, entityInformation.getCollectionName()));
+		if (source.isEmpty()) {
+			return source;
 		}
 
-		if (entityInformation.isVersioned()) {
+		// bulk writes re-initialize rather than increment @Version and cannot attribute a conflict to a single entity
+		if (source.stream().anyMatch(this::isVersionedEntity)) {
 			return source.stream().map(this::save).collect(Collectors.toList());
 		}
 
-		List<S> newEntities = new ArrayList<>();
-		List<S> existingEntities = new ArrayList<>();
-
-		for (S entity : source) {
-			(entityInformation.isNew(entity) ? newEntities : existingEntities).add(entity);
-		}
-
-		if (!newEntities.isEmpty()) {
-
-			Iterator<S> inserted = mongoOperations.insert(newEntities, entityInformation.getCollectionName()).iterator();
-			Map<S, S> insertedEntities = new IdentityHashMap<>(newEntities.size());
-
-			for (S entity : newEntities) {
-				insertedEntities.put(entity, inserted.next());
-			}
-
-			source.replaceAll(entity -> insertedEntities.getOrDefault(entity, entity));
-		}
-
-		if (!existingEntities.isEmpty()) {
-
-			BulkOperations bulkOps = mongoOperations.bulkOps(BulkMode.ORDERED, entityInformation.getJavaType(),
-					entityInformation.getCollectionName());
-
-			for (S entity : existingEntities) {
-				bulkOps.replaceOne(getIdQuery(entityInformation.getId(entity)), entity,
-						FindAndReplaceOptions.options().upsert());
-			}
-
-			bulkOps.execute();
-		}
+		mongoOperations.bulkWrite(createSaveBulk(source), BulkWriteOptions.ordered());
 
 		return source;
+	}
+
+	/**
+	 * Returns whether the given entity declares a version property. Resolves the {@link MongoPersistentEntity} for the
+	 * actual entity type as a repository can be declared for a supertype that does not declare a version property while
+	 * the instance at hand does.
+	 *
+	 * @param entity the entity to inspect.
+	 * @return {@literal true} if the entity type declares a version property.
+	 */
+	private boolean isVersionedEntity(Object entity) {
+
+		MongoPersistentEntity<?> persistentEntity = mongoOperations.getConverter().getMappingContext()
+				.getPersistentEntity(entity.getClass());
+
+		return persistentEntity != null && persistentEntity.hasVersionProperty();
+	}
+
+	private <S extends T> Bulk createSaveBulk(List<S> source) {
+
+		return Bulk.create(builder -> builder.inCollection(entityInformation.getJavaType(),
+				entityInformation.getCollectionName(), spec -> {
+
+					for (S entity : source) {
+
+						if (entityInformation.isNew(entity)) {
+							spec.insert(entity);
+						} else {
+							spec.replaceOne(getIdQuery(entityInformation.getId(entity)), entity);
+						}
+					}
+				}));
 	}
 
 	@Override
