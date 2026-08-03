@@ -4,6 +4,7 @@ name: "CodeQL Advanced"
 
 on:
   push:
+    branches: [ 5.1.x ]
   pull_request:
   workflow_dispatch:
   schedule:
