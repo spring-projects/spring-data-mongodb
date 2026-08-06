@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.config;
 import static org.assertj.core.api.Assertions.*;
 
 import example.first.First;
+import example.scanning.MetaAnnotatedEntity;
+import example.scanning.ScannedEntity;
+import example.scanning.ScannedEntityInterface;
 import example.second.Second;
 
 import java.util.Arrays;
@@ -135,6 +138,21 @@ public class AbstractMongoConfigurationUnitTests {
 
 		assertThat(entities).hasSize(2);
 		assertThat(entities).contains(First.class, Second.class);
+	}
+
+	@Test // GH-4103
+	public void considersMetaAnnotatedTypesButNotInterfaces() throws ClassNotFoundException {
+
+		AbstractMongoClientConfiguration configuration = new SampleMongoConfiguration() {
+			@Override
+			protected Collection<String> getMappingBasePackages() {
+				return Collections.singleton(ScannedEntity.class.getPackage().getName());
+			}
+		};
+
+		assertThat(configuration.getInitialEntitySet()).containsExactlyInAnyOrder(ScannedEntity.class,
+				MetaAnnotatedEntity.class);
+		assertThat(configuration.getInitialEntitySet()).doesNotContain(ScannedEntityInterface.class);
 	}
 
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
