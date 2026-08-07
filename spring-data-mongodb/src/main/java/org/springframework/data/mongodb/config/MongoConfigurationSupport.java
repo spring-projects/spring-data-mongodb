@@ -41,6 +41,7 @@ import com.mongodb.MongoClientSettings.Builder;
  * Base class for Spring Data MongoDB to be extended for JavaConfiguration usage.
  *
  * @author Mark Paluch
+ * @author masiljangajji
  * @since 2.0
  */
 public abstract class MongoConfigurationSupport {
