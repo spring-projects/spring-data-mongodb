@@ -20,11 +20,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -34,8 +31,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
+import org.springframework.data.util.TypeScanner;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoClientSettings;
@@ -45,6 +41,7 @@ import com.mongodb.MongoClientSettings.Builder;
  * Base class for Spring Data MongoDB to be extended for JavaConfiguration usage.
  *
  * @author Mark Paluch
+ * @author masiljangajji
  * @since 2.0
  */
 public abstract class MongoConfigurationSupport {
@@ -153,7 +150,8 @@ public abstract class MongoConfigurationSupport {
 	 *
 	 * @param basePackage must not be {@literal null}.
 	 * @return
-	 * @throws ClassNotFoundException
+	 * @throws ClassNotFoundException retained for backwards compatibility of this extension point. Types that cannot be
+	 *           loaded are reported as {@link IllegalStateException} by {@link TypeScanner}.
 	 * @since 1.10
 	 */
 	protected Set<Class<?>> scanForEntities(String basePackage) throws ClassNotFoundException {
@@ -162,24 +160,13 @@ public abstract class MongoConfigurationSupport {
 			return Collections.emptySet();
 		}
 
-		Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
-
-		if (StringUtils.hasText(basePackage)) {
-
-			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
-					false);
-			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-
-			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-
-				String beanClassName = candidate.getBeanClassName();
-				Assert.notNull(beanClassName, "BeanClassName cannot be null");
-
-				initialEntitySet.add(ClassUtils.forName(beanClassName, MongoConfigurationSupport.class.getClassLoader()));
-			}
-		}
-
-		return initialEntitySet;
+		return TypeScanner.typeScanner(MongoConfigurationSupport.class.getClassLoader()) //
+				.forTypesAnnotatedWith(Document.class) //
+				.onClassNotFound(cause -> {
+					throw new IllegalStateException("Unable to load entity class", cause);
+				}) //
+				.scanPackages(basePackage) //
+				.collectAsSet();
 	}
 
 	/**
