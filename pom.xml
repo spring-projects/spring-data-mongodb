@@ -5,7 +5,7 @@
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-mongodb-parent</artifactId>
-	<version>5.0.7-SNAPSHOT</version>
+	<version>5.0.7</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Data MongoDB</name>
@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>4.0.7-SNAPSHOT</version>
+		<version>4.0.7</version>
 	</parent>
 
 	<modules>
@@ -27,7 +27,7 @@
 		<project.type>multi</project.type>
 		<antora.javadoc-artifactId>spring-data-mongodb</antora.javadoc-artifactId>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>4.0.7-SNAPSHOT</springdata.commons>
+		<springdata.commons>4.0.7</springdata.commons>
 		<mongo>5.6.5</mongo>
 	</properties>
 
@@ -198,8 +198,7 @@
 									</artifactItem>
 									<artifactItem>
 										<groupId>org.mongodb</groupId>
-										<artifactId>mongodb-driver-reactivestreams
-										</artifactId>
+										<artifactId>mongodb-driver-reactivestreams</artifactId>
 										<version>${mongo}</version>
 										<classifier>javadoc</classifier>
 										<type>jar</type>
@@ -279,20 +278,8 @@
 
 
 	<repositories>
-		<repository>
-			<id>spring-snapshot</id>
-			<url>https://repo.spring.io/snapshot</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>spring-milestone</id>
-			<url>https://repo.spring.io/milestone</url>
-		</repository>
+		
+		
 	</repositories>
 
 </project>
