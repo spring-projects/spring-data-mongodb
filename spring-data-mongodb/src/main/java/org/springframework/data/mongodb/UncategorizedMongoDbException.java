@@ -18,8 +18,11 @@ package org.springframework.data.mongodb;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.UncategorizedDataAccessException;
 
+import java.io.Serial;
+
 public class UncategorizedMongoDbException extends UncategorizedDataAccessException {
 
+	@Serial
 	private static final long serialVersionUID = -2336595514062364929L;
 
 	public UncategorizedMongoDbException(String msg, @Nullable Throwable cause) {

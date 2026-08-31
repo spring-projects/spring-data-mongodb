@@ -20,6 +20,8 @@ import org.springframework.util.Assert;
 
 import com.mongodb.WriteConcernResult;
 
+import java.io.Serial;
+
 /**
  * Mongo-specific {@link DataIntegrityViolationException}.
  *
@@ -27,6 +29,7 @@ import com.mongodb.WriteConcernResult;
  */
 public class MongoDataIntegrityViolationException extends DataIntegrityViolationException {
 
+	@Serial
 	private static final long serialVersionUID = -186980521176764046L;
 
 	private final WriteConcernResult writeResult;
