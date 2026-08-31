@@ -31,6 +31,7 @@ import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext.WriteOperatorContext;
@@ -236,6 +237,12 @@ public class UpdateMapper extends QueryMapper {
 		}
 
 		TypeInformation<?> typeHint = field == null ? TypeInformation.OBJECT : field.getTypeHint();
+
+		if (field != null && field.getProperty() != null
+				&& GeoConverters.isArrayBackedPoint(field.getProperty(), value)) {
+			return GeoConverters.writeArrayBackedPoint((Point) value);
+		}
+
 		return converter.convertToMongoType(value, typeHint);
 	}
 

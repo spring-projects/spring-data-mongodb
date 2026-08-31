@@ -60,6 +60,7 @@ import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.core.TypeInformation;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.InstanceCreatorMetadata;
 import org.springframework.data.mapping.MappingException;
@@ -1339,6 +1340,11 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			return;
 		}
 
+		if (GeoConverters.isArrayBackedPoint(property, value)) {
+			accessor.put(property, GeoConverters.writeArrayBackedPoint((Point) value));
+			return;
+		}
+
 		accessor.put(property, getPotentiallyConvertedSimpleWrite(value,
 				property.hasExplicitWriteTarget() ? property.getFieldType() : Object.class));
 	}
@@ -2006,6 +2012,10 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 			if (value == null) {
 				return null;
+			}
+
+			if (GeoConverters.isArrayBackedPointProperty(property)) {
+				return (T) GeoConverters.readArrayBackedPoint(value);
 			}
 
 			ConversionContext contextToUse = context.forProperty(property);

@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.query.GeoCommand;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author dragonfsky
  * @since 1.5
  */
 public class GeoConvertersUnitTests {
@@ -150,6 +151,13 @@ public class GeoConvertersUnitTests {
 
 		assertThat(DocumentToPointConverter.INSTANCE.convert(new Document().append("x", 1L).append("y", 2L)))
 				.isEqualTo(new Point(1, 2));
+	}
+
+	@Test // GH-4997
+	public void convertsCoordinateListToPointCorrectly() {
+
+		assertThat(ListToPointConverter.INSTANCE.convert(Arrays.asList(-73.99171, 40.738868)))
+				.isEqualTo(new Point(-73.99171, 40.738868));
 	}
 
 	@Test // DATAMONGO-1607
