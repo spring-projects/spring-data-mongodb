@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.bson.Document;
@@ -739,5 +740,21 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * Do not attempt to map fields against the model and treat the entire pipeline as-is.
 		 */
 		NONE
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		AggregationOptions that = (AggregationOptions) o;
+		return allowDiskUse == that.allowDiskUse && explain == that.explain && Objects.equals(cursor, that.cursor)
+				&& Objects.equals(collation, that.collation) && Objects.equals(comment, that.comment)
+				&& Objects.equals(hint, that.hint) && Objects.equals(maxTime, that.maxTime)
+				&& resultOptions == that.resultOptions && domainTypeMapping == that.domainTypeMapping
+				&& Objects.equals(readConcern, that.readConcern) && Objects.equals(readPreference, that.readPreference);
 	}
 }

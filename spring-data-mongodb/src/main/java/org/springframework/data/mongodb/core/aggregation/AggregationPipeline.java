@@ -176,4 +176,16 @@ public class AggregationPipeline {
 	private static boolean isOut(AggregationOperation operator) {
 		return operator instanceof OutOperation || operator.getOperator().equals("$out");
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof AggregationPipeline)) {
+			return false;
+		}
+		AggregationPipeline that = (AggregationPipeline) o;
+		return pipeline.equals(that.pipeline);
+	}
 }
