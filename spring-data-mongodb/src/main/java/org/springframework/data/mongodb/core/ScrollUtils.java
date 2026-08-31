@@ -37,6 +37,7 @@ import org.springframework.util.Assert;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jens Schauder
  * @since 4.1
  */
 class ScrollUtils {
@@ -160,9 +161,13 @@ class ScrollUtils {
 				throw new IllegalStateException("KeysetScrollPosition does not contain all keyset values");
 			}
 
-			List<Document> or = getKeysetCriteria(queryObject, sortObject, sortKeys, keysetValues);
+			List<Document> or = getKeysetCriteria(sortObject, sortKeys, keysetValues);
 			if (or.isEmpty()) {
 				return queryObject;
+			}
+
+			if (queryObject.containsKey("$or")) {
+				return new Document("$and", List.of(queryObject, new Document("$or", or)));
 			}
 
 			Document filterQuery = new Document(queryObject);
@@ -170,10 +175,10 @@ class ScrollUtils {
 			return filterQuery;
 		}
 
-		private List<Document> getKeysetCriteria(Document queryObject, Document sortObject, List<String> sortKeys,
+		private List<Document> getKeysetCriteria(Document sortObject, List<String> sortKeys,
 				Map<String, Object> keysetValues) {
 
-			List<Document> or = new ArrayList<>((List<Document>) queryObject.getOrDefault("$or", Collections.emptyList()));
+			List<Document> or = new ArrayList<>();
 
 			// build matrix query for keyset paging that contains sort^2 queries
 			// reflecting a query that follows sort order semantics starting from the last returned keyset
