@@ -296,6 +296,24 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollation()).isEqualTo(Collation.of("en_US"));
 	}
 
+	@Test // GH-4535
+	void readsStandaloneCollationAnnotation() {
+
+		BasicMongoPersistentEntity<WithStandaloneCollation> entity = new BasicMongoPersistentEntity<>(
+				TypeInformation.of(WithStandaloneCollation.class));
+
+		assertThat(entity.getCollation()).isEqualTo(Collation.of("en_US"));
+	}
+
+	@Test // GH-4535
+	void readsStandaloneCollationAnnotationWithoutDocumentAnnotation() {
+
+		BasicMongoPersistentEntity<WithStandaloneCollationOnly> entity = new BasicMongoPersistentEntity<>(
+				TypeInformation.of(WithStandaloneCollationOnly.class));
+
+		assertThat(entity.getCollation()).isEqualTo(Collation.of("en_US"));
+	}
+
 	@Test // DATAMONGO-2341
 	void detectsShardedEntityCorrectly() {
 
@@ -397,6 +415,13 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@Document(collation = "{ 'locale' : 'en_US' }")
 	class WithDocumentCollation {}
+
+	@Document
+	@org.springframework.data.mongodb.core.annotation.Collation("en_US")
+	class WithStandaloneCollation {}
+
+	@org.springframework.data.mongodb.core.annotation.Collation("en_US")
+	class WithStandaloneCollationOnly {}
 
 	@Sharded
 	private class WithDefaultShardKey {}
