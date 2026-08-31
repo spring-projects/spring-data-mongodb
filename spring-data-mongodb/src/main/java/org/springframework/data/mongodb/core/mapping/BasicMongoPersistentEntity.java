@@ -382,6 +382,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			EvaluationContext ctx = getEvaluationContext(null);
 			ctx.setVariable("target", getType().getSimpleName());
+			ctx.setVariable("collection", getCollection());
 			return ctx;
 		});
 

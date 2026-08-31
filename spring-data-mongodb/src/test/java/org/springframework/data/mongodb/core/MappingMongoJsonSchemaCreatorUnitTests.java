@@ -164,6 +164,24 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 		assertThat(schema.schemaDocument().toBsonDocument()).isEqualTo(BsonDocument.parse(ENC_FROM_METHOD_SCHEMA));
 	}
 
+	@Test // GH-4304
+	void csfleWithKeyFromCollection() {
+
+		GenericApplicationContext applicationContext = new GenericApplicationContext();
+		applicationContext.registerBean("encryptionExtension", EncryptionExtension.class, () -> new EncryptionExtension());
+		applicationContext.refresh();
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setApplicationContext(applicationContext);
+		mappingContext.afterPropertiesSet();
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create(mappingContext) //
+				.filter(MongoJsonSchemaCreator.encryptedOnly()) //
+				.createSchemaFor(EncryptionMetadataWithCollection.class);
+
+		assertThat(schema.schemaDocument().toBsonDocument()).isEqualTo(BsonDocument.parse(ENC_FROM_COLLECTION_SCHEMA));
+	}
+
 	// --> Combining Schemas and Properties
 
 	@Test // GH-3870
@@ -648,6 +666,49 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 		String provider;
 	}
 
+	static final String ENC_FROM_COLLECTION_KEY = "R2Vkm1DOCM6sBplG+MZYOQ==";
+	static final String ENC_FROM_COLLECTION_SCHEMA = "{" + //
+			"  'encryptMetadata': {" + //
+			"    'keyId': [" + //
+			"      {" + //
+			"        '$binary': {" + //
+			"          'base64': '" + ENC_FROM_COLLECTION_KEY + "'," + //
+			"          'subType': '04'" + //
+			"        }" + //
+			"      }" + //
+			"    ]" + //
+			"  }," + //
+			"  'type': 'object'," + //
+			"  'properties': {" + //
+			"    'policyNumber': {" + //
+			"      'encrypt': {" + //
+			"        'keyId': [" + //
+			"          [" + //
+			"            {" + //
+			"              '$binary': {" + //
+			"                'base64': '" + ENC_FROM_COLLECTION_KEY + "'," + //
+			"                'subType': '04'" + //
+			"              }" + //
+			"            }" + //
+			"          ]" + //
+			"        ]," + //
+			"        'bsonType': 'int'," + //
+			"        'algorithm': 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic'" + //
+			"      }" + //
+			"    }" + //
+			"  }" + //
+			"}";
+
+	@org.springframework.data.mongodb.core.mapping.Document("patients")
+	@Encrypted(keyId = "#{mongocrypt.keyId(#collection)}")
+	static class EncryptionMetadataWithCollection {
+
+		@Encrypted(keyId = "#{mongocrypt.keyId(#collection)}", algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic") //
+		Integer policyNumber;
+
+		String provider;
+	}
+
 	public static class EncryptionExtension implements EvaluationContextExtension {
 
 		@Override
@@ -683,6 +744,10 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 
 			if (target.equals("EncryptionMetadataFromMethod.policyNumber")) {
 				return ENC_FROM_METHOD_PROPOERTY_KEY;
+			}
+
+			if (target.equals("patients")) {
+				return ENC_FROM_COLLECTION_KEY;
 			}
 
 			return "xKVup8B1Q+CkHaVRx+qa+g==";
