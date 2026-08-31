@@ -64,6 +64,7 @@ import org.springframework.javapoet.MethodSpec;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Tomasz Forys
+ * @author maryantocinn
  */
 class QueryMethodContributionUnitTests {
 
@@ -397,6 +398,17 @@ class QueryMethodContributionUnitTests {
 
 		assertThat(methodSpec.toString()) //
 				.containsSubsequence("return", "Streamable.of(", "all())");
+	}
+
+	@Test // GH-5225
+	void rendersSetReturnType() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "findUserSetBy");
+
+		assertThat(methodSpec.toString()) //
+				.contains("DefaultConversionService.getSharedInstance().convert(") //
+				.containsSubsequence("return", "all()", "Set.class") //
+				.doesNotContain("return finder.matching(filterQuery).all()");
 	}
 
 	@Test // GH-5089
