@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +49,7 @@ import com.mongodb.client.MongoCollection;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Sangyeop Jeong
  */
 @EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
 class MongoTemplateBulkTests {
@@ -86,6 +88,21 @@ class MongoTemplateBulkTests {
 		Long inSpecialCollection = operations.execute(SpecialDoc.class, MongoCollection::countDocuments);
 		assertThat(inBaseDocCollection).isEqualTo(3L);
 		assertThat(inSpecialCollection).isOne();
+	}
+
+	@Test // GH-5220
+	void bulkInsertPropagatesGeneratedIdToEntity() {
+
+		BaseDoc doc = new BaseDoc();
+		doc.value = "value-doc";
+
+		operations.bulkWrite(Bulk.create(builder -> builder.inCollection(BaseDoc.class, ops -> ops.insert(doc))),
+				BulkWriteOptions.ordered());
+
+		ObjectId storedId = operations.execute(BaseDoc.class,
+				collection -> collection.find().first().getObjectId("_id"));
+
+		assertThat(doc.id).isNotNull().isEqualTo(storedId.toHexString());
 	}
 
 	@Test // GH-5087

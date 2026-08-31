@@ -40,6 +40,9 @@ import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.bulk.Bulk;
+import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -63,6 +66,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mehran Behnam
  * @author Jens Schauder
  * @author Kirill Egorov
+ * @author Sangyeop Jeong
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
@@ -106,16 +110,52 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null");
 
-		Streamable<S> source = Streamable.of(entities);
-		boolean allNew = source.stream().allMatch(entityInformation::isNew);
+		List<S> source = Streamable.of(entities).stream().collect(Collectors.toList());
 
-		if (allNew) {
-
-			List<S> result = source.stream().collect(Collectors.toList());
-			return new ArrayList<>(mongoOperations.insert(result, entityInformation.getCollectionName()));
+		if (source.isEmpty()) {
+			return source;
 		}
 
-		return source.stream().map(this::save).collect(Collectors.toList());
+		// bulk writes re-initialize rather than increment @Version and cannot attribute a conflict to a single entity
+		if (source.stream().anyMatch(this::isVersionedEntity)) {
+			return source.stream().map(this::save).collect(Collectors.toList());
+		}
+
+		mongoOperations.bulkWrite(createSaveBulk(source), BulkWriteOptions.ordered());
+
+		return source;
+	}
+
+	/**
+	 * Returns whether the given entity declares a version property. Resolves the {@link MongoPersistentEntity} for the
+	 * actual entity type as a repository can be declared for a supertype that does not declare a version property while
+	 * the instance at hand does.
+	 *
+	 * @param entity the entity to inspect.
+	 * @return {@literal true} if the entity type declares a version property.
+	 */
+	private boolean isVersionedEntity(Object entity) {
+
+		MongoPersistentEntity<?> persistentEntity = mongoOperations.getConverter().getMappingContext()
+				.getPersistentEntity(entity.getClass());
+
+		return persistentEntity != null && persistentEntity.hasVersionProperty();
+	}
+
+	private <S extends T> Bulk createSaveBulk(List<S> source) {
+
+		return Bulk.create(builder -> builder.inCollection(entityInformation.getJavaType(),
+				entityInformation.getCollectionName(), spec -> {
+
+					for (S entity : source) {
+
+						if (entityInformation.isNew(entity)) {
+							spec.insert(entity);
+						} else {
+							spec.replaceOne(getIdQuery(entityInformation.getId(entity)), entity);
+						}
+					}
+				}));
 	}
 
 	@Override

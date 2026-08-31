@@ -50,6 +50,7 @@ import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Sangyeop Jeong
  * @since 5.1
  */
 class ReactiveBulkWriter extends BulkWriterSupport {
@@ -80,21 +81,13 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		return buildWriteModelsReactive(bulk, collector).then(Mono.defer(() -> {
 
 			String collectionName = collector.getNamespace().getCollectionName();
-			List<SourceAwareDocument<Object>> afterSaveCallables = collector.getAfterSaveCallables();
 
 			return template
 					.createMono(collectionName,
 							col -> col.bulkWrite(collector.getWriteModels(),
 									new com.mongodb.client.model.BulkWriteOptions()
 											.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.map(BulkWriteResult::from)
-					.doOnSuccess(
-							v -> afterSaveCallables
-									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
-											callable.document(), callable.collectionName()))))
-					.flatMap(result -> Flux.concat(afterSaveCallables.stream().map(callable -> template
-							.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName())).toList())
-							.then(Mono.just(result)));
+					.flatMap(result -> completeSaves(collector).thenReturn(BulkWriteResult.from(result)));
 		}));
 	}
 
@@ -106,20 +99,12 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		return buildWriteModelsReactive(bulk, collector).then(Mono.defer(() -> {
 
 			List<ClientNamespacedWriteModel> writeModels = collector.getWriteModels();
-			List<SourceAwareDocument<Object>> afterSaveCallables = collector.getAfterSaveCallables();
 
 			return template
 					.doWithCluster(client -> client.bulkWrite(writeModels,
 							ClientBulkWriteOptions
 									.clientBulkWriteOptions().ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.map(BulkWriteResult::from)
-					.doOnSuccess(
-							v -> afterSaveCallables
-									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
-											callable.document(), callable.collectionName()))))
-					.flatMap(result -> Flux.concat(afterSaveCallables.stream().map(callable -> template
-							.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName())).toList())
-							.then(Mono.just(result)));
+					.flatMap(result -> completeSaves(collector).thenReturn(BulkWriteResult.from(result)));
 		}));
 	}
 
@@ -184,6 +169,28 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		}
 
 		return Mono.error(new IllegalStateException("Unknown bulk operation type: " + bulkOp.getClass()));
+	}
+
+	private Mono<Void> completeSaves(WriteModelCollector collector) {
+		return Flux.fromIterable(collector.getAfterSaveCallables()).concatMap(this::completeSave).then();
+	}
+
+	/**
+	 * Completes the save lifecycle after an entity has been written through an {@literal insert} or {@literal replace}
+	 * operation by propagating a generated identifier back to the entity and emitting the after save event and
+	 * callbacks.
+	 *
+	 * @param written the entity along with the document handed to the driver, carrying an identifier generated during
+	 *          the write.
+	 * @return the entity as returned by the after save callbacks.
+	 */
+	private Mono<Object> completeSave(SourceAwareDocument<Object> written) {
+
+		Object entity = populateIdIfNecessary(written.source(), written.document(),
+				template.getConverter().getConversionService());
+
+		template.maybeEmitEvent(new AfterSaveEvent<>(entity, written.document(), written.collectionName()));
+		return template.maybeCallAfterSave(entity, written.document(), written.collectionName());
 	}
 
 	@SuppressWarnings("unchecked")
