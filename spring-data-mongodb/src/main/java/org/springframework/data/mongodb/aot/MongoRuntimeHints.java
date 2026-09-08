@@ -47,6 +47,7 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Yasser Ameur
  * @since 4.0
  */
 class MongoRuntimeHints implements RuntimeHintsRegistrar {
@@ -83,6 +84,17 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 					TypeReference.of("org.springframework.aop.SpringProxy"),
 					TypeReference.of("org.springframework.core.DecoratingProxy"));
 			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.client.MongoCollection"),
+					TypeReference.of("org.springframework.aop.SpringProxy"),
+					TypeReference.of("org.springframework.core.DecoratingProxy"));
+		}
+
+		if (MongoAotPredicates.isReactiveClientPresent(classLoader)
+				&& ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
+
+			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.reactivestreams.client.MongoDatabase"),
+					TypeReference.of("org.springframework.aop.SpringProxy"),
+					TypeReference.of("org.springframework.core.DecoratingProxy"));
+			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.reactivestreams.client.MongoCollection"),
 					TypeReference.of("org.springframework.aop.SpringProxy"),
 					TypeReference.of("org.springframework.core.DecoratingProxy"));
 		}
