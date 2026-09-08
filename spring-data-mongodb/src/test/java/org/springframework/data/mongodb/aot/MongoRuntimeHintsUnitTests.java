@@ -37,6 +37,7 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
  * Unit Tests for {@link MongoRuntimeHints}.
  *
  * @author Christoph Strobl
+ * @author Yasser Ameur
  */
 @SuppressWarnings("deprecation")
 class MongoRuntimeHintsUnitTests {
@@ -121,6 +122,47 @@ class MongoRuntimeHintsUnitTests {
 				.withMemberCategory(INVOKE_PUBLIC_METHODS).negate()
 				.and(reflection().onType(TypeReference.of("com.mongodb.reactivestreams.client.internal.MapReducePublisherImpl"))
 						.withMemberCategory(INVOKE_PUBLIC_METHODS).negate());
+
+		assertThat(runtimeHints).matches(expected);
+	}
+
+	@Test // GH-5238
+	@ClassPathExclusions(packages = { "com.mongodb.client" })
+	void shouldRegisterReactiveTransactionProxyHintsIfPresent() {
+
+		RuntimeHints runtimeHints = new RuntimeHints();
+
+		new MongoRuntimeHints().registerHints(runtimeHints, this.getClass().getClassLoader());
+
+		Predicate<RuntimeHints> expected = proxies().forInterfaces(
+				TypeReference.of("com.mongodb.reactivestreams.client.MongoDatabase"),
+				TypeReference.of("org.springframework.aop.SpringProxy"),
+				TypeReference.of("org.springframework.core.DecoratingProxy"))
+				.and(proxies().forInterfaces(TypeReference.of("com.mongodb.reactivestreams.client.MongoCollection"),
+						TypeReference.of("org.springframework.aop.SpringProxy"),
+						TypeReference.of("org.springframework.core.DecoratingProxy")));
+
+		assertThat(runtimeHints).matches(expected);
+	}
+
+	@Test // GH-5238
+	@ClassPathExclusions(packages = { "com.mongodb.reactivestreams.client" })
+	void shouldNotRegisterReactiveTransactionProxyHintsIfClientNotPresent() {
+
+		RuntimeHints runtimeHints = new RuntimeHints();
+
+		new MongoRuntimeHints().registerHints(runtimeHints, this.getClass().getClassLoader());
+
+		Predicate<RuntimeHints> expected = proxies()
+				.forInterfaces(TypeReference.of("com.mongodb.reactivestreams.client.MongoDatabase"),
+						TypeReference.of("org.springframework.aop.SpringProxy"),
+						TypeReference.of("org.springframework.core.DecoratingProxy"))
+				.negate()
+				.and(proxies()
+						.forInterfaces(TypeReference.of("com.mongodb.reactivestreams.client.MongoCollection"),
+								TypeReference.of("org.springframework.aop.SpringProxy"),
+								TypeReference.of("org.springframework.core.DecoratingProxy"))
+						.negate());
 
 		assertThat(runtimeHints).matches(expected);
 	}
