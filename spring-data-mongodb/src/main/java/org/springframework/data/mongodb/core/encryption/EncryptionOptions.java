@@ -45,7 +45,6 @@ public class EncryptionOptions {
 
 		Assert.hasText(algorithm, "Algorithm must not be empty");
 		Assert.notNull(key, "EncryptionKey must not be empty");
-		Assert.notNull(key, "QueryableEncryptionOptions must not be empty");
 
 		this.key = key;
 		this.algorithm = algorithm;
