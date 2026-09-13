@@ -106,6 +106,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <S extends T> List<S> saveAll(Iterable<S> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null");
@@ -121,9 +122,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return source.stream().map(this::save).collect(Collectors.toList());
 		}
 
-		mongoOperations.bulkWrite(createSaveBulk(source), BulkWriteOptions.ordered());
-
-		return source;
+		return (List<S>) mongoOperations.bulkWrite(createSaveBulk(source), BulkWriteOptions.ordered()).savedEntities();
 	}
 
 	/**

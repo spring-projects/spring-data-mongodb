@@ -34,6 +34,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
@@ -45,6 +46,9 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
@@ -66,6 +70,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Jens Schauder
+ * @author Sangyeop Jeong
  */
 @ExtendWith({ DirtiesStateExtension.class })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -457,6 +462,40 @@ class SimpleMongoRepositoryTests implements StateFunctions {
 		assertThat(repository.count()).isEqualTo(all.size() + 1);
 	}
 
+	@Test // GH-5220
+	void saveAllReturnsImmutableEntitiesWithGeneratedId() {
+
+		SimpleMongoRepository<ImmutablePerson, String> immutableRepository = repositoryFor(ImmutablePerson.class);
+
+		try {
+			ImmutablePerson saved = immutableRepository.saveAll(List.of(new ImmutablePerson(null, "Keith"))).get(0);
+
+			assertThat(saved.id).isNotNull();
+			assertThat(immutableRepository.findById(saved.id)).isPresent();
+		} finally {
+			template.dropCollection(ImmutablePerson.class);
+		}
+	}
+
+	@Test // GH-5220
+	void saveAllConvertsGeneratedIdToTargetType() {
+
+		SimpleMongoRepository<StringIdPerson, String> stringIdRepository = repositoryFor(StringIdPerson.class);
+		StringIdPerson person = new StringIdPerson();
+
+		try {
+			stringIdRepository.saveAll(List.of(person));
+
+			Object storedId = template.execute(StringIdPerson.class,
+					collection -> collection.find().first().get("_id"));
+
+			assertThat(storedId).isInstanceOf(String.class).isEqualTo(person.id);
+			assertThat(stringIdRepository.findById(person.id)).isPresent();
+		} finally {
+			template.dropCollection(StringIdPerson.class);
+		}
+	}
+
 	@Test // DATAMONGO-2130
 	@EnableIfReplicaSetAvailable
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
@@ -708,4 +747,29 @@ class SimpleMongoRepositoryTests implements StateFunctions {
 
 	@Document
 	static class PersonExtended extends Person {}
+
+	@SuppressWarnings("unchecked")
+	private <T> SimpleMongoRepository<T, String> repositoryFor(Class<T> type) {
+
+		MongoPersistentEntity<T> entity = (MongoPersistentEntity<T>) template.getConverter().getMappingContext()
+				.getRequiredPersistentEntity(type);
+
+		return new SimpleMongoRepository<>(new MappingMongoEntityInformation<>(entity), template);
+	}
+
+	static final class ImmutablePerson {
+
+		@Id private final String id;
+		private final String firstname;
+
+		ImmutablePerson(String id, String firstname) {
+			this.id = id;
+			this.firstname = firstname;
+		}
+	}
+
+	static class StringIdPerson {
+
+		@MongoId(FieldType.STRING) String id;
+	}
 }

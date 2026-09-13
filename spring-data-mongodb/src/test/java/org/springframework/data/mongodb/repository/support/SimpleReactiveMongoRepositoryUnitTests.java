@@ -244,8 +244,9 @@ class SimpleReactiveMongoRepositoryUnitTests {
 		when(entityInformation.isNew(existing)).thenReturn(false);
 		when(entityInformation.isNew(fresh)).thenReturn(true);
 		when(entityInformation.getId(existing)).thenReturn("id-1");
-		when(mongoOperations.bulkWrite(any(Bulk.class), any(BulkWriteOptions.class)))
-				.thenReturn(Mono.just(mock(BulkWriteResult.class)));
+
+		BulkWriteResult result = bulkWriteResult(existing, fresh);
+		when(mongoOperations.bulkWrite(any(Bulk.class), any(BulkWriteOptions.class))).thenReturn(Mono.just(result));
 
 		repository.saveAll(asList(existing, fresh)).as(StepVerifier::create) //
 				.expectNext(existing, fresh) //
@@ -268,6 +269,26 @@ class SimpleReactiveMongoRepositoryUnitTests {
 
 		verify(mongoOperations, never()).save(any(), anyString());
 		verify(mongoOperations, never()).insert(anyCollection(), anyString());
+	}
+
+	@Test // GH-5220
+	void saveAllReturnsSavedInstancesInOriginalOrder() {
+
+		Object existing = new Object();
+		Object fresh = new Object();
+		Object insertedFresh = new Object();
+
+		stubNonVersionedEntityInformation();
+		when(entityInformation.isNew(existing)).thenReturn(false);
+		when(entityInformation.isNew(fresh)).thenReturn(true);
+		when(entityInformation.getId(existing)).thenReturn("id-1");
+
+		BulkWriteResult result = bulkWriteResult(existing, insertedFresh);
+		when(mongoOperations.bulkWrite(any(Bulk.class), any(BulkWriteOptions.class))).thenReturn(Mono.just(result));
+
+		repository.saveAll(asList(existing, fresh)).as(StepVerifier::create) //
+				.expectNext(existing, insertedFresh) //
+				.verifyComplete();
 	}
 
 	@Test // GH-5220
@@ -319,6 +340,14 @@ class SimpleReactiveMongoRepositoryUnitTests {
 		when(mongoOperations.getConverter()).thenReturn(mongoConverter);
 		doReturn(mappingContext).when(mongoConverter).getMappingContext();
 		doReturn(persistentEntity).when(mappingContext).getPersistentEntity(any(Class.class));
+	}
+
+	private static BulkWriteResult bulkWriteResult(Object... savedEntities) {
+
+		BulkWriteResult result = mock(BulkWriteResult.class);
+		when(result.savedEntities()).thenReturn(asList(savedEntities));
+
+		return result;
 	}
 
 	private static Stream<Arguments> findAllCalls() {

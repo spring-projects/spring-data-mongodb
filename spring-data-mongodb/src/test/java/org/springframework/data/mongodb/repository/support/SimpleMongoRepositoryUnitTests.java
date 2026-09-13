@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkOperation;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
+import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -223,6 +224,9 @@ public class SimpleMongoRepositoryUnitTests {
 		when(entityInformation.isNew(fresh)).thenReturn(true);
 		when(entityInformation.getId(existing)).thenReturn("id-1");
 
+		BulkWriteResult result = bulkWriteResult(existing, fresh);
+		when(mongoOperations.bulkWrite(any(Bulk.class), any(BulkWriteOptions.class))).thenReturn(result);
+
 		repository.saveAll(asList(existing, fresh));
 
 		ArgumentCaptor<Bulk> bulk = ArgumentCaptor.forClass(Bulk.class);
@@ -245,19 +249,23 @@ public class SimpleMongoRepositoryUnitTests {
 	}
 
 	@Test // GH-5220
-	void saveAllReturnsEntitiesInSourceOrder() {
+	void saveAllReturnsSavedInstancesInOriginalOrder() {
 
 		Object existing = new Object();
 		Object fresh = new Object();
+		Object insertedFresh = new Object();
 
 		stubNonVersionedEntityInformation();
 		when(entityInformation.isNew(existing)).thenReturn(false);
 		when(entityInformation.isNew(fresh)).thenReturn(true);
 		when(entityInformation.getId(existing)).thenReturn("id-1");
 
+		BulkWriteResult result = bulkWriteResult(existing, insertedFresh);
+		when(mongoOperations.bulkWrite(any(Bulk.class), any(BulkWriteOptions.class))).thenReturn(result);
+
 		List<Object> saved = repository.saveAll(asList(existing, fresh));
 
-		assertThat(saved).containsExactly(existing, fresh);
+		assertThat(saved).containsExactly(existing, insertedFresh);
 	}
 
 	@Test // GH-5220
@@ -306,6 +314,14 @@ public class SimpleMongoRepositoryUnitTests {
 		when(mongoOperations.getConverter()).thenReturn(mongoConverter);
 		doReturn(mappingContext).when(mongoConverter).getMappingContext();
 		doReturn(persistentEntity).when(mappingContext).getPersistentEntity(any(Class.class));
+	}
+
+	private static BulkWriteResult bulkWriteResult(Object... savedEntities) {
+
+		BulkWriteResult result = mock(BulkWriteResult.class);
+		when(result.savedEntities()).thenReturn(asList(savedEntities));
+
+		return result;
 	}
 
 	private static Stream<Arguments> findAllCalls() {

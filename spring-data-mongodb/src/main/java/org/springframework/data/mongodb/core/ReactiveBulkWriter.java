@@ -87,7 +87,8 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 							col -> col.bulkWrite(collector.getWriteModels(),
 									new com.mongodb.client.model.BulkWriteOptions()
 											.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.flatMap(result -> completeSaves(collector).thenReturn(BulkWriteResult.from(result)));
+					.flatMap(result -> completeSaves(collector)
+							.map(savedEntities -> BulkWriteResult.from(result, savedEntities)));
 		}));
 	}
 
@@ -104,7 +105,8 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 					.doWithCluster(client -> client.bulkWrite(writeModels,
 							ClientBulkWriteOptions
 									.clientBulkWriteOptions().ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.flatMap(result -> completeSaves(collector).thenReturn(BulkWriteResult.from(result)));
+					.flatMap(result -> completeSaves(collector)
+							.map(savedEntities -> BulkWriteResult.from(result, savedEntities)));
 		}));
 	}
 
@@ -121,7 +123,13 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 
 			return template
 					.prepareObjectForSaveReactive(namespace.getCollectionName(), insert.value())
-					.doOnNext(sad -> collector.addInsert(namespace, sad.document(), toObject(sad))).then();
+					.doOnNext(sad -> {
+
+						Document document = queryOperations.createInsertContext(MappedDocument.of(sad.document()))
+								.prepareId(sad.source().getClass()).getDocument();
+
+						collector.addInsert(namespace, document, toObject(sad));
+					}).then();
 		}
 
 		if (bulkOp instanceof Update update) {
@@ -171,8 +179,8 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		return Mono.error(new IllegalStateException("Unknown bulk operation type: " + bulkOp.getClass()));
 	}
 
-	private Mono<Void> completeSaves(WriteModelCollector collector) {
-		return Flux.fromIterable(collector.getAfterSaveCallables()).concatMap(this::completeSave).then();
+	private Mono<List<Object>> completeSaves(WriteModelCollector collector) {
+		return Flux.fromIterable(collector.getAfterSaveCallables()).concatMap(this::completeSave).collectList();
 	}
 
 	/**

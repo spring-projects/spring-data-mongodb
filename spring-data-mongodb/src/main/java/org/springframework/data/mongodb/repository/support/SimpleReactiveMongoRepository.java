@@ -111,6 +111,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <S extends T> Flux<S> saveAll(Iterable<S> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null");
@@ -127,7 +128,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		}
 
 		return mongoOperations.bulkWrite(createSaveBulk(source), BulkWriteOptions.ordered())
-				.thenMany(Flux.fromIterable(source));
+				.flatMapIterable(result -> (List<S>) result.savedEntities());
 	}
 
 	/**
