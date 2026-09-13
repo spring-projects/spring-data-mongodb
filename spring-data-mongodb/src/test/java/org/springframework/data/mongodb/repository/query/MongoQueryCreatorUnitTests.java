@@ -765,6 +765,56 @@ class MongoQueryCreatorUnitTests {
 		assertThat(query).isEqualTo(query(where("registrationDate").eq("")));
 	}
 
+	@Test // GH-4715
+	void createsAndQueryForRangeOnSameProperty() {
+
+		PartTree tree = new PartTree("findByAgeGreaterThanAndAgeLessThan", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 10, 50), context);
+
+		assertThat(creator.createQuery())
+				.isEqualTo(query(new Criteria().andOperator(where("age").gt(10), where("age").lt(50))));
+	}
+
+	@Test // GH-4715
+	void createsAndQueryForEqualityOnSameProperty() {
+
+		PartTree tree = new PartTree("findByAgeAndAge", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 10, 50), context);
+
+		assertThat(creator.createQuery())
+				.isEqualTo(query(new Criteria().andOperator(where("age").is(10), where("age").is(50))));
+	}
+
+	@Test // GH-4715
+	void keepsPrecedingPartsInTheFirstAndOperand() {
+
+		PartTree tree = new PartTree("findByFirstNameAndAgeGreaterThanAndAgeLessThan", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Oliver", 10, 50), context);
+
+		assertThat(creator.createQuery()).isEqualTo(
+				query(new Criteria().andOperator(where("firstName").is("Oliver").and("age").gt(10),
+						where("age").lt(50))));
+	}
+
+	@Test // GH-4715
+	void leavesQueryWithoutDuplicatePropertyUntouched() {
+
+		PartTree tree = new PartTree("findByFirstNameAndAge", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Oliver", 10), context);
+
+		assertThat(creator.createQuery()).isEqualTo(query(where("firstName").is("Oliver").and("age").is(10)));
+	}
+
+	@Test // GH-4715
+	void doesNotMergeSamePropertyAcrossOrBranches() {
+
+		PartTree tree = new PartTree("findByAgeGreaterThanOrAgeLessThan", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 50, 10), context);
+
+		assertThat(creator.createQuery())
+				.isEqualTo(query(new Criteria().orOperator(where("age").gt(50), where("age").lt(10))));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
