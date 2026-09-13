@@ -67,6 +67,7 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @author Edward Prentice
  * @author Junhyeong Choi
+ * @author Jeongkyun An
  */
 public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 

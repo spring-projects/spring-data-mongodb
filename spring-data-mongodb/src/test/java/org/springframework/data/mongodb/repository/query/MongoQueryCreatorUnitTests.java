@@ -69,6 +69,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Junhyeong Choi
+ * @author Jeongkyun An
  */
 class MongoQueryCreatorUnitTests {
 
