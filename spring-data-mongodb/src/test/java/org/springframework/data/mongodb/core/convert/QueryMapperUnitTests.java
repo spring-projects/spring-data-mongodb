@@ -88,6 +88,7 @@ import com.mongodb.client.model.Filters;
  * @author Mark Paluch
  * @author David Julia
  * @author Gyungrai Wang
+ * @author dragonfsky
  */
 public class QueryMapperUnitTests {
 
@@ -854,6 +855,20 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
 
 		assertThat(document).isEqualTo(new org.bson.Document().append("nested.id", 1));
+	}
+
+	@Test // GH-3351
+	void shouldPreserveImplicitIdFieldNameForNestedTypeWhenRestrictedToDocumentTypes() {
+
+		context.setAutoIdFieldMappingOnlyForDocumentTypes(true);
+
+		String idHex = new ObjectId().toHexString();
+		Query query = query(where("nested.id").is(idHex));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(DocumentWithNestedImplicitIdField.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("nested.id", idHex));
 	}
 
 	@Test // DATAMONGO-1135
@@ -1886,6 +1901,18 @@ public class QueryMapperUnitTests {
 
 		@Id String id;
 		ClassWithExplicitlyRenamedField nested;
+	}
+
+	@Document
+	static class DocumentWithNestedImplicitIdField {
+
+		String id;
+		ClassWithImplicitIdField nested;
+	}
+
+	static class ClassWithImplicitIdField {
+
+		String id;
 	}
 
 	static class ClassWithExplicitlyRenamedField {
