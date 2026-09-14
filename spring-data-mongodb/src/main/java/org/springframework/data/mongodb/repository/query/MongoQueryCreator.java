@@ -67,6 +67,7 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @author Edward Prentice
  * @author Junhyeong Choi
+ * @author Jeongkyun An
  */
 public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
@@ -145,8 +146,15 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		MongoPersistentProperty property = path.getLeafProperty();
+		String dotPath = path.toDotPath();
 
-		return from(part, property, base.and(path.toDotPath()), iterator);
+		if (base.getCriteriaObject().containsKey(dotPath)) {
+
+			// A single document cannot carry the same key twice, so the conditions have to travel in an $and.
+			return new Criteria().andOperator(base, from(part, property, where(dotPath), iterator));
+		}
+
+		return from(part, property, base.and(dotPath), iterator);
 	}
 
 	@Override
