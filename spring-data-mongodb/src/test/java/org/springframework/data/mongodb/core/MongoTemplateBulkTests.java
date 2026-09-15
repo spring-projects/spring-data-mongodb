@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +31,8 @@ import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -48,13 +51,14 @@ import com.mongodb.client.MongoCollection;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Sangyeop Jeong
  */
 @EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
 class MongoTemplateBulkTests {
 
 	@Client private static MongoClient mongoClient;
 
-	@Template(initialEntitySet = { BaseDoc.class, SpecialDoc.class }) //
+	@Template(initialEntitySet = { BaseDoc.class, SpecialDoc.class, TypedIdDoc.class }) //
 	private static MongoTestTemplate operations;
 
 	@BeforeEach
@@ -86,6 +90,34 @@ class MongoTemplateBulkTests {
 		Long inSpecialCollection = operations.execute(SpecialDoc.class, MongoCollection::countDocuments);
 		assertThat(inBaseDocCollection).isEqualTo(3L);
 		assertThat(inSpecialCollection).isOne();
+	}
+
+	@Test // GH-5220
+	void bulkInsertPropagatesGeneratedIdToEntity() {
+
+		BaseDoc doc = new BaseDoc();
+		doc.value = "value-doc";
+
+		operations.bulkWrite(Bulk.create(builder -> builder.inCollection(BaseDoc.class, ops -> ops.insert(doc))),
+				BulkWriteOptions.ordered());
+
+		ObjectId storedId = operations.execute(BaseDoc.class,
+				collection -> collection.find().first().getObjectId("_id"));
+
+		assertThat(doc.id).isNotNull().isEqualTo(storedId.toHexString());
+	}
+
+	@Test // GH-5220
+	void bulkInsertConvertsGeneratedIdToTargetType() {
+
+		TypedIdDoc doc = new TypedIdDoc();
+
+		operations.bulkWrite(Bulk.create(builder -> builder.inCollection(TypedIdDoc.class, ops -> ops.insert(doc))),
+				BulkWriteOptions.ordered());
+
+		Object storedId = operations.execute(TypedIdDoc.class, collection -> collection.find().first().get("_id"));
+
+		assertThat(storedId).isInstanceOf(String.class).isEqualTo(doc.id);
 	}
 
 	@Test // GH-5087
@@ -516,6 +548,11 @@ class MongoTemplateBulkTests {
 
 	private static Document rawDoc(String id, String value) {
 		return new Document("_id", id).append("value", value);
+	}
+
+	static class TypedIdDoc {
+
+		@MongoId(FieldType.STRING) String id;
 	}
 
 }
