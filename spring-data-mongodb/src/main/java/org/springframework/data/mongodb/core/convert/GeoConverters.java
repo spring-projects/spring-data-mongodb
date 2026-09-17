@@ -45,7 +45,10 @@ import org.springframework.data.mongodb.core.geo.GeoJsonMultiPolygon;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.GeoCommand;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
@@ -60,6 +63,7 @@ import com.mongodb.Function;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thiago Diniz da Silveira
+ * @author dragonfsky
  * @since 1.5
  */
 @SuppressWarnings("ConstantConditions")
@@ -146,6 +150,31 @@ abstract class GeoConverters {
 			}
 
 			return new Point(toPrimitiveDoubleValue(source.get("x")), toPrimitiveDoubleValue(source.get("y")));
+		}
+	}
+
+	/**
+	 * Converts a {@link List} of coordinates into a {@link Point}.
+	 *
+	 * @author dragonfsky
+	 * @since 5.1
+	 */
+	@ReadingConverter
+	enum ListToPointConverter implements Converter<List<Number>, @Nullable Point> {
+
+		INSTANCE;
+
+		@Override
+		@SuppressWarnings("NullAway")
+		public Point convert(List<Number> source) {
+
+			if (ObjectUtils.isEmpty(source)) {
+				return null;
+			}
+
+			Assert.isTrue(source.size() == 2, "Source must contain 2 elements");
+
+			return new Point(toPrimitiveDoubleValue(source.get(0)), toPrimitiveDoubleValue(source.get(1)));
 		}
 	}
 
@@ -726,6 +755,28 @@ abstract class GeoConverters {
 
 	static List<Double> toList(Point point) {
 		return Arrays.asList(point.getX(), point.getY());
+	}
+
+	static boolean isArrayBackedPoint(MongoPersistentProperty property, @Nullable Object value) {
+		return value instanceof Point && isArrayBackedPointProperty(property);
+	}
+
+	static boolean isArrayBackedPointProperty(MongoPersistentProperty property) {
+		return property.hasExplicitWriteTarget() && property.getMongoField().getFieldType() == FieldType.ARRAY
+				&& Point.class.isAssignableFrom(property.getType());
+	}
+
+	static List<Double> writeArrayBackedPoint(Point point) {
+		return toList(point);
+	}
+
+	@SuppressWarnings("unchecked")
+	static @Nullable Point readArrayBackedPoint(Object source) {
+
+		Collection<?> coordinates = BsonUtils.asCollection(source);
+		List<?> coordinateList = coordinates instanceof List<?> list ? list : new ArrayList<>(coordinates);
+
+		return ListToPointConverter.INSTANCE.convert((List<Number>) coordinateList);
 	}
 
 	/**
