@@ -174,6 +174,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result).hasSize(1).contains(carter);
 	}
 
+	@Test // GH-5225
+	void findsPersonsByLastnameAndConvertsResultToSet() {
+
+		Set<Person> result = repository.findSetOfPersonByLastname("Beauford");
+		assertThat(result).hasSize(1).contains(carter);
+	}
+
 	@Test // GH-5178
 	@SuppressWarnings("rawtypes")
 	void findsExtendedPersonsByLastname() {

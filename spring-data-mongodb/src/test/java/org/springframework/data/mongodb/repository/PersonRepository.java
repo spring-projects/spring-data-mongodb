@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -66,6 +67,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByLastname(String lastname);
+
+	Set<Person> findSetOfPersonByLastname(String lastname);
 
 	List<ExtendedPerson> findExtendedPersonByLastname(String lastname);
 
