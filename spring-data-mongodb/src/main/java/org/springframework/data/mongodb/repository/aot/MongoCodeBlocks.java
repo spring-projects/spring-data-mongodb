@@ -101,7 +101,6 @@ class MongoCodeBlocks {
 	 * Builder for generating update parsing {@link CodeBlock}.
 	 *
 	 * @param context
-	 * @param queryMethod
 	 * @return
 	 */
 	static UpdateCodeBlockBuilder updateBlockBuilder(AotQueryMethodGenerationContext context) {
@@ -258,8 +257,9 @@ class MongoCodeBlocks {
 		}
 
 		if (ClassUtils.isAssignable(Set.class, returnType)) {
-			return CodeBlock.of("$2T.getSharedInstance().convert($3L, $1T.class)", returnType,
-					DefaultConversionService.class, returningIterable);
+
+			return CodeBlock.of("$2T.getSharedInstance().convert($3L, $1T.class)", returnType, DefaultConversionService.class,
+					returningIterable);
 		}
 
 		return returningIterable;
