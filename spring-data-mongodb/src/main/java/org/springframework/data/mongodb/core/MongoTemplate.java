@@ -186,6 +186,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael Krog
  * @author Jakub Zurawa
  * @author Florian Lüdiger
+ * @author Sujay HK
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider,
 		SearchIndexOperationsProvider, ReadPreferenceAware {
@@ -2184,7 +2185,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	protected <S, T> UpdateResult replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
-			String collectionName) {
+										  String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(replacement, "Replacement must not be null");
@@ -2195,10 +2196,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
 		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
 
+		replacement = maybeCallBeforeConvert(replacement, collectionName);
 		UpdateContext updateContext = queryOperations.replaceSingleContext(query,
 				operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
 
-		replacement = maybeCallBeforeConvert(replacement, collectionName);
 		Document mappedReplacement = updateContext.getMappedUpdate(mappingContext.getPersistentEntity(entityType));
 		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
 		replacement = maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
