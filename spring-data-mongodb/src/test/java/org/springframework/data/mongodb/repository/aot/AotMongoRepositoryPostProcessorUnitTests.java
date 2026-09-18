@@ -29,10 +29,10 @@ import org.junitpioneer.jupiter.ClearSystemProperty;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 import org.springframework.aot.AotDetector;
-import org.springframework.aot.generate.ClassNameGenerator;
 import org.springframework.aot.generate.DefaultGenerationContext;
 import org.springframework.aot.generate.GenerationContext;
 import org.springframework.aot.generate.InMemoryGeneratedFiles;
+import org.springframework.aot.generate.NameGenerator;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.annotation.MergedAnnotation;
@@ -116,7 +116,7 @@ class AotMongoRepositoryPostProcessorUnitTests {
 	}
 
 	private GenerationContext createGenerationContext() {
-		return new DefaultGenerationContext(new ClassNameGenerator(ClassName.OBJECT), new InMemoryGeneratedFiles());
+		return new DefaultGenerationContext(new NameGenerator(ClassName.OBJECT), new InMemoryGeneratedFiles());
 	}
 
 	private MongoRepositoryContributor createContributorForReactiveRepo(GenericApplicationContext context) {

@@ -20,10 +20,10 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.aot.generate.ClassNameGenerator;
 import org.springframework.aot.generate.DefaultGenerationContext;
 import org.springframework.aot.generate.GenerationContext;
 import org.springframework.aot.generate.InMemoryGeneratedFiles;
+import org.springframework.aot.generate.NameGenerator;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.javapoet.ClassName;
@@ -38,7 +38,7 @@ class LazyLoadingProxyAotProcessorUnitTests {
 	@Test // GH-4351
 	void registersProxyForLazyDbRefCorrectlyWhenTypeIsCollectionInterface() {
 
-		GenerationContext ctx = new DefaultGenerationContext(new ClassNameGenerator(ClassName.get(this.getClass())),
+		GenerationContext ctx = new DefaultGenerationContext(new NameGenerator(ClassName.get(this.getClass())),
 				new InMemoryGeneratedFiles());
 
 		new LazyLoadingProxyAotProcessor().registerLazyLoadingProxyIfNeeded(A.class, ctx);
