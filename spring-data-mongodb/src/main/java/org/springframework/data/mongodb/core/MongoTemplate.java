@@ -186,6 +186,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael Krog
  * @author Jakub Zurawa
  * @author Florian Lüdiger
+ * @author Jeongkyun An
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider,
 		SearchIndexOperationsProvider, ReadPreferenceAware {
@@ -3592,7 +3593,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			try {
 				if (skip > 0) {
-					cursorToUse = cursorToUse.skip((int) skip);
+					cursorToUse = cursorToUse.skip(QueryOperations.skipAsInt(skip));
 				}
 				if (limit > 0) {
 					cursorToUse = cursorToUse.limit(limit);

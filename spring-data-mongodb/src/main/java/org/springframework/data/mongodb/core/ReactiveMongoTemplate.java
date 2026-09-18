@@ -194,6 +194,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Yadhukrishna S Pai
  * @author Florian Lüdiger
  * @author Kyuhong Han
+ * @author Jeongkyun An
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -3449,7 +3450,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			try {
 
 				if (skip > 0) {
-					findPublisherToUse = findPublisherToUse.skip((int) skip);
+					findPublisherToUse = findPublisherToUse.skip(QueryOperations.skipAsInt(skip));
 				}
 
 				if (limit > 0) {
