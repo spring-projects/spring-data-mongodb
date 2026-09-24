@@ -65,4 +65,6 @@ public interface AggregationOperation {
 	default String getOperator() {
 		return toDocument(Aggregation.DEFAULT_CONTEXT).keySet().iterator().next();
 	}
+
+	boolean equals(Object obj);
 }
