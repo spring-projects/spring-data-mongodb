@@ -59,6 +59,7 @@ import com.mongodb.ReadPreference;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Anton Barkan
+ * @author Jeongkyun An
  */
 public class Query implements ReadConcernAware, ReadPreferenceAware {
 
@@ -134,6 +135,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 		String key = criteriaDefinition.getKey();
 
 		if (existing == null) {
+			verifyNoDuplicateField(criteriaDefinition);
 			this.criteria.put(key, criteriaDefinition);
 		} else {
 			throw new InvalidMongoDbApiUsageException(
@@ -142,6 +144,36 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 		}
 
 		return this;
+	}
+
+	/**
+	 * Rejects a criteria that would contribute a field already contributed by one of the criteria held so far.
+	 * <p>
+	 * {@link CriteriaDefinition#getKey()} only reports the last field of a chained {@link Criteria}, so the check above
+	 * misses a duplicate that sits earlier in the chain. {@link #getQueryObject()} then merges the criteria into a single
+	 * document and the earlier condition is silently dropped, leaving a query that matches more documents than intended.
+	 * {@link Criteria} already refuses the same duplicate within a single chain.
+	 *
+	 * @param criteriaDefinition the criteria about to be added.
+	 */
+	private void verifyNoDuplicateField(CriteriaDefinition criteriaDefinition) {
+
+		if (this.criteria.isEmpty()) {
+			return;
+		}
+
+		Set<String> fields = criteriaDefinition.getCriteriaObject().keySet();
+
+		for (CriteriaDefinition existing : this.criteria.values()) {
+			for (String field : existing.getCriteriaObject().keySet()) {
+				if (fields.contains(field)) {
+					throw new InvalidMongoDbApiUsageException(String.format(
+							"Due to limitations of the com.mongodb.BasicDocument, you can't add a second '%s' criteria;"
+									+ " Query already contains '%s'",
+							field, serializeToJsonSafely(existing.getCriteriaObject())));
+				}
+			}
+		}
 	}
 
 	public Field fields() {
