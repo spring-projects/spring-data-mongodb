@@ -124,6 +124,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(id, "The given id must not be null");
 
 		Query query = getIdQuery(id);
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return Optional.ofNullable(
@@ -136,6 +137,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(id, "The given id must not be null");
 
 		Query query = getIdQuery(id);
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.exists(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
@@ -158,6 +160,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	public long count() {
 
 		Query query = new Query();
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.count(query, entityInformation.getCollectionName());
 	}
@@ -168,6 +171,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(id, "The given id must not be null");
 
 		Query query = getIdQuery(id);
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
@@ -193,6 +197,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(ids, "The given Iterable of ids must not be null");
 
 		Query query = getIdQuery(ids);
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
@@ -209,6 +214,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	public void deleteAll() {
 
 		Query query = new Query();
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		mongoOperations.remove(query, entityInformation.getCollectionName());
@@ -385,6 +391,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	private Query getIdQuery(Iterable<? extends ID> ids) {
 
 		Query query = new Query(new Criteria(entityInformation.getIdAttribute()).in(toCollection(ids)));
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return query;
 	}
@@ -400,8 +407,16 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return Collections.emptyList();
 		}
 
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
+	}
+
+	private void applyDefaultCollation(Query query) {
+
+		if (entityInformation.hasCollation() && !query.getCollation().isPresent()) {
+			query.collation(entityInformation.getCollation());
+		}
 	}
 
 	/**
