@@ -50,6 +50,7 @@ import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Sangyeop Jeong
  * @since 5.1
  */
 class ReactiveBulkWriter extends BulkWriterSupport {
@@ -80,21 +81,14 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		return buildWriteModelsReactive(bulk, collector).then(Mono.defer(() -> {
 
 			String collectionName = collector.getNamespace().getCollectionName();
-			List<SourceAwareDocument<Object>> afterSaveCallables = collector.getAfterSaveCallables();
 
 			return template
 					.createMono(collectionName,
 							col -> col.bulkWrite(collector.getWriteModels(),
 									new com.mongodb.client.model.BulkWriteOptions()
 											.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.map(BulkWriteResult::from)
-					.doOnSuccess(
-							v -> afterSaveCallables
-									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
-											callable.document(), callable.collectionName()))))
-					.flatMap(result -> Flux.concat(afterSaveCallables.stream().map(callable -> template
-							.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName())).toList())
-							.then(Mono.just(result)));
+					.flatMap(result -> completeSaves(collector)
+							.map(savedEntities -> BulkWriteResult.from(result, savedEntities)));
 		}));
 	}
 
@@ -106,20 +100,13 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		return buildWriteModelsReactive(bulk, collector).then(Mono.defer(() -> {
 
 			List<ClientNamespacedWriteModel> writeModels = collector.getWriteModels();
-			List<SourceAwareDocument<Object>> afterSaveCallables = collector.getAfterSaveCallables();
 
 			return template
 					.doWithCluster(client -> client.bulkWrite(writeModels,
 							ClientBulkWriteOptions
 									.clientBulkWriteOptions().ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.map(BulkWriteResult::from)
-					.doOnSuccess(
-							v -> afterSaveCallables
-									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
-											callable.document(), callable.collectionName()))))
-					.flatMap(result -> Flux.concat(afterSaveCallables.stream().map(callable -> template
-							.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName())).toList())
-							.then(Mono.just(result)));
+					.flatMap(result -> completeSaves(collector)
+							.map(savedEntities -> BulkWriteResult.from(result, savedEntities)));
 		}));
 	}
 
@@ -136,7 +123,13 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 
 			return template
 					.prepareObjectForSaveReactive(namespace.getCollectionName(), insert.value())
-					.doOnNext(sad -> collector.addInsert(namespace, sad.document(), toObject(sad))).then();
+					.doOnNext(sad -> {
+
+						Document document = queryOperations.createInsertContext(MappedDocument.of(sad.document()))
+								.prepareId(sad.source().getClass()).getDocument();
+
+						collector.addInsert(namespace, document, toObject(sad));
+					}).then();
 		}
 
 		if (bulkOp instanceof Update update) {
@@ -184,6 +177,28 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		}
 
 		return Mono.error(new IllegalStateException("Unknown bulk operation type: " + bulkOp.getClass()));
+	}
+
+	private Mono<List<Object>> completeSaves(WriteModelCollector collector) {
+		return Flux.fromIterable(collector.getAfterSaveCallables()).concatMap(this::completeSave).collectList();
+	}
+
+	/**
+	 * Completes the save lifecycle after an entity has been written through an {@literal insert} or {@literal replace}
+	 * operation by propagating a generated identifier back to the entity and emitting the after save event and
+	 * callbacks.
+	 *
+	 * @param written the entity along with the document handed to the driver, carrying an identifier generated during
+	 *          the write.
+	 * @return the entity as returned by the after save callbacks.
+	 */
+	private Mono<Object> completeSave(SourceAwareDocument<Object> written) {
+
+		Object entity = populateIdIfNecessary(written.source(), written.document(),
+				template.getConverter().getConversionService());
+
+		template.maybeEmitEvent(new AfterSaveEvent<>(entity, written.document(), written.collectionName()));
+		return template.maybeCallAfterSave(entity, written.document(), written.collectionName());
 	}
 
 	@SuppressWarnings("unchecked")
