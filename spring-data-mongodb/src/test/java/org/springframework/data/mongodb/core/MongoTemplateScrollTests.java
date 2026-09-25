@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -44,6 +45,7 @@ import org.springframework.data.domain.Window;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.MongoTemplateTests.PersonWithIdPropertyOfTypeUUIDListener;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
@@ -56,6 +58,7 @@ import com.mongodb.client.MongoClient;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jens Schauder
  */
 
 class MongoTemplateScrollTests {
@@ -106,6 +109,7 @@ class MongoTemplateScrollTests {
 		template.remove(Person.class).all();
 		template.remove(WithNestedDocument.class).all();
 		template.remove(WithRenamedField.class).all();
+		template.remove(AccessibleDocument.class).all();
 	}
 
 	@Test // GH-4308
@@ -286,6 +290,39 @@ class MongoTemplateScrollTests {
 		assertThat(window.isLast()).isTrue();
 		assertThat(window).hasSize(1);
 		assertThat(window).containsOnly(assertionConverter.apply(one));
+	}
+
+	@Test // GH-5212
+	void keysetScrollShouldRespectOrPredicateOnSubsequentPages() {
+
+		template.insertAll(Arrays.asList(
+				new AccessibleDocument("user1", false, 10), new AccessibleDocument("user1", false, 20),
+				new AccessibleDocument("user1", false, 30), new AccessibleDocument("anyone", true, 5),
+				new AccessibleDocument("anyone", true, 15), new AccessibleDocument("anyone", true, 25),
+				new AccessibleDocument("other", false, 12), new AccessibleDocument("other", false, 22),
+				new AccessibleDocument("other", false, 32)));
+
+		Criteria visibilityFilter = new Criteria().orOperator(where("owner").is("user1"),
+				where("accessible").is(true));
+		Query q = new Query(visibilityFilter).with(Sort.by("score")).limit(3);
+		q.with(ScrollPosition.keyset());
+
+		Window<AccessibleDocument> page1 = template.scroll(q, AccessibleDocument.class);
+
+		assertThat(page1).hasSize(3);
+		assertThat(page1).allSatisfy(doc -> assertThat("user1".equals(doc.owner) || doc.accessible)
+				.as("page 1 element %s must satisfy the visibility filter", doc).isTrue());
+
+		Window<AccessibleDocument> page2 = template.scroll(q.with(page1.positionAt(page1.size() - 1)),
+				AccessibleDocument.class);
+
+		List<AccessibleDocument> unauthorized = page2.stream()
+				.filter(doc -> !"user1".equals(doc.owner) && !doc.accessible).toList();
+
+		assertThat(unauthorized)
+				.as("keyset scroll must not return unauthorized documents on page 2 when base query uses $or"
+						+ " – keyset predicates must be ANDed with the access-control filter, not OR-ed")
+				.isEmpty();
 	}
 
 	static Stream<Arguments> positions() {
@@ -484,6 +521,27 @@ class MongoTemplateScrollTests {
 		public String toString() {
 			return "MongoTemplateScrollTests.WithRenamedField(id=" + this.getId() + ", value=" + this.getValue() + ", nested="
 					+ this.getNested() + ")";
+		}
+	}
+
+	static class AccessibleDocument {
+
+		String id;
+		String owner;
+		boolean accessible;
+		int score;
+
+		AccessibleDocument() {}
+
+		AccessibleDocument(String owner, boolean accessible, int score) {
+			this.owner = owner;
+			this.accessible = accessible;
+			this.score = score;
+		}
+
+		@Override
+		public String toString() {
+			return "AccessibleDocument{owner='%s', accessible=%s, score=%d}".formatted(owner, accessible, score);
 		}
 	}
 
