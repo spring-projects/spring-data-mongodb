@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.SpecialDoc;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jeongkyun An
  */
 class QueryTests {
 
@@ -229,6 +230,38 @@ class QueryTests {
 			query.addCriteria(where("value").is(EnumType.VAL_2));
 		}).withMessageContaining("second 'value' criteria")
 				.withMessageContaining("already contains '{ \"value\" : { \"$java\" : VAL_1 } }'");
+	}
+
+	@Test // GH-5209
+	void addCriteriaForSamePropertyEarlierInChainShouldThrow() {
+
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class).isThrownBy(() -> {
+
+			Query query = new Query();
+			query.addCriteria(where("amount").gte(100).and("status").is("NEW"));
+			query.addCriteria(where("amount").lte(500));
+		}).withMessageContaining("second 'amount' criteria");
+	}
+
+	@Test // GH-5209
+	void addCriteriaForSamePropertyEarlierInChainShouldThrowForEquality() {
+
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class).isThrownBy(() -> {
+
+			Query query = new Query();
+			query.addCriteria(where("amount").is(100).and("status").is("NEW"));
+			query.addCriteria(where("amount").is(200));
+		}).withMessageContaining("second 'amount' criteria");
+	}
+
+	@Test // GH-5209
+	void addCriteriaForDistinctPropertiesInChainShouldNotThrow() {
+
+		Query query = new Query();
+		query.addCriteria(where("amount").gte(100).and("status").is("NEW"));
+		query.addCriteria(where("city").is("Stockholm"));
+
+		assertThat(query.getQueryObject()).containsKeys("amount", "status", "city");
 	}
 
 	@Test // DATAMONGO-1783
