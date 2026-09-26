@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
- * A Jackson {@link Module} to register custom {@link JsonDeserializer}s for GeoJSON types.
+ * A Jackson {@link Module} to register custom {@link JsonDeserializer}s and {@link JsonSerializer}s for GeoJSON types.
  * <br />
  * Use {@link #geoJsonModule()} to obtain a {@link Module} containing both {@link JsonSerializer serializers} and
  * {@link JsonDeserializer deserializers}.
@@ -43,16 +43,23 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Artyom Muravlev
  * @since 1.7
  */
 public class GeoJsonModule extends SimpleModule {
 
 	private static final long serialVersionUID = -8723016728655643720L;
+	private static final Version VERSION = new Version(3,
+			2,
+			0,
+			null,
+			"org.springframework.data",
+			"spring-data-mongodb-geojson");
 
 	public GeoJsonModule() {
-
+		super("Spring Data MongoDB GeoJson", Version.unknownVersion());
 		registerDeserializersIn(this);
-		// TODO: add serializers as of next major version (4.0).
+		GeoJsonSerializersModule.registerSerializersIn(this);
 	}
 
 	/**
@@ -72,7 +79,7 @@ public class GeoJsonModule extends SimpleModule {
 	public static Module deserializers() {
 
 		SimpleModule module = new SimpleModule("Spring Data MongoDB GeoJson - Deserializers",
-				new Version(3, 2, 0, null, "org.springframework.data", "spring-data-mongodb-geojson"));
+				VERSION);
 		registerDeserializersIn(module);
 		return module;
 	}
@@ -94,7 +101,7 @@ public class GeoJsonModule extends SimpleModule {
 	public static Module serializers() {
 
 		SimpleModule module = new SimpleModule("Spring Data MongoDB GeoJson - Serializers",
-				new Version(3, 2, 0, null, "org.springframework.data", "spring-data-mongodb-geojson"));
+				VERSION);
 		GeoJsonSerializersModule.registerSerializersIn(module);
 		return module;
 	}
@@ -116,12 +123,7 @@ public class GeoJsonModule extends SimpleModule {
 	 * @since 3.2
 	 */
 	public static Module geoJsonModule() {
-
-		SimpleModule module = new SimpleModule("Spring Data MongoDB GeoJson",
-				new Version(3, 2, 0, null, "org.springframework.data", "spring-data-mongodb-geojson"));
-		GeoJsonSerializersModule.registerSerializersIn(module);
-		registerDeserializersIn(module);
-		return module;
+		return new GeoJsonModule();
 	}
 
 	private static void registerDeserializersIn(SimpleModule module) {
