@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 
+import java.io.Serial;
+
 /**
  * Base class for delete events.
  *
@@ -27,6 +29,7 @@ import org.jspecify.annotations.Nullable;
  */
 public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<Document> {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 	private final @Nullable Class<T> type;
 

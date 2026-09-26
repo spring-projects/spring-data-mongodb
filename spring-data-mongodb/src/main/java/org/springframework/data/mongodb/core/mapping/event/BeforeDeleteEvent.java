@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 
+import java.io.Serial;
+
 /**
  * Event being thrown before a document is deleted. The {@link Document} held in the event will represent the query
  * document <em>before</em> being mapped based on the domain class handled.
@@ -28,6 +30,7 @@ import org.jspecify.annotations.Nullable;
  */
 public class BeforeDeleteEvent<T> extends AbstractDeleteEvent<T> {
 
+	@Serial
 	private static final long serialVersionUID = -2627547705679734497L;
 
 	/**

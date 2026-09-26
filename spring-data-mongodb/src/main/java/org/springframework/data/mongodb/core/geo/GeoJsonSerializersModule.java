@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.geo;
 
 import java.io.IOException;
+import java.io.Serial;
 
 import org.springframework.data.geo.Point;
 
@@ -34,6 +35,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
  */
 class GeoJsonSerializersModule extends SimpleModule {
 
+	@Serial
 	private static final long serialVersionUID = 1340494654898895610L;
 
 	GeoJsonSerializersModule() {
