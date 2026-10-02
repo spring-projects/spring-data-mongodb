@@ -31,6 +31,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.AdditionalAnswers;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -47,6 +48,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
+import org.springframework.data.mongodb.ReactiveMongoClusterCapable;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -63,7 +67,9 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCal
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.transaction.reactive.TransactionalOperator;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
 import com.mongodb.internal.client.model.bulk.AbstractClientNamespacedWriteModel;
@@ -73,6 +79,7 @@ import com.mongodb.internal.client.model.bulk.ConcreteClientInsertOneModel;
 import com.mongodb.internal.client.model.bulk.ConcreteClientReplaceOneModel;
 import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateManyModel;
 import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateOneModel;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
@@ -82,6 +89,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * so that {@code client.bulkWrite} is exercised (multi-collection path).
  *
  * @author Christoph Strobl
+ * @author Goutam Adwant
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -163,6 +171,67 @@ class ReactiveBulkWriterUnitTests {
 
 		verify(client).bulkWrite(anyList(), any());
 		verifyNoInteractions(collection);
+	}
+
+	@Test // GH-5247
+	void delegatesToSessionBoundClientOnMultiNamespace() {
+
+		ClientSession session = mock(ClientSession.class);
+		when(client.bulkWrite(eq(session), anyList(), any())).thenReturn(Mono.just(mock(ClientBulkWriteResult.class)));
+		ReactiveMongoDatabaseFactory sessionFactory = factory.withSession(session);
+		doReturn(mock(ReactiveMongoDatabaseFactory.class, AdditionalAnswers.delegatesTo(sessionFactory))).when(factory)
+				.withSession(session);
+		ops.insert(new BaseDoc());
+		builder.inCollection("other-collection", it -> it.insert(new BaseDoc()));
+
+		template.withSession(session).bulkWrite(builder.build(), BulkWriteOptions.ordered()).block();
+
+		verify(client).bulkWrite(eq(session), anyList(), any());
+		verify(client, never()).bulkWrite(anyList(), any());
+	}
+
+	@Test // GH-5247
+	void usesClusterExposedBySessionBoundFactory() {
+
+		ClientSession session = mock(ClientSession.class);
+		MongoClient boundClient = mock(MongoClient.class);
+		when(boundClient.bulkWrite(eq(session), anyList(), any())).thenReturn(Mono.just(mock(ClientBulkWriteResult.class)));
+		ReactiveMongoDatabaseFactory root = mock(ReactiveMongoDatabaseFactory.class, AdditionalAnswers.delegatesTo(factory));
+		ReactiveMongoDatabaseFactory bound = mock(ReactiveMongoDatabaseFactory.class,
+				withSettings().extraInterfaces(ReactiveMongoClusterCapable.class)
+						.defaultAnswer(AdditionalAnswers.delegatesTo(factory.withSession(session))));
+		doReturn(bound).when(root).withSession(session);
+		doReturn(boundClient).when((ReactiveMongoClusterCapable) bound).getMongoCluster();
+		ops.insert(new BaseDoc());
+		builder.inCollection("other-collection", it -> it.insert(new BaseDoc()));
+
+		new ReactiveMongoTemplate(root, converter).withSession(session).bulkWrite(builder.build(), BulkWriteOptions.ordered())
+				.block();
+
+		verify(boundClient).bulkWrite(eq(session), anyList(), any());
+		verify(boundClient, never()).bulkWrite(anyList(), any());
+		verify(client, never()).bulkWrite(anyList(), any());
+	}
+
+	@Test // GH-5247
+	void delegatesToClientWhenSessionBoundFactoryDoesNotExposeCluster() {
+
+		ClientSession session = mock(ClientSession.class);
+		when(client.startSession(any(ClientSessionOptions.class))).thenReturn(Mono.just(session));
+		when(session.commitTransaction()).thenReturn(Mono.empty());
+		when(session.abortTransaction()).thenReturn(Mono.empty());
+		when(client.bulkWrite(eq(session), anyList(), any())).thenReturn(Mono.just(mock(ClientBulkWriteResult.class)));
+		ReactiveMongoDatabaseFactory sessionFactory = factory.withSession(session);
+		doReturn(mock(ReactiveMongoDatabaseFactory.class, AdditionalAnswers.delegatesTo(sessionFactory))).when(factory)
+				.withSession(session);
+		ops.insert(new BaseDoc());
+		builder.inCollection("other-collection", it -> it.insert(new BaseDoc()));
+
+		TransactionalOperator transaction = TransactionalOperator.create(new ReactiveMongoTransactionManager(factory));
+		transaction.transactional(template.bulkWrite(builder.build(), BulkWriteOptions.ordered())).block();
+
+		verify(client).bulkWrite(eq(session), anyList(), any());
+		verify(client, never()).bulkWrite(anyList(), any());
 	}
 
 	@Test // GH-5087

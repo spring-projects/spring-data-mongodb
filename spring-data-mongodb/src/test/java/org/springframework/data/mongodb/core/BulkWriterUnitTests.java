@@ -29,6 +29,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.AdditionalAnswers;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -45,6 +46,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mongodb.MongoClusterCapable;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -61,7 +65,10 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -78,6 +85,7 @@ import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateOneModel;
  * Unit tests for {@link BulkWriter} through {@link MongoTemplate}.
  *
  * @author Christoph Strobl
+ * @author Goutam Adwant
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -154,6 +162,59 @@ class BulkWriterUnitTests {
 
 		verify(client).bulkWrite(anyList(), any());
 		verifyNoInteractions(collection);
+	}
+
+	@Test // GH-5247
+	void delegatesToSessionBoundClientOnMultiNamespace() {
+
+		ClientSession session = mock(ClientSession.class);
+		doReturn(new MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory(session, factory)).when(factory)
+				.withSession(session);
+		ops.insert(new BaseDoc());
+		builder.inCollection("other-collection", it -> it.insert(new BaseDoc()));
+
+		template.withSession(session).bulkWrite(builder.build(), BulkWriteOptions.ordered());
+
+		verify(client).bulkWrite(eq(session), anyList(), any());
+		verify(client, never()).bulkWrite(anyList(), any());
+	}
+
+	@Test // GH-5247
+	void usesClusterExposedBySessionBoundFactory() {
+
+		ClientSession session = mock(ClientSession.class);
+		MongoClient boundClient = mock(MongoClient.class);
+		MongoDatabaseFactory root = mock(MongoDatabaseFactory.class, AdditionalAnswers.delegatesTo(factory));
+		MongoDatabaseFactory bound = mock(MongoDatabaseFactory.class,
+				withSettings().extraInterfaces(MongoClusterCapable.class)
+						.defaultAnswer(AdditionalAnswers.delegatesTo(factory.withSession(session))));
+		doReturn(bound).when(root).withSession(session);
+		doReturn(boundClient).when((MongoClusterCapable) bound).getMongoCluster();
+		ops.insert(new BaseDoc());
+		builder.inCollection("other-collection", it -> it.insert(new BaseDoc()));
+
+		new MongoTemplate(root, converter).withSession(session).bulkWrite(builder.build(), BulkWriteOptions.ordered());
+
+		verify(boundClient).bulkWrite(eq(session), anyList(), any());
+		verify(boundClient, never()).bulkWrite(anyList(), any());
+		verify(client, never()).bulkWrite(anyList(), any());
+	}
+
+	@Test // GH-5247
+	void delegatesToClientWhenSessionBoundFactoryDoesNotExposeCluster() {
+
+		ClientSession session = mock(ClientSession.class);
+		when(client.startSession(any(ClientSessionOptions.class))).thenReturn(session);
+		doReturn(new MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory(session, factory)).when(factory)
+				.withSession(session);
+		ops.insert(new BaseDoc());
+		builder.inCollection("other-collection", it -> it.insert(new BaseDoc()));
+
+		new TransactionTemplate(new MongoTransactionManager(factory))
+				.executeWithoutResult(status -> template.bulkWrite(builder.build(), BulkWriteOptions.ordered()));
+
+		verify(client).bulkWrite(eq(session), anyList(), any());
+		verify(client, never()).bulkWrite(anyList(), any());
 	}
 
 	@Test // GH-5087

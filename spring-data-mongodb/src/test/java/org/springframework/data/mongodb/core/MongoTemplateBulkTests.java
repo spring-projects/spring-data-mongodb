@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.BulkOperationException;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
@@ -35,9 +36,11 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.Pair;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.mongodb.ClientBulkWriteException;
 import com.mongodb.client.MongoClient;
@@ -48,6 +51,7 @@ import com.mongodb.client.MongoCollection;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Goutam Adwant
  */
 @EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
 class MongoTemplateBulkTests {
@@ -86,6 +90,38 @@ class MongoTemplateBulkTests {
 		Long inSpecialCollection = operations.execute(SpecialDoc.class, MongoCollection::countDocuments);
 		assertThat(inBaseDocCollection).isEqualTo(3L);
 		assertThat(inSpecialCollection).isOne();
+	}
+
+	@Test // GH-5247
+	@EnableIfReplicaSetAvailable
+	void multiCollectionBulkWriteParticipatesInTransaction() {
+
+		BaseDoc base = newDoc("base", "before");
+		SpecialDoc special = new SpecialDoc("before");
+		special.id = "special";
+		operations.insert(base);
+		operations.insert(special);
+
+		Bulk bulk = Bulk.builder()
+				.inCollection(BaseDoc.class, it -> it.updateOne(where("_id").is(base.id), set("value", "after")))
+				.inCollection(SpecialDoc.class, it -> it.updateOne(where("_id").is(special.id), set("value", "after")))
+				.build();
+
+		TransactionTemplate transaction = new TransactionTemplate(
+				new MongoTransactionManager(operations.getMongoDatabaseFactory()));
+		transaction.executeWithoutResult(status -> {
+
+			assertThat(operations.findById(base.id, BaseDoc.class).value).isEqualTo("before");
+			assertThat(operations.findById(special.id, SpecialDoc.class).value).isEqualTo("before");
+
+			assertThat(operations.bulkWrite(bulk, BulkWriteOptions.ordered()).modifiedCount()).isEqualTo(2);
+			assertThat(operations.findById(base.id, BaseDoc.class).value).isEqualTo("after");
+			assertThat(operations.findById(special.id, SpecialDoc.class).value).isEqualTo("after");
+			status.setRollbackOnly();
+		});
+
+		assertThat(operations.findById(base.id, BaseDoc.class).value).isEqualTo("before");
+		assertThat(operations.findById(special.id, SpecialDoc.class).value).isEqualTo("before");
 	}
 
 	@Test // GH-5087

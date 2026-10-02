@@ -34,6 +34,7 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Goutam Adwant
  * @since 2.1
  */
 public class MongoDatabaseUtils {
@@ -97,21 +98,30 @@ public class MongoDatabaseUtils {
 	private static MongoDatabase doGetMongoDatabase(@Nullable String dbName, MongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
 
+		ClientSession session = getSession(factory, sessionSynchronization);
+		MongoDatabaseFactory factoryToUse = session != null ? factory.withSession(session) : factory;
+		return StringUtils.hasText(dbName) ? factoryToUse.getMongoDatabase(dbName) : factoryToUse.getMongoDatabase();
+	}
+
+	/**
+	 * Return the {@link ClientSession} bound to the current transaction, if any.
+	 *
+	 * @param factory the factory to use. Must not be {@literal null}.
+	 * @param sessionSynchronization the synchronization to use. Must not be {@literal null}.
+	 * @return the bound session, or {@literal null} when no session is available.
+	 * @since 5.2
+	 */
+	public static @Nullable ClientSession getSession(MongoDatabaseFactory factory,
+			SessionSynchronization sessionSynchronization) {
+
 		Assert.notNull(factory, "Factory must not be null");
 
 		if (sessionSynchronization == SessionSynchronization.NEVER
 				|| !TransactionSynchronizationManager.isSynchronizationActive()) {
-			return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
+			return null;
 		}
 
-		ClientSession session = doGetSession(factory, sessionSynchronization);
-
-		if (session == null) {
-			return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
-		}
-
-		MongoDatabaseFactory factoryToUse = factory.withSession(session);
-		return StringUtils.hasText(dbName) ? factoryToUse.getMongoDatabase(dbName) : factoryToUse.getMongoDatabase();
+		return doGetSession(factory, sessionSynchronization);
 	}
 
 	/**

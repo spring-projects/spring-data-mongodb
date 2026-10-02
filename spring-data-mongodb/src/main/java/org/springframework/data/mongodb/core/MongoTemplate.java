@@ -186,6 +186,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael Krog
  * @author Jakub Zurawa
  * @author Florian Lüdiger
+ * @author Goutam Adwant
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider,
 		SearchIndexOperationsProvider, ReadPreferenceAware {
@@ -643,7 +644,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		try {
-			return callback.apply(client.getMongoCluster());
+			MongoCluster cluster = client.getMongoCluster();
+			ClientSession session = MongoDatabaseUtils.getSession(getMongoDatabaseFactory(), sessionSynchronization);
+			if (session != null) {
+				cluster = MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory.createProxyInstance(session, cluster,
+						MongoCluster.class);
+			}
+			return callback.apply(cluster);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
@@ -3813,6 +3820,37 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			this.delegate = that;
 			this.session = session;
+		}
+
+		@Override
+		<T> @Nullable T doWithClient(Function<MongoCluster, T> callback) {
+
+			if (getMongoDatabaseFactory() instanceof MongoClusterCapable client) {
+				try {
+					MongoCluster cluster = MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory.createProxyInstance(
+							session, client.getMongoCluster(), MongoCluster.class);
+					return callback.apply(cluster);
+				} catch (RuntimeException e) {
+					throw potentiallyConvertRuntimeException(e, delegate.exceptionTranslator);
+				}
+			}
+
+			MongoTemplate template = delegate;
+			while (template instanceof SessionBoundMongoTemplate bound) {
+				template = bound.delegate;
+			}
+			if (!(template.getMongoDatabaseFactory() instanceof MongoClusterCapable client)) {
+				throw new IllegalStateException(
+						"Unable to obtain MongoCluster. Does your database factory implement MongoClusterCapable?");
+			}
+
+			try {
+				MongoCluster cluster = MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory.createProxyInstance(
+						session, client.getMongoCluster(), MongoCluster.class);
+				return callback.apply(cluster);
+			} catch (RuntimeException e) {
+				throw potentiallyConvertRuntimeException(e, delegate.exceptionTranslator);
+			}
 		}
 
 		@Override

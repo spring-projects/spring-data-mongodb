@@ -41,6 +41,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Mathieu Ouellet
+ * @author Goutam Adwant
  * @since 2.2
  */
 public class ReactiveMongoDatabaseUtils {
@@ -134,21 +135,32 @@ public class ReactiveMongoDatabaseUtils {
 	private static Mono<MongoDatabase> doGetMongoDatabase(@Nullable String dbName, ReactiveMongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
 
+		return getSession(factory, sessionSynchronization)
+				.flatMap(session -> getMongoDatabaseOrDefault(dbName, factory.withSession(session)))
+				.switchIfEmpty(getMongoDatabaseOrDefault(dbName, factory));
+	}
+
+	/**
+	 * Return the {@link ClientSession} bound to the current transaction, if any.
+	 *
+	 * @param factory the factory to use. Must not be {@literal null}.
+	 * @param sessionSynchronization the synchronization to use. Must not be {@literal null}.
+	 * @return the bound session, or an empty {@link Mono} when no session is available.
+	 * @since 5.2
+	 */
+	public static Mono<ClientSession> getSession(ReactiveMongoDatabaseFactory factory,
+			SessionSynchronization sessionSynchronization) {
+
 		Assert.notNull(factory, "DatabaseFactory must not be null");
 
 		if (sessionSynchronization == SessionSynchronization.NEVER) {
-			return getMongoDatabaseOrDefault(dbName, factory);
+			return Mono.empty();
 		}
 
 		return TransactionSynchronizationManager.forCurrentTransaction()
 				.filter(TransactionSynchronizationManager::isSynchronizationActive) //
-				.flatMap(synchronizationManager -> {
-
-					return doGetSession(synchronizationManager, factory, sessionSynchronization) //
-							.flatMap(it -> getMongoDatabaseOrDefault(dbName, factory.withSession(it)));
-				}) //
-				.onErrorResume(NoTransactionException.class, e -> getMongoDatabaseOrDefault(dbName, factory))
-				.switchIfEmpty(getMongoDatabaseOrDefault(dbName, factory));
+				.flatMap(synchronizationManager -> doGetSession(synchronizationManager, factory, sessionSynchronization)) //
+				.onErrorResume(NoTransactionException.class, e -> Mono.empty());
 	}
 
 	private static Mono<MongoDatabase> getMongoDatabaseOrDefault(@Nullable String dbName,

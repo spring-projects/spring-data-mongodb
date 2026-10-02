@@ -45,6 +45,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Mathieu Ouellet
+ * @author Goutam Adwant
  * @since 2.0
  */
 public class SimpleReactiveMongoDatabaseFactory
@@ -232,7 +233,7 @@ public class SimpleReactiveMongoDatabaseFactory
 			return createProxyInstance(session, collection, MongoCollection.class);
 		}
 
-		private static MongoCluster proxyCluster(com.mongodb.session.ClientSession session, MongoCluster client) {
+		static MongoCluster proxyCluster(com.mongodb.session.ClientSession session, MongoCluster client) {
 			return createProxyInstance(session, client, MongoCluster.class);
 		}
 

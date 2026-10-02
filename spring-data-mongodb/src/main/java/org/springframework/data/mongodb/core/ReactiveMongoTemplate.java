@@ -194,6 +194,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Yadhukrishna S Pai
  * @author Florian Lüdiger
  * @author Kyuhong Han
+ * @author Goutam Adwant
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -572,7 +573,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					"Unable to obtain MongoCluster. Does your database factory implement ReactiveMongoClusterCapable?"));
 		}
 
-		return Mono.from(callback.apply(clusterCapable.getMongoCluster())).onErrorMap(translateException());
+		MongoCluster cluster = clusterCapable.getMongoCluster();
+		return ReactiveMongoDatabaseUtils.getSession(mongoDatabaseFactory, sessionSynchronization)
+				.map(session -> SimpleReactiveMongoDatabaseFactory.ClientSessionBoundMongoDbFactory.proxyCluster(session,
+						cluster))
+				.defaultIfEmpty(cluster)
+				.flatMap(client -> Mono.from(callback.apply(client)))
+				.onErrorMap(translateException());
 	}
 
 	@Override
@@ -3534,6 +3541,32 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			this.delegate = that;
 			this.session = session;
+		}
+
+		@Override
+		<T> Mono<T> doWithCluster(Function<MongoCluster, Publisher<T>> callback) {
+
+			return Mono.defer(() -> {
+
+				if (getMongoDatabaseFactory() instanceof ReactiveMongoClusterCapable client) {
+					MongoCluster cluster = SimpleReactiveMongoDatabaseFactory.ClientSessionBoundMongoDbFactory
+							.proxyCluster(session, client.getMongoCluster());
+					return Mono.from(callback.apply(cluster));
+				}
+
+				ReactiveMongoTemplate template = delegate;
+				while (template instanceof ReactiveSessionBoundMongoTemplate bound) {
+					template = bound.delegate;
+				}
+				if (!(template.mongoDatabaseFactory instanceof ReactiveMongoClusterCapable client)) {
+					return Mono.error(new IllegalStateException(
+							"Unable to obtain MongoCluster. Does your database factory implement ReactiveMongoClusterCapable?"));
+				}
+
+				MongoCluster cluster = SimpleReactiveMongoDatabaseFactory.ClientSessionBoundMongoDbFactory
+						.proxyCluster(session, client.getMongoCluster());
+				return Mono.from(callback.apply(cluster));
+			}).onErrorMap(delegate.translateException());
 		}
 
 		@Override
