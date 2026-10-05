@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.sequence;
+package org.springframework.data.mongodb.core;
 
 import com.mongodb.client.MongoDatabase;
 
@@ -23,19 +23,19 @@ import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
 
 /**
- * Increments inside the ongoing transaction, if there is one, so the sequence rolls back with it and never skips a
- * number. The catch is that a rolled back value is handed out again, and that concurrent readers of the sequence
- * contend on the same document until the transaction ends.
+ * Increments outside of any ongoing transaction, so a value that has been handed out stays handed out even if the
+ * transaction that asked for it rolls back. The sequence then has gaps, which is the usual trade for identifiers that
+ * only have to be unique.
  * <p>
- * Without an active transaction this behaves like {@link DefaultSequenceExecutor}.
+ * This is the default. Use {@link SessionBoundSequenceExecutor} when the numbers have to be contiguous.
  *
  * @author Jeongkyun An
  * @since 5.2
  */
-public class SessionBoundSequenceExecutor extends AbstractSequenceExecutor {
+public class DefaultSequenceExecutor extends AbstractSequenceExecutor {
 
 	@Override
 	protected MongoDatabase getDatabase(@Nullable String databaseName, MongoDatabaseFactory dbFactory) {
-		return MongoDatabaseUtils.getDatabase(databaseName, dbFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
+		return MongoDatabaseUtils.getDatabase(databaseName, dbFactory, SessionSynchronization.NEVER);
 	}
 }

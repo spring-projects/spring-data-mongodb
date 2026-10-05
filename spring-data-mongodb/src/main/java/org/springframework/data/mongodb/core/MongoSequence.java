@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.sequence;
+package org.springframework.data.mongodb.core;
 
 /**
  * Represents a MongoDB-backed sequence that provides monotonically increasing values using atomic operations.

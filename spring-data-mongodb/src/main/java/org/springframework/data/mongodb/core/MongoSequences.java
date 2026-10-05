@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.sequence;
+package org.springframework.data.mongodb.core;
 
 import java.util.function.Consumer;
 
@@ -38,6 +38,37 @@ import org.springframework.util.Assert;
  * 		.strategy(new CounterSequenceStrategy())
  * 		.build();
  * </pre>
+ *
+ * <h2>Concurrency</h2>
+ * <p>
+ * Every value comes from an atomic update, so a sequence is safe to share between threads and between application
+ * instances. Sequence objects hold no state and are cheap to obtain.
+ *
+ * <h2>Transactions</h2>
+ * <p>
+ * {@link SequenceExecutor} decides whether an increment joins an ongoing transaction. Staying outside it, the default,
+ * leaves a gap when a transaction rolls back but never hands the same value to two callers. Joining it keeps the
+ * sequence contiguous but puts rolled back values back into circulation.
+ *
+ * <h2>Document layout</h2>
+ * <p>
+ * {@link CounterSequenceStrategy}, the default, stores only the current value:
+ *
+ * <pre>
+ * { "_id": "orders", "value": NumberLong(123) }
+ * </pre>
+ *
+ * {@link SelfDescribingSequenceStrategy} also writes the counting rules, so clients configured differently can be told
+ * they disagree rather than quietly counting their own way:
+ *
+ * <pre>
+ * { "_id": "orders", "value": NumberLong(123), "startValue": NumberLong(1), "increment": NumberLong(1) }
+ * </pre>
+ *
+ * What happens on disagreement is up to {@link DefinitionPolicy}, which by default refuses the increment.
+ * <p>
+ * Sequences live in a collection named {@literal sequences} unless
+ * {@link SequenceDefinition.Builder#collection(String)} says otherwise.
  *
  * @author Jeongkyun An
  * @since 5.2
