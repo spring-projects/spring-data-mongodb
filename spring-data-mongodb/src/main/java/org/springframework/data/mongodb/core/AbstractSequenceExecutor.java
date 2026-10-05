@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.sequence;
+package org.springframework.data.mongodb.core;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
