@@ -567,12 +567,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	<T> Mono<T> doWithCluster(Function<MongoCluster, Publisher<T>> callback) {
 
-		if (!(mongoDatabaseFactory instanceof ReactiveMongoClusterCapable clusterCapable)) {
+		if (!(mongoDatabaseFactory instanceof ReactiveMongoClusterCapable)) {
 			return Mono.error(new IllegalStateException(
 					"Unable to obtain MongoCluster. Does your database factory implement ReactiveMongoClusterCapable?"));
 		}
 
-		return Mono.from(callback.apply(clusterCapable.getMongoCluster())).onErrorMap(translateException());
+		return ReactiveMongoDatabaseUtils.getCluster(mongoDatabaseFactory, sessionSynchronization)
+				.flatMap(cluster -> Mono.from(callback.apply(cluster)).onErrorMap(translateException()));
 	}
 
 	@Override

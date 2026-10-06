@@ -24,6 +24,7 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoCluster;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -92,6 +93,35 @@ public class MongoDatabaseUtils {
 	public static MongoDatabase getDatabase(@Nullable String dbName, MongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
 		return doGetMongoDatabase(dbName, factory, sessionSynchronization);
+	}
+
+	/**
+	 * Obtain the {@link MongoCluster} from the given {@link MongoDatabaseFactory factory}.
+	 *
+	 * @param factory the factory a potential transaction is bound to. Must not be {@literal null}.
+	 * @param sessionSynchronization the synchronization to use. Must not be {@literal null}.
+	 * @throws IllegalArgumentException if the given factory is not {@link MongoClusterCapable}
+	 * @return never {@literal null}.
+	 */
+	public static MongoCluster getCluster(MongoDatabaseFactory factory, SessionSynchronization sessionSynchronization) {
+
+		Assert.notNull(factory, "Factory must not be null");
+		if (!(factory instanceof MongoClusterCapable clusterCapable)) {
+			throw new IllegalArgumentException("Factory must be a MongoClusterCapable");
+		}
+
+		if (sessionSynchronization == SessionSynchronization.NEVER
+				|| !TransactionSynchronizationManager.isSynchronizationActive()) {
+			return clusterCapable.getMongoCluster();
+		}
+
+		ClientSession session = doGetSession(factory, sessionSynchronization);
+		if (session == null) {
+			return clusterCapable.getMongoCluster();
+		}
+
+		MongoDatabaseFactory factoryToUse = factory.withSession(session);
+		return ((MongoClusterCapable) factoryToUse).getMongoCluster();
 	}
 
 	private static MongoDatabase doGetMongoDatabase(@Nullable String dbName, MongoDatabaseFactory factory,

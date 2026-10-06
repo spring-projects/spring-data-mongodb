@@ -27,8 +27,10 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,6 +41,7 @@ import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.Pair;
+import org.springframework.transaction.reactive.TransactionalOperator;
 
 import com.mongodb.ClientBulkWriteException;
 import com.mongodb.reactivestreams.client.MongoClient;
@@ -434,6 +437,79 @@ class ReactiveMongoTemplateBulkTests {
 				.as(StepVerifier::create).expectNextMatches(doc -> doc != null).verifyComplete();
 		Mono.from(mongoClient.getDatabase("bulk-ops-db-3").getCollection("c1").find(new Document("_id", "c1-id-1")).first())
 				.as(StepVerifier::create).expectNextMatches(doc -> doc != null).verifyComplete();
+	}
+
+	@Nested
+	class Transactions {
+
+		TransactionalOperator transactionalOperator;
+
+		@BeforeEach
+		void setUp() {
+
+			operations.flushDatabase().block();
+
+			transactionalOperator = TransactionalOperator
+					.create(new ReactiveMongoTransactionManager(operations.getDatabaseFactory()));
+
+			insertSomeDocumentsIntoBaseDoc();
+			insertSomeDocumentsIntoSpecialDoc();
+		}
+
+		@Test // GH-5247
+		void multipleCollectionBulkWriteShouldCommit() {
+
+			Bulk bulk = Bulk.builder()
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), set("value", "updated")))
+					.inCollection(SpecialDoc.class, ops -> ops.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.build();
+
+			operations.bulkWrite(bulk, BulkWriteOptions.ordered()).as(transactionalOperator::transactional)
+					.as(StepVerifier::create).expectNextMatches(result -> result.modifiedCount() == 2).verifyComplete();
+
+			operations.execute(BaseDoc.class, col -> col.countDocuments(new Document("value", "updated")))
+					.as(StepVerifier::create).expectNext(1L).verifyComplete();
+			operations.execute(SpecialDoc.class, col -> col.countDocuments(new Document("value", "updated")))
+					.as(StepVerifier::create).expectNext(1L).verifyComplete();
+		}
+
+		@Test // GH-5247
+		void singleCollectionBulkWriteShouldRollBack() {
+
+			Bulk bulk = Bulk.builder()
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), set("value", "updated")) //
+							.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.build();
+
+			transactionalOperator.execute(status -> {
+				status.setRollbackOnly();
+				return operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+			}).as(StepVerifier::create).expectNextMatches(result -> result.modifiedCount() == 2).verifyComplete();
+
+			operations.execute(BaseDoc.class, col -> col.countDocuments(new Document("value", "updated")))
+					.as(StepVerifier::create).expectNext(0L).verifyComplete();
+		}
+
+		@Test // GH-5247
+		void multipleCollectionBulkWriteShouldRollBack() {
+
+			Bulk bulk = Bulk.builder()
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), set("value", "updated")))
+					.inCollection(SpecialDoc.class, ops -> ops.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.build();
+
+			operations.bulkWrite(bulk, BulkWriteOptions.ordered()).flatMap(result -> {
+				assertThat(result.modifiedCount()).isEqualTo(2);
+				return Mono.error(new IllegalStateException("boom"));
+			}).as(transactionalOperator::transactional) //
+					.as(StepVerifier::create) //
+					.verifyError(IllegalStateException.class);
+
+			operations.execute(BaseDoc.class, col -> col.countDocuments(new Document("value", "updated")))
+					.as(StepVerifier::create).expectNext(0L).verifyComplete();
+			operations.execute(SpecialDoc.class, col -> col.countDocuments(new Document("value", "updated")))
+					.as(StepVerifier::create).expectNext(0L).verifyComplete();
+		}
 	}
 
 	private void insertSomeDocumentsIntoBaseDoc() {
