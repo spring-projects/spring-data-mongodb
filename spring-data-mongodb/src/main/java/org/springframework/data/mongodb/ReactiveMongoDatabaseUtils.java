@@ -29,6 +29,7 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.reactivestreams.client.ClientSession;
+import com.mongodb.reactivestreams.client.MongoCluster;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
@@ -129,6 +130,39 @@ public class ReactiveMongoDatabaseUtils {
 	public static Mono<MongoDatabase> getDatabase(@Nullable String dbName, ReactiveMongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
 		return doGetMongoDatabase(dbName, factory, sessionSynchronization);
+	}
+
+	/**
+	 * Obtain the {@link MongoCluster} from the given {@link ReactiveMongoDatabaseFactory factory}.
+	 *
+	 * @param factory the factory a potential transaction is bound to. Must not be {@literal null}.
+	 * @param sessionSynchronization the synchronization to use. Must not be {@literal null}.
+	 * @throws IllegalArgumentException if the given factory is not {@link ReactiveMongoClusterCapable}
+	 * @return never {@literal null}.
+	 */
+	public static Mono<MongoCluster> getCluster(ReactiveMongoDatabaseFactory factory,
+			SessionSynchronization sessionSynchronization) {
+
+		Assert.notNull(factory, "Factory must not be null");
+		if (!(factory instanceof ReactiveMongoClusterCapable clusterCapable)) {
+			throw new IllegalArgumentException("Factory must be a ReactiveMongoClusterCapable");
+		}
+
+		if (sessionSynchronization == SessionSynchronization.NEVER) {
+			return Mono.just(clusterCapable.getMongoCluster());
+		}
+
+		return TransactionSynchronizationManager.forCurrentTransaction()
+				.filter(TransactionSynchronizationManager::isSynchronizationActive) //
+				.flatMap(synchronizationManager -> {
+
+					return doGetSession(synchronizationManager, factory, sessionSynchronization) //
+							.flatMap(it -> {
+								MongoCluster mongoCluster = ((ReactiveMongoClusterCapable) factory.withSession(it)).getMongoCluster();
+								return Mono.just(mongoCluster);
+							});
+				}).onErrorResume(NoTransactionException.class, e -> Mono.just(clusterCapable.getMongoCluster()))
+				.switchIfEmpty(Mono.just(clusterCapable.getMongoCluster()));
 	}
 
 	private static Mono<MongoDatabase> doGetMongoDatabase(@Nullable String dbName, ReactiveMongoDatabaseFactory factory,

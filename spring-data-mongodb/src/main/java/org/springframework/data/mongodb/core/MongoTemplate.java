@@ -119,6 +119,7 @@ import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Contract;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -637,13 +638,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	<T> @Nullable T doWithClient(Function<MongoCluster, T> callback) {
 
-		if (!(getMongoDatabaseFactory() instanceof MongoClusterCapable client)) {
-			throw new IllegalStateException(
-					"Unable to obtain MongoCluster. Does your database factory implement MongoClusterCapable?");
-		}
-
 		try {
-			return callback.apply(client.getMongoCluster());
+			return callback.apply(doGetCluster());
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
@@ -2527,6 +2523,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected MongoDatabase doGetDatabase() {
 		return MongoDatabaseUtils.getDatabase(mongoDbFactory, sessionSynchronization);
+	}
+
+	protected MongoCluster doGetCluster() {
+		return MongoDatabaseUtils.getCluster(mongoDbFactory, sessionSynchronization);
 	}
 
 	protected MongoDatabase prepareDatabase(MongoDatabase database) {

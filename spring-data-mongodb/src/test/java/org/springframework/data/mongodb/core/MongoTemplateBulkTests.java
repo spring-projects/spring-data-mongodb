@@ -24,9 +24,11 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.BulkOperationException;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
@@ -38,6 +40,7 @@ import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.Pair;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.mongodb.ClientBulkWriteException;
 import com.mongodb.client.MongoClient;
@@ -470,6 +473,90 @@ class MongoTemplateBulkTests {
 		assertThat(inDefaultDB).isNotNull();
 		assertThat(inDB2).isNotNull();
 		assertThat(inDB3).isNotNull();
+	}
+
+	@Nested
+	class Transactions {
+
+		TransactionTemplate transactionTemplate;
+
+		@BeforeEach
+		void setUp() {
+
+			transactionTemplate = new TransactionTemplate(new MongoTransactionManager(operations.getMongoDatabaseFactory()));
+
+			insertSomeDocumentsIntoBaseDoc();
+			insertSomeDocumentsIntoSpecialDoc();
+		}
+
+		@Test // GH-5247
+		void multipleCollectionBulkWriteShouldCommit() {
+
+			Bulk bulk = Bulk.builder()
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), set("value", "updated")))
+					.inCollection(SpecialDoc.class, ops -> ops.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.build();
+
+			transactionTemplate.executeWithoutResult(status -> {
+
+				BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+				assertThat(result.modifiedCount()).isEqualTo(2);
+			});
+
+			Long updatedCountBaseDoc = operations.execute(BaseDoc.class,
+					col -> col.countDocuments(new Document("value", "updated")));
+			assertThat(updatedCountBaseDoc).isOne();
+
+			Long updatedCountSpecialDoc = operations.execute(SpecialDoc.class,
+					col -> col.countDocuments(new Document("value", "updated")));
+			assertThat(updatedCountSpecialDoc).isOne();
+		}
+
+		@Test // GH-5247
+		void singleCollectionBulkWriteShouldRollBack() {
+
+			Bulk bulk = Bulk.builder()
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("id", "1"), set("value", "updated")) //
+							.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.build();
+
+			transactionTemplate.executeWithoutResult(status -> {
+
+				BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+				assertThat(result.modifiedCount()).isEqualTo(2);
+
+				status.setRollbackOnly();
+			});
+
+			Long updatedCountBaseDoc = operations.execute(BaseDoc.class,
+					col -> col.countDocuments(new Document("value", "updated")));
+			assertThat(updatedCountBaseDoc).isZero();
+		}
+
+		@Test // GH-5247
+		void multipleCollectionBulkWriteShouldRollBack() {
+
+			Bulk bulk = Bulk.builder()
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), set("value", "updated")))
+					.inCollection(SpecialDoc.class, ops -> ops.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.build();
+
+			transactionTemplate.executeWithoutResult(status -> {
+
+				BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
+				assertThat(result.modifiedCount()).isEqualTo(2);
+
+				status.setRollbackOnly();
+			});
+
+			Long updatedCountBaseDoc = operations.execute(BaseDoc.class,
+					col -> col.countDocuments(new Document("value", "updated")));
+			assertThat(updatedCountBaseDoc).isZero();
+
+			Long updatedCountSpecialDoc = operations.execute(SpecialDoc.class,
+					col -> col.countDocuments(new Document("value", "updated")));
+			assertThat(updatedCountSpecialDoc).isZero();
+		}
 	}
 
 	private void insertSomeDocumentsIntoBaseDoc() {
