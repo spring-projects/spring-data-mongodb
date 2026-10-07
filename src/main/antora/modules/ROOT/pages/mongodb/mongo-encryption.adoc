@@ -195,7 +195,11 @@ class Patient {
     @Encrypted(algorithm = "Unindexed")
     String pin;           <2>
 
-    @Encrypted(algorithm = "Indexed")
+
+// NOTE: "Indexed" is not a valid value for @Encrypted.algorithm.
+// Queryable Encryption indexing is controlled via @Queryable / @RangeEncrypted.
+
+    @Encrypted
     @Queryable(queryType = "equality", contentionFactor = 0)
     String ssn;           <3>
 
