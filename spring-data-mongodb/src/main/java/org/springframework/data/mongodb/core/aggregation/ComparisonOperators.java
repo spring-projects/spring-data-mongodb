@@ -26,6 +26,7 @@ import org.springframework.util.Assert;
  * Gateway to {@literal comparison expressions}.
  *
  * @author Christoph Strobl
+ * @author sathish256
  * @since 1.10
  */
 public class ComparisonOperators {
@@ -145,6 +146,18 @@ public class ComparisonOperators {
 		 */
 		public Eq equalToValue(Object value) {
 			return createEq().equalToValue(value);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
+		 * value is equal to {@literal null}.
+		 *
+		 * @return new instance of {@link Eq}.
+		 * @since 5.1
+		 */
+		@Contract(" -> new")
+		public Eq isNull() {
+			return createEq().isNull();
 		}
 
 		@SuppressWarnings("NullAway")
@@ -504,6 +517,21 @@ public class ComparisonOperators {
 
 			Assert.notNull(value, "Value must not be null");
 			return new Eq(append(value, Expand.KEEP_SOURCE));
+		}
+
+		/**
+		 * Creates new {@link Eq} with all previously added arguments appending {@literal null}. Renders to
+		 * {@code {$eq: [..., null]}}.
+		 *
+		 * @return new instance of {@link Eq}.
+		 * @since 5.1
+		 */
+		@Contract(" -> new")
+		public Eq isNull() {
+
+			List<Object> args = values();
+			args.add(null);
+			return new Eq(args);
 		}
 	}
 
