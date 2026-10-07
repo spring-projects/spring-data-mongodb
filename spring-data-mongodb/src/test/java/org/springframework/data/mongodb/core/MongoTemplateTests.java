@@ -73,6 +73,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -95,8 +96,10 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -144,6 +147,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author duozhilin
  * @author Jakub Zurawa
  * @author Florian Lüdiger
+ * @author Sujay HK
  */
 public class MongoTemplateTests {
 
@@ -4099,6 +4103,29 @@ public class MongoTemplateTests {
 		assertThat(loaded.mapValue).isEqualTo(sourceMap);
 	}
 
+	@Test // GH-5166
+	void beforeConvertCallbackIsAppliedOnReplace() {
+
+		PersonWithConvertedName person = new PersonWithConvertedName("sujay");
+		template.insert(person);
+
+		// Register a BeforeConvertCallback that uppercases the name
+		template.setEntityCallbacks(EntityCallbacks.create(
+				(BeforeConvertCallback<PersonWithConvertedName>) (entity, collection) -> {
+					entity.name = entity.name.toUpperCase();
+					return entity;
+				}
+		));
+
+		PersonWithConvertedName replacement = new PersonWithConvertedName("sujay");
+		replacement.id = person.id;
+
+		template.replace(query(where("id").is(person.id)), replacement);
+
+		PersonWithConvertedName found = template.findById(person.id, PersonWithConvertedName.class);
+		assertThat(found.name).isEqualTo("SUJAY"); // will FAIL before the fix
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
@@ -4111,6 +4138,17 @@ public class MongoTemplateTests {
 		});
 
 		return saved;
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document
+	static class PersonWithConvertedName {
+
+		@Id String id;
+		String name;
+
+		PersonWithConvertedName(String name) {
+			this.name = name;
+		}
 	}
 
 	static class TypeWithNumbers {
@@ -4813,6 +4851,7 @@ public class MongoTemplateTests {
 
 			person.setId(UUID.randomUUID());
 		}
+
 	}
 
 	public static class Message {
@@ -5097,4 +5136,5 @@ public class MongoTemplateTests {
 			return Objects.hash(id, value, mapValue);
 		}
 	}
+
 }

@@ -194,6 +194,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Yadhukrishna S Pai
  * @author Florian Lüdiger
  * @author Kyuhong Han
+ * @author Sujay HK
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -2095,25 +2096,29 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected <S, T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
-			String collectionName) {
+												String collectionName) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
-		UpdateContext updateContext = queryOperations.replaceSingleContext(query,
-				operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
 
-		return createMono(collectionName, collection -> {
+		return maybeCallBeforeConvert(replacement, collectionName).flatMap(converted -> {
 
-			Document mappedUpdate = updateContext.getMappedUpdate(entity);
+			UpdateContext updateContext = queryOperations.replaceSingleContext(query,
+					operations.forEntity(converted).toMappedDocument(this.mongoConverter), options.isUpsert());
 
-			MongoAction action = new MongoAction(writeConcern, MongoActionOperation.REPLACE, collectionName, entityType,
-					mappedUpdate, updateContext.getQueryObject());
+			return createMono(collectionName, collection -> {
 
-			MongoCollection<Document> collectionToUse = createCollectionPreparer(query, action).prepare(collection);
+				Document mappedUpdate = updateContext.getMappedUpdate(entity);
 
-			return collectionToUse.replaceOne(updateContext.getMappedQuery(entity), mappedUpdate,
-					updateContext.getReplaceOptions(entity, it -> {
-						it.upsert(options.isUpsert());
-					}));
+				MongoAction action = new MongoAction(writeConcern, MongoActionOperation.REPLACE, collectionName, entityType,
+						mappedUpdate, updateContext.getQueryObject());
+
+				MongoCollection<Document> collectionToUse = createCollectionPreparer(query, action).prepare(collection);
+
+				return collectionToUse.replaceOne(updateContext.getMappedQuery(entity), mappedUpdate,
+						updateContext.getReplaceOptions(entity, it -> {
+							it.upsert(options.isUpsert());
+						}));
+			});
 		});
 	}
 
