@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -33,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.annotation.PersistenceCreator;
@@ -109,7 +107,6 @@ class MongoTemplateScrollTests {
 		template.remove(Person.class).all();
 		template.remove(WithNestedDocument.class).all();
 		template.remove(WithRenamedField.class).all();
-		template.remove(AccessibleDocument.class).all();
 	}
 
 	@Test // GH-4308
@@ -295,34 +292,55 @@ class MongoTemplateScrollTests {
 	@Test // GH-5212
 	void keysetScrollShouldRespectOrPredicateOnSubsequentPages() {
 
-		template.insertAll(Arrays.asList(
-				new AccessibleDocument("user1", false, 10), new AccessibleDocument("user1", false, 20),
-				new AccessibleDocument("user1", false, 30), new AccessibleDocument("anyone", true, 5),
-				new AccessibleDocument("anyone", true, 15), new AccessibleDocument("anyone", true, 25),
-				new AccessibleDocument("other", false, 12), new AccessibleDocument("other", false, 22),
-				new AccessibleDocument("other", false, 32)));
+		initPersons();
 
-		Criteria visibilityFilter = new Criteria().orOperator(where("owner").is("user1"),
-				where("accessible").is(true));
-		Query q = new Query(visibilityFilter).with(Sort.by("score")).limit(3);
+		Query q = new Query(johnOrJane()).with(Sort.by("age")).limit(3);
 		q.with(ScrollPosition.keyset());
 
-		Window<AccessibleDocument> page1 = template.scroll(q, AccessibleDocument.class);
+		Window<Person> page1 = template.scroll(q, Person.class);
 
-		assertThat(page1).hasSize(3);
-		assertThat(page1).allSatisfy(doc -> assertThat("user1".equals(doc.owner) || doc.accessible)
-				.as("page 1 element %s must satisfy the visibility filter", doc).isTrue());
+		assertThat(page1).extracting(Person::getAge).containsExactly(5, 10, 15);
+		assertThat(page1.isLast()).isFalse();
 
-		Window<AccessibleDocument> page2 = template.scroll(q.with(page1.positionAt(page1.size() - 1)),
-				AccessibleDocument.class);
+		Window<Person> page2 = template.scroll(q.with(page1.positionAt(page1.size() - 1)), Person.class);
 
-		List<AccessibleDocument> unauthorized = page2.stream()
-				.filter(doc -> !"user1".equals(doc.owner) && !doc.accessible).toList();
+		assertThat(page2)
+				.as("keyset predicates must be ANDed with a base query using $or; OR-ing them makes the scroll "
+						+ "restart at the first page and pulls in documents not matching the base query")
+				.extracting(Person::getAge).containsExactly(20, 25, 30);
+		assertThat(page2.isLast()).isTrue();
+	}
 
-		assertThat(unauthorized)
-				.as("keyset scroll must not return unauthorized documents on page 2 when base query uses $or"
-						+ " – keyset predicates must be ANDed with the access-control filter, not OR-ed")
-				.isEmpty();
+	@Test // GH-5212
+	void keysetScrollBackwardsShouldRespectOrPredicate() {
+
+		initPersons();
+
+		Query q = new Query(johnOrJane()).with(Sort.by("age")).limit(6);
+		q.with(ScrollPosition.keyset());
+
+		Window<Person> all = template.scroll(q, Person.class);
+
+		assertThat(all).extracting(Person::getAge).containsExactly(5, 10, 15, 20, 25, 30);
+
+		KeysetScrollPosition backwards = ((KeysetScrollPosition) all.positionAt(all.size() - 1)).backward();
+		Window<Person> previous = template.scroll(new Query(johnOrJane()).with(Sort.by("age")).limit(3).with(backwards),
+				Person.class);
+
+		assertThat(previous).as("backwards keyset scrolling must not return documents not matching the base query")
+				.extracting(Person::getAge).containsExactly(15, 20, 25);
+	}
+
+	private void initPersons() {
+
+		template.insertAll(Arrays.asList( //
+				new Person("John", 10), new Person("John", 20), new Person("John", 30), //
+				new Person("Jane", 5), new Person("Jane", 15), new Person("Jane", 25), //
+				new Person("Alice", 12), new Person("Alice", 22), new Person("Alice", 32)));
+	}
+
+	private static Criteria johnOrJane() {
+		return new Criteria().orOperator(where("firstName").is("John"), where("firstName").is("Jane"));
 	}
 
 	static Stream<Arguments> positions() {
@@ -521,27 +539,6 @@ class MongoTemplateScrollTests {
 		public String toString() {
 			return "MongoTemplateScrollTests.WithRenamedField(id=" + this.getId() + ", value=" + this.getValue() + ", nested="
 					+ this.getNested() + ")";
-		}
-	}
-
-	static class AccessibleDocument {
-
-		String id;
-		String owner;
-		boolean accessible;
-		int score;
-
-		AccessibleDocument() {}
-
-		AccessibleDocument(String owner, boolean accessible, int score) {
-			this.owner = owner;
-			this.accessible = accessible;
-			this.score = score;
-		}
-
-		@Override
-		public String toString() {
-			return "AccessibleDocument{owner='%s', accessible=%s, score=%d}".formatted(owner, accessible, score);
 		}
 	}
 

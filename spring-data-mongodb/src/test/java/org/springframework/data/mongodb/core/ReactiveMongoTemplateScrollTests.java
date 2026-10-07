@@ -15,9 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -28,16 +30,18 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
@@ -144,8 +148,8 @@ class ReactiveMongoTemplateScrollTests {
 		Query q = new Query(where("value").regex("v.*")).with(Sort.by(Sort.Direction.DESC, "value")).limit(2);
 		q.with(ScrollPosition.keyset());
 
-		Window<T> window = template.query(WithRenamedField.class).as(resultType).matching(q)
-				.scroll(ScrollPosition.keyset()).block(Duration.ofSeconds(10));
+		Window<T> window = template.query(WithRenamedField.class).as(resultType).matching(q).scroll(ScrollPosition.keyset())
+				.block(Duration.ofSeconds(10));
 
 		assertThat(window.hasNext()).isTrue();
 		assertThat(window.isLast()).isFalse();
@@ -159,6 +163,73 @@ class ReactiveMongoTemplateScrollTests {
 		assertThat(window.isLast()).isTrue();
 		assertThat(window).hasSize(1);
 		assertThat(window).containsOnly(assertionConverter.apply(one));
+	}
+
+	@Test // GH-5212
+	void keysetScrollShouldRespectOrPredicateOnSubsequentPages() {
+
+		initPersons();
+
+		Query q = new Query(johnOrJane()).with(Sort.by("age")).limit(3);
+		q.with(ScrollPosition.keyset());
+
+		template.scroll(q, Person.class) //
+				.flatMapMany(page1 -> Flux.concat(Mono.just(page1),
+						template.scroll(q.with(page1.positionAt(page1.size() - 1)), Person.class))) //
+				.as(StepVerifier::create) //
+				.assertNext(page1 -> {
+
+					assertThat(page1).extracting(Person::getAge).containsExactly(5, 10, 15);
+					assertThat(page1.isLast()).isFalse();
+				}) //
+				.assertNext(page2 -> {
+
+					assertThat(page2)
+							.as("keyset predicates must be ANDed with a base query using $or; OR-ing them makes the scroll "
+									+ "restart at the first page and pulls in documents not matching the base query")
+							.extracting(Person::getAge).containsExactly(20, 25, 30);
+					assertThat(page2.isLast()).isTrue();
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // GH-5212
+	void keysetScrollBackwardsShouldRespectOrPredicate() {
+
+		initPersons();
+
+		Query q = new Query(johnOrJane()).with(Sort.by("age")).limit(6);
+		q.with(ScrollPosition.keyset());
+
+		template.scroll(q, Person.class) //
+				.flatMapMany(all -> {
+
+					KeysetScrollPosition backwards = ((KeysetScrollPosition) all.positionAt(all.size() - 1)).backward();
+					Query previousPage = new Query(johnOrJane()).with(Sort.by("age")).limit(3).with(backwards);
+
+					return Flux.concat(Mono.just(all), template.scroll(previousPage, Person.class));
+				}) //
+				.as(StepVerifier::create) //
+				.assertNext(all -> assertThat(all).extracting(Person::getAge).containsExactly(5, 10, 15, 20, 25, 30)) //
+				.assertNext(previous -> assertThat(previous)
+						.as("backwards keyset scrolling must not return documents not matching the base query")
+						.extracting(Person::getAge).containsExactly(15, 20, 25)) //
+				.verifyComplete();
+	}
+
+	private void initPersons() {
+
+		template.insertAll(Arrays.asList( //
+				new Person("John", 10), new Person("John", 20), new Person("John", 30), //
+				new Person("Jane", 5), new Person("Jane", 15), new Person("Jane", 25), //
+				new Person("Alice", 12), new Person("Alice", 22), new Person("Alice", 32))) //
+				.as(StepVerifier::create) //
+				.expectNextCount(9) //
+				.verifyComplete();
+	}
+
+	private static Criteria johnOrJane() {
+		return new Criteria().orOperator(where("firstName").is("John"), where("firstName").is("Jane"));
 	}
 
 	static Stream<Arguments> positions() {
