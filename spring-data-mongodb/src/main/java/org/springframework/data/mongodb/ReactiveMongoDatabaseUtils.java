@@ -139,6 +139,7 @@ public class ReactiveMongoDatabaseUtils {
 	 * @param sessionSynchronization the synchronization to use. Must not be {@literal null}.
 	 * @throws IllegalArgumentException if the given factory is not {@link ReactiveMongoClusterCapable}
 	 * @return never {@literal null}.
+	 * @since 5.1.2
 	 */
 	public static Mono<MongoCluster> getCluster(ReactiveMongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
@@ -157,9 +158,8 @@ public class ReactiveMongoDatabaseUtils {
 				.flatMap(synchronizationManager -> {
 
 					return doGetSession(synchronizationManager, factory, sessionSynchronization) //
-							.flatMap(it -> {
-								MongoCluster mongoCluster = ((ReactiveMongoClusterCapable) factory.withSession(it)).getMongoCluster();
-								return Mono.just(mongoCluster);
+							.map(it -> {
+								return ((ReactiveMongoClusterCapable) factory.withSession(it)).getMongoCluster();
 							});
 				}).onErrorResume(NoTransactionException.class, e -> Mono.just(clusterCapable.getMongoCluster()))
 				.switchIfEmpty(Mono.just(clusterCapable.getMongoCluster()));

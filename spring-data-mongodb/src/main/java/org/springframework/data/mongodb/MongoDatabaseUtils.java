@@ -102,6 +102,7 @@ public class MongoDatabaseUtils {
 	 * @param sessionSynchronization the synchronization to use. Must not be {@literal null}.
 	 * @throws IllegalArgumentException if the given factory is not {@link MongoClusterCapable}
 	 * @return never {@literal null}.
+	 * @since 5.1.2
 	 */
 	public static MongoCluster getCluster(MongoDatabaseFactory factory, SessionSynchronization sessionSynchronization) {
 
