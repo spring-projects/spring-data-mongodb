@@ -30,11 +30,13 @@ import org.bson.BsonBinarySubType;
 import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
@@ -115,6 +117,151 @@ class ParameterBindingJsonReaderUnitTests {
 				.isEqualTo(Document.parse("{$where: 'return this.date.getUTCMonth() == 2 && this.date.getUTCDay() == 3;'}"));
 	}
 
+	@Test // GH-5258
+	void placeholderCannotBreakOutOfSingleQuotedStringLiteral() {
+
+		Document target = parse("{ $where : 'return this.firstname == \\'?0\\'' }", "x'; throw new Error(1); //");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == 'x\\'; throw new Error(1); //'");
+	}
+
+	@Test // GH-5258
+	void placeholderCannotBreakOutOfDoubleQuotedStringLiteral() {
+
+		Document target = parse("{ $where : 'return this.firstname == \"?0\"' }", "x\"; throw new Error(1); //");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == \"x\\\"; throw new Error(1); //\"");
+	}
+
+	@Test // GH-5258
+	void placeholderCannotEscapeQuotation() {
+
+		Document target = parse("{ $where : 'return this.firstname == \"?0\"' }", "x\\");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == \"x\\\\\"");
+	}
+
+	@Test // GH-5258
+	void retainsLineTerminator() {
+
+		String lineSeparator = String.valueOf((char) 0x2028);
+		String paragraphSeparator = String.valueOf((char) 0x2029);
+		String value = "a\nb\rc" + lineSeparator + "d" + paragraphSeparator + "e";
+
+		Document target = parse("{ $where : 'return this.firstname == \"?0\"' }", value);
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == \"" + value + "\"");
+	}
+
+	@Test // GH-5258
+	void lineTerminatorCannotReopenQuotedSection() {
+
+		Document target = parse("{ $where : 'return this.firstname == \"?0\"' }", "x\n\" ; throw new Error(1); //");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == \"x\n\\\" ; throw new Error(1); //\"");
+	}
+
+	@Test // GH-5258
+	void backticksAreNoProperQuotation() {
+
+		Document target = parse("{ $where : 'return this.firstname == `?0`' }", "${this.firstname}");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == `${this.firstname}`");
+	}
+
+	@Test // GH-5258
+	void retainsQuotationMarkNotEnclosingThePlaceholder() {
+
+		Document target = parse("{ $where : 'return this.firstname == \"?0\"' }", "K'holin");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == \"K'holin\"");
+	}
+
+	@Test // GH-5258
+	void escapesQuotedPlaceholderIndependentOfTheOperatorInUse() {
+
+		Document target = parse("{ '$expr' : { '$function' : { 'body' : 'function(n) { return n == \"?0\"; }' } } }",
+				"x\"; throw new Error(1); //");
+
+		assertThat(target.getEmbedded(List.of("$expr", "$function", "body"), String.class))
+				.isEqualTo("function(n) { return n == \"x\\\"; throw new Error(1); //\"; }");
+	}
+
+	@Test // GH-5258
+	void escapesEachPlaceholderAccordingToItsOwnQuotation() {
+
+		Document target = parse("{ $where : 'return this.a == ?0 && this.b == \\'?0\\'' }", "x'y");
+
+		assertThat(target.get("$where")).isEqualTo("return this.a == x'y && this.b == 'x\\'y'");
+	}
+
+	@Test // GH-5258
+	void retainsUnquotedPlaceholderVerbatim() {
+
+		Document target = parse("{ $where : 'return this.firstname == ?0' }", "x'; throw new Error(1); //");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == x'; throw new Error(1); //");
+	}
+
+	@Test // GH-5258
+	void doesNotEscapeTopLevelQuotedPlaceholder() {
+
+		Document target = parse("{ 'lastname' : '?0' }", "Dalinar\\K'holin");
+
+		assertThat(target.get("lastname")).isEqualTo("Dalinar\\K'holin");
+	}
+
+	@Test // GH-5258
+	void quotedExpressionPlaceholderCannotBreakOutOfStringLiteral() {
+
+		Document target = parse("{ $where : 'return this.firstname == \"?#{[0]}\"' }", "x\"; throw new Error(1); //");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == \"x\\\"; throw new Error(1); //\"");
+	}
+
+	@Test // GH-5258
+	void unquotedExpressionPlaceholderRetainsValueVerbatim() {
+
+		Document target = parse("{ $where : 'return this.firstname == ?#{[0]}' }", "x'; throw new Error(1); //");
+
+		assertThat(target.get("$where")).isEqualTo("return this.firstname == x'; throw new Error(1); //");
+	}
+
+	@Test // GH-5258
+	void doesNotResolvePlaceholdersWithinAlreadyBoundValues() {
+
+		Document target = parse("{ 'value' : 'x?0y?1z' }", "?1", "B");
+
+		assertThat(target.get("value")).isEqualTo("x?1yBz");
+	}
+
+	@Test // GH-5258
+	void doesNotApplyStringLiteralEscapingToRegularExpressionTokens() {
+
+		Document target = parse("{ 'value' : /^\"?0\"$/i }", "a\"b\\c");
+
+		assertThat(target.get("value")).isEqualTo(new BsonRegularExpression("^\"a\"b\\c\"$", "i"));
+	}
+
+	@ParameterizedTest // GH-5258
+	@MethodSource("nonStringParameterArgs")
+	void bindsNonStringParameterToTopLevelQuotedPlaceholder(Object value, String expected, String expectedWhenNested) {
+
+		Document target = parse("{ 'value' : '?0' }", value);
+
+		assertThat(target.get("value")).isEqualTo(expected);
+	}
+
+	@ParameterizedTest // GH-5258
+	@MethodSource("nonStringParameterArgs")
+	void bindsNonStringParameterToQuotedPlaceholderWithinStringValue(Object value, String expected,
+			String expectedWhenNested) {
+
+		Document target = parse("{ $where : 'return this.value == \"?0\"' }", value);
+
+		assertThat(target.get("$where")).isEqualTo("return this.value == \"" + expectedWhenNested + "\"");
+	}
+
 	@Test
 	void bindValueToDbRef() {
 
@@ -174,6 +321,13 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(new Document("arg0", 100.01D));
 	}
 
+	@Test // GH-5258
+	void bindNull() {
+
+		Document target = parse("{ arg0 : ?0 }", new Object[] { null });
+		assertThat(target).isEqualTo(new Document("arg0", null));
+	}
+
 	@Test // DATAMONGO-2315
 	void bindDateAsDate() {
 
@@ -210,7 +364,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3750
-	public void shouldParseISODate() {
+	void shouldParseISODate() {
 
 		String json = "{ 'value' : ISODate(\"1970-01-01T00:00:00Z\") }";
 		Date value = parse(json).get("value", Date.class);
@@ -218,7 +372,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3750
-	public void shouldParseISODateWith24HourTimeSpecification() {
+	void shouldParseISODateWith24HourTimeSpecification() {
 
 		String json = "{ 'value' : ISODate(\"2013-10-04T12:07:30.443Z\") }";
 		Date value = parse(json).get("value", Date.class);
@@ -226,7 +380,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3750
-	public void shouldParse$date() {
+	void shouldParse$date() {
 
 		String json = "{ 'value' : { \"$date\" : \"2015-04-16T14:55:57.626Z\" } }";
 		Date value = parse(json).get("value", Date.class);
@@ -234,7 +388,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3750
-	public void shouldParse$dateWithTimeOffset() {
+	void shouldParse$dateWithTimeOffset() {
 
 		String json = "{ 'value' :{ \"$date\" : \"2015-04-16T16:55:57.626+02:00\" } }";
 		Date value = parse(json).get("value", Date.class);
@@ -242,7 +396,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-4282
-	public void shouldReturnNullAsSuch() {
+	void shouldReturnNullAsSuch() {
 
 		String json = "{ 'value' : ObjectId(?0) }";
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> parse(json, new Object[] { null }))
@@ -401,7 +555,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3871
-	public void capturingExpressionDependenciesShouldNotThrowParseErrorForSpelOnlyJson() {
+	void capturingExpressionDependenciesShouldNotThrowParseErrorForSpelOnlyJson() {
 
 		Object[] args = new Object[] { "1", "2" };
 		String json = "?#{ true ? { 'name': #name } : { 'name' : #name + 'trouble' } }";
@@ -411,7 +565,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3871, GH-4089
-	public void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsDocument() {
+	void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsDocument() {
 
 		Object[] args = new Object[] { "expected", "unexpected" };
 		String json = "?#{ true ? { 'name': ?0 } : { 'name' : ?1 } }";
@@ -426,7 +580,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3871, GH-4089
-	public void throwsExceptionWhenBindEntireQueryUsingSpelExpressionIsMalFormatted() {
+	void throwsExceptionWhenBindEntireQueryUsingSpelExpressionIsMalFormatted() {
 
 		Object[] args = new Object[] { "expected", "unexpected" };
 		String json = "?#{ true ? { 'name': ?0 { } } : { 'name' : ?1 } }";
@@ -442,7 +596,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3871, GH-4089
-	public void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsJsonStringContainingUUID() {
+	void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsJsonStringContainingUUID() {
 
 		Object[] args = new Object[] { UUID.fromString("cfbca728-4e39-4613-96bc-f920b5c37e16"), "unexpected" };
 		String json = "?#{ true ? { 'name': ?0 } : { 'name' : ?1 } }";
@@ -604,25 +758,57 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // GH-3750
-	public void shouldParse$uuidAsStandardRepresentation() {
+	void shouldParse$uuidAsStandardRepresentation() {
 
 		String json = "{ 'value' : { '$uuid' : \"73ff-d26444b-34c6-990e8e-7d1dfc035d4\" } } }";
 		BsonBinary value = parse(json).get("value", BsonBinary.class);
 		assertThat(value.getType()).isEqualTo(BsonBinarySubType.UUID_STANDARD.getValue());
 	}
 
+	/**
+	 * @return value, expected string representation, expected string representation when nested
+	 */
+	static Stream<Arguments> nonStringParameterArgs() {
+
+		Object toStringContainingQuotationMark = new Object() {
+
+			@Override
+			public String toString() {
+				return "x\"; throw new Error(1); //";
+			}
+		};
+
+		return Stream.of( //
+				Arguments.of(100, "100", "100"), //
+				Arguments.of(100L, "100", "100"), //
+				Arguments.of(1.5D, "1.5", "1.5"), //
+				Arguments.of(Boolean.TRUE, "true", "true"), //
+				Arguments.of(null, "null", "null"), //
+				Arguments.of(new ObjectId("528a2b0c9c1a4b0d8e4f6a71"), "528a2b0c9c1a4b0d8e4f6a71", "528a2b0c9c1a4b0d8e4f6a71"), //
+				Arguments.of(BsonBinarySubType.UUID_STANDARD, "UUID_STANDARD", "UUID_STANDARD"), //
+				Arguments.of(new Date(1234567890123L), "2009-02-13T23:31:30.123Z", "2009-02-13T23:31:30.123Z"), //
+				Arguments.of(new int[] { 1, 2 }, "{1, 2}", "{1, 2}"), //
+				Arguments.of(List.of("a", "b"), "[a, b]", "[a, b]"), //
+				Arguments.of(List.of("x\"y", "a\\b"), "[x\"y, a\\b]", "[x\\\"y, a\\\\b]"), //
+				Arguments.of(toStringContainingQuotationMark, "x\"; throw new Error(1); //", "x\\\"; throw new Error(1); //") //
+		);
+	}
+
 	static Stream<Arguments> treatNestedStringParametersArgs() {
 		return Stream.of( //
-				Arguments.of("{ 'value': '^\\Q:#{?0}\\E' }", "\\E.", "^\\Q\\E.\\E"),Arguments.of("{ 'value': '/^?0$/i' }", "foo", "/^foo$/i"),
+				Arguments.of("{ 'value': '^\\Q:#{?0}\\E' }", "\\E.", "^\\Q\\E.\\E"),
+				Arguments.of("{ 'value': '/^?0$/i' }", "foo", "/^foo$/i"),
 				Arguments.of("{ 'value': /^true$/i }", null, new BsonRegularExpression("^true$", "i")),
 				Arguments.of("{ 'value': /^?0$/i }", "foo", new BsonRegularExpression("^foo$", "i")), //
 				Arguments.of("{ 'value': '/^?0$/i' }", "\\Qfoo\\E", "/^\\Qfoo\\E$/i"),
 				Arguments.of("{ 'value': '?0' }", "/^foo$/i", "/^foo$/i"), //
 				Arguments.of("{ 'value': /^\\Q?0\\E/}", "foo", new BsonRegularExpression("^\\Qfoo\\E")), //
 				Arguments.of("{ 'value': /^\\Q?0\\E/}", "\\E.*", new BsonRegularExpression("^\\Q\\E\\\\E\\Q.*\\E")), //
-			Arguments.of("{ 'value': /^\\Q:#{?0}\\E/ }", "\\E.*", new BsonRegularExpression("^\\Q\\E\\\\E\\Q.*\\E")),
+				Arguments.of("{ 'value': /^\\Q:#{?0}\\E/ }", "\\E.*", new BsonRegularExpression("^\\Q\\E\\\\E\\Q.*\\E")),
 				Arguments.of("{ 'value': ?0 }", "/^foo$/i", "/^foo$/i"), //
-				Arguments.of("{ 'value': { '$regex' : '^(?0)'} }", "foo", new Document("$regex", "^(foo)")) //
+				Arguments.of("{ 'value': { '$regex' : '^(?0)'} }", "foo", new Document("$regex", "^(foo)")), //
+				Arguments.of("{ 'value': { '$regex' : '^\\Q?0\\E' } }", "\\E.*",
+						new Document("$regex", "^\\Q\\E\\\\E\\Q.*\\E")) //
 		);
 	}
 
@@ -669,7 +855,7 @@ class ParameterBindingJsonReaderUnitTests {
 
 		String id;
 
-		public DummyWithId(String id) {
+		DummyWithId(String id) {
 			this.id = id;
 		}
 
