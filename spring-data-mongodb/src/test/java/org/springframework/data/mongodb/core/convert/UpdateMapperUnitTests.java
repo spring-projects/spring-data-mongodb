@@ -44,10 +44,12 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -147,6 +149,18 @@ class UpdateMapperUnitTests {
 
 		Document set = getAsDocument(mappedObject, "$set");
 		assertThat(set.get("_class")).isNull();
+	}
+
+	@Test // GH-4997
+	void updateMapperShouldMapArrayBackedPointToCoordinateArray() {
+
+		Update update = Update.update("point", new Point(-73.99171, 40.738868));
+
+		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ClassWithArrayBackedGeoPoint.class));
+
+		Document set = getAsDocument(mappedObject, "$set");
+		assertThat(set.get("point")).isEqualTo(Arrays.asList(-73.99171, 40.738868));
 	}
 
 	@Test // DATAMONGO-407
@@ -1829,5 +1843,10 @@ class UpdateMapperUnitTests {
 
 		@ValueConverter(ReversingValueConverter.class)
 		String text;
+	}
+
+	static class ClassWithArrayBackedGeoPoint {
+
+		@Field(targetType = FieldType.ARRAY) Point point;
 	}
 }

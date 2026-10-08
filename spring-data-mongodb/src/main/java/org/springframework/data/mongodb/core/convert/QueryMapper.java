@@ -48,6 +48,7 @@ import org.springframework.data.core.PropertyPath;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Example;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -923,6 +924,31 @@ public class QueryMapper {
 		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()
 				|| value instanceof Document || value instanceof DBObject || Quirks.skipConversion(value)) {
 			return value;
+		}
+
+		if (GeoConverters.isArrayBackedPoint(documentField.getProperty(), value)) {
+			return GeoConverters.writeArrayBackedPoint((Point) value);
+		}
+
+		if (GeoConverters.isArrayBackedPointProperty(documentField.getProperty())
+				&& value instanceof Collection<?> source) {
+
+			List<Object> converted = new ArrayList<>(source.size());
+			boolean hasPoint = false;
+
+			for (Object candidate : source) {
+
+				if (candidate instanceof Point point) {
+					converted.add(GeoConverters.writeArrayBackedPoint(point));
+					hasPoint = true;
+				} else {
+					converted.add(candidate);
+				}
+			}
+
+			if (hasPoint) {
+				return converted;
+			}
 		}
 
 		if (!conversionService.canConvert(value.getClass(), documentField.getProperty().getFieldType())) {

@@ -1000,6 +1000,30 @@ public class QueryMapperUnitTests {
 		assertThat(document).containsEntry("legacyPoint.y", 20D);
 	}
 
+	@Test // GH-4997
+	void shouldMapArrayBackedPointQueryToCoordinateArray() {
+
+		Query query = query(where("arrayBackedPoint").is(new Point(-73.99171, 40.738868)));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(document).containsEntry("arrayBackedPoint", Arrays.asList(-73.99171, 40.738868));
+	}
+
+	@Test // GH-4997
+	void shouldMapArrayBackedPointInQueryToCoordinateArrays() {
+
+		Query query = query(where("arrayBackedPoint").in(new Point(-73.99171, 40.738868), new Point(10D, 20D)));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		List<List<Double>> expected = Arrays.asList(Arrays.asList(-73.99171, 40.738868),
+				Arrays.asList(10D, 20D));
+		assertThat(getAsDocument(document, "arrayBackedPoint").get("$in")).isEqualTo(expected);
+	}
+
 	@Test // GH-3544
 	void exampleWithCombinedCriteriaShouldBeMappedCorrectly() {
 
@@ -1902,6 +1926,7 @@ public class QueryMapperUnitTests {
 
 		double[] justAnArray;
 		Point legacyPoint;
+		@Field(targetType = FieldType.ARRAY) Point arrayBackedPoint;
 		GeoJsonPoint geoJsonPoint;
 		@Field("geoJsonPointWithNameViaFieldAnnotation") GeoJsonPoint namedGeoJsonPoint;
 	}
