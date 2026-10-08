@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.Pair;
@@ -212,9 +213,9 @@ class MongoTemplateBulkTests {
 		insertSomeDocumentsIntoSpecialDoc();
 
 		List<Pair<Query, UpdateDefinition>> updatesBase = Arrays
-				.asList(Pair.of(queryWhere("value", "value1"), set("value", "value3")));
+				.asList(Pair.of(queryWhere("value", "value1"), Update.update("value", "value3")));
 		List<Pair<Query, UpdateDefinition>> updatesSpecial = Arrays
-				.asList(Pair.of(queryWhere("value", "value1"), set("value", "value3")));
+				.asList(Pair.of(queryWhere("value", "value1"), Update.update("value", "value3")));
 
 		Bulk bulk = Bulk.builder()
 				.inCollection(BaseDoc.class, ops -> updatesBase.forEach(p -> ops.updateOne(p.getFirst(), p.getSecond())))
@@ -260,11 +261,11 @@ class MongoTemplateBulkTests {
 		insertSomeDocumentsIntoSpecialDoc();
 
 		List<Pair<Query, UpdateDefinition>> updatesBase = Arrays.asList(
-				Pair.of(queryWhere("value", "value1"), set("value", "value3")),
-				Pair.of(queryWhere("value", "value2"), set("value", "value4")));
+				Pair.of(queryWhere("value", "value1"), Update.update("value", "value3")),
+				Pair.of(queryWhere("value", "value2"), Update.update("value", "value4")));
 		List<Pair<Query, UpdateDefinition>> updatesSpecial = Arrays.asList(
-				Pair.of(queryWhere("value", "value1"), set("value", "value3")),
-				Pair.of(queryWhere("value", "value2"), set("value", "value4")));
+				Pair.of(queryWhere("value", "value1"), Update.update("value", "value3")),
+				Pair.of(queryWhere("value", "value2"), Update.update("value", "value4")));
 
 		Bulk bulk = Bulk.builder()
 				.inCollection(BaseDoc.class, ops -> updatesBase.forEach(p -> ops.updateMulti(p.getFirst(), p.getSecond())))
@@ -294,8 +295,11 @@ class MongoTemplateBulkTests {
 		insertSomeDocumentsIntoSpecialDoc();
 
 		Bulk bulk = Bulk.builder()
-				.inCollection(BaseDoc.class, ops -> ops.upsert(queryWhere("value", "value1"), set("value", "value2")))
-				.inCollection(SpecialDoc.class, ops -> ops.upsert(queryWhere("value", "value1"), set("value", "value2")))
+				.inCollection(BaseDoc.class, ops -> {
+					ops.upsert(queryWhere("value", "value1"), Update.update("value", "value2"));
+				}).inCollection(SpecialDoc.class, ops -> {
+					ops.upsert(queryWhere("value", "value1"), Update.update("value", "value2"));
+				})
 				.build();
 		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -309,8 +313,11 @@ class MongoTemplateBulkTests {
 	void upsertDoesInsertInEachCollection() {
 
 		Bulk bulk = Bulk.builder()
-				.inCollection(BaseDoc.class, ops -> ops.upsert(queryWhere("_id", "new-id-1"), set("value", "upserted1")))
-				.inCollection(SpecialDoc.class, ops -> ops.upsert(queryWhere("_id", "new-id-2"), set("value", "upserted2")))
+				.inCollection(BaseDoc.class, ops -> {
+					ops.upsert(queryWhere("_id", "new-id-1"), Update.update("value", "upserted1"));
+				}).inCollection(SpecialDoc.class, ops -> {
+					ops.upsert(queryWhere("_id", "new-id-2"), Update.update("value", "upserted2"));
+				})
 				.build();
 		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -392,7 +399,10 @@ class MongoTemplateBulkTests {
 		doc2.value = "v2";
 
 		Bulk bulk = Bulk.builder().inCollection(BaseDoc.class,
-				ops -> ops.insert(doc1).updateOne(queryWhere("_id", "1"), set("value", "v2")).remove(queryWhere("value", "v2"))) //
+				ops -> {
+					ops.insert(doc1).updateOne(queryWhere("_id", "1"), Update.update("value", "v2"))
+							.remove(queryWhere("value", "v2"));
+				}) //
 				.inCollection(SpecialDoc.class, it -> it.insert(doc2)).build();
 		BulkWriteResult result = operations.bulkWrite(bulk, BulkWriteOptions.ordered());
 
@@ -411,7 +421,7 @@ class MongoTemplateBulkTests {
 
 		List<BaseDoc> insertsBase = Arrays.asList(newDoc("1", "v1"), newDoc("2", "v2"), newDoc("3", "v2"));
 		List<Pair<Query, UpdateDefinition>> updatesBase = Arrays
-				.asList(Pair.of(queryWhere("value", "v2"), set("value", "v3")));
+				.asList(Pair.of(queryWhere("value", "v2"), Update.update("value", "v3")));
 		List<Query> removesBase = Arrays.asList(queryWhere("_id", "1"));
 
 		SpecialDoc specialDoc = new SpecialDoc();
@@ -476,6 +486,7 @@ class MongoTemplateBulkTests {
 	}
 
 	@Nested
+	@EnableIfReplicaSetAvailable
 	class Transactions {
 
 		TransactionTemplate transactionTemplate;
@@ -493,8 +504,9 @@ class MongoTemplateBulkTests {
 		void multipleCollectionBulkWriteShouldCommit() {
 
 			Bulk bulk = Bulk.builder()
-					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), set("value", "updated")))
-					.inCollection(SpecialDoc.class, ops -> ops.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), Update.update("value", "updated")))
+					.inCollection(SpecialDoc.class,
+							ops -> ops.updateOne(queryWhere("_id", "3"), Update.update("value", "updated")))
 					.build();
 
 			transactionTemplate.executeWithoutResult(status -> {
@@ -513,11 +525,11 @@ class MongoTemplateBulkTests {
 		}
 
 		@Test // GH-5247
-		void singleCollectionBulkWriteShouldRollBack() {
+		void singleCollectionBulkWriteShouldRollback() {
 
 			Bulk bulk = Bulk.builder()
-					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("id", "1"), set("value", "updated")) //
-							.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("id", "1"), Update.update("value", "updated")) //
+							.updateOne(queryWhere("_id", "3"), Update.update("value", "updated")))
 					.build();
 
 			transactionTemplate.executeWithoutResult(status -> {
@@ -534,11 +546,12 @@ class MongoTemplateBulkTests {
 		}
 
 		@Test // GH-5247
-		void multipleCollectionBulkWriteShouldRollBack() {
+		void multipleCollectionBulkWriteShouldRollback() {
 
 			Bulk bulk = Bulk.builder()
-					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), set("value", "updated")))
-					.inCollection(SpecialDoc.class, ops -> ops.updateOne(queryWhere("_id", "3"), set("value", "updated")))
+					.inCollection(BaseDoc.class, ops -> ops.updateOne(queryWhere("_id", "1"), Update.update("value", "updated")))
+					.inCollection(SpecialDoc.class,
+							ops -> ops.updateOne(queryWhere("_id", "3"), Update.update("value", "updated")))
 					.build();
 
 			transactionTemplate.executeWithoutResult(status -> {
@@ -595,10 +608,6 @@ class MongoTemplateBulkTests {
 
 	private static Query queryWhere(String field, String value) {
 		return new Query(org.springframework.data.mongodb.core.query.Criteria.where(field).is(value));
-	}
-
-	private static Update set(String field, String value) {
-		return new Update().set(field, value);
 	}
 
 	private static Document rawDoc(String id, String value) {

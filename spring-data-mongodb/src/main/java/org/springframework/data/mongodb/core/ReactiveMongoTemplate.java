@@ -573,7 +573,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		return ReactiveMongoDatabaseUtils.getCluster(mongoDatabaseFactory, sessionSynchronization)
-				.flatMap(cluster -> Mono.from(callback.apply(cluster)).onErrorMap(translateException()));
+				.flatMap(cluster -> Mono.from(callback.apply(cluster))).onErrorMap(translateException());
 	}
 
 	@Override
