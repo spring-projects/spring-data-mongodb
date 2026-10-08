@@ -377,6 +377,7 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 The `?0` placeholder lets you substitute the value from the method arguments into the JSON query string.
 
 NOTE: `String` parameter values are escaped during the binding process, which means that it is not possible to add MongoDB specific operators through the argument.
+You can (and should where possible) quote binding placeholders to express the literal semantic and enforce escaping of the value to bind - especially when using operators like `$where` or `$function`. Backticks are not considered quotes, just in case you wondered ;)
 
 You can also use the filter property to restrict the set of properties that is mapped into the Java object, as the following example shows:
 
@@ -476,6 +477,8 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 WARNING: SpEL in query strings can be a powerful way to enhance queries.
 However, they can also accept a broad range of unwanted arguments.
 Make sure to sanitize strings before passing them to the query to avoid creation of vulnerabilities or unwanted changes to your query.
+This is especially relevant when using SpEL expressions or positional parameters within a BSON string `'id':'?#{[0])'` as Spring Data can only make minimal assumptions regarding the context and where to apply quoting and escaping.
+We therefore recommend using SpEL to construct binding values entirely instead of embedding expressions within string values.
 
 Expression support is extensible through the Query SPI: `EvaluationContextExtension` & `ReactiveEvaluationContextExtension`
 The Query SPI can contribute properties and functions and can customize the root object.
