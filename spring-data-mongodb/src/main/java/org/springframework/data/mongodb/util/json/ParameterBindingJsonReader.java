@@ -23,13 +23,14 @@ import java.text.SimpleDateFormat;
 import java.time.format.DateTimeParseException;
 import java.util.Base64;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -360,7 +361,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		super.setState(newState);
 	}
 
-	private BindableValue bindableValueFor(JsonToken token) {
+	private @Nullable BindableValue bindableValueFor(JsonToken token) {
 
 		if (!JsonTokenType.STRING.equals(token.getType()) && !JsonTokenType.UNQUOTED_STRING.equals(token.getType())
 				&& !JsonTokenType.REGULAR_EXPRESSION.equals(token.getType())) {
@@ -368,207 +369,29 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 
 		boolean isRegularExpression = token.getType().equals(JsonTokenType.REGULAR_EXPRESSION);
-
-		BindableValue bindableValue = new BindableValue();
-		String tokenValue = isRegularExpression ? token.getValue(BsonRegularExpression.class).getPattern()
+		String tokenValue = token.getValue() instanceof BsonRegularExpression regex ? regex.getPattern()
 				: String.class.cast(token.getValue());
-		Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(tokenValue);
-
-		if (token.getType().equals(JsonTokenType.UNQUOTED_STRING)) {
-
-			Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(tokenValue);
-			if (regexMatcher.find()) {
-
-				String binding = regexMatcher.group();
-				String expression = binding.substring(3, binding.length() - 1);
-				String expressionString = binding.substring(1);
-
-				Matcher inSpelMatcher = SPEL_PARAMETER_BINDING_PATTERN.matcher(expression); // ?0 '?0'
-				Map<String, Object> innerSpelVariables = new HashMap<>();
-
-				while (inSpelMatcher.find()) {
-
-					String group = inSpelMatcher.group();
-					int index = computeParameterIndex(group);
-					Object value = getBindableValueForIndex(index);
-					String varName = "__QVar" + innerSpelVariables.size();
-					expression = expression.replace(group, "#" + varName);
-					expressionString = expressionString.replace(group, "#" + varName);
-					if(group.startsWith("'")) { // retain the string semantic
-						innerSpelVariables.put(varName, nullSafeToString(value));
-					} else {
-						innerSpelVariables.put(varName, value);
-					}
-				}
-
-				Object value = evaluateExpression(expressionString, innerSpelVariables);
-				bindableValue.setValue(value);
-				bindableValue.setType(bsonTypeForValue(value));
-				return bindableValue;
-			}
-
-			if (matcher.find()) {
-
-				int index = computeParameterIndex(matcher.group());
-				Object bindableValueForIndex = getBindableValueForIndex(index);
-				bindableValue.setValue(bindableValueForIndex);
-				bindableValue.setType(bsonTypeForValue(bindableValueForIndex));
-				return bindableValue;
-			}
-
-			bindableValue.setValue(tokenValue);
-			bindableValue.setType(BsonType.STRING);
-			return bindableValue;
-
-		}
-
-		String computedValue = tokenValue;
-
-		Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(computedValue);
-
-		if (regexMatcher.find()) {
-
-			String binding = regexMatcher.group();
-			String expression = binding.substring(3, binding.length() - 1);
-			String expressionString = binding.substring(1);
-
-			Matcher inSpelMatcher = SPEL_PARAMETER_BINDING_PATTERN.matcher(expression);
-			Map<String, Object> innerSpelVariables = new HashMap<>();
-
-			while (inSpelMatcher.find()) {
-
-				String group = inSpelMatcher.group();
-				int index = computeParameterIndex(group);
-				Object value = getBindableValueForIndex(index);
-				String varName = "__QVar" + innerSpelVariables.size();
-				expression = expression.replace(group, "#" + varName);
-				expressionString = expressionString.replace(group, "#" + varName);
-				if(group.startsWith("'")) { // retain the string semantic
-					innerSpelVariables.put(varName, nullSafeToString(value));
-				} else {
-					innerSpelVariables.put(varName, value);
-				}
-			}
-
-			String spelReplacement =
-					nullSafeToString(evaluateExpression(expressionString, innerSpelVariables));
-
-			if (isRegularExpression) {
-
-				computedValue = computedValue.replace(binding, escapeIfQuoted(tokenValue, spelReplacement));
-				bindableValue.setValue(new BsonRegularExpression(computedValue));
-				bindableValue.setType(BsonType.REGULAR_EXPRESSION);
-			} else {
-
-				computedValue = computedValue.replace(binding, spelReplacement);
-				bindableValue.setValue(computedValue);
-				bindableValue.setType(BsonType.STRING);
-			}
-			return bindableValue;
-		}
-
-		while (matcher.find()) {
-
-			String group = matcher.group();
-			int index = computeParameterIndex(group);
-
-			String bindValue = escapeIfQuoted(tokenValue,
-				nullSafeToString(getBindableValueForIndex(index)));
-			computedValue = computedValue.replace(group, bindValue);
-		}
+		TokenValueEvaluator evaluator = new TokenValueEvaluator(this.bindingContext, tokenValue);
 
 		if (isRegularExpression) {
-
 			BsonRegularExpression originalExpression = token.getValue(BsonRegularExpression.class);
-
-			bindableValue.setValue(new BsonRegularExpression(computedValue, originalExpression.getOptions()));
-			bindableValue.setType(BsonType.REGULAR_EXPRESSION);
-		} else {
-
-			bindableValue.setValue(computedValue);
-			bindableValue.setType(BsonType.STRING);
-		}
-		return bindableValue;
-	}
-
-	private static String nullSafeToString(@Nullable Object value) {
-
-		if (value instanceof Date date) {
-			return DateTimeFormatter.format(date.getTime());
+			String escaped = evaluator.mapMatch((match, value) -> TokenValueEvaluator.escapeBinding(evaluator.getTokenValue(),
+					match.start(), match.end(), value, true));
+			return BindableValue.of(new BsonRegularExpression(escaped, originalExpression.getOptions()));
 		}
 
-		return ObjectUtils.nullSafeToString(value);
-	}
-
-	private static boolean isQuoted(String value) {
-		return value.contains(QUOTE_START) || value.contains(QUOTE_END);
-	}
-
-	private static String escapeIfQuoted(String fullToken, String fragment) {
-
-		if (!isQuoted(fullToken)) {
-			return fragment;
-		}
-		return fragment.replace(QUOTE_END, QUOTE_REPLACEMENT_QUOTE_END);
-	}
-
-	private static int computeParameterIndex(String parameter) {
-		return NumberUtils.parseNumber(parameter.replace("?", "").replace("'", ""), Integer.class);
-	}
-
-	private Object getBindableValueForIndex(int index) {
-		return bindingContext.bindableValueForIndex(index);
-	}
-
-	private BsonType bsonTypeForValue(Object value) {
-
-		if (value == null) {
-			return BsonType.NULL;
+		if (evaluator.evaluationRequired() && token.getType().equals(JsonTokenType.UNQUOTED_STRING)) {
+			return BindableValue.from(evaluator.evaluate());
 		}
 
-		Class<?> type = value.getClass();
-
-		if (ClassUtils.isAssignable(String.class, type)) {
-
-			if (((String) value).startsWith("{")) {
-				return BsonType.DOCUMENT;
-			}
-			return BsonType.STRING;
-		}
-		if (ClassUtils.isAssignable(Boolean.class, type)) {
-			return BsonType.BOOLEAN;
-		}
-		if (ClassUtils.isAssignable(Document.class, type)) {
-			return BsonType.DOCUMENT;
-		}
-		if (ClassUtils.isAssignable(Double.class, type)) {
-			return BsonType.DOUBLE;
-		}
-		if (ClassUtils.isAssignable(Long.class, type)) {
-			return BsonType.INT64;
-		}
-		if (ClassUtils.isAssignable(Integer.class, type)) {
-			return BsonType.INT32;
-		}
-		if (ClassUtils.isAssignable(Pattern.class, type)) {
-			return BsonType.REGULAR_EXPRESSION;
-		}
-		if (ClassUtils.isAssignable(Iterable.class, type)) {
-			return BsonType.ARRAY;
-		}
-		if (ClassUtils.isAssignable(Map.class, type)) {
-			return BsonType.DOCUMENT;
+		if (evaluator.isSpelExpression()) {
+			return BindableValue.of(evaluator.mapMatch((match, value) -> TokenValueEvaluator
+					.escapeIfEnclosedInQuotationMarks(evaluator.getTokenValue(), match.start(), match.end(), value)));
 		}
 
-		return BsonType.UNDEFINED;
-	}
-
-	private @Nullable Object evaluateExpression(String expressionString) {
-		return bindingContext.evaluateExpression(expressionString, Collections.emptyMap());
-	}
-
-	private @Nullable Object evaluateExpression(String expressionString, Map<String,Object> variables) {
-		return bindingContext.evaluateExpression(expressionString, variables);
+		String escaped = evaluator.mapMatch((match, value) -> TokenValueEvaluator.escapeBinding(evaluator.getTokenValue(),
+				match.start(), match.end(), value, false));
+		return BindableValue.of(escaped);
 	}
 
 	// Spring Data Customization END
@@ -902,8 +725,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				currentValue = visitUuidExtendedJson();
 				setCurrentBsonType(BsonType.BINARY);
 				return;
-			}
-			else if ("$regex".equals(value) || "$options".equals(value)) {
+			} else if ("$regex".equals(value) || "$options".equals(value)) {
 				currentValue = visitRegularExpressionExtendedJson(value);
 				if (currentValue != null) {
 					setCurrentBsonType(BsonType.REGULAR_EXPRESSION);
@@ -1652,7 +1474,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 	}
 
 	@Override
-	protected Context getContext() {
+	protected @Nullable Context getContext() {
 		return (Context) super.getContext();
 	}
 
@@ -1713,6 +1535,194 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	// Spring Data Customization START
 
+	/**
+	 * Evaluator utility to evaluate a token value from either a token value, a positional or a SpEL parameter expression.
+	 */
+	static class TokenValueEvaluator {
+
+		private final ParameterBindingContext bindingContext;
+
+		private final String tokenValue;
+
+		private final Matcher bySpel;
+
+		private final boolean bySpelMatch;
+
+		private final Matcher byPosition;
+
+		private final boolean byPositionMatch;
+
+		public TokenValueEvaluator(ParameterBindingContext bindingContext, String tokenValue) {
+
+			this.bindingContext = bindingContext;
+
+			this.tokenValue = tokenValue;
+			this.bySpel = EXPRESSION_BINDING_PATTERN.matcher(tokenValue);
+			this.byPosition = PARAMETER_BINDING_PATTERN.matcher(tokenValue);
+
+			this.bySpelMatch = bySpel.find();
+			this.byPositionMatch = byPosition.find();
+		}
+
+		/**
+		 * Return {@literal true} if the token value contains a SpEL expression or positional parameter.
+		 */
+		public boolean evaluationRequired() {
+			return bySpelMatch || byPositionMatch;
+		}
+
+		/**
+		 * Return {@literal true} if the token value binds via a SpEL expression rather than a positional parameter.
+		 */
+		public boolean isSpelExpression() {
+			return bySpelMatch;
+		}
+
+		/**
+		 * Return the original {@link JsonToken#getValue() token value}.
+		 */
+		public String getTokenValue() {
+			return tokenValue;
+		}
+
+		/**
+		 * Evaluate the token value. Returns either the evaluated expression/positional parameter or {@link #getTokenValue()
+		 * token value} if the token value is a literal.
+		 */
+		public @Nullable Object evaluate() {
+			if (bySpelMatch || byPositionMatch) {
+				return doEvaluate(bySpelMatch ? bySpel.group() : byPosition.group());
+			}
+			return tokenValue;
+		}
+
+		/**
+		 * Evaluates binding expression and apply a {@link BiFunction escape function} to post-process the evaluated value.
+		 * This is useful to escape the evaluated value depending on the context of the token (e.g. if it is enclosed in
+		 * quotation marks or not).
+		 *
+		 * @param escapeFunction the escape function to apply.
+		 * @return the resulting String value.
+		 */
+		public String mapMatch(BiFunction<MatchResult, String, String> escapeFunction) {
+
+			if (bySpelMatch || byPositionMatch) {
+				Matcher matcher = bySpelMatch ? bySpel : byPosition;
+				return matcher.replaceAll(it -> {
+					String escaped = escapeFunction.apply(it, nullSafeToString(doEvaluate(it.group())));
+					return Matcher.quoteReplacement(escaped);
+				});
+			}
+
+			return tokenValue;
+		}
+
+		private @Nullable Object doEvaluate(String group) {
+
+			if (bySpelMatch) {
+				return evaluateBindingExpression(group);
+			}
+
+			if (byPositionMatch) {
+				return getBindableValueForIndex(computeParameterIndex(group));
+			}
+
+			throw new IllegalStateException(
+					"Cannot evaluate expression '%s' as it is neither a SpEL expression nor a parameter binding."
+							.formatted(tokenValue));
+		}
+
+		private @Nullable Object evaluateBindingExpression(String binding) {
+
+			String expression = binding.substring(3, binding.length() - 1);
+			String expressionString = binding.substring(1);
+			Matcher matcher = SPEL_PARAMETER_BINDING_PATTERN.matcher(expression);
+			Map<String, Object> variables = new HashMap<>();
+
+			while (matcher.find()) {
+
+				String parameter = matcher.group();
+				Object value = getBindableValueForIndex(computeParameterIndex(parameter));
+				String variableName = "__QVar" + variables.size();
+
+				expressionString = expressionString.replace(parameter, "#" + variableName);
+				variables.put(variableName, parameter.startsWith("'") ? nullSafeToString(value) : value);
+			}
+
+			return evaluateExpression(expressionString, variables);
+		}
+
+		private static int computeParameterIndex(String parameter) {
+			return NumberUtils.parseNumber(parameter.replace("?", "").replace("'", ""), Integer.class);
+		}
+
+		private @Nullable Object getBindableValueForIndex(int index) {
+			return bindingContext.bindableValueForIndex(index);
+		}
+
+		private @Nullable Object evaluateExpression(String expressionString, Map<String, Object> variables) {
+			return bindingContext.evaluateExpression(expressionString, variables);
+		}
+
+		private static String nullSafeToString(@Nullable Object value) {
+
+			if (value instanceof Date date) {
+				return DateTimeFormatter.format(date.getTime());
+			}
+
+			return ObjectUtils.nullSafeToString(value);
+		}
+
+		private static String escapeBinding(String source, int start, int end, String value, boolean regularExpression) {
+
+			if (source.contains(QUOTE_START) || source.contains(QUOTE_END)) {
+				value = value.replace(QUOTE_END, QUOTE_REPLACEMENT_QUOTE_END);
+			}
+
+			return regularExpression ? value : escapeIfEnclosedInQuotationMarks(source, start, end, value);
+		}
+
+		/**
+		 * Escape the given {@literal fragment} if {@code start} and {@code end} is enclosed in quotation marks to retain
+		 * semantic meaning.
+		 */
+		private static String escapeIfEnclosedInQuotationMarks(String source, int start, int end, String fragment) {
+
+			if (start == 0 || end >= source.length()) {
+				return fragment;
+			}
+
+			char quotationMark = source.charAt(start - 1);
+
+			if ((quotationMark != '\'' && quotationMark != '"') || source.charAt(end) != quotationMark) {
+				return fragment;
+			}
+
+			return escapeStringLiteral(fragment, quotationMark);
+		}
+
+		/**
+		 * Escape {@code \} and {@code quotationMark} in given {@code value}.
+		 */
+		private static String escapeStringLiteral(String source, char quotationMark) {
+
+			StringBuilder escaped = new StringBuilder(source.length());
+
+			for (int i = 0; i < source.length(); i++) {
+
+				char c = source.charAt(i);
+
+				if (c == '\\' || c == quotationMark) {
+					escaped.append('\\');
+				}
+
+				escaped.append(c);
+			}
+
+			return escaped.toString();
+		}
+	}
+
 	static class BindableValue {
 
 		private BsonType type;
@@ -1720,6 +1730,30 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		private int index;
 
 		BindableValue() {}
+
+		public static BindableValue of(BsonRegularExpression value) {
+
+			BindableValue bindableValue = new BindableValue();
+			bindableValue.type = BsonType.REGULAR_EXPRESSION;
+			bindableValue.value = value;
+			return bindableValue;
+		}
+
+		public static BindableValue of(String value) {
+
+			BindableValue bindableValue = new BindableValue();
+			bindableValue.type = BsonType.STRING;
+			bindableValue.value = value;
+			return bindableValue;
+		}
+
+		public static BindableValue from(@Nullable Object value) {
+
+			BindableValue bindableValue = new BindableValue();
+			bindableValue.type = getBsonTypeForValue(value);
+			bindableValue.value = value;
+			return bindableValue;
+		}
 
 		BsonType getType() {
 			return type;
@@ -1743,6 +1777,49 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 		void setIndex(int index) {
 			this.index = index;
+		}
+
+		private static BsonType getBsonTypeForValue(@Nullable Object value) {
+
+			if (value == null) {
+				return BsonType.NULL;
+			}
+
+			Class<?> type = value.getClass();
+
+			if (ClassUtils.isAssignable(String.class, type)) {
+
+				if (((String) value).startsWith("{")) {
+					return BsonType.DOCUMENT;
+				}
+				return BsonType.STRING;
+			}
+			if (ClassUtils.isAssignable(Boolean.class, type)) {
+				return BsonType.BOOLEAN;
+			}
+			if (ClassUtils.isAssignable(Document.class, type)) {
+				return BsonType.DOCUMENT;
+			}
+			if (ClassUtils.isAssignable(Double.class, type)) {
+				return BsonType.DOUBLE;
+			}
+			if (ClassUtils.isAssignable(Long.class, type)) {
+				return BsonType.INT64;
+			}
+			if (ClassUtils.isAssignable(Integer.class, type)) {
+				return BsonType.INT32;
+			}
+			if (ClassUtils.isAssignable(Pattern.class, type)) {
+				return BsonType.REGULAR_EXPRESSION;
+			}
+			if (ClassUtils.isAssignable(Iterable.class, type)) {
+				return BsonType.ARRAY;
+			}
+			if (ClassUtils.isAssignable(Map.class, type)) {
+				return BsonType.DOCUMENT;
+			}
+
+			return BsonType.UNDEFINED;
 		}
 	}
 
