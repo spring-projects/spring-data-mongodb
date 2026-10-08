@@ -126,6 +126,7 @@ import com.mongodb.DBRef;
  * @author Roman Puchkovskiy
  * @author Heesu Jung
  * @author Julia Lee
+ * @author dragonfsky
  */
 @ExtendWith(MockitoExtension.class)
 class MappingMongoConverterUnitTests {
@@ -1804,6 +1805,38 @@ class MappingMongoConverterUnitTests {
 
 		RootForClassWithExplicitlyRenamedIdField sink = converter.read(RootForClassWithExplicitlyRenamedIdField.class,
 				source);
+
+		assertThat(sink.id).isEqualTo("rootId");
+		assertThat(sink.nested).isNotNull();
+		assertThat(sink.nested.id).isEqualTo("nestedId");
+	}
+
+	@Test // GH-3351
+	void writeShouldPreserveImplicitIdFieldNameForNestedTypeWhenRestrictedToDocumentTypes() {
+
+		mappingContext.setAutoIdFieldMappingOnlyForDocumentTypes(true);
+
+		DocumentWithNestedImplicitIdField source = new DocumentWithNestedImplicitIdField();
+		source.id = "rootId";
+		source.nested = new ClassWithNamedIdField();
+		source.nested.id = "nestedId";
+
+		org.bson.Document sink = new org.bson.Document();
+		converter.write(source, sink);
+
+		assertThat(sink.get("_id")).isEqualTo("rootId");
+		assertThat(sink.get("nested")).isEqualTo(new org.bson.Document().append("id", "nestedId"));
+	}
+
+	@Test // GH-3351
+	void readShouldPreserveImplicitIdFieldNameForNestedTypeWhenRestrictedToDocumentTypes() {
+
+		mappingContext.setAutoIdFieldMappingOnlyForDocumentTypes(true);
+
+		org.bson.Document source = new org.bson.Document().append("_id", "rootId").append("nested",
+				new org.bson.Document("id", "nestedId"));
+
+		DocumentWithNestedImplicitIdField sink = converter.read(DocumentWithNestedImplicitIdField.class, source);
 
 		assertThat(sink.id).isEqualTo("rootId");
 		assertThat(sink.nested).isNotNull();
@@ -4107,6 +4140,13 @@ class MappingMongoConverterUnitTests {
 	}
 
 	static class RootForClassWithNamedIdField {
+
+		String id;
+		ClassWithNamedIdField nested;
+	}
+
+	@Document
+	static class DocumentWithNestedImplicitIdField {
 
 		String id;
 		ClassWithNamedIdField nested;

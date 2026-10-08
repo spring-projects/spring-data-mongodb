@@ -67,6 +67,7 @@ import com.mongodb.DBRef;
  * @author Pavel Vodrazka
  * @author David Julia
  * @author Divya Srivastava
+ * @author dragonfsky
  */
 @ExtendWith(MockitoExtension.class)
 class UpdateMapperUnitTests {
@@ -627,6 +628,31 @@ class UpdateMapperUnitTests {
 
 		assertThat(mappedUpdate).doesNotContainKey("$addToSet.nestedDocs.$each.[0]._class")
 				.doesNotContainKey("$addToSet.nestedDocs.$each.[1]._class");
+	}
+
+	@Test // GH-3351
+	void mappingShouldPreserveImplicitIdFieldNameForNestedTypeWhenRestrictedToDocumentTypes() {
+
+		context.setAutoIdFieldMappingOnlyForDocumentTypes(true);
+
+		Update update = new Update().set("nested.id", "nested-1");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithNestedImplicitIdField.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("nested.id", "nested-1")));
+	}
+
+	@Test // GH-3351
+	void mappingNestedValueShouldPreserveImplicitIdFieldNameWhenRestrictedToDocumentTypes() {
+
+		context.setAutoIdFieldMappingOnlyForDocumentTypes(true);
+
+		Update update = new Update().set("nested", new NestedTypeWithImplicitId("nested-1"));
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithNestedImplicitIdField.class));
+
+		assertThat(mappedUpdate).containsEntry("$set.nested.id", "nested-1");
+		assertThat(mappedUpdate).doesNotContainKey("$set.nested._id");
 	}
 
 	@Test // DATAMONGO-1210
@@ -1556,6 +1582,22 @@ class UpdateMapperUnitTests {
 
 	static class DocumentWithNestedCollection {
 		List<NestedDocument> nestedDocs;
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document
+	static class DocumentWithNestedImplicitIdField {
+
+		String id;
+		NestedTypeWithImplicitId nested;
+	}
+
+	static class NestedTypeWithImplicitId {
+
+		String id;
+
+		NestedTypeWithImplicitId(String id) {
+			this.id = id;
+		}
 	}
 
 	static class NestedDocument {
