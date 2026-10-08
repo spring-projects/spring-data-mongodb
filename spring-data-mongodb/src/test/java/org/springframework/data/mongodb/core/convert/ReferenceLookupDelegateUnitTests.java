@@ -19,7 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.Map;
 
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +33,6 @@ import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEnti
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.expression.EvaluationContext;
 
 /**
  * Unit tests for {@link ReferenceLookupDelegate}.
@@ -43,7 +44,6 @@ class ReferenceLookupDelegateUnitTests {
 
 	@Mock MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	@Mock SpELContext spELContext;
-	@Mock EvaluationContext evaluationContext;
 	@Mock MongoEntityReader entityReader;
 
 	private ReferenceLookupDelegate lookupDelegate;
@@ -94,4 +94,28 @@ class ReferenceLookupDelegateUnitTests {
 		lookupDelegate.readReference(property, Collections.emptyMap(), lookupFunction, entityReader);
 		verify(lookupFunction, never()).apply(any(), any());
 	}
+
+	@Test // GH-5065
+	void emptyMapWithDocumentReferenceAnnotationShouldDeserializeToAnEmptyMap() {
+		DocumentReference documentReference = mock(DocumentReference.class);
+		when(documentReference.lookup()).thenReturn("{ '_id' : ?#{#target} }");
+		when(documentReference.sort()).thenReturn("");
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		when(property.isMap()).thenReturn(true);
+		when(property.isDocumentReference()).thenReturn(true);
+		when(property.getDocumentReference()).thenReturn(documentReference);
+		when(property.isCollectionLike()).thenReturn(false);
+		DocumentReferenceSource source = mock(DocumentReferenceSource.class);
+		when(source.getTargetSource()).thenReturn(Document.parse("{}"));
+
+		// Placeholder mock.  It should never get called.
+		ReferenceLookupDelegate.LookupFunction lookupFunction = mock(ReferenceLookupDelegate.LookupFunction.class);
+
+		Object target = lookupDelegate.readReference(property, source, lookupFunction, entityReader);
+
+		assertThat(target)
+				.isNotNull()
+				.isInstanceOf(Map.class);
+	}
+
 }
