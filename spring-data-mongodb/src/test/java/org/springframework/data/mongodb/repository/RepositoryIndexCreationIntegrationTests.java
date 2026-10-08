@@ -84,7 +84,7 @@ public class RepositoryIndexCreationIntegrationTests {
 	private static void assertHasIndexForField(List<IndexInfo> indexInfo, String... fields) {
 
 		for (IndexInfo info : indexInfo) {
-			if (info.isIndexForFields(Arrays.asList(fields))) {
+			if (info.containsAllFields(Arrays.asList(fields))) {
 				return;
 			}
 		}
