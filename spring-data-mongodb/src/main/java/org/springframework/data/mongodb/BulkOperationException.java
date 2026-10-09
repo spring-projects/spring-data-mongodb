@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
+import java.io.Serial;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +42,7 @@ import com.mongodb.client.model.bulk.ClientBulkWriteResult;
  */
 public class BulkOperationException extends DataAccessException {
 
+	@Serial
 	private static final long serialVersionUID = 73929601661154421L;
 
 	private final Lazy<List<BulkWriteError>> errors;

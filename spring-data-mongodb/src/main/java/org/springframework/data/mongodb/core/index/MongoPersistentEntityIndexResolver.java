@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.io.Serial;
 import java.lang.annotation.Annotation;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -1001,6 +1002,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 */
 	public static class CyclicPropertyReferenceException extends RuntimeException {
 
+		@Serial
 		private static final long serialVersionUID = -3762979307658772277L;
 
 		private final String propertyName;
