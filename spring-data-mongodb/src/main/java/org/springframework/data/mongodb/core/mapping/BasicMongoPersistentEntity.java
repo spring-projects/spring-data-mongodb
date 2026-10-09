@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.expression.ValueEvaluationContext;
@@ -96,13 +97,24 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			this.collection = StringUtils.hasText(document.collection()) ? document.collection() : fallback;
 			this.language = StringUtils.hasText(document.language()) ? document.language() : "";
 			this.expression = detectExpression(document.collection());
-			this.collation = document.collation();
-			this.collationExpression = detectExpression(document.collation());
 		} else {
 
 			this.collection = fallback;
 			this.language = "";
 			this.expression = null;
+		}
+
+		// Pick up the standalone @Collation annotation independently of @Document. @Document.collation
+		// remains supported because @Document is meta-annotated with @Collation and Document#collation
+		// is declared as @AliasFor(annotation = Collation.class, attribute = "value"), so the merged
+		// lookup returns the same value in either case.
+		org.springframework.data.mongodb.core.annotation.Collation collationAnnotation = AnnotatedElementUtils
+				.findMergedAnnotation(rawType, org.springframework.data.mongodb.core.annotation.Collation.class);
+
+		if (collationAnnotation != null && StringUtils.hasText(collationAnnotation.value())) {
+			this.collation = collationAnnotation.value();
+			this.collationExpression = detectExpression(collationAnnotation.value());
+		} else {
 			this.collation = null;
 			this.collationExpression = null;
 		}

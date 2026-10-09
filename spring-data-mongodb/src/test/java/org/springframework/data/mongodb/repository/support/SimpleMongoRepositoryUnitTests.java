@@ -145,6 +145,105 @@ public class SimpleMongoRepositoryUnitTests {
 		assertThat(query.getValue().getCollation()).contains(collation);
 	}
 
+	@ParameterizedTest // GH-4535
+	@MethodSource("findCallsThatAcceptDefaultCollation")
+	void shouldAddDefaultCollationToFindMethods(
+			Consumer<SimpleMongoRepository<Object, Object>> findCall) {
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+
+		findCall.accept(repository);
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).find(query.capture(), any(), any());
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // GH-4535
+	void shouldAddDefaultCollationToFindById() {
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+		when(entityInformation.getIdAttribute()).thenReturn("id");
+
+		repository.findById("42");
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).findOne(query.capture(), any(), any());
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // GH-4535
+	void shouldAddDefaultCollationToExistsById() {
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+		when(entityInformation.getIdAttribute()).thenReturn("id");
+
+		repository.existsById("42");
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).exists(query.capture(), any(), any());
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // GH-4535
+	void shouldAddDefaultCollationToCount() {
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+		when(entityInformation.getCollectionName()).thenReturn("documents");
+
+		repository.count();
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).count(query.capture(), any(String.class));
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // GH-4535
+	void shouldAddDefaultCollationToDeleteById() {
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+		when(entityInformation.getIdAttribute()).thenReturn("id");
+		when(entityInformation.getJavaType()).thenReturn(Object.class);
+		when(entityInformation.getCollectionName()).thenReturn("documents");
+
+		repository.deleteById("42");
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).remove(query.capture(), any(Class.class), any(String.class));
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // GH-4535
+	void shouldAddDefaultCollationToDeleteAll() {
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+		when(entityInformation.getCollectionName()).thenReturn("documents");
+
+		repository.deleteAll();
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).remove(query.capture(), any(String.class));
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
 	@ParameterizedTest // GH-2971
 	@MethodSource("findAllCalls")
 	void shouldAddReadPreferenceToFindAllMethods(Consumer<SimpleMongoRepository<Object, Object>> findCall)
@@ -217,6 +316,16 @@ public class SimpleMongoRepositoryUnitTests {
 				Arguments.of(findAllWithExample), //
 				Arguments.of(findAllWithExampleAndSort), //
 				Arguments.of(findAllWithExampleAndPage));
+	}
+
+	private static Stream<Arguments> findCallsThatAcceptDefaultCollation() {
+
+		Consumer<SimpleMongoRepository<Object, Object>> findAll = SimpleMongoRepository::findAll;
+		Consumer<SimpleMongoRepository<Object, Object>> findAllWithSort = repo -> repo.findAll(Sort.by("age"));
+		Consumer<SimpleMongoRepository<Object, Object>> findAllWithPage = repo -> repo
+				.findAll(PageRequest.of(1, 20, Sort.by("age")));
+
+		return Stream.of(Arguments.of(findAll), Arguments.of(findAllWithSort), Arguments.of(findAllWithPage));
 	}
 
 	static class TestDummy {

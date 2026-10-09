@@ -130,6 +130,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(id, "The given id must not be null");
 
 		Query query = getIdQuery(id);
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.findOne(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
@@ -142,6 +143,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		return Mono.from(publisher).flatMap(id -> {
 			Query query = getIdQuery(id);
+			applyDefaultCollation(query);
 			readPreference.ifPresent(query::withReadPreference);
 			return mongoOperations.findOne(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 		});
@@ -153,6 +155,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(id, "The given id must not be null");
 
 		Query query = getIdQuery(id);
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.exists(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
@@ -165,6 +168,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		return Mono.from(publisher).flatMap(id -> {
 			Query query = getIdQuery(id);
+			applyDefaultCollation(query);
 			readPreference.ifPresent(query::withReadPreference);
 			return mongoOperations.exists(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 		});
@@ -191,6 +195,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Optional<ReadPreference> readPreference = getReadPreference();
 		return Flux.from(ids).buffer().flatMapSequential(listOfIds -> {
 			Query query = getIdQuery(listOfIds);
+			applyDefaultCollation(query);
 			readPreference.ifPresent(query::withReadPreference);
 			return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 		});
@@ -200,6 +205,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	public Mono<Long> count() {
 
 		Query query = new Query();
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.count(query, entityInformation.getCollectionName());
 	}
@@ -217,6 +223,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(id, "The given id must not be null");
 
 		Query query = getIdQuery(id);
+		applyDefaultCollation(query);
 		readPreference.ifPresent(query::withReadPreference);
 		return mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
 	}
@@ -230,6 +237,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		return Mono.from(publisher).flatMap(id -> {
 			Query query = getIdQuery(id);
+			applyDefaultCollation(query);
 			readPreference.ifPresent(query::withReadPreference);
 			return mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 		}).then();
@@ -272,6 +280,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	private Mono<Void> deleteAllById(Iterable<? extends ID> ids, Optional<ReadPreference> readPreference) {
 
 		Query query = getIdQuery(ids);
+		applyDefaultCollation(query);
 		readPreference.ifPresent(query::withReadPreference);
 
 		return mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
@@ -302,6 +311,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Void> deleteAll() {
 		Query query = new Query();
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.remove(query, entityInformation.getCollectionName()).then(Mono.empty());
 	}
@@ -444,8 +454,16 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 	private Flux<T> findAll(Query query) {
 
+		applyDefaultCollation(query);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
+	}
+
+	private void applyDefaultCollation(Query query) {
+
+		if (entityInformation.hasCollation() && !query.getCollation().isPresent()) {
+			query.collation(entityInformation.getCollation());
+		}
 	}
 
 	private Optional<ReadPreference> getReadPreference() {

@@ -150,6 +150,61 @@ class SimpleReactiveMongoRepositoryUnitTests {
 		assertThat(query.getValue().getCollation()).contains(collation);
 	}
 
+	@Test // GH-4535
+	void shouldAddDefaultCollationToFindById() {
+
+		when(mongoOperations.findOne(any(), any(), any())).thenReturn(mono);
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+		when(entityInformation.getIdAttribute()).thenReturn("id");
+
+		repository.findById("42").subscribe();
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).findOne(query.capture(), any(), any());
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // GH-4535
+	void shouldAddDefaultCollationToCount() {
+
+		when(mongoOperations.count(any(), anyString())).thenReturn(mono);
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+		when(entityInformation.getCollectionName()).thenReturn("testdummy");
+
+		repository.count().subscribe();
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).count(query.capture(), anyString());
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // GH-4535
+	void shouldAddDefaultCollationToDeleteAll() {
+
+		when(mongoOperations.remove(any(Query.class), anyString())).thenReturn(mono);
+		when(mono.then(any(Mono.class))).thenReturn(Mono.empty());
+
+		Collation collation = Collation.of("en_US");
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+		when(entityInformation.getCollectionName()).thenReturn("testdummy");
+
+		repository.deleteAll().subscribe();
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).remove(query.capture(), anyString());
+
+		assertThat(query.getValue().getCollation()).contains(collation);
+	}
+
 	@ParameterizedTest // GH-2971
 	@MethodSource("findAllCalls")
 	void shouldAddReadPreferenceToFindAllMethods(
