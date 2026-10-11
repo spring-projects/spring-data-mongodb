@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.bson.Document;
@@ -47,6 +49,7 @@ import com.mongodb.client.model.bulk.ClientBulkWriteResult;
  * Internal API wrapping a {@link MongoTemplate} to encapsulate {@link Bulk} handling.
  *
  * @author Christoph Strobl
+ * @author Sangyeop Jeong
  * @since 5.1
  */
 class BulkWriter extends BulkWriterSupport {
@@ -82,12 +85,7 @@ class BulkWriter extends BulkWriterSupport {
 					collection -> collection.bulkWrite(collector.getWriteModels(), new com.mongodb.client.model.BulkWriteOptions()
 							.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))));
 
-			collector.getAfterSaveCallables().forEach(callable -> {
-				template
-						.maybeEmitEvent(new AfterSaveEvent<>(callable.source(), callable.document(), callable.collectionName()));
-				template.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName());
-			});
-			return BulkWriteResult.from(bulkWriteResult);
+			return BulkWriteResult.from(bulkWriteResult, completeSaves(collector));
 		} catch (MongoBulkWriteException e) {
 			DataAccessException dataAccessException = template.getExceptionTranslator().translateExceptionIfPossible(e);
 			if (dataAccessException != null) {
@@ -110,12 +108,7 @@ class BulkWriter extends BulkWriterSupport {
 					.doWithClient(client -> client.bulkWrite(collector.getWriteModels(), ClientBulkWriteOptions
 							.clientBulkWriteOptions().ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))));
 
-			collector.getAfterSaveCallables().forEach(callable -> {
-				template
-						.maybeEmitEvent(new AfterSaveEvent<>(callable.source(), callable.document(), callable.collectionName()));
-				template.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName());
-			});
-			return BulkWriteResult.from(clientBulkWriteResult);
+			return BulkWriteResult.from(clientBulkWriteResult, completeSaves(collector));
 		} catch (MongoBulkWriteException e) {
 			DataAccessException dataAccessException = template.getExceptionTranslator().translateExceptionIfPossible(e);
 			if (dataAccessException != null) {
@@ -136,7 +129,11 @@ class BulkWriter extends BulkWriterSupport {
 
 				SourceAwareDocument<Object> sourceAwareDocument = template.prepareObjectForSave(namespace.getCollectionName(),
 						insert.value());
-				collector.addInsert(namespace, sourceAwareDocument.document(), sourceAwareDocument);
+				MappedDocument document = queryOperations
+						.createInsertContext(MappedDocument.of(sourceAwareDocument.document()))
+						.prepareId(sourceAwareDocument.source().getClass());
+
+				collector.addInsert(namespace, document.getDocument(), sourceAwareDocument);
 			} else if (bulkOp instanceof Update update) {
 
 				boolean multi = !(bulkOp instanceof UpdateFirst);
@@ -172,6 +169,36 @@ class BulkWriter extends BulkWriterSupport {
 						sourceAwareDocument);
 			}
 		}
+	}
+
+	private List<Object> completeSaves(WriteModelCollector collector) {
+
+		List<SourceAwareDocument<Object>> written = collector.getAfterSaveCallables();
+		List<Object> savedEntities = new ArrayList<>(written.size());
+
+		for (SourceAwareDocument<Object> entity : written) {
+			savedEntities.add(completeSave(entity));
+		}
+
+		return savedEntities;
+	}
+
+	/**
+	 * Completes the save lifecycle after an entity has been written through an {@literal insert} or {@literal replace}
+	 * operation by propagating a generated identifier back to the entity and emitting the after save event and
+	 * callbacks.
+	 *
+	 * @param written the entity along with the document handed to the driver, carrying an identifier generated during
+	 *          the write.
+	 * @return the entity as returned by the after save callbacks.
+	 */
+	private Object completeSave(SourceAwareDocument<Object> written) {
+
+		Object entity = populateIdIfNecessary(written.source(), written.document(),
+				template.getConverter().getConversionService());
+
+		template.maybeEmitEvent(new AfterSaveEvent<>(entity, written.document(), written.collectionName()));
+		return template.maybeCallAfterSave(entity, written.document(), written.collectionName());
 	}
 
 }
