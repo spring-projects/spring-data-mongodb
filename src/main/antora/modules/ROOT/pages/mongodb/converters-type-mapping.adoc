@@ -32,6 +32,58 @@ mongoTemplate.save(sample);
 
 Spring Data MongoDB stores the type information as the last field for the actual root class as well as for the nested type (because it is complex and a subtype of `Contact`).So, if you now use `mongoTemplate.findAll(Object.class, "sample")`, you can find out that the document stored is a `Sample` instance.You can also find out that the value property is actually a `Person`.
 
+[[mongo-template.type-mapping.enums]]
+=== Enum Values Declared as Interfaces
+
+By default, enum values are stored as strings containing the constant name.
+This representation can be read into a concrete enum type, but it does not identify the enum when the property is declared as an interface implemented by multiple enums.
+
+To preserve the concrete enum type for interface properties, enable `MappingMongoConverter.setPreserveEnumTypeInformation(true)` on your converter:
+
+[source,java]
+----
+converter.setPreserveEnumTypeInformation(true);
+----
+
+For example, given the following types:
+
+[source,java]
+----
+interface EventType {
+}
+
+enum OrderEventType implements EventType {
+  CREATED
+}
+
+class Event {
+  EventType eventType;
+}
+----
+
+An `eventType` value of `OrderEventType.CREATED` is written as:
+
+[source,json]
+----
+{
+  "eventType": {
+    "value": "CREATED",
+    "_class": "com.acme.OrderEventType"
+  }
+}
+----
+
+The converter uses the configured `MongoTypeMapper` to write and resolve the enum type.
+Custom type keys and aliases configured through a `TypeInformationMapper` are supported.
+The type mapper must write resolvable type information and must not use `value` as its type key.
+The same representation applies to elements and values declared as interfaces in collections, arrays, and maps, and to mapped queries and updates.
+Concrete enum properties continue to use strings.
+Custom conversions and explicit field target types take precedence.
+
+NOTE: Enabling this option changes the stored representation of affected properties.
+Existing string values cannot identify an enum implementation and require an application-specific reading converter or data migration.
+Queries must also account for existing data during a migration.
+
 [[customizing-type-mapping]]
 === Customizing Type Mapping
 

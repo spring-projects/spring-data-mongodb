@@ -93,6 +93,7 @@ import com.mongodb.DBRef;
  * @author Divya Srivastava
  * @author Gyungrai Wang
  * @author Ross Lawley
+ * @author Priyanshu Gagiya
  */
 public class QueryMapper {
 
@@ -1175,6 +1176,7 @@ public class QueryMapper {
 		private final MongoPersistentProperty property;
 		private final @Nullable PersistentPropertyPath<MongoPersistentProperty> path;
 		private final @Nullable Association<MongoPersistentProperty> association;
+		private boolean unresolvedContainerPath;
 
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
@@ -1297,6 +1299,13 @@ public class QueryMapper {
 				return getProperty().getFieldName();
 			}
 
+			if (unresolvedContainerPath && path != null && !isAssociation()) {
+
+				KeyMapper keyMapper = new KeyMapper(name, mappingContext);
+				String mappedPath = path.toDotPath(keyMapper::mapPropertyName);
+				return keyMapper.appendRemainingPath(mappedPath);
+			}
+
 			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
 		}
 
@@ -1323,6 +1332,37 @@ public class QueryMapper {
 			String rawPath = resolvePath(pathExpression);
 
 			PropertyPath path = forName(rawPath);
+			String parentPath = pathExpression;
+			while (path == null && parentPath.contains(".")) {
+
+				// Container keys and indexes are not properties, but enum conversion needs their declared value type.
+				parentPath = parentPath.substring(0, parentPath.lastIndexOf('.'));
+				PropertyPath parent = forName(resolvePath(parentPath));
+				if (parent == null) {
+					continue;
+				}
+
+				PersistentPropertyPath<MongoPersistentProperty> candidate = tryToResolvePersistentPropertyPath(parent);
+				if (candidate == null || candidate.getLeafProperty().hasExplicitWriteTarget()) {
+					continue;
+				}
+
+				TypeInformation<?> type = candidate.getLeafProperty().getTypeInformation();
+				boolean container = type.isMap() || type.isCollectionLike();
+				while (type.isMap() || type.isCollectionLike()) {
+					TypeInformation<?> actualType = type.getActualType();
+					if (actualType == null || actualType.equals(type)) {
+						break;
+					}
+					type = actualType;
+				}
+
+				if (container && type.getType().isInterface()) {
+					path = parent;
+					unresolvedContainerPath = true;
+				}
+			}
+
 			if (path == null || isPathToJavaLangClassProperty(path)) {
 				return null;
 			}
@@ -1503,9 +1543,13 @@ public class QueryMapper {
 				return super.getTypeHint();
 			}
 
+			if (property.hasExplicitWriteTarget()) {
+				return TypeInformation.of(property.getFieldType());
+			}
+
 			if (property.getActualType().isInterface()
 					|| java.lang.reflect.Modifier.isAbstract(property.getActualType().getModifiers())) {
-				return TypeInformation.OBJECT;
+				return property.getTypeInformation().getRequiredActualType();
 			}
 
 			return NESTED_DOCUMENT;
@@ -1567,6 +1611,16 @@ public class QueryMapper {
 
 				currentIndex++;
 				return mappedName.toString();
+			}
+
+			String appendRemainingPath(String mappedPath) {
+
+				if (currentIndex >= pathParts.size()) {
+					return mappedPath;
+				}
+
+				return mappedPath + "."
+						+ StringUtils.collectionToDelimitedString(pathParts.subList(currentIndex, pathParts.size()), ".");
 			}
 
 			static boolean isPositionalParameter(String partial) {

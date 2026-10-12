@@ -38,10 +38,14 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
 
 import com.mongodb.client.MongoClient;
@@ -52,6 +56,7 @@ import com.mongodb.client.MongoDatabase;
  * Integration tests for {@link MappingMongoConverter}.
  *
  * @author Christoph Strobl
+ * @author Priyanshu Gagiya
  */
 
 public class MappingMongoConverterTests {
@@ -84,6 +89,37 @@ public class MappingMongoConverterTests {
 
 		converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		converter.afterPropertiesSet();
+	}
+
+	@Test // GH-2786
+	void savesQueriesAndUpdatesPolymorphicEnums() {
+
+		converter.setPreserveEnumTypeInformation(true);
+		MongoTemplate template = new MongoTemplate(factory, converter);
+		WithPolymorphicEnums source = new WithPolymorphicEnums();
+		source.id = "enum-event";
+		source.event = OrderEvent.CREATED;
+		source.events = List.of(OrderEvent.CREATED);
+		source.values = Map.of("current", OrderEvent.CREATED);
+		template.insert(source, "samples");
+
+		Query orderEvents = Query.query(Criteria.where("event").is(OrderEvent.CREATED));
+		WithPolymorphicEnums found = template.findOne(orderEvents, WithPolymorphicEnums.class, "samples");
+		assertThat(found).isNotNull();
+		assertThat(found.event).isSameAs(OrderEvent.CREATED);
+
+		Update update = new Update().set("event", CustomerEvent.CREATED).set("values.current", CustomerEvent.CREATED)
+				.push("events").each(CustomerEvent.CREATED);
+		assertThat(template.updateFirst(orderEvents, update, WithPolymorphicEnums.class, "samples").getModifiedCount())
+				.isEqualTo(1);
+
+		Query customerEvents = Query.query(Criteria.where("event").is(CustomerEvent.CREATED).and("values.current")
+				.is(CustomerEvent.CREATED).and("events").in(CustomerEvent.CREATED));
+		WithPolymorphicEnums updated = template.findOne(customerEvents, WithPolymorphicEnums.class, "samples");
+		assertThat(updated).isNotNull();
+		assertThat(updated.event).isSameAs(CustomerEvent.CREATED);
+		assertThat(updated.events).containsExactly(OrderEvent.CREATED, CustomerEvent.CREATED);
+		assertThat(updated.values).containsEntry("current", CustomerEvent.CREATED);
 	}
 
 	@Test // DATAMONGO-2004
@@ -477,5 +513,22 @@ public class MappingMongoConverterTests {
 			return "MappingMongoConverterTests.WithJavaTimeTypes(id=" + this.getId() + ", localDate=" + this.getLocalDate()
 					+ ", localTime=" + this.getLocalTime() + ", localDateTime=" + this.getLocalDateTime() + ")";
 		}
+	}
+
+	interface EventType {}
+
+	enum OrderEvent implements EventType {
+		CREATED
+	}
+
+	enum CustomerEvent implements EventType {
+		CREATED
+	}
+
+	static class WithPolymorphicEnums {
+		String id;
+		EventType event;
+		List<EventType> events;
+		Map<String, EventType> values;
 	}
 }

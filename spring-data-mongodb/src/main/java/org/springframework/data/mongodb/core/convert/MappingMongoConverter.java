@@ -124,6 +124,7 @@ import com.mongodb.DBRef;
  * @author Heesu Jung
  * @author Divya Srivastava
  * @author Julia Lee
+ * @author Priyanshu Gagiya
  */
 public class MappingMongoConverter extends AbstractMongoConverter
 		implements ApplicationContextAware, EnvironmentCapable {
@@ -165,6 +166,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	protected @Nullable CodecRegistryProvider codecRegistryProvider;
 
 	private MongoTypeMapper defaultTypeMapper;
+	private boolean preserveEnumTypeInformation;
 	private SpELContext spELContext;
 	private @Nullable EntityCallbacks entityCallbacks;
 	private final SpelExpressionParser expressionParser = new SpelExpressionParser();
@@ -244,6 +246,19 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	 */
 	public void setTypeMapper(@Nullable MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper;
+	}
+
+	/**
+	 * Configure whether enum values declared as interfaces are written as documents containing their name and type
+	 * information. Defaults to {@literal false}, storing enum names as strings. Concrete enum properties and custom
+	 * conversions are not affected. Requires a {@link MongoTypeMapper} that writes resolvable type information using a
+	 * key other than {@code value}.
+	 *
+	 * @param preserveEnumTypeInformation whether to preserve the type of enum values declared as interfaces.
+	 * @since 5.2
+	 */
+	public void setPreserveEnumTypeInformation(boolean preserveEnumTypeInformation) {
+		this.preserveEnumTypeInformation = preserveEnumTypeInformation;
 	}
 
 	@Override
@@ -485,6 +500,21 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 		if (conversions.hasCustomReadTarget(bson.getClass(), rawType)) {
 			return doConvert(bson, rawType, typeHint.getType());
+		}
+
+		if (rawType.isEnum()) {
+
+			TypeInformation<?> storedType = getTypeMapper().readType(document);
+			if (storedType != null && !rawType.equals(storedType.getType())) {
+				throw new MappingException("Stored enum type is incompatible with " + rawType.getName());
+			}
+
+			Object value = document.get("value");
+			if (!(value instanceof String)) {
+				throw new MappingException("Expected a string enum value in " + document);
+			}
+
+			return (S) getPotentiallyConvertedSimpleRead(value, rawType);
 		}
 
 		if (Document.class.isAssignableFrom(rawType)) {
@@ -890,7 +920,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		if (Map.class.isAssignableFrom(entityType)) {
-			writeMapInternal((Map<Object, Object>) obj, bson, TypeInformation.MAP);
+			writeMapInternal((Map<Object, Object>) obj, bson,
+					typeHint != null && typeHint.isMap() ? typeHint : TypeInformation.MAP);
 			return;
 		}
 
@@ -1130,7 +1161,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		Assert.notNull(property, "PersistentProperty must not be null");
 
 		if (!property.isAssociation()) {
-			return writeMapInternal(map, new Document(), property.getTypeInformation());
+			return writeMapInternal(map, new Document(),
+					property.hasExplicitWriteTarget() ? new FieldTypeInformation<>(property) : property.getTypeInformation());
 		}
 
 		Document document = new Document();
@@ -1183,7 +1215,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 			if (elementType == null || conversions.isSimpleType(elementType)) {
 				collection.add(getPotentiallyConvertedSimpleWrite(element,
-						componentType != null ? componentType.getType() : Object.class));
+						componentType != null ? componentType.getType() : Object.class, componentType));
 			} else if (element instanceof Collection || elementType.isArray()) {
 
 				Collection<?> objects = BsonUtils.asCollection(element);
@@ -1216,7 +1248,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 				String simpleKey = prepareMapKey(key);
 				if (val == null || conversions.isSimpleType(val.getClass())) {
-					writeSimpleInternal(val, bson, simpleKey);
+					BsonUtils.addToMap(bson, simpleKey,
+							getPotentiallyConvertedSimpleWrite(val, Object.class, propertyType.getMapValueType()));
 				} else if (val instanceof Collection || val.getClass().isArray()) {
 					BsonUtils.addToMap(bson, simpleKey,
 							writeCollectionInternal(BsonUtils.asCollection(val), propertyType.getMapValueType(), new ArrayList<>()));
@@ -1318,17 +1351,6 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 	}
 
-	/**
-	 * Writes the given simple value to the given {@link Document}. Will store enum names for enum values.
-	 *
-	 * @param value can be {@literal null}.
-	 * @param bson must not be {@literal null}.
-	 * @param key must not be {@literal null}.
-	 */
-	private void writeSimpleInternal(@Nullable Object value, Bson bson, String key) {
-		BsonUtils.addToMap(bson, key, getPotentiallyConvertedSimpleWrite(value, Object.class));
-	}
-
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property,
 			PersistentPropertyAccessor<?> persistentPropertyAccessor) {
 
@@ -1339,8 +1361,10 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			return;
 		}
 
-		accessor.put(property, getPotentiallyConvertedSimpleWrite(value,
-				property.hasExplicitWriteTarget() ? property.getFieldType() : Object.class));
+		accessor.put(property,
+				getPotentiallyConvertedSimpleWrite(value,
+						property.hasExplicitWriteTarget() ? property.getFieldType() : Object.class,
+						property.hasExplicitWriteTarget() ? null : property.getTypeInformation()));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1368,8 +1392,13 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	 * Returns the converted value if so. If not, we perform special enum handling or simply return the value as is.
 	 */
 	@Contract("null, _-> null")
-	@SuppressWarnings("NullAway")
 	private @Nullable Object getPotentiallyConvertedSimpleWrite(@Nullable Object value, @Nullable Class<?> typeHint) {
+		return getPotentiallyConvertedSimpleWrite(value, typeHint, null);
+	}
+
+	@SuppressWarnings("NullAway")
+	private @Nullable Object getPotentiallyConvertedSimpleWrite(@Nullable Object value, @Nullable Class<?> typeHint,
+			@Nullable TypeInformation<?> declaredType) {
 
 		if (value == null) {
 			return null;
@@ -1387,6 +1416,37 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 		if (customTarget.isPresent()) {
 			return doConvert(value, customTarget.get());
+		}
+
+		if (preserveEnumTypeInformation && value instanceof Enum<?>) {
+
+			// Query and update values may retain container metadata at the enum leaf.
+			while (declaredType != null && (declaredType.isCollectionLike() || declaredType.isMap())) {
+				TypeInformation<?> actualType = declaredType.getActualType();
+				if (actualType == null || actualType.equals(declaredType)) {
+					break;
+				}
+				declaredType = actualType;
+			}
+		}
+
+		if (preserveEnumTypeInformation && value instanceof Enum<?> enumValue && declaredType != null
+				&& declaredType.getType().isInterface() && declaredType.getType().isInstance(value)) {
+
+			if (getTypeMapper().isTypeKey("value")) {
+				throw new MappingException("Enum type information must not use the key 'value'");
+			}
+
+			Document document = new Document("value", enumValue.name());
+			getTypeMapper().writeType(enumValue.getDeclaringClass(), document);
+
+			TypeInformation<?> storedType = getTypeMapper().readType(document);
+			if (storedType == null || !storedType.getType().equals(enumValue.getDeclaringClass())
+					|| !enumValue.name().equals(document.get("value"))) {
+				throw new MappingException("Cannot preserve enum type information with the configured MongoTypeMapper");
+			}
+
+			return document;
 		}
 
 		if (ObjectUtils.isArray(value)) {
@@ -1599,7 +1659,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				conversionTargetType = Object.class;
 			}
 
-			return getPotentiallyConvertedSimpleWrite(obj, conversionTargetType);
+			return getPotentiallyConvertedSimpleWrite(obj, conversionTargetType, typeInformation);
 		}
 
 		if (obj instanceof List<?> list) {
@@ -1692,6 +1752,14 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 		if (!(object instanceof Document document)) {
 			return object;
+		}
+
+		if (preserveEnumTypeInformation) {
+
+			TypeInformation<?> type = getTypeMapper().readType(document);
+			if (type != null && type.getType().isEnum()) {
+				return document;
+			}
 		}
 
 		String keyToRemove = null;
@@ -1891,6 +1959,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		target.setInstantiators(instantiators);
 		target.defaultTypeMapper = defaultTypeMapper;
 		target.typeMapper = typeMapper;
+		target.preserveEnumTypeInformation = preserveEnumTypeInformation;
 		target.setCodecRegistryProvider(dbFactory);
 		target.afterPropertiesSet();
 
