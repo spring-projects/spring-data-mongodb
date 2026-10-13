@@ -224,7 +224,7 @@ public class ReactiveMongoTemplateTransactionTests {
 
 		initTx()
 				.transactional(template.find(query(where("age").exists(true)).with(Sort.by("age")), Person.class).take(3)
-						.flatMap(template::remove)) //
+						.concatMap(template::remove)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
