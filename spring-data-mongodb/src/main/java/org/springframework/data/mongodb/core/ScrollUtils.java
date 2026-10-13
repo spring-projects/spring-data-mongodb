@@ -28,6 +28,7 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.ScrollPosition.Direction;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.CheckReturnValue;
 import org.springframework.util.Assert;
@@ -38,6 +39,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Jens Schauder
+ * @author Priyanshu Gagiya
  * @since 4.1
  */
 class ScrollUtils {
@@ -197,7 +199,12 @@ class ScrollUtils {
 							throw new IllegalStateException(
 									"Cannot resume from KeysetScrollPosition. Offending key: '%s' is 'null'".formatted(sortSegment));
 						}
-						sortConstraint.put(sortSegment, new Document(getComparator(sortOrder), o));
+						sortConstraint.put("$expr", (AggregationExpression) context -> {
+							Document mapped = context.getMappedObject(new Document(sortSegment, o));
+							Map.Entry<String, Object> entry = mapped.entrySet().iterator().next();
+							return new Document(getComparator(sortOrder),
+									List.of("$" + entry.getKey(), new Document("$literal", entry.getValue())));
+						});
 						break;
 					}
 
