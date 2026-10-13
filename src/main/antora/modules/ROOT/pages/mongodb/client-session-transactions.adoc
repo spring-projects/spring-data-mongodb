@@ -194,6 +194,9 @@ The culprit of the above operation is in keeping the main flows `DeleteResult` i
 
 NOTE: Unless you specify a `ReactiveMongoTransactionManager` within your application context, transaction support is *DISABLED*.
 You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
+
+NOTE: The MongoDB driver requires strictly serialized operations when using a transaction.
+Make sure to use `concatMap(…)` instead of `flatMap…(…)` methods, otherwise the driver will report failures resulting from race conditions on the client state.
 ====
 ======
 

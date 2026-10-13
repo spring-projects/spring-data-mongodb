@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -46,7 +47,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.util.SliceUtils;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
 
@@ -111,7 +111,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		if (allNew) {
 
-			List<S> result = source.stream().collect(Collectors.toList());
+			Collection<S> result = IterableUtils.toCollection(source);
 			return new ArrayList<>(mongoOperations.insert(result, entityInformation.getCollectionName()));
 		}
 
@@ -255,7 +255,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null");
 
-		Collection<S> list = toCollection(entities);
+		Collection<S> list = IterableUtils.toCollection(entities);
 
 		if (list.isEmpty()) {
 			return Collections.emptyList();
@@ -384,14 +384,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	private Query getIdQuery(Iterable<? extends ID> ids) {
 
-		Query query = new Query(new Criteria(entityInformation.getIdAttribute()).in(toCollection(ids)));
+		Query query = new Query(new Criteria(entityInformation.getIdAttribute()).in(IterableUtils.toCollection(ids)));
 		getReadPreference().ifPresent(query::withReadPreference);
 		return query;
-	}
-
-	private static <E> Collection<E> toCollection(Iterable<E> ids) {
-		return ids instanceof Collection<E> collection ? collection
-				: StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
 	}
 
 	private List<T> findAll(@Nullable Query query) {

@@ -21,7 +21,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -113,7 +112,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
-		List<S> source = toList(entities);
+		List<S> source = IterableUtils.toList(entities);
 		return source.stream().allMatch(entityInformation::isNew) ? //
 				insert(source) : concatMapSequentially(source, this::save);
 	}
@@ -337,7 +336,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
-		return insert(toCollection(entities));
+		return insert(IterableUtils.toCollection(entities));
 	}
 
 	private <S extends T> Flux<S> insert(Collection<S> entities) {
@@ -468,7 +467,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	}
 
 	private Query getIdQuery(Iterable<? extends ID> ids) {
-		return new Query(where(entityInformation.getIdAttribute()).in(toCollection(ids)));
+		return new Query(where(entityInformation.getIdAttribute()).in(IterableUtils.toCollection(ids)));
 	}
 
 	/**
@@ -499,13 +498,13 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		};
 	}
 
+	// Transactions require strictly serial execution, therefore some complexity
 	static <T> Flux<T> concatMapSequentially(Publisher<T> publisher,
 			Function<? super T, ? extends Publisher<? extends T>> mapper) {
 
 		return TransactionSynchronizationManager.forCurrentTransaction()
 				.map(TransactionSynchronizationManager::isActualTransactionActive)
-				.onErrorResume(NoTransactionException.class, e -> Mono.just(false))
-				.flatMapMany(transactionActive -> {
+				.onErrorResume(NoTransactionException.class, e -> Mono.just(false)).flatMapMany(transactionActive -> {
 
 					if (transactionActive) {
 						return Flux.from(publisher).concatMap(mapper);
@@ -513,37 +512,14 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 					return Flux.from(publisher).switchOnFirst((signal, source) -> {
 
-						if (!signal.hasValue()) {
-							return source.concatMap(mapper);
+						if (signal.hasValue()) {
+							Mono<T> firstCall = Mono.from(mapper.apply(signal.get()));
+							return firstCall.concatWith(source.skip(1).flatMapSequential(mapper));
 						}
 
-						Mono<T> firstCall = Mono.from(mapper.apply(signal.get()));
-						return firstCall.concatWith(source.skip(1).flatMapSequential(mapper));
+						return source.concatMap(mapper);
 					});
 				});
-	}
-
-	private static <E> List<E> toList(Iterable<E> source) {
-
-		Collection<E> collection = toCollection(source);
-
-		if (collection instanceof List<E> list) {
-			return list;
-		}
-
-		return new ArrayList<>(collection);
-	}
-
-	private static <E> Collection<E> toCollection(Iterable<E> source) {
-
-		if (source instanceof Collection<E> collection) {
-			return collection;
-		}
-
-		List<E> list = new ArrayList<>();
-		source.forEach(list::add);
-
-		return list;
 	}
 
 	/**
