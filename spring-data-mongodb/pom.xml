@@ -205,7 +205,7 @@
 		<dependency>
 			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
-			<version>9.1.4.Final</version>
+			<version>9.1.5.Final</version>
 			<scope>test</scope>
 		</dependency>
 
