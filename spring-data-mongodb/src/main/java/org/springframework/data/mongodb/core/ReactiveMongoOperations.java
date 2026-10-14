@@ -77,6 +77,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Mathieu Ouellet
+ * @author Priyanshu Gagiya
  * @since 2.0
  * @see Flux
  * @see Mono
@@ -565,8 +566,10 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 * <p>
 	 * When using {@link KeysetScrollPosition}, make sure to use non-nullable {@link org.springframework.data.domain.Sort
-	 * sort properties} as MongoDB does not support criteria to reconstruct a query result from absent document fields or
-	 * {@literal null} values through {@code $gt/$lt} operators.
+	 * sort properties}. Keyset scrolling cannot resume from absent document fields or {@literal null} values.
+	 * Array-valued sort properties are not supported because their sort order differs from expression comparison order.
+	 * Positions retain stored sort values before domain conversion and lifecycle callbacks. Caller-supplied positions
+	 * must use the stored value types.
 	 *
 	 * @param query the query class that specifies the criteria used to find a document and also an optional fields
 	 *          specification. Must not be {@literal null}.
@@ -590,8 +593,10 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 * <p>
 	 * When using {@link KeysetScrollPosition}, make sure to use non-nullable {@link org.springframework.data.domain.Sort
-	 * sort properties} as MongoDB does not support criteria to reconstruct a query result from absent document fields or
-	 * {@literal null} values through {@code $gt/$lt} operators.
+	 * sort properties}. Keyset scrolling cannot resume from absent document fields or {@literal null} values.
+	 * Array-valued sort properties are not supported because their sort order differs from expression comparison order.
+	 * Positions retain stored sort values before domain conversion and lifecycle callbacks. Caller-supplied positions
+	 * must use the stored value types.
 	 *
 	 * @param query the query class that specifies the criteria used to find a document and also an optional fields
 	 *          specification. Must not be {@literal null}.
