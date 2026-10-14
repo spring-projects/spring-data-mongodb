@@ -876,6 +876,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * When using {@link KeysetScrollPosition}, make sure to use non-nullable {@link org.springframework.data.domain.Sort
 	 * sort properties}. Keyset scrolling cannot resume from absent document fields or {@literal null} values.
 	 * Array-valued sort properties are not supported because their sort order differs from expression comparison order.
+	 * Positions retain stored sort values before domain conversion and lifecycle callbacks. Caller-supplied positions
+	 * must use the stored value types.
 	 *
 	 * @param query the query class that specifies the criteria used to find a document and also an optional fields
 	 *          specification. Must not be {@literal null}.
@@ -901,6 +903,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * When using {@link KeysetScrollPosition}, make sure to use non-nullable {@link org.springframework.data.domain.Sort
 	 * sort properties}. Keyset scrolling cannot resume from absent document fields or {@literal null} values.
 	 * Array-valued sort properties are not supported because their sort order differs from expression comparison order.
+	 * Positions retain stored sort values before domain conversion and lifecycle callbacks. Caller-supplied positions
+	 * must use the stored value types.
 	 *
 	 * @param query the query class that specifies the criteria used to find a document and also an optional fields
 	 *          specification. Must not be {@literal null}.

@@ -18,9 +18,13 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.bson.Document;
+import org.bson.UuidRepresentation;
+import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,14 +35,19 @@ import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Regression tests for keyset scrolling across BSON ID types.
@@ -78,7 +87,7 @@ class MongoTemplateMixedIdScrollTests {
 	}
 
 	@Test // GH-5260
-	void keysetConvertsStringIdCursorBackToStoredObjectId() {
+	void keysetRetainsStoredObjectIdForStringIdProperty() {
 
 		insertIds(OBJECT_ONE, OBJECT_TWO, new ObjectId("000000000000000000000003"));
 		Query query = new Query().with(Sort.by("id")).limit(2).with(ScrollPosition.keyset());
@@ -93,6 +102,74 @@ class MongoTemplateMixedIdScrollTests {
 	}
 
 	@Test // GH-5260
+	void keysetPreservesDistinctBsonTypesWithTheSameStringId() {
+
+		template.getCollection(COLLECTION).insertMany(List.of(new Document("_id", HEX_ONE).append("kind", "string"),
+				new Document("_id", OBJECT_ONE).append("kind", "objectId")));
+		Query query = new Query().with(Sort.by("id")).limit(1).with(ScrollPosition.keyset());
+		Window<StringId> first = template.scroll(query, StringId.class, COLLECTION);
+		Window<StringId> second = template.scroll(query.with(first.positionAt(0)), StringId.class, COLLECTION);
+
+		assertThat(first).extracting("kind").containsExactly("string");
+		assertThat(second).extracting("kind").containsExactly("objectId");
+
+		first = template.scroll(query.with(ScrollPosition.keyset().backward()), StringId.class, COLLECTION);
+		second = template.scroll(query.with(first.positionAt(0)), StringId.class, COLLECTION);
+
+		assertThat(first).extracting("kind").containsExactly("objectId");
+		assertThat(second).extracting("kind").containsExactly("string");
+	}
+
+	@Test // GH-5260
+	void keysetIgnoresSortKeyChangesFromCallbacks() {
+
+		template.getCollection(COLLECTION).insertMany(List.of(new Document("_id", "A").append("date", new Date(1)),
+				new Document("_id", "B").append("date", new Date(2))));
+		template
+				.setEntityCallbacks(EntityCallbacks.create((AfterConvertCallback<MixedId>) (entity, document, collection) -> {
+					entity.id = "changed";
+					entity.date.setTime(0);
+					document.put("_id", "changed");
+					return entity;
+				}));
+		Query query = new Query().with(Sort.by("date")).limit(1).with(ScrollPosition.keyset());
+		Window<MixedId> first = template.scroll(query, MixedId.class, COLLECTION);
+		Window<MixedId> second = template.scroll(query.with(first.positionAt(0)), MixedId.class, COLLECTION);
+
+		assertThat(((KeysetScrollPosition) first.positionAt(0)).getKeys()).containsEntry("id", "A").containsEntry("date",
+				new Date(1));
+		assertThat(second).hasSize(1);
+		assertThat(((KeysetScrollPosition) second.positionAt(0)).getKeys()).containsEntry("id", "B").containsEntry("date",
+				new Date(2));
+	}
+
+	@Test // GH-5260
+	void keysetUsesDatabaseCodecRegistryWithSuppliedConverter() {
+
+		SimpleMongoClientDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, template.getDb().getName()) {
+			@Override
+			protected MongoDatabase doGetMongoDatabase(String dbName) {
+				MongoDatabase database = super.doGetMongoDatabase(dbName);
+				return database.withCodecRegistry(
+						CodecRegistries.withUuidRepresentation(database.getCodecRegistry(), UuidRepresentation.STANDARD));
+			}
+		};
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE,
+				template.getConverter().getMappingContext());
+		converter.afterPropertiesSet();
+		MongoTemplate uuidTemplate = new MongoTemplate(factory, converter);
+		UUID firstId = new UUID(0, 1);
+		UUID secondId = new UUID(0, 2);
+		uuidTemplate.getCollection(COLLECTION).insertMany(List.of(new Document("_id", firstId), new Document("_id", secondId)));
+		Query query = new Query().with(Sort.by("id")).limit(1).with(ScrollPosition.keyset());
+		Window<MixedId> first = uuidTemplate.scroll(query, MixedId.class, COLLECTION);
+		Window<MixedId> second = uuidTemplate.scroll(query.with(first.positionAt(0)), MixedId.class, COLLECTION);
+
+		assertThat(((KeysetScrollPosition) first.positionAt(0)).getKeys()).containsEntry("id", firstId);
+		assertThat(second).extracting("id").containsExactly(secondId);
+	}
+
+	@Test // GH-5260
 	void keysetTreatsDollarPrefixedIdsAsLiterals() {
 
 		insertIds("$A", "$B", "$C");
@@ -101,7 +178,7 @@ class MongoTemplateMixedIdScrollTests {
 	}
 
 	@Test // GH-5260
-	void keysetMapsSortFieldsAndValues() {
+	void keysetMapsSortFieldsAndRetainsStoredValues() {
 
 		template.getCollection(COLLECTION).insertMany(
 				List.of(new Document("_id", "A").append("rank", "10"), new Document("_id", "B").append("rank", "2")));
@@ -142,6 +219,7 @@ class MongoTemplateMixedIdScrollTests {
 	static class MixedId {
 		@MongoId
 		Object id;
+		Date date;
 	}
 
 	static class MappedSort {
@@ -154,5 +232,6 @@ class MongoTemplateMixedIdScrollTests {
 	static class StringId {
 		@Id
 		String id;
+		String kind;
 	}
 }
