@@ -944,6 +944,16 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertIndexPathAndCollection(new String[] { "nested.foo" }, "textIndexOnNestedRoot", indexDefinitions.get(0));
 		}
 
+		@Test // GH-5213
+		public void shouldResolveTextIndexThroughGenericTypeArguments() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					TextIndexThroughGenericRoot.class);
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection(new String[] { "holder.value.foo" }, "textIndexThroughGenericRoot",
+					indexDefinitions.get(0));
+		}
+
 		@Test // DATAMONGO-937
 		public void shouldResolveTextIndexOnElementWithWeightCorrectly() {
 
@@ -1065,6 +1075,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		class TextIndexOnNested {
 
 			String foo;
+		}
+
+		@Document
+		static class TextIndexThroughGenericRoot {
+			TextIndexGenericHolder<TextIndexGenericValue> holder;
+		}
+
+		static class TextIndexGenericHolder<T> {
+			T value;
+		}
+
+		static class TextIndexGenericValue {
+			@TextIndexed String foo;
 		}
 
 		@Document
