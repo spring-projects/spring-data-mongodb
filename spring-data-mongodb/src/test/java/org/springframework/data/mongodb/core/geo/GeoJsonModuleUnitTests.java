@@ -25,26 +25,25 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.data.geo.Point;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Christoph Strobl
+ * @author Artyom Muravlev
  */
-public class GeoJsonModuleUnitTests {
+class GeoJsonModuleUnitTests {
 
 	ObjectMapper mapper;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		mapper = new ObjectMapper();
 		mapper.registerModule(new GeoJsonModule());
 	}
 
 	@Test // DATAMONGO-1181
-	public void shouldDeserializeJsonPointCorrectly() throws JsonParseException, JsonMappingException, IOException {
+	void shouldDeserializeJsonPointCorrectly() throws IOException {
 
 		String json = "{ \"type\": \"Point\", \"coordinates\": [10.0, 20.0] }";
 
@@ -52,8 +51,8 @@ public class GeoJsonModuleUnitTests {
 	}
 
 	@Test // DATAMONGO-1181
-	public void shouldDeserializeGeoJsonLineStringCorrectly()
-			throws JsonParseException, JsonMappingException, IOException {
+	void shouldDeserializeGeoJsonLineStringCorrectly()
+			throws IOException {
 
 		String json = "{ \"type\": \"LineString\", \"coordinates\": [ [10.0, 20.0], [30.0, 40.0], [50.0, 60.0] ]}";
 
@@ -62,8 +61,8 @@ public class GeoJsonModuleUnitTests {
 	}
 
 	@Test // DATAMONGO-1181
-	public void shouldDeserializeGeoJsonMultiPointCorrectly()
-			throws JsonParseException, JsonMappingException, IOException {
+	void shouldDeserializeGeoJsonMultiPointCorrectly()
+			throws IOException {
 
 		String json = "{ \"type\": \"MultiPoint\", \"coordinates\": [ [10.0, 20.0], [30.0, 40.0], [50.0, 60.0] ]}";
 
@@ -73,8 +72,8 @@ public class GeoJsonModuleUnitTests {
 
 	@Test // DATAMONGO-1181
 	@SuppressWarnings("unchecked")
-	public void shouldDeserializeGeoJsonMultiLineStringCorrectly()
-			throws JsonParseException, JsonMappingException, IOException {
+	void shouldDeserializeGeoJsonMultiLineStringCorrectly()
+			throws IOException {
 
 		String json = "{ \"type\": \"MultiLineString\", \"coordinates\": [ [ [10.0, 20.0], [30.0, 40.0] ], [ [50.0, 60.0] , [70.0, 80.0] ] ]}";
 
@@ -83,7 +82,7 @@ public class GeoJsonModuleUnitTests {
 	}
 
 	@Test // DATAMONGO-1181
-	public void shouldDeserializeGeoJsonPolygonCorrectly() throws JsonParseException, JsonMappingException, IOException {
+	void shouldDeserializeGeoJsonPolygonCorrectly() throws IOException {
 
 		String json = "{ \"type\": \"Polygon\", \"coordinates\": [ [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0] ] ]}";
 
@@ -92,8 +91,8 @@ public class GeoJsonModuleUnitTests {
 	}
 
 	@Test // DATAMONGO-1181
-	public void shouldDeserializeGeoJsonMultiPolygonCorrectly()
-			throws JsonParseException, JsonMappingException, IOException {
+	void shouldDeserializeGeoJsonMultiPolygonCorrectly()
+			throws IOException {
 
 		String json = "{ \"type\": \"Polygon\", \"coordinates\": ["
 				+ "[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],"
@@ -108,6 +107,76 @@ public class GeoJsonModuleUnitTests {
 						new Point(100, 0))),
 				new GeoJsonPolygon(Arrays.asList(new Point(100.2, 0.2), new Point(100.8, 0.2), new Point(100.8, 0.8),
 						new Point(100.2, 0.8), new Point(100.2, 0.2))))));
+
+	}
+
+	@Test // GH-4950
+	void shouldSerializeJsonPointCorrectly() throws IOException {
+
+		String json = "{\"type\":\"Point\",\"coordinates\":[10.0,20.0]}";
+
+		assertThat(mapper.writeValueAsString(new GeoJsonPoint(10D, 20D))).isEqualTo(json);
+	}
+
+	@Test // GH-4950
+	void shouldSerializeGeoJsonLineStringCorrectly()
+			throws IOException {
+
+		String json = "{\"type\":\"LineString\",\"coordinates\":[[10.0,20.0],[30.0,40.0],[50.0,60.0]]}";
+
+		assertThat(mapper.writeValueAsString(new GeoJsonLineString(Arrays.asList(new Point(10, 20), new Point(30, 40), new Point(50, 60)))))
+				.isEqualTo(json);
+	}
+
+	@Test // GH-4950
+	void shouldSerializeGeoJsonMultiPointCorrectly()
+			throws IOException {
+
+		String json = "{\"type\":\"MultiPoint\",\"coordinates\":[[10.0,20.0],[30.0,40.0],[50.0,60.0]]}";
+
+		assertThat(mapper.writeValueAsString(new GeoJsonMultiPoint(Arrays.asList(new Point(10, 20), new Point(30, 40), new Point(50, 60)))))
+				.isEqualTo(json);
+	}
+
+	@Test // GH-4950
+	@SuppressWarnings("unchecked")
+	void shouldSerializeGeoJsonMultiLineStringCorrectly()
+			throws IOException {
+
+		String json = "{\"type\":\"MultiLineString\",\"coordinates\":[[[10.0,20.0],[30.0,40.0]],[[50.0,60.0],[70.0,80.0]]]}";
+
+		assertThat(mapper.writeValueAsString(new GeoJsonMultiLineString(
+				Arrays.asList(new Point(10, 20), new Point(30, 40)), Arrays.asList(new Point(50, 60), new Point(70, 80)))))
+				.isEqualTo(json);
+	}
+
+	@Test // GH-4950
+	void shouldSerializeGeoJsonPolygonCorrectly() throws IOException {
+
+		String json = "{\"type\":\"Polygon\",\"coordinates\":[[[100.0,0.0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]}";
+
+		assertThat(mapper.writeValueAsString(new GeoJsonPolygon(
+				Arrays.asList(new Point(100, 0), new Point(101, 0), new Point(101, 1), new Point(100, 1), new Point(100, 0)))))
+				.isEqualTo(json);
+	}
+
+	@Test // GH-4950
+	void shouldSerializeGeoJsonMultiPolygonCorrectly()
+			throws IOException {
+
+		String json="{\"type\":\"MultiPolygon\",\"coordinates\":["
+				+"[[[102.0,2.0],[103.0,2.0],[103.0,3.0],[102.0,3.0],[102.0,2.0]]],"
+				+"[[[100.0,0.0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]],"
+				+"[[[100.2,0.2],[100.8,0.2],[100.8,0.8],[100.2,0.8],[100.2,0.2]]]"//
+				+"]}";
+
+		assertThat(mapper.writeValueAsString(new GeoJsonMultiPolygon(Arrays.asList(
+				new GeoJsonPolygon(Arrays.asList(new Point(102, 2), new Point(103, 2), new Point(103, 3), new Point(102, 3),
+						new Point(102, 2))),
+				new GeoJsonPolygon(Arrays.asList(new Point(100, 0), new Point(101, 0), new Point(101, 1), new Point(100, 1),
+						new Point(100, 0))),
+				new GeoJsonPolygon(Arrays.asList(new Point(100.2, 0.2), new Point(100.8, 0.2), new Point(100.8, 0.8),
+						new Point(100.2, 0.8), new Point(100.2, 0.2))))))).isEqualTo(json);
 
 	}
 }
