@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import java.io.Serial;
+
 /**
  * Event being thrown before a domain object is converted to be persisted.
  *
@@ -25,6 +27,7 @@ package org.springframework.data.mongodb.core.mapping.event;
  */
 public class BeforeConvertEvent<T> extends MongoMappingEvent<T> {
 
+	@Serial
 	private static final long serialVersionUID = 252614269008845243L;
 
 	/**

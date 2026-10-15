@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 
+import java.io.Serial;
+
 /**
  * Event being thrown after a single or a set of documents has/have been deleted. The {@link Document} held in the event
  * will be the query document <em>after</em> it has been mapped onto the domain type handled.
@@ -28,6 +30,7 @@ import org.jspecify.annotations.Nullable;
  */
 public class AfterDeleteEvent<T> extends AbstractDeleteEvent<T> {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	/**
