@@ -93,6 +93,7 @@ import com.mongodb.client.MongoCollection;
  * @author Minsu Kim
  * @author Sangyong Choi
  * @author Julia Lee
+ * @author Seonwoo Jung
  */
 public class AggregationTests {
 
@@ -2123,6 +2124,19 @@ public class AggregationTests {
 		List<Document> mappedResults = results.getMappedResults();
 		assertThat(mappedResults).hasSize(1);
 		assertThat(mappedResults.get(0)).containsEntry("itemId", "1");
+	}
+
+	@Test // GH-3490
+	void shouldExcludeNestedFieldOnly() {
+
+		mongoTemplate.insert(new Document("_id", 1).append("street", "top-level") //
+				.append("home", new Document("street", "nested").append("city", "Springfield")), INPUT_COLLECTION);
+
+		Aggregation aggregation = newAggregation(project().andExclude("home.street"));
+		AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, Document.class);
+
+		assertThat(results.getMappedResults()).containsExactly(new Document("_id", 1).append("street", "top-level")
+				.append("home", new Document("city", "Springfield")));
 	}
 
 	@Test // GH-5115
