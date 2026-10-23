@@ -47,6 +47,7 @@ import com.mongodb.BasicDBList;
 
 /**
  * @author Christoph Strobl
+ * @author dragonfsky
  */
 @RunWith(Suite.class)
 @SuiteClasses({ GeoJsonConverterUnitTests.GeoJsonToDocumentConverterUnitTests.class,
@@ -73,6 +74,11 @@ public class GeoJsonConverterUnitTests {
 	static final Point INNER_POINT_2 = new Point(90, 90);
 	static final Point INNER_POINT_3 = new Point(10, 90);
 
+	static final Point SECOND_INNER_POINT_0 = new Point(1, 1);
+	static final Point SECOND_INNER_POINT_1 = new Point(5, 1);
+	static final Point SECOND_INNER_POINT_2 = new Point(5, 5);
+	static final Point SECOND_INNER_POINT_3 = new Point(1, 5);
+
 	static final GeoJsonMultiPoint MULTI_POINT = new GeoJsonMultiPoint(POINT_0, POINT_2, POINT_3);
 	static final GeoJsonLineString LINE_STRING = new GeoJsonLineString(POINT_0, POINT_1, POINT_2);
 	@SuppressWarnings("unchecked") static final GeoJsonMultiLineString MULTI_LINE_STRING = new GeoJsonMultiLineString(
@@ -80,7 +86,11 @@ public class GeoJsonConverterUnitTests {
 	static final GeoJsonPolygon POLYGON = new GeoJsonPolygon(POINT_0, POINT_1, POINT_2, POINT_3, POINT_0);
 	static final GeoJsonPolygon POLYGON_WITH_2_RINGS = POLYGON.withInnerRing(INNER_POINT_0, INNER_POINT_1, INNER_POINT_2,
 			INNER_POINT_3, INNER_POINT_0);
+	static final GeoJsonPolygon POLYGON_WITH_MULTIPLE_INNER_RINGS = POLYGON_WITH_2_RINGS.withInnerRing(
+			SECOND_INNER_POINT_0, SECOND_INNER_POINT_1, SECOND_INNER_POINT_2, SECOND_INNER_POINT_3, SECOND_INNER_POINT_0);
 	static final GeoJsonMultiPolygon MULTI_POLYGON = new GeoJsonMultiPolygon(Arrays.asList(POLYGON));
+	static final GeoJsonMultiPolygon MULTI_POLYGON_WITH_MULTIPLE_INNER_RINGS = new GeoJsonMultiPolygon(
+			Arrays.asList(POLYGON_WITH_MULTIPLE_INNER_RINGS));
 	static final GeoJsonGeometryCollection GEOMETRY_COLLECTION = new GeoJsonGeometryCollection(
 			Arrays.<GeoJson<?>> asList(SINGLE_POINT, POLYGON));
 	/*
@@ -123,6 +133,14 @@ public class GeoJsonConverterUnitTests {
 			.add(new BasicDbListBuilder().add(INNER_POINT_0.getX()).add(INNER_POINT_0.getY()).get()) //
 			.get();
 
+	static final BasicDBList POLYGON_SECOND_INNER_CORDS = new BasicDbListBuilder() //
+			.add(new BasicDbListBuilder().add(SECOND_INNER_POINT_0.getX()).add(SECOND_INNER_POINT_0.getY()).get()) //
+			.add(new BasicDbListBuilder().add(SECOND_INNER_POINT_1.getX()).add(SECOND_INNER_POINT_1.getY()).get()) //
+			.add(new BasicDbListBuilder().add(SECOND_INNER_POINT_2.getX()).add(SECOND_INNER_POINT_2.getY()).get()) //
+			.add(new BasicDbListBuilder().add(SECOND_INNER_POINT_3.getX()).add(SECOND_INNER_POINT_3.getY()).get()) //
+			.add(new BasicDbListBuilder().add(SECOND_INNER_POINT_0.getX()).add(SECOND_INNER_POINT_0.getY()).get()) //
+			.get();
+
 	static final BasicDBList POLYGON_CORDS = new BasicDbListBuilder().add(POLYGON_OUTER_CORDS).get();
 	static final Document POLYGON_DOC = new Document() //
 			.append("type", "Polygon") //
@@ -133,6 +151,12 @@ public class GeoJsonConverterUnitTests {
 	static final Document POLYGON_WITH_2_RINGS_DOC = new Document() //
 			.append("type", "Polygon") //
 			.append("coordinates", POLYGON_WITH_2_RINGS_CORDS);
+
+	static final BasicDBList POLYGON_WITH_MULTIPLE_INNER_RINGS_CORDS = new BasicDbListBuilder().add(POLYGON_OUTER_CORDS)
+			.add(POLYGON_INNER_CORDS).add(POLYGON_SECOND_INNER_CORDS).get();
+	static final Document POLYGON_WITH_MULTIPLE_INNER_RINGS_DOC = new Document() //
+			.append("type", "Polygon") //
+			.append("coordinates", POLYGON_WITH_MULTIPLE_INNER_RINGS_CORDS);
 
 	// LineString
 	static final BasicDBList LINE_STRING_CORDS_0 = new BasicDbListBuilder() //
@@ -159,6 +183,11 @@ public class GeoJsonConverterUnitTests {
 	static final BasicDBList MULTI_POLYGON_CORDS = new BasicDbListBuilder().add(POLYGON_CORDS).get();
 	static final Document MULTI_POLYGON_DOC = new Document().append("type", "MultiPolygon").append("coordinates",
 			MULTI_POLYGON_CORDS);
+
+	static final BasicDBList MULTI_POLYGON_WITH_MULTIPLE_INNER_RINGS_CORDS = new BasicDbListBuilder()
+			.add(POLYGON_WITH_MULTIPLE_INNER_RINGS_CORDS).get();
+	static final Document MULTI_POLYGON_WITH_MULTIPLE_INNER_RINGS_DOC = new Document().append("type", "MultiPolygon")
+			.append("coordinates", MULTI_POLYGON_WITH_MULTIPLE_INNER_RINGS_CORDS);
 
 	// GeometryCollection
 	static final BasicDBList GEOMETRY_COLLECTION_GEOMETRIES = new BasicDbListBuilder() //
@@ -193,6 +222,12 @@ public class GeoJsonConverterUnitTests {
 		@Test // DATAMONGO-1399
 		public void shouldConvertDboWithMultipleRingsCorrectly() {
 			assertThat(converter.convert(POLYGON_WITH_2_RINGS_DOC)).isEqualTo(POLYGON_WITH_2_RINGS);
+		}
+
+		@Test // GH-5190
+		public void shouldConvertDboWithMultipleInnerRingsCorrectly() {
+			assertThat(converter.convert(POLYGON_WITH_MULTIPLE_INNER_RINGS_DOC))
+					.isEqualTo(POLYGON_WITH_MULTIPLE_INNER_RINGS);
 		}
 
 	}
@@ -300,6 +335,12 @@ public class GeoJsonConverterUnitTests {
 		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
 			assertThat(converter.convert(MULTI_POLYGON_DOC)).isEqualTo(MULTI_POLYGON);
+		}
+
+		@Test // GH-5190
+		public void shouldConvertDboWithMultipleInnerRingsCorrectly() {
+			assertThat(converter.convert(MULTI_POLYGON_WITH_MULTIPLE_INNER_RINGS_DOC))
+					.isEqualTo(MULTI_POLYGON_WITH_MULTIPLE_INNER_RINGS);
 		}
 
 		@Test // DATAMONGO-1137
