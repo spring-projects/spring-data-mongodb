@@ -57,6 +57,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Seonwoo Jung
  */
 @ExtendWith(MockitoExtension.class)
 public class TypeBasedAggregationOperationContextUnitTests {
@@ -201,6 +202,22 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		Document sort = getPipelineElementFromAggregationAt(dbo, 1);
 		assertThat(getAsDocument(sort, "$sort")).isEqualTo(new Document("age.value", 1).append("last_name", 1));
+	}
+
+	@Test // GH-3490
+	void rendersNestedExclusionWithFullPath() {
+
+		AggregationOperationContext context = getContext(FooPerson.class);
+		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class, project() //
+				.andExclude("age.value"), sort(Sort.by("name", "lastName")));
+
+		Document dbo = agg.toDocument("person", context);
+
+		Document projection = getPipelineElementFromAggregationAt(dbo, 0);
+		assertThat(getAsDocument(projection, "$project")).isEqualTo(new Document("age.value", 0));
+
+		Document sort = getPipelineElementFromAggregationAt(dbo, 1);
+		assertThat(getAsDocument(sort, "$sort")).isEqualTo(new Document("name", 1).append("last_name", 1));
 	}
 
 	@Test // DATAMONGO-1133

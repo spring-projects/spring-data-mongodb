@@ -48,6 +48,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Amine Jaoui
+ * @author Seonwoo Jung
  * @since 1.3
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/project/">MongoDB Aggregation Framework:
  *      $project</a>
@@ -154,7 +155,12 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	@Contract("_ -> new")
 	public ProjectionOperation andExclude(String... fieldNames) {
 
-		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fieldNames), false);
+		Assert.notNull(fieldNames, "Field names must not be null");
+
+		// exclusions cannot be aliased: keep the full (possibly nested) path instead of deriving an alias from it
+		Fields fields = Fields.from(Arrays.stream(fieldNames).map(it -> Fields.field(it, it)).toArray(Field[]::new));
+
+		List<FieldProjection> excludeProjections = FieldProjection.from(fields, false);
 		return new ProjectionOperation(this.projections, excludeProjections);
 	}
 
