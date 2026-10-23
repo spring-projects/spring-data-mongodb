@@ -87,6 +87,7 @@ import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContex
 import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.ScrollUtils.KeysetScrollQuery;
+import org.springframework.data.mongodb.core.ScrollUtils.KeysetScrollResult;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -194,6 +195,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Yadhukrishna S Pai
  * @author Florian Lüdiger
  * @author Kyuhong Han
+ * @author Priyanshu Gagiya
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -969,14 +971,22 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		if (query.hasKeyset()) {
 
 			KeysetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
-					operations.getIdPropertyName(sourceClass));
+					operations.getIdPropertyName(sourceClass), sort -> {
+						return queryMapper.getMappedSort(sort, mappingContext.getPersistentEntity(sourceClass));
+					});
 
-			Mono<List<R>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
+			Mono<List<KeysetScrollResult<R>>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
 					keysetPaginationQuery.query(), keysetPaginationQuery.fields(), sourceClass,
-					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback)
-					.collectList();
+					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), document -> {
+						Map<String, Object> keys = keysetPaginationQuery.captureKeys(document, mongoDatabaseFactory.getCodecRegistry());
+						return callback.doWith(document).map(entity -> {
+							return new KeysetScrollResult<>(entity, keys);
+						});
+					}).collectList();
 
-			return result.map(it -> ScrollUtils.createWindow(query, it, sourceClass, operations));
+			return result.map(it -> {
+				return ScrollUtils.createWindow(query, it);
+			});
 		}
 
 		Mono<List<R>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
