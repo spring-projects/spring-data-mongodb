@@ -16,11 +16,10 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +48,7 @@ import com.mongodb.client.model.Filters;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Priyanshu Gagiya
  * @since 1.4
  */
 public class DefaultDbRefResolver extends DefaultReferenceResolver implements DbRefResolver, ReferenceResolver {
@@ -130,9 +130,19 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 				.find(new Document(BasicMongoPersistentProperty.ID_FIELD_NAME, new Document("$in", ids))) //
 				.into(new ArrayList<>(ids.size()));
 
-		return ids.stream() //
-				.flatMap(id -> documentWithId(id, result)) //
-				.collect(Collectors.toList());
+		Map<DbRefId, Document> documentsById = new HashMap<>(result.size());
+		for (Document document : result) {
+			documentsById.putIfAbsent(new DbRefId(document.get(BasicMongoPersistentProperty.ID_FIELD_NAME)), document);
+		}
+
+		List<Document> ordered = new ArrayList<>(ids.size());
+		for (Object id : ids) {
+			Document document = documentsById.get(new DbRefId(id));
+			if (document != null) {
+				ordered.add(document);
+			}
+		}
+		return ordered;
 	}
 
 	/**
@@ -162,18 +172,17 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 		return property.getDBRef() != null && property.getDBRef().lazy();
 	}
 
-	/**
-	 * Returns document with the given identifier from the given list of {@link Document}s.
-	 *
-	 * @param identifier
-	 * @param documents
-	 * @return
-	 */
-	private static Stream<Document> documentWithId(Object identifier, Collection<Document> documents) {
+	private record DbRefId(@Nullable Object value) {
 
-		return documents.stream() //
-				.filter(it -> ObjectUtils.nullSafeEquals(it.get(BasicMongoPersistentProperty.ID_FIELD_NAME), identifier)) //
-				.limit(1);
+		@Override
+		public boolean equals(Object other) {
+			return other instanceof DbRefId id && ObjectUtils.nullSafeEquals(value, id.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHashCode(value);
+		}
 	}
 
 	/**
