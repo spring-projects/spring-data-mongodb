@@ -15,6 +15,12 @@
  */
 package org.springframework.data.mongodb.core.bulk;
 
+import java.util.List;
+
+import org.jspecify.annotations.Nullable;
+
+import org.springframework.util.Assert;
+
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 
 /**
@@ -23,6 +29,7 @@ import com.mongodb.client.model.bulk.ClientBulkWriteResult;
  * ({@link com.mongodb.bulk.BulkWriteResult}) and multi-collection ({@link ClientBulkWriteResult}) driver results.
  *
  * @author Christoph Strobl
+ * @author Sangyeop Jeong
  * @since 5.1
  */
 public interface BulkWriteResult {
@@ -34,6 +41,27 @@ public interface BulkWriteResult {
 	 * @return a new {@link BulkWriteResult} wrapping the given result.
 	 */
 	static BulkWriteResult from(ClientBulkWriteResult result) {
+		return create(result, null);
+	}
+
+	/**
+	 * Creates a {@link BulkWriteResult} from a MongoDB driver {@link ClientBulkWriteResult} retaining the entities
+	 * affected by {@literal insert} and {@literal replace} operations.
+	 *
+	 * @param result the driver result; must not be {@literal null}.
+	 * @param savedEntities the entities affected by {@literal insert} and {@literal replace} operations in operation
+	 *          order; must not be {@literal null}.
+	 * @return a new {@link BulkWriteResult} wrapping the given result.
+	 * @since 5.2
+	 */
+	static BulkWriteResult from(ClientBulkWriteResult result, List<Object> savedEntities) {
+
+		Assert.notNull(savedEntities, "Saved entities must not be null");
+
+		return create(result, savedEntities);
+	}
+
+	private static BulkWriteResult create(ClientBulkWriteResult result, @Nullable List<Object> savedEntities) {
 
 		return new BulkWriteResult() {
 			@Override
@@ -65,6 +93,11 @@ public interface BulkWriteResult {
 			public long matchedCount() {
 				return result.getMatchedCount();
 			}
+
+			@Override
+			public List<Object> savedEntities() {
+				return savedEntities != null ? savedEntities : BulkWriteResult.super.savedEntities();
+			}
 		};
 	}
 
@@ -75,6 +108,28 @@ public interface BulkWriteResult {
 	 * @return a new {@link BulkWriteResult} wrapping the given result.
 	 */
 	static BulkWriteResult from(com.mongodb.bulk.BulkWriteResult result) {
+		return create(result, null);
+	}
+
+	/**
+	 * Creates a {@link BulkWriteResult} from a MongoDB driver {@link com.mongodb.bulk.BulkWriteResult} retaining the
+	 * entities affected by {@literal insert} and {@literal replace} operations.
+	 *
+	 * @param result the driver result; must not be {@literal null}.
+	 * @param savedEntities the entities affected by {@literal insert} and {@literal replace} operations in operation
+	 *          order; must not be {@literal null}.
+	 * @return a new {@link BulkWriteResult} wrapping the given result.
+	 * @since 5.2
+	 */
+	static BulkWriteResult from(com.mongodb.bulk.BulkWriteResult result, List<Object> savedEntities) {
+
+		Assert.notNull(savedEntities, "Saved entities must not be null");
+
+		return create(result, savedEntities);
+	}
+
+	private static BulkWriteResult create(com.mongodb.bulk.BulkWriteResult result,
+			@Nullable List<Object> savedEntities) {
 		return new BulkWriteResult() {
 			@Override
 			public long insertCount() {
@@ -104,6 +159,11 @@ public interface BulkWriteResult {
 			@Override
 			public long matchedCount() {
 				return result.getMatchedCount();
+			}
+
+			@Override
+			public List<Object> savedEntities() {
+				return savedEntities != null ? savedEntities : BulkWriteResult.super.savedEntities();
 			}
 		};
 	}
@@ -149,5 +209,18 @@ public interface BulkWriteResult {
 	 * @return the matched count.
 	 */
 	long matchedCount();
+
+	/**
+	 * Returns the entities affected by {@literal insert} and {@literal replace} operations in the order these
+	 * operations were declared. Returned entities reflect the state after the write, such as generated
+	 * identifiers and instances returned by entity callbacks.
+	 *
+	 * @return the saved entities in operation order; never {@literal null}.
+	 * @throws UnsupportedOperationException if this result does not track saved entities.
+	 * @since 5.2
+	 */
+	default List<Object> savedEntities() {
+		throw new UnsupportedOperationException("Saved entities are not tracked by this BulkWriteResult");
+	}
 
 }

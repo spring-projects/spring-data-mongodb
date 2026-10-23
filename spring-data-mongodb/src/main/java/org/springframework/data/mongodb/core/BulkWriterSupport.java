@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.bulk.Bulk;
 import org.springframework.data.mongodb.core.bulk.BulkOperation;
@@ -44,6 +45,7 @@ import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Sangyeop Jeong
  * @since 5.1
  */
 abstract class BulkWriterSupport {
@@ -73,6 +75,22 @@ abstract class BulkWriterSupport {
 			return namespace.getRequiredCollectionName().getCollectionName(entityOperations::getRequiredPersistentEntity);
 		}
 		return entityOperations.determineCollectionName(namespace.type());
+	}
+
+	/**
+	 * Propagates an identifier generated during the write back to the entity the write was issued for. Entities that
+	 * already carry an identifier remain untouched.
+	 *
+	 * @param source the entity the write was issued for.
+	 * @param document the document handed to the server, potentially carrying a generated {@literal _id}.
+	 * @param conversionService used to adapt the identifier to the id property type.
+	 * @return the entity carrying the identifier. Can be a different instance for immutable types.
+	 */
+	<T> T populateIdIfNecessary(T source, Document document, ConversionService conversionService) {
+
+		Object id = MappedDocument.of(document).getId();
+
+		return id != null ? entityOperations.forEntity(source, conversionService).populateIdIfNecessary(id) : source;
 	}
 
 	@Nullable

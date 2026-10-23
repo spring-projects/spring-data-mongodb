@@ -194,6 +194,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Yadhukrishna S Pai
  * @author Florian Lüdiger
  * @author Kyuhong Han
+ * @author Sangyeop Jeong
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -2805,6 +2806,21 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	protected MongoDatabase prepareDatabase(MongoDatabase database) {
 		return database;
+	}
+
+	/**
+	 * Resolve the {@link WriteConcern} to use for a bulk write against the given collection considering the configured
+	 * {@link #setWriteConcern(WriteConcern) default} and {@link #setWriteConcernResolver(WriteConcernResolver) resolver}.
+	 *
+	 * @param collectionName the collection to write to.
+	 * @param entityType the entity type the bulk was declared for, can be {@literal null}.
+	 * @return the {@link WriteConcern} to apply or {@literal null} to use the collection default.
+	 * @since 5.2
+	 */
+	@Nullable
+	WriteConcern prepareBulkWriteConcern(String collectionName, @Nullable Class<?> entityType) {
+		return prepareWriteConcern(
+				new MongoAction(writeConcern, MongoActionOperation.BULK, collectionName, entityType, null, null));
 	}
 
 	/**
