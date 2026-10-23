@@ -44,4 +44,16 @@ record BasicAggregationOperation(Object value) implements AggregationOperation {
 		throw new IllegalStateException(
 				String.format("%s cannot be converted to org.bson.Document", ObjectUtils.nullSafeClassName(value)));
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		BasicAggregationOperation that = (BasicAggregationOperation) o;
+		return ObjectUtils.nullSafeEquals(value, that.value);
+	}
 }
