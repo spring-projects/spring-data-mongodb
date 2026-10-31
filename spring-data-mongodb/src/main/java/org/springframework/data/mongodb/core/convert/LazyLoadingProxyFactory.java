@@ -56,6 +56,7 @@ import com.mongodb.DBRef;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Priyanshu Gagiya
  */
 public final class LazyLoadingProxyFactory {
 
@@ -275,8 +276,7 @@ public final class LazyLoadingProxyFactory {
 		private Object ensureResolved() {
 
 			if (!resolved) {
-				this.result = resolve();
-				this.resolved = true;
+				return resolve();
 			}
 
 			return this.result;
@@ -366,7 +366,15 @@ public final class LazyLoadingProxyFactory {
 			}
 
 			try {
-				return writeLock.execute(() -> callback.resolve(property));
+				return writeLock.execute(() -> {
+					if (resolved) {
+						return result;
+					}
+
+					result = callback.resolve(property);
+					resolved = true;
+					return result;
+				});
 			} catch (RuntimeException ex) {
 
 				DataAccessException translatedException =  exceptionTranslator != null ? exceptionTranslator.translateExceptionIfPossible(ex) : null;
