@@ -19,7 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.List;
 
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
+import org.springframework.data.mongodb.core.convert.ReferenceLookupDelegate.ListDocumentReferenceQuery;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -37,6 +40,7 @@ import org.springframework.expression.EvaluationContext;
  * Unit tests for {@link ReferenceLookupDelegate}.
  *
  * @author Christoph Strobl
+ * @author Priyanshu Gagiya
  */
 @ExtendWith(MockitoExtension.class)
 class ReferenceLookupDelegateUnitTests {
@@ -51,6 +55,17 @@ class ReferenceLookupDelegateUnitTests {
 	@BeforeEach
 	void beforeEach() {
 		lookupDelegate = new ReferenceLookupDelegate(mappingContext, spELContext);
+	}
+
+	@Test
+	void shouldRestoreReferenceOrderUsingCompoundLookup() {
+
+		Document first = new Document("tenant", "one").append("code", "shared");
+		Document second = new Document("tenant", "two").append("code", "shared");
+		List<Document> references = List.of(second, new Document("tenant", "missing"), first);
+		ListDocumentReferenceQuery query = new ListDocumentReferenceQuery(new Document("$or", references), new Document());
+
+		assertThat(query.restoreOrder(List.of(first, second))).containsExactly(second, first);
 	}
 
 	@Test // GH-3842
