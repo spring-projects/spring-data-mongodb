@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
@@ -31,6 +32,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 
+import com.mongodb.client.model.CreateIndexOptions;
+import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -48,6 +51,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	private final String collectionName;
 	private final QueryMapper queryMapper;
 	private final @Nullable Class<?> type;
+	private final CreateIndexOptions createIndexOptions;
 
 	/**
 	 * Creates a new {@link DefaultReactiveIndexOperations}.
@@ -71,15 +75,32 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	 */
 	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
 			QueryMapper queryMapper, @Nullable Class<?> type) {
+		this(mongoOperations, collectionName, queryMapper, type, new CreateIndexOptions());
+	}
+
+	/**
+	 * Creates a new {@link DefaultReactiveIndexOperations}.
+	 *
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param queryMapper must not be {@literal null}.
+	 * @param type used for mapping potential partial index filter expression, must not be {@literal null}.
+	 * @param createIndexOptions must not be {@literal null}.
+	 * @since 4.5
+	 */
+	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
+			QueryMapper queryMapper, @Nullable Class<?> type, CreateIndexOptions createIndexOptions) {
 
 		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null");
 		Assert.notNull(collectionName, "Collection must not be null");
 		Assert.notNull(queryMapper, "QueryMapper must not be null");
+		Assert.notNull(createIndexOptions, "CreateIndexOptions must not be null");
 
 		this.mongoOperations = mongoOperations;
 		this.collectionName = collectionName;
 		this.queryMapper = queryMapper;
 		this.type = type;
+		this.createIndexOptions = createIndexOptions;
 	}
 
 	@Override
@@ -95,7 +116,8 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
 			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
 
-			return collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
+			IndexModel indexModel = new IndexModel(indexDefinition.getIndexKeys(), indexOptions);
+			return collection.createIndexes(List.of(indexModel), createIndexOptions);
 
 		}).next();
 	}
