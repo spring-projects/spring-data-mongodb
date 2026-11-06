@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
@@ -38,6 +41,8 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoNamespace;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteOptions;
@@ -47,6 +52,7 @@ import com.mongodb.client.model.bulk.ClientBulkWriteResult;
  * Internal API wrapping a {@link MongoTemplate} to encapsulate {@link Bulk} handling.
  *
  * @author Christoph Strobl
+ * @author Sangyeop Jeong
  * @since 5.1
  */
 class BulkWriter extends BulkWriterSupport {
@@ -77,17 +83,20 @@ class BulkWriter extends BulkWriterSupport {
 		SingleCollectionCollector collector = new SingleCollectionCollector(mongoNamespace);
 		buildWriteModels(bulk, collector);
 
-		try {
-			com.mongodb.bulk.BulkWriteResult bulkWriteResult = template.execute(collector.getNamespace().getCollectionName(),
-					collection -> collection.bulkWrite(collector.getWriteModels(), new com.mongodb.client.model.BulkWriteOptions()
-							.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))));
+		String collectionName = collector.getNamespace().getCollectionName();
+		WriteConcern writeConcern = template.prepareBulkWriteConcern(collectionName, namespace.type());
 
-			collector.getAfterSaveCallables().forEach(callable -> {
-				template
-						.maybeEmitEvent(new AfterSaveEvent<>(callable.source(), callable.document(), callable.collectionName()));
-				template.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName());
+		try {
+			com.mongodb.bulk.BulkWriteResult bulkWriteResult = template.execute(collectionName, collection -> {
+
+				MongoCollection<Document> collectionToUse = writeConcern != null ? collection.withWriteConcern(writeConcern)
+						: collection;
+
+				return collectionToUse.bulkWrite(collector.getWriteModels(), new com.mongodb.client.model.BulkWriteOptions()
+						.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED)));
 			});
-			return BulkWriteResult.from(bulkWriteResult);
+
+			return BulkWriteResult.from(bulkWriteResult, completeSaves(collector));
 		} catch (MongoBulkWriteException e) {
 			DataAccessException dataAccessException = template.getExceptionTranslator().translateExceptionIfPossible(e);
 			if (dataAccessException != null) {
@@ -110,12 +119,7 @@ class BulkWriter extends BulkWriterSupport {
 					.doWithClient(client -> client.bulkWrite(collector.getWriteModels(), ClientBulkWriteOptions
 							.clientBulkWriteOptions().ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))));
 
-			collector.getAfterSaveCallables().forEach(callable -> {
-				template
-						.maybeEmitEvent(new AfterSaveEvent<>(callable.source(), callable.document(), callable.collectionName()));
-				template.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName());
-			});
-			return BulkWriteResult.from(clientBulkWriteResult);
+			return BulkWriteResult.from(clientBulkWriteResult, completeSaves(collector));
 		} catch (MongoBulkWriteException e) {
 			DataAccessException dataAccessException = template.getExceptionTranslator().translateExceptionIfPossible(e);
 			if (dataAccessException != null) {
@@ -136,7 +140,11 @@ class BulkWriter extends BulkWriterSupport {
 
 				SourceAwareDocument<Object> sourceAwareDocument = template.prepareObjectForSave(namespace.getCollectionName(),
 						insert.value());
-				collector.addInsert(namespace, sourceAwareDocument.document(), sourceAwareDocument);
+				MappedDocument document = queryOperations
+						.createInsertContext(MappedDocument.of(sourceAwareDocument.document()))
+						.prepareId(sourceAwareDocument.source().getClass());
+
+				collector.addInsert(namespace, document.getDocument(), sourceAwareDocument);
 			} else if (bulkOp instanceof Update update) {
 
 				boolean multi = !(bulkOp instanceof UpdateFirst);
@@ -165,13 +173,72 @@ class BulkWriter extends BulkWriterSupport {
 				UpdateContext updateContext = queryOperations.replaceSingleContext(replace.query(),
 						MappedDocument.of(sourceAwareDocument.document()), replace.upsert());
 
-				Document mappedQuery = updateContext.getMappedQuery(entity);
+				Document mappedQuery = applyShardKeyIfRequired(updateContext, entity,
+						updateContext.getMappedQuery(entity), namespace.getCollectionName());
 				UpdateOptions updateOptions = updateContext.getUpdateOptions(entity, replace.query());
 
 				collector.addReplace(namespace, mappedQuery, sourceAwareDocument.document(), updateOptions,
 						sourceAwareDocument);
 			}
 		}
+	}
+
+	/**
+	 * Append the {@link MongoPersistentEntity#getShardKey() shard key} to the given replacement filter if the entity is
+	 * sharded and the filter does not contain the shard key yet. Mutable shard key values are read from the existing
+	 * document, falling back to the replacement if there is none.
+	 *
+	 * @param updateContext the replacement context.
+	 * @param entity the entity the replacement is declared for, can be {@literal null}.
+	 * @param filter the mapped replacement filter.
+	 * @param collectionName the collection to look up the existing document in.
+	 * @return the filter to use.
+	 */
+	private Document applyShardKeyIfRequired(UpdateContext updateContext, @Nullable MongoPersistentEntity<?> entity,
+			Document filter, String collectionName) {
+
+		if (entity == null || !updateContext.requiresShardKey(filter, entity)) {
+			return filter;
+		}
+
+		if (entity.getShardKey().isImmutable()) {
+			return updateContext.applyShardKey(entity, filter, null);
+		}
+
+		Document existing = template.execute(collectionName, collection -> collection.find(filter, Document.class)
+				.projection(updateContext.getMappedShardKey(entity)).first());
+
+		return updateContext.applyShardKey(entity, filter, existing);
+	}
+
+	private List<Object> completeSaves(WriteModelCollector collector) {
+
+		List<SourceAwareDocument<Object>> written = collector.getAfterSaveCallables();
+		List<Object> savedEntities = new ArrayList<>(written.size());
+
+		for (SourceAwareDocument<Object> entity : written) {
+			savedEntities.add(completeSave(entity));
+		}
+
+		return savedEntities;
+	}
+
+	/**
+	 * Completes the save lifecycle after an entity has been written through an {@literal insert} or {@literal replace}
+	 * operation by propagating a generated identifier back to the entity and emitting the after save event and
+	 * callbacks.
+	 *
+	 * @param written the entity along with the document handed to the driver, carrying an identifier generated during
+	 *          the write.
+	 * @return the entity as returned by the after save callbacks.
+	 */
+	private Object completeSave(SourceAwareDocument<Object> written) {
+
+		Object entity = populateIdIfNecessary(written.source(), written.document(),
+				template.getConverter().getConversionService());
+
+		template.maybeEmitEvent(new AfterSaveEvent<>(entity, written.document(), written.collectionName()));
+		return template.maybeCallAfterSave(entity, written.document(), written.collectionName());
 	}
 
 }
