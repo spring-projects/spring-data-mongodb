@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.core.NestedRuntimeException;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
@@ -39,7 +40,9 @@ import com.mongodb.MongoInternalException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.MongoSocketReadTimeoutException;
 import com.mongodb.MongoSocketWriteException;
+import com.mongodb.MongoWriteException;
 import com.mongodb.ServerAddress;
+import com.mongodb.WriteError;
 
 /**
  * Unit tests for {@link MongoExceptionTranslator}.
@@ -48,6 +51,7 @@ import com.mongodb.ServerAddress;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Brice Vandeputte
+ * @author Seonwoo Jung
  */
 class MongoExceptionTranslatorUnitTests {
 
@@ -191,6 +195,42 @@ class MongoExceptionTranslatorUnitTests {
 		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
 
 		expectExceptionWithCauseMessage(translatedException, UncategorizedMongoDbException.class);
+	}
+
+	@Test // GH-5150
+	void translateTransientWriteConflictMongoException() {
+
+		MongoException source = new MongoException(112, "WriteConflict");
+		source.addLabel(MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL);
+
+		DataAccessException translated = translator.translateExceptionIfPossible(source);
+
+		expectExceptionWithCauseMessage(translated, ConcurrencyFailureException.class, "WriteConflict");
+		assertThat(translator.isTransientFailure(translated)).isTrue();
+	}
+
+	@Test // GH-5150
+	void translateTransientMongoWriteException() {
+
+		WriteError writeError = new WriteError(112, "WriteConflict", new BsonDocument());
+		MongoWriteException source = new MongoWriteException(writeError, new ServerAddress());
+		source.addLabel(MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL);
+
+		DataAccessException translated = translator.translateExceptionIfPossible(source);
+
+		expectExceptionWithCauseMessage(translated, ConcurrencyFailureException.class, "WriteConflict");
+		assertThat(translator.isTransientFailure(translated)).isTrue();
+	}
+
+	@Test // GH-5150
+	void translateNonTransientWriteConflictMongoException() {
+
+		MongoException source = new MongoException(112, "WriteConflict");
+
+		DataAccessException translated = translator.translateExceptionIfPossible(source);
+
+		expectExceptionWithCauseMessage(translated,
+				org.springframework.dao.DataIntegrityViolationException.class, "WriteConflict");
 	}
 
 	private void checkTranslatedMongoException(Class<? extends Exception> clazz, int code) {
