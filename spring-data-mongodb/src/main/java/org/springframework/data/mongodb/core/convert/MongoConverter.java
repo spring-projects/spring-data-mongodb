@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.lang.reflect.Method;
+
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -22,6 +24,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.core.KotlinDetector;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityConverter;
@@ -36,6 +39,7 @@ import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.DBRef;
 import com.mongodb.MongoClientSettings;
@@ -48,6 +52,7 @@ import com.mongodb.MongoClientSettings;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Ryan Gibb
+ * @author Jonghun Ju
  */
 public interface MongoConverter
 		extends EntityConverter<MongoPersistentEntity<?>, MongoPersistentProperty, Object, Bson>, MongoWriter<Object>,
@@ -160,30 +165,43 @@ public interface MongoConverter
 	@Nullable
 	default Object convertId(@Nullable Object id, Class<?> targetType) {
 
-		if (id == null || ClassUtils.isAssignableValue(targetType, id)) {
-			return id;
+		if (id == null) {
+			return null;
+		}
+
+		Object idValue = (KotlinDetector.isInlineClass(id.getClass()) ? unbox(id) : id);
+		if (idValue == null || ClassUtils.isAssignableValue(targetType, idValue)) {
+			return idValue;
 		}
 
 		if (ClassUtils.isAssignable(ObjectId.class, targetType)) {
 
-			if (id instanceof String) {
+			if (idValue instanceof String) {
 
-				if (ObjectId.isValid(id.toString())) {
-					return new ObjectId(id.toString());
+				if (ObjectId.isValid(idValue.toString())) {
+					return new ObjectId(idValue.toString());
 				}
 
 				// avoid ConversionException as convertToMongoType will return String anyways.
-				return id;
+				return idValue;
 			}
 		}
 
 		try {
-			return getConversionService().canConvert(id.getClass(), targetType)
-					? getConversionService().convert(id, targetType)
-					: convertToMongoType(id, (TypeInformation<?>) null);
+			return getConversionService().canConvert(idValue.getClass(), targetType)
+					? getConversionService().convert(idValue, targetType)
+					: convertToMongoType(idValue, (TypeInformation<?>) null);
 		} catch (ConversionException o_O) {
-			return convertToMongoType(id,(TypeInformation<?>)  null);
+			return convertToMongoType(idValue, (TypeInformation<?>) null);
 		}
+	}
+
+	private static @Nullable Object unbox(Object value) {
+
+		Method unboxMethod = ReflectionUtils.findMethod(value.getClass(), "unbox-impl");
+		Assert.state(unboxMethod != null, "Kotlin value class must declare an unbox-impl method");
+		Object unboxed = ReflectionUtils.invokeMethod(unboxMethod, value);
+		return (unboxed != null && KotlinDetector.isInlineClass(unboxed.getClass()) ? unbox(unboxed) : unboxed);
 	}
 
 	@Override
