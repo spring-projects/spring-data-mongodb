@@ -17,18 +17,24 @@ package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import org.bson.BsonNull;
 import org.bson.Document;
+import org.bson.RawBsonDocument;
+import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.ScrollPosition.Direction;
 import org.springframework.data.domain.Window;
-import org.springframework.data.mongodb.core.EntityOperations.Entity;
+import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.CheckReturnValue;
 import org.springframework.util.Assert;
 
@@ -38,6 +44,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Jens Schauder
+ * @author Priyanshu Gagiya
  * @since 4.1
  */
 class ScrollUtils {
@@ -47,9 +54,11 @@ class ScrollUtils {
 	 *
 	 * @param query
 	 * @param idPropertyName
+	 * @param sortMapper maps sort field names to their stored names
 	 * @return
 	 */
-	static KeysetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
+	static KeysetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName,
+			Function<Document, Document> sortMapper) {
 
 		KeysetScrollPosition keyset = query.getKeyset();
 
@@ -58,33 +67,32 @@ class ScrollUtils {
 		KeysetScrollDirector director = KeysetScrollDirector.of(keyset.getDirection());
 		Document sortObject = director.getSortObject(idPropertyName, query);
 		Document fieldsObject = director.getFieldsObject(query.getFieldsObject(), sortObject);
-		Document queryObject = director.createQuery(keyset, query.getQueryObject(), sortObject);
+		Map<String, String> keyFields = new LinkedHashMap<>();
+		for (String key : sortObject.keySet()) {
+			keyFields.put(key, sortMapper.apply(new Document(key, 1)).keySet().iterator().next());
+		}
+		Document queryObject = director.createQuery(keyset, query.getQueryObject(), sortObject, keyFields::get);
 
-		return new KeysetScrollQuery(queryObject, fieldsObject, sortObject);
+		return new KeysetScrollQuery(queryObject, fieldsObject, sortObject, keyFields);
 	}
 
-	static <T> Window<T> createWindow(Query query, List<T> result, Class<?> sourceType, EntityOperations operations) {
+	static <T> Window<T> createWindow(Query query, List<KeysetScrollResult<T>> result) {
 
-		Document sortObject = query.getSortObject();
 		KeysetScrollPosition keyset = query.getKeyset();
-
 		Assert.notNull(keyset, "Query.keyset must not be null");
 
 		Direction direction = keyset.getDirection();
-		KeysetScrollDirector director = KeysetScrollDirector.of(direction);
-
-		List<T> resultsToUse = director.postPostProcessResults(result, query.getLimit());
-
-		IntFunction<ScrollPosition> positionFunction = value -> {
-
-			T last = resultsToUse.get(value);
-			Entity<T> entity = operations.forEntity(last);
-
-			Map<String, Object> keys = entity.extractKeys(sortObject, sourceType);
-			return ScrollPosition.of(keys, direction);
+		List<KeysetScrollResult<T>> resultsToUse = KeysetScrollDirector.of(direction).postPostProcessResults(result,
+				query.getLimit());
+		IntFunction<ScrollPosition> positionFunction = index -> {
+			return ScrollPosition.of(resultsToUse.get(index).keys(), direction);
 		};
 
-		return Window.from(resultsToUse, positionFunction, hasMoreElements(result, query.getLimit()));
+		return Window.from(resultsToUse.stream().map(KeysetScrollResult::entity).toList(), positionFunction,
+				hasMoreElements(result, query.getLimit()));
+	}
+
+	record KeysetScrollResult<T>(T entity, Map<String, Object> keys) {
 	}
 
 	static <T> Window<T> createWindow(List<T> result, int limit, IntFunction<? extends ScrollPosition> positionFunction) {
@@ -104,8 +112,22 @@ class ScrollUtils {
 		return result;
 	}
 
-	record KeysetScrollQuery(Document query, Document fields, Document sort) {
+	record KeysetScrollQuery(Document query, Document fields, Document sort, Map<String, String> keyFields) {
 
+		Map<String, Object> captureKeys(Map<String, Object> document, CodecRegistry codecRegistry) {
+
+			Document keys = new Document();
+			keyFields.forEach((key, field) -> {
+				Object value = BsonUtils.resolveValue(document, field);
+				if (value == null || value instanceof BsonNull) {
+					throw new IllegalStateException("Cannot extract value for key %s because its value is null".formatted(key));
+				}
+				keys.put(key, value);
+			});
+			Codec<Document> codec = codecRegistry.get(Document.class);
+			// Snapshot mutable BSON values before conversion or lifecycle callbacks can change them.
+			return new RawBsonDocument(keys, codec).decode(codec);
+		}
 	}
 
 	/**
@@ -147,7 +169,8 @@ class ScrollUtils {
 		}
 
 		@CheckReturnValue
-		public Document createQuery(KeysetScrollPosition keyset, Document queryObject, Document sortObject) {
+		public Document createQuery(KeysetScrollPosition keyset, Document queryObject, Document sortObject,
+				Function<String, String> fieldMapper) {
 
 			Map<String, Object> keysetValues = keyset.getKeys();
 			List<String> sortKeys = new ArrayList<>(sortObject.keySet());
@@ -161,7 +184,7 @@ class ScrollUtils {
 				throw new IllegalStateException("KeysetScrollPosition does not contain all keyset values");
 			}
 
-			List<Document> or = getKeysetCriteria(sortObject, sortKeys, keysetValues);
+			List<MongoExpression> or = getKeysetCriteria(sortObject, sortKeys, keysetValues, fieldMapper);
 			if (or.isEmpty()) {
 				return queryObject;
 			}
@@ -175,38 +198,35 @@ class ScrollUtils {
 			return filterQuery;
 		}
 
-		private List<Document> getKeysetCriteria(Document sortObject, List<String> sortKeys,
-				Map<String, Object> keysetValues) {
+		private List<MongoExpression> getKeysetCriteria(Document sortObject, List<String> sortKeys,
+				Map<String, Object> keysetValues, Function<String, String> fieldMapper) {
 
-			List<Document> or = new ArrayList<>();
+			List<MongoExpression> or = new ArrayList<>();
 
-			// build matrix query for keyset paging that contains sort^2 queries
-			// reflecting a query that follows sort order semantics starting from the last returned keyset
 			for (int i = 0; i < sortKeys.size(); i++) {
 
 				Document sortConstraint = new Document();
-
-				for (int j = 0; j < sortKeys.size(); j++) {
+				for (int j = 0; j <= i; j++) {
 
 					String sortSegment = sortKeys.get(j);
-					int sortOrder = sortObject.getInteger(sortSegment);
-					Object o = keysetValues.get(sortSegment);
-
-					if (j >= i) { // tail segment
-						if (o instanceof BsonNull) {
-							throw new IllegalStateException(
-									"Cannot resume from KeysetScrollPosition. Offending key: '%s' is 'null'".formatted(sortSegment));
-						}
-						sortConstraint.put(sortSegment, new Document(getComparator(sortOrder), o));
-						break;
+					String field = fieldMapper.apply(sortSegment);
+					Object value = keysetValues.get(sortSegment);
+					if (value == null || value instanceof BsonNull) {
+						throw new IllegalStateException(
+								"Cannot resume from KeysetScrollPosition. Offending key: '%s' is 'null'".formatted(sortSegment));
 					}
 
-					sortConstraint.put(sortSegment, o);
+					if (j == i) {
+						sortConstraint.put("$expr", new Document(getComparator(sortObject.getInteger(sortSegment)),
+								List.of("$" + field, new Document("$literal", value))));
+					} else {
+						sortConstraint.put(field, new Document("$eq", value));
+					}
 				}
-
-				if (!sortConstraint.isEmpty()) {
-					or.add(sortConstraint);
-				}
+				// Field names are mapped; values must retain their stored BSON types.
+				or.add(() -> {
+					return sortConstraint;
+				});
 			}
 
 			return or;
