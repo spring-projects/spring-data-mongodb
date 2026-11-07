@@ -38,6 +38,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author dragonfsky
  */
 public class MongoMappingContext extends AbstractMappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>
 		implements ApplicationContextAware {
@@ -46,6 +47,7 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
 	private boolean autoIndexCreation = false;
+	private boolean autoIdFieldMappingOnlyForDocumentTypes = false;
 
 	private @Nullable ApplicationContext applicationContext;
 
@@ -81,7 +83,8 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	public MongoPersistentProperty createPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder) {
 
-		CachingMongoPersistentProperty cachingMongoPersistentProperty = new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+		CachingMongoPersistentProperty cachingMongoPersistentProperty = new CachingMongoPersistentProperty(property, owner,
+				simpleTypeHolder, fieldNamingStrategy, autoIdFieldMappingOnlyForDocumentTypes);
 		cachingMongoPersistentProperty.validate();
 		return cachingMongoPersistentProperty;
 	}
@@ -123,6 +126,30 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	 */
 	public void setAutoIndexCreation(boolean autoCreateIndexes) {
 		this.autoIndexCreation = autoCreateIndexes;
+	}
+
+	/**
+	 * Returns whether implicit {@code id} field mapping to {@code _id} should be applied only to types annotated with
+	 * {@link Document}.
+	 *
+	 * @return {@literal true} to restrict implicit {@code id} field mapping to {@link Document} types.
+	 * @since 5.1
+	 */
+	public boolean isAutoIdFieldMappingOnlyForDocumentTypes() {
+		return autoIdFieldMappingOnlyForDocumentTypes;
+	}
+
+	/**
+	 * Enables/disables restricting implicit {@code id} field mapping to {@code _id} to types annotated with
+	 * {@link Document}. Defaults to {@literal false} to retain the historic behavior of treating unannotated {@code id}
+	 * properties as id properties on every mapped type.
+	 *
+	 * @param autoIdFieldMappingOnlyForDocumentTypes set to {@literal true} to restrict implicit {@code id} field mapping
+	 *          to {@link Document} types.
+	 * @since 5.1
+	 */
+	public void setAutoIdFieldMappingOnlyForDocumentTypes(boolean autoIdFieldMappingOnlyForDocumentTypes) {
+		this.autoIdFieldMappingOnlyForDocumentTypes = autoIdFieldMappingOnlyForDocumentTypes;
 	}
 
 	@Override
