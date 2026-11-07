@@ -60,6 +60,7 @@ import com.mongodb.Function;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thiago Diniz da Silveira
+ * @author dragonfsky
  * @since 1.5
  */
 @SuppressWarnings("ConstantConditions")
@@ -768,7 +769,11 @@ abstract class GeoConverters {
 		Assert.notNull(dbList, "DbList must not be null");
 
 		GeoJsonPolygon polygon = new GeoJsonPolygon(toListOfPoint((List<?>) dbList.get(0)));
-		return dbList.size() > 1 ? polygon.withInnerRing(toListOfPoint((List<?>) dbList.get(1))) : polygon;
+		for (int i = 1; i < dbList.size(); i++) {
+			polygon = polygon.withInnerRing(toListOfPoint((List<?>) dbList.get(i)));
+		}
+
+		return polygon;
 	}
 
 	/**
