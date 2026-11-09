@@ -39,7 +39,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
@@ -65,7 +64,8 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	private static final String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
 
 	private Set<Class<?>> restrictedTypes = Collections.emptySet();
-	private final Map<String, CriteriaDefinition> criteria = new LinkedHashMap<>();
+	private final Map<String, List<CriteriaDefinition>> criteria = new LinkedHashMap<>();
+	private final List<CriteriaDefinition> criteriaDefinitions = new ArrayList<>();
 	private @Nullable Field fieldSpec = null;
 	private Sort sort = Sort.unsorted();
 	private long skip;
@@ -130,16 +130,9 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 		Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null");
 
-		CriteriaDefinition existing = this.criteria.get(criteriaDefinition.getKey());
 		String key = criteriaDefinition.getKey();
-
-		if (existing == null) {
-			this.criteria.put(key, criteriaDefinition);
-		} else {
-			throw new InvalidMongoDbApiUsageException(
-					String.format("Due to limitations of the com.mongodb.BasicDocument, you can't add a second '%s' criteria;"
-							+ " Query already contains '%s'", key, serializeToJsonSafely(existing.getCriteriaObject())));
-		}
+		this.criteria.computeIfAbsent(key, it -> new ArrayList<>()).add(criteriaDefinition);
+		this.criteriaDefinitions.add(criteriaDefinition);
 
 		return this;
 	}
@@ -435,18 +428,16 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 			return BsonUtils.EMPTY_DOCUMENT;
 		}
 
-		if (criteria.size() == 1 && restrictedTypes.isEmpty()) {
-
-			for (CriteriaDefinition definition : criteria.values()) {
-				return definition.getCriteriaObject();
-			}
+		if (criteriaDefinitions.size() == 1 && restrictedTypes.isEmpty()) {
+			return criteriaDefinitions.get(0).getCriteriaObject();
 		}
 
-		Document document = new Document();
-
-		for (CriteriaDefinition definition : criteria.values()) {
-			document.putAll(definition.getCriteriaObject());
+		List<Document> criteriaDocuments = new ArrayList<>(criteriaDefinitions.size());
+		for (CriteriaDefinition definition : criteriaDefinitions) {
+			criteriaDocuments.add(definition.getCriteriaObject());
 		}
+
+		Document document = mergeCriteriaDocuments(criteriaDocuments);
 
 		if (!restrictedTypes.isEmpty()) {
 			document.put(RESTRICTED_TYPES_KEY, getRestrictedTypes());
@@ -713,7 +704,58 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	}
 
 	protected List<CriteriaDefinition> getCriteria() {
-		return new ArrayList<>(this.criteria.values());
+		return new ArrayList<>(this.criteriaDefinitions);
+	}
+
+	private static Document mergeCriteriaDocuments(List<Document> criteriaDocuments) {
+
+		Set<String> keys = new HashSet<>();
+		boolean hasDuplicateKey = false;
+
+		for (Document criteriaDocument : criteriaDocuments) {
+			for (String key : criteriaDocument.keySet()) {
+				if (!keys.add(key)) {
+					hasDuplicateKey = true;
+					break;
+				}
+			}
+			if (hasDuplicateKey) {
+				break;
+			}
+		}
+
+		if (hasDuplicateKey) {
+			return new Document("$and", criteriaDocuments);
+		}
+
+		Document merged = new Document();
+		criteriaDocuments.forEach(merged::putAll);
+		return merged;
+	}
+
+	private static Document mergeQueryObjects(Document sourceQuery, Document targetQuery) {
+
+		Document source = new Document(sourceQuery);
+		Document target = new Document(targetQuery);
+
+		Object sourceRestrictedTypes = source.remove(RESTRICTED_TYPES_KEY);
+		Object restrictedTypes = target.remove(RESTRICTED_TYPES_KEY);
+
+		boolean hasDuplicateKey = target.keySet().stream().anyMatch(source::containsKey);
+
+		Document merged;
+		if (hasDuplicateKey) {
+			merged = new Document("$and", Arrays.asList(source, target));
+		} else {
+			merged = BsonUtils.merge(source, target);
+		}
+
+		Object effectiveRestrictedTypes = restrictedTypes != null ? restrictedTypes : sourceRestrictedTypes;
+		if (effectiveRestrictedTypes != null) {
+			merged.put(RESTRICTED_TYPES_KEY, effectiveRestrictedTypes);
+		}
+
+		return merged;
 	}
 
 	/**
@@ -747,7 +789,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 			@Override
 			public Document getQueryObject() {
-				return BsonUtils.merge(sourceQuery, super.getQueryObject());
+				return mergeQueryObjects(sourceQuery, super.getQueryObject());
 			}
 
 			@Override
