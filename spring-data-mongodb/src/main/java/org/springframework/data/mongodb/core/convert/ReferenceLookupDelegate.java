@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,6 +63,7 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Stefan Bildl
+ * @author Priyanshu Gagiya
  * @since 3.3
  */
 public final class ReferenceLookupDelegate {
@@ -460,7 +462,21 @@ public final class ReferenceLookupDelegate {
 			}
 
 			List<Document> ors = query.get("$or", List.class);
-			return target.stream().sorted((o1, o2) -> compareAgainstReferenceIndex(ors, o1, o2)).collect(Collectors.toList());
+			Map<Document, Integer> referenceIndexes = new IdentityHashMap<>();
+
+			return target.stream().sorted((o1, o2) -> {
+				int index1 = referenceIndexes.computeIfAbsent(o1, it -> {
+					return getReferenceIndex(ors, it);
+				});
+				int index2 = referenceIndexes.computeIfAbsent(o2, it -> {
+					return getReferenceIndex(ors, it);
+				});
+
+				if (index1 == ors.size() && index2 == ors.size()) {
+					return ors.size();
+				}
+				return index1 <= index2 ? -1 : 1;
+			}).collect(Collectors.toList());
 		}
 
 		@Override
@@ -473,17 +489,14 @@ public final class ReferenceLookupDelegate {
 			return sort;
 		}
 
-		int compareAgainstReferenceIndex(List<Document> referenceList, Document document1, Document document2) {
+		private int getReferenceIndex(List<Document> referenceList, Document target) {
 
-			for (Document document : referenceList) {
-
-				Set<Entry<String, Object>> entries = document.entrySet();
-				if (document1.entrySet().containsAll(entries)) {
-					return -1;
+			int index = 0;
+			for (Document reference : referenceList) {
+				if (target.entrySet().containsAll(reference.entrySet())) {
+					return index;
 				}
-				if (document2.entrySet().containsAll(entries)) {
-					return 1;
-				}
+				index++;
 			}
 			return referenceList.size();
 		}
