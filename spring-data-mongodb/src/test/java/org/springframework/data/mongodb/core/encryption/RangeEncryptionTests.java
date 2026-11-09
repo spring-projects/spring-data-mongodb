@@ -112,13 +112,14 @@ class RangeEncryptionTests {
 	@Test // GH-4185
 	void manuallyEncryptedValuesCanBeSavedAndRetrievedCorrectly() {
 
-		EncryptOptions encryptOptions = new EncryptOptions("Range").contentionFactor(1L)
-				.keyId(keyHolder.getEncryptionKey("encryptedInt"))
-				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)).sparsity(1L));
+		RangeOptions intRangeOptions = new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)).trimFactor(1)
+				.sparsity(1L);
 
-		EncryptOptions encryptExpressionOptions = new EncryptOptions("Range").contentionFactor(1L)
-				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)))
-				.keyId(keyHolder.getEncryptionKey("encryptedInt")).queryType("range");
+		EncryptOptions encryptOptions = new EncryptOptions("Range").contentionFactor(0L)
+				.keyId(keyHolder.getEncryptionKey("encryptedInt")).rangeOptions(intRangeOptions);
+
+		EncryptOptions encryptExpressionOptions = new EncryptOptions("Range").contentionFactor(0L)
+				.rangeOptions(intRangeOptions).keyId(keyHolder.getEncryptionKey("encryptedInt")).queryType("range");
 
 		EncryptOptions equalityEncOptions = new EncryptOptions("Indexed").contentionFactor(0L)
 				.keyId(keyHolder.getEncryptionKey("age"));
