@@ -20,6 +20,7 @@ import java.util.Set;
 import com.mongodb.ClientBulkWriteException;
 import org.bson.BsonInvalidOperationException;
 import org.jspecify.annotations.Nullable;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -50,6 +51,7 @@ import com.mongodb.bulk.BulkWriteError;
  * @author Michal Vich
  * @author Christoph Strobl
  * @author Brice Vandeputte
+ * @author Seonwoo Jung
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
@@ -120,6 +122,10 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 				}
 			}
 
+			if (isTransientFailure(ex)) {
+				return new ConcurrencyFailureException(ex.getMessage(), ex);
+			}
+
 			return new DataIntegrityViolationException(ex.getMessage(), ex);
 		}
 
@@ -142,6 +148,9 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 				return new PermissionDeniedDataAccessException(ex.getMessage(), ex);
 			}
 			if (MongoDbErrorCodes.isDataIntegrityViolationError(mongoException)) {
+				if (isTransientFailure(mongoException)) {
+					return new ConcurrencyFailureException(mongoException.getMessage(), mongoException);
+				}
 				return new DataIntegrityViolationException(mongoException.getMessage(), mongoException);
 			}
 			if (MongoDbErrorCodes.isClientSessionFailure(mongoException)) {
