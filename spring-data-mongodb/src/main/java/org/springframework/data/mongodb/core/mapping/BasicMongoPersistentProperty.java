@@ -51,6 +51,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Divya Srivastava
+ * @author dragonfsky
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty>
 		implements MongoPersistentProperty {
@@ -62,6 +63,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = Set.of("id", ID_FIELD_NAME);
 
 	private final FieldNamingStrategy fieldNamingStrategy;
+	private final boolean autoIdFieldMappingOnlyForDocumentTypes;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentProperty}.
@@ -74,9 +76,16 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	public BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
 
+		this(property, owner, simpleTypeHolder, fieldNamingStrategy, false);
+	}
+
+	BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder,
+			@Nullable FieldNamingStrategy fieldNamingStrategy, boolean autoIdFieldMappingOnlyForDocumentTypes) {
+
 		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
+		this.autoIdFieldMappingOnlyForDocumentTypes = autoIdFieldMappingOnlyForDocumentTypes;
 	}
 
 	/**
@@ -93,7 +102,11 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		// We need to support a wider range of ID types than just the ones that can be converted to an ObjectId
 		// but still we need to check if there happens to be an explicit name set
-		return SUPPORTED_ID_PROPERTY_NAMES.contains(getName()) && !hasExplicitFieldName();
+		if (!SUPPORTED_ID_PROPERTY_NAMES.contains(getName()) || hasExplicitFieldName()) {
+			return false;
+		}
+
+		return !autoIdFieldMappingOnlyForDocumentTypes || getOwner().isAnnotationPresent(Document.class);
 	}
 
 	@Override
