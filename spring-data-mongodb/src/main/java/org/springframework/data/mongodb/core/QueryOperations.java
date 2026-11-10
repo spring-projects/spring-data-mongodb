@@ -79,9 +79,28 @@ import com.mongodb.client.model.UpdateOptions;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Florian Lüdiger
+ * @author Jeongkyun An
  * @since 3.0
  */
 class QueryOperations {
+
+	/**
+	 * Narrow a {@link Query#getSkip() skip} to the {@code int} the MongoDB driver and wire protocol accept.
+	 *
+	 * @param skip the value to narrow.
+	 * @return {@code skip} narrowed to {@code int}.
+	 * @throws IllegalArgumentException if {@code skip} is outside the {@code int} range.
+	 */
+	static int skipAsInt(long skip) {
+
+		if (skip > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException(
+					"Skip must be within the Integer range, but was %d".formatted(skip));
+		}
+
+		return (int) skip;
+	}
+
 
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
@@ -635,7 +654,7 @@ class QueryOperations {
 			}
 
 			if (query.getSkip() > 0) {
-				options.skip((int) query.getSkip());
+				options.skip(skipAsInt(query.getSkip()));
 			}
 
 			Meta meta = query.getMeta();
