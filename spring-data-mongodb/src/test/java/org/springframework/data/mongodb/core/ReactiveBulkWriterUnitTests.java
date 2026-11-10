@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,6 +65,8 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.mongodb.WriteConcern;
+import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
 import com.mongodb.internal.client.model.bulk.AbstractClientNamespacedWriteModel;
@@ -82,6 +85,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * so that {@code client.bulkWrite} is exercised (multi-collection path).
  *
  * @author Christoph Strobl
+ * @author Sangyeop Jeong
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -402,6 +406,98 @@ class ReactiveBulkWriterUnitTests {
 				captor.getValue().get(1));
 		assertThat(updateModel.getUpdate())
 				.contains(new Document("$set", new Document("items.$.documents.0.the_file_id", "file-id")));
+	}
+
+	@Test // GH-5220
+	void singleCollectionBulkShouldApplyTemplateWriteConcern() {
+
+		stubSingleCollectionBulkWrite();
+		template.setWriteConcern(WriteConcern.MAJORITY);
+
+		ops.insert(new BaseDoc());
+
+		template.bulkWrite(builder.build(), BulkWriteOptions.ordered()).block();
+
+		verify(collection).withWriteConcern(WriteConcern.MAJORITY);
+	}
+
+	@Test // GH-5220
+	void singleCollectionBulkShouldApplyResolvedWriteConcern() {
+
+		stubSingleCollectionBulkWrite();
+		template.setWriteConcernResolver(action -> action.getMongoActionOperation() == MongoActionOperation.BULK
+				&& action.getCollectionName().equals("default-collection") ? WriteConcern.W2 : null);
+
+		ops.insert(new BaseDoc());
+
+		template.bulkWrite(builder.build(), BulkWriteOptions.ordered()).block();
+
+		verify(collection).withWriteConcern(WriteConcern.W2);
+	}
+
+	@Test // GH-5220
+	void replaceOneShouldAppendNonDefaultShardKeyFromReplacementIfShardKeyIsImmutable() {
+
+		stubSingleCollectionBulkWrite();
+
+		Bulk bulk = Bulk.create(it -> it.inCollection(ShardedEntityWithNonDefaultImmutableShardKey.class,
+				spec -> spec.replaceOne(query(where("id").is("id-1")),
+						new ShardedEntityWithNonDefaultImmutableShardKey("id-1", "AT", 4230))));
+
+		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
+
+		assertThat(capturedReplaceFilter())
+				.isEqualTo(new Document("_id", "id-1").append("country", "AT").append("userid", 4230));
+		verify(collection, never()).find(any(Bson.class), eq(Document.class));
+	}
+
+	@Test // GH-5220
+	void replaceOneShouldAppendNonDefaultShardKeyFromExistingDocument() {
+
+		stubSingleCollectionBulkWrite();
+		when(collection.find(any(Bson.class), eq(Document.class)).projection(any()).first())
+				.thenReturn(Mono.just(new Document("_id", "id-1").append("country", "US").append("userid", 4230)));
+
+		Bulk bulk = Bulk.create(it -> it.inCollection(ShardedEntityWithNonDefaultShardKey.class,
+				spec -> spec.replaceOne(query(where("id").is("id-1")),
+						new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230))));
+
+		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
+
+		assertThat(capturedReplaceFilter())
+				.isEqualTo(new Document("_id", "id-1").append("country", "US").append("userid", 4230));
+	}
+
+	@Test // GH-5220
+	void replaceOneShouldAppendNonDefaultShardKeyFromReplacementIfNoExistingDocument() {
+
+		stubSingleCollectionBulkWrite();
+		when(collection.find(any(Bson.class), eq(Document.class)).projection(any()).first()).thenReturn(Mono.empty());
+
+		Bulk bulk = Bulk.create(it -> it.inCollection(ShardedEntityWithNonDefaultShardKey.class,
+				spec -> spec.replaceOne(query(where("id").is("id-1")),
+						new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230))));
+
+		template.bulkWrite(bulk, BulkWriteOptions.ordered()).block();
+
+		assertThat(capturedReplaceFilter())
+				.isEqualTo(new Document("_id", "id-1").append("country", "AT").append("userid", 4230));
+	}
+
+	private void stubSingleCollectionBulkWrite() {
+
+		when(collection.withWriteConcern(any())).thenReturn(collection);
+		when(collection.bulkWrite(anyList(), any(com.mongodb.client.model.BulkWriteOptions.class)))
+				.thenReturn(Mono.just(com.mongodb.bulk.BulkWriteResult.unacknowledged()));
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private Bson capturedReplaceFilter() {
+
+		ArgumentCaptor<List> models = ArgumentCaptor.forClass(List.class);
+		verify(collection).bulkWrite(models.capture(), any(com.mongodb.client.model.BulkWriteOptions.class));
+
+		return ((ReplaceOneModel<Document>) models.getValue().get(0)).getFilter();
 	}
 
 	static <T extends ClientWriteModel> T extractWriteModel(Class<T> type, ClientNamespacedWriteModel source) {

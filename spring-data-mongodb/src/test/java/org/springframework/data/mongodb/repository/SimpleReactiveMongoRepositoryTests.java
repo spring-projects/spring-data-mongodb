@@ -45,6 +45,8 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
@@ -62,6 +64,7 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @author Ruben J Garcia
  * @author Clément Petit
+ * @author Sangyeop Jeong
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
@@ -373,6 +376,42 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 				.verifyComplete();
 	}
 
+	@Test // GH-5220
+	void saveIterableOfImmutableEntitiesShouldInsertEntity() {
+
+		immutableRepository.deleteAll().as(StepVerifier::create).verifyComplete();
+
+		immutableRepository.saveAll(Arrays.asList(keith, james)).as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.id).isNotNull();
+				}) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.id).isNotNull();
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // GH-5220
+	void saveIterableShouldConvertGeneratedIdToTargetType() {
+
+		ReactiveStringIdPersonRepository stringIdRepository = factory
+				.getRepository(ReactiveStringIdPersonRepository.class);
+		StringIdReactivePerson person = new StringIdReactivePerson();
+
+		stringIdRepository.deleteAll().as(StepVerifier::create).verifyComplete();
+		stringIdRepository.saveAll(Arrays.asList(person)).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		template.execute(StringIdReactivePerson.class, collection -> Flux.from(collection.find())) //
+				.map(it -> it.get("_id")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual).isInstanceOf(String.class).isEqualTo(person.id);
+				}) //
+				.verifyComplete();
+
+		stringIdRepository.findById(person.id).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+	}
+
 	@Test // DATAMONGO-1444
 	void deleteAllShouldRemoveEntities() {
 
@@ -680,6 +719,15 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 	interface ReactiveImmutablePersonRepository extends ReactiveMongoRepository<ImmutableReactivePerson, String> {
 
+	}
+
+	interface ReactiveStringIdPersonRepository extends ReactiveMongoRepository<StringIdReactivePerson, String> {
+
+	}
+
+	static class StringIdReactivePerson {
+
+		@MongoId(FieldType.STRING) String id;
 	}
 
 	static class ReactivePerson {
