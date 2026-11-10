@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import org.bson.Document;
 
+import java.io.Serial;
+
 /**
  * {@link MongoMappingEvent} triggered after save of a document.
  *
@@ -26,6 +28,7 @@ import org.bson.Document;
  */
 public class AfterSaveEvent<E> extends MongoMappingEvent<E> {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	/**
