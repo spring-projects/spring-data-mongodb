@@ -16,19 +16,9 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -39,6 +29,7 @@ import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentRef
 import org.springframework.data.mongodb.core.convert.ReferenceLoader.NoResultsFilter;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -197,7 +188,8 @@ public final class ReferenceLookupDelegate {
 	 * @return can be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<@Nullable T> defaultValue) {
+	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext,
+			Supplier<@Nullable T> defaultValue) {
 
 		if (!StringUtils.hasText(value)) {
 			return defaultValue.get();
@@ -222,7 +214,8 @@ public final class ReferenceLookupDelegate {
 		return evaluated != null ? evaluated : defaultValue.get();
 	}
 
-	ParameterBindingContext bindingContext(MongoPersistentProperty property, @Nullable Object source, SpELContext spELContext) {
+	ParameterBindingContext bindingContext(MongoPersistentProperty property, @Nullable Object source,
+			SpELContext spELContext) {
 
 		ValueProvider valueProvider = valueProviderFor(DocumentReferenceSource.getTargetSource(source));
 
@@ -240,7 +233,8 @@ public final class ReferenceLookupDelegate {
 		};
 	}
 
-	EvaluationContext evaluationContextFor(MongoPersistentProperty property, @Nullable Object source, SpELContext spELContext) {
+	EvaluationContext evaluationContextFor(MongoPersistentProperty property, @Nullable Object source,
+			SpELContext spELContext) {
 
 		Object target = source instanceof DocumentReferenceSource documentReferenceSource
 				? documentReferenceSource.getTargetSource()
@@ -266,7 +260,7 @@ public final class ReferenceLookupDelegate {
 	 * @param spELContext must not be {@literal null}.
 	 * @return never {@literal null}.
 	 */
-	@SuppressWarnings({"unchecked","NullAway"})
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
 		DocumentReference documentReference = property.isDocumentReference() ? property.getDocumentReference()
@@ -322,6 +316,16 @@ public final class ReferenceLookupDelegate {
 		}
 
 		return new SingleDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, source, spELContext)), sort);
+	}
+
+	private static boolean isIdLookup(Collection<Document> references) {
+
+		for (Document reference : references) {
+			if (reference.size() != 1 || !reference.containsKey(BasicMongoPersistentProperty.ID_FIELD_NAME)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	enum ReferenceEmulatingDocumentReference implements DocumentReference {
@@ -424,15 +428,28 @@ public final class ReferenceLookupDelegate {
 
 			Map<String, Object> targetMap = new LinkedHashMap<>();
 			List<Document> collected = documents instanceof List<Document> list ? list : Streamable.of(documents).toList();
+			DocumentIdIndex index = isIdLookup(filterOrderMap.values()) ? DocumentIdIndex.of(collected) : null;
 
 			for (Entry<Object, Document> filterMapping : filterOrderMap.entrySet()) {
 
-				Optional<Document> first = collected.stream()
-						.filter(it -> it.entrySet().containsAll(filterMapping.getValue().entrySet())).findFirst();
+				Document filter = filterMapping.getValue();
+				Document match = index != null ? index.get(filter.get(BasicMongoPersistentProperty.ID_FIELD_NAME))
+						: findFirstMatch(collected, filter);
 
-				targetMap.put(filterMapping.getKey().toString(), first.orElse(null));
+				targetMap.put(filterMapping.getKey().toString(), match);
 			}
 			return Collections.singleton(new Document(targetMap));
+		}
+
+		private static @Nullable Document findFirstMatch(List<Document> documents, Document filter) {
+
+			Set<Entry<String, Object>> entries = filter.entrySet();
+			for (Document document : documents) {
+				if (document.entrySet().containsAll(entries)) {
+					return document;
+				}
+			}
+			return null;
 		}
 	}
 
@@ -457,26 +474,35 @@ public final class ReferenceLookupDelegate {
 
 			List<Document> target = documents instanceof List<Document> list ? list : Streamable.of(documents).toList();
 
-			if (!sort.isEmpty() || !query.containsKey("$or")) {
+			if (target.size() < 2 || !sort.isEmpty() || !query.containsKey("$or")) {
 				return target;
 			}
 
 			List<Document> ors = query.get("$or", List.class);
-			Map<Document, Integer> referenceIndexes = new IdentityHashMap<>();
+			boolean idLookup = isIdLookup(ors);
 
-			return target.stream().sorted((o1, o2) -> {
-				int index1 = referenceIndexes.computeIfAbsent(o1, it -> {
-					return getReferenceIndex(ors, it);
-				});
-				int index2 = referenceIndexes.computeIfAbsent(o2, it -> {
-					return getReferenceIndex(ors, it);
-				});
+			if (target.size() == 2) {
 
-				if (index1 == ors.size() && index2 == ors.size()) {
-					return ors.size();
-				}
-				return index1 <= index2 ? -1 : 1;
-			}).collect(Collectors.toList());
+				Document first = target.get(0);
+				Document second = target.get(1);
+				return compareAgainstReferenceIndex(ors, idLookup, first, second) > 0 ? List.of(second, first) : target;
+			}
+
+			List<Document> source = target instanceof RandomAccess ? target : new ArrayList<>(target);
+			int[] ranks = idLookup ? DocumentIdIndex.of(source).rank(ors) : rankByMatchingEntries(ors, source);
+			long[] keys = new long[ranks.length];
+
+			for (int i = 0; i < ranks.length; i++) {
+				keys[i] = ((long) ranks[i] << 32) | i;
+			}
+
+			Arrays.sort(keys);
+
+			List<Document> result = new ArrayList<>(keys.length);
+			for (long key : keys) {
+				result.add(source.get((int) key));
+			}
+			return result;
 		}
 
 		@Override
@@ -489,16 +515,52 @@ public final class ReferenceLookupDelegate {
 			return sort;
 		}
 
-		private int getReferenceIndex(List<Document> referenceList, Document target) {
+		private static int compareAgainstReferenceIndex(List<Document> referenceList, boolean idLookup,
+				Document document1, Document document2) {
 
+			for (Document reference : referenceList) {
+
+				boolean match1 = matches(reference, document1, idLookup);
+				boolean match2 = matches(reference, document2, idLookup);
+
+				if (match1 || match2) {
+					return match1 == match2 ? 0 : match1 ? -1 : 1;
+				}
+			}
+			return 0;
+		}
+
+		private static boolean matches(Document reference, Document document, boolean idLookup) {
+
+			if (!idLookup) {
+				return document.entrySet().containsAll(reference.entrySet());
+			}
+
+			return document.containsKey(BasicMongoPersistentProperty.ID_FIELD_NAME)
+					&& ObjectUtils.nullSafeEquals(reference.get(BasicMongoPersistentProperty.ID_FIELD_NAME),
+							document.get(BasicMongoPersistentProperty.ID_FIELD_NAME));
+		}
+
+		private static int[] rankByMatchingEntries(List<Document> referenceList, List<Document> targets) {
+
+			int[] ranks = new int[targets.size()];
+			for (int i = 0; i < ranks.length; i++) {
+				ranks[i] = getReferenceIndex(referenceList, targets.get(i));
+			}
+			return ranks;
+		}
+
+		private static int getReferenceIndex(List<Document> referenceList, Document target) {
+
+			Set<Entry<String, Object>> entries = target.entrySet();
 			int index = 0;
 			for (Document reference : referenceList) {
-				if (target.entrySet().containsAll(reference.entrySet())) {
+				if (entries.containsAll(reference.entrySet())) {
 					return index;
 				}
 				index++;
 			}
-			return referenceList.size();
+			return index;
 		}
 	}
 

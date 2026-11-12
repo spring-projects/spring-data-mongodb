@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -110,50 +111,34 @@ class DefaultDbRefResolverUnitTests {
 		verify(collectionMock, never()).find(Mockito.any(Document.class));
 	}
 
-	@Test // DATAMONGO-1194
-	void bulkFetchShouldRestoreOriginalOrder() {
+	@Test // DATAMONGO-1194, DATAMONGO-1765, GH-5265
+	void bulkFetchShouldRestoreReferenceOrderOmittingMissingAndRepeatingDuplicates() {
 
-		Document o1 = new Document("_id", new ObjectId());
-		Document o2 = new Document("_id", new ObjectId());
+		Document a = new Document("_id", "a");
+		Document b = new Document("_id", "b");
+		doReturn(List.of(b, a)).when(cursorMock).into(any());
 
-		DBRef ref1 = new DBRef("collection-1", o1.get("_id"));
-		DBRef ref2 = new DBRef("collection-1", o2.get("_id"));
-
-		when(cursorMock.into(any())).then(invocation -> Arrays.asList(o2, o1));
-
-		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(o1, o2);
+		assertThat(resolver.bulkFetch(List.of(new DBRef("items", "a"), new DBRef("items", "missing"),
+				new DBRef("items", "b"), new DBRef("items", "a")))).containsExactly(a, b, a);
 	}
 
-	@Test // DATAMONGO-1765
-	void bulkFetchContainsDuplicates() {
-
-		Document document = new Document("_id", new ObjectId());
-
-		DBRef ref1 = new DBRef("collection-1", document.get("_id"));
-		DBRef ref2 = new DBRef("collection-1", document.get("_id"));
-
-		when(cursorMock.into(any())).then(invocation -> Arrays.asList(document));
-
-		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(document, document);
-	}
-
-	@Test
-	void bulkFetchShouldOmitMissingReferences() {
-
-		Document document = new Document("_id", "present");
-		doReturn(List.of(document)).when(cursorMock).into(any());
-
-		assertThat(resolver.bulkFetch(List.of(new DBRef("items", "missing"), new DBRef("items", "present"))))
-				.containsExactly(document);
-	}
-
-	@Test
+	@Test // GH-5265
 	void bulkFetchShouldMatchBinaryIdsByContents() {
 
 		Document document = new Document("_id", new byte[] { 1, 2 });
 		doReturn(List.of(document)).when(cursorMock).into(any());
 
 		assertThat(resolver.bulkFetch(List.of(new DBRef("items", new byte[] { 1, 2 })))).containsExactly(document);
+	}
+
+	@Test // GH-5265
+	void bulkFetchShouldMatchDriverBinaryIds() {
+
+		Document document = new Document("_id", new Binary(new byte[] { 1, 2 }));
+		doReturn(List.of(document)).when(cursorMock).into(any());
+
+		assertThat(resolver.bulkFetch(List.of(new DBRef("items", new Binary(new byte[] { 1, 2 })))))
+				.containsExactly(document);
 	}
 
 }

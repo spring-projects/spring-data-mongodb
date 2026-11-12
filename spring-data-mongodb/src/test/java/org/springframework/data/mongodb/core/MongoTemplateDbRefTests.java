@@ -19,8 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -52,7 +54,8 @@ public class MongoTemplateDbRefTests {
 			initialEntitySet = { RefCycleLoadingIntoDifferentTypeRoot.class,
 					RefCycleLoadingIntoDifferentTypeIntermediate.class, RefCycleLoadingIntoDifferentTypeRootView.class,
 					WithDBRefOnRawStringId.class, WithLazyDBRefOnRawStringId.class, WithRefToAnotherDb.class,
-					WithLazyRefToAnotherDb.class, WithListRefToAnotherDb.class, WithLazyListRefToAnotherDb.class }) //
+					WithLazyRefToAnotherDb.class, WithListRefToAnotherDb.class, WithLazyListRefToAnotherDb.class,
+					CompositeIdRef.class, CompositeIdRefRoot.class }) //
 	static MongoTestTemplate template;
 
 	@Template(database = "mongo-template-dbref-tests-other-db", initialEntitySet = JustSomeType.class) //
@@ -230,6 +233,25 @@ public class MongoTemplateDbRefTests {
 		assertThat(target.getValue()).containsExactlyInAnyOrder(one, two);
 	}
 
+	@Test // GH-5265
+	void readCollectionOfReferencesUsingCompositeIds() {
+
+		Date created = Date.from(Instant.now());
+		CompositeIdRef one = new CompositeIdRef(new CompositeId("spring", created, 1_001L), "one");
+		CompositeIdRef two = new CompositeIdRef(new CompositeId("spring", created, 1_002L), "two");
+		CompositeIdRef three = new CompositeIdRef(new CompositeId("spring", created, 1_003L), "three");
+		template.insertAll(List.of(one, two, three));
+
+		CompositeIdRefRoot source = new CompositeIdRefRoot();
+		source.id = "root-1";
+		source.refs = List.of(three, one, two);
+		template.save(source);
+
+		CompositeIdRefRoot target = template.findOne(query(where("id").is("root-1")), CompositeIdRefRoot.class);
+
+		assertThat(target.refs).extracting(it -> it.value).containsExactly("three", "one", "two");
+	}
+
 	@Test // GH-2191
 	void shouldAllowToSliceCollectionOfDbRefs() {
 
@@ -275,6 +297,26 @@ public class MongoTemplateDbRefTests {
 		WithCollectionDbRef target = template.findOne(theQuery, WithCollectionDbRef.class);
 		LazyLoadingTestUtils.assertProxyIsResolved(target.lazyrefs, false);
 		assertThat(target.getLazyrefs()).containsExactly(two);
+	}
+
+	record CompositeId(String tenant, Date created, Long sequence) {}
+
+	static class CompositeIdRef {
+
+		@Id CompositeId id;
+		String value;
+
+		CompositeIdRef(CompositeId id, String value) {
+
+			this.id = id;
+			this.value = value;
+		}
+	}
+
+	static class CompositeIdRefRoot {
+
+		@Id String id;
+		@DBRef List<CompositeIdRef> refs;
 	}
 
 	@Document("cycle-with-different-type-root")

@@ -19,13 +19,16 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -653,6 +656,33 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target.get("lazyToA", Object.class)).isEqualTo("a");
 	}
 
+	@Test // GH-5272
+	void readCollectionOfReferencesUsingCompositeIds() {
+
+		String rootCollectionName = template.getCollectionName(CompositeIdRefRoot.class);
+		String refCollectionName = template.getCollectionName(CompositeIdRef.class);
+		Date created = Date.from(Instant.now());
+		Function<Long, Document> id = sequence -> new Document("tenant", "spring").append("created", created)
+				.append("sequence", sequence);
+
+		template.execute(db -> {
+
+			db.getCollection(refCollectionName).insertMany(List.of( //
+					new Document("_id", id.apply(1_001L)).append("value", "one"), //
+					new Document("_id", id.apply(1_002L)).append("value", "two"), //
+					new Document("_id", id.apply(1_003L)).append("value", "three")));
+			db.getCollection(rootCollectionName).insertOne(
+					new Document("_id", "root-1").append("refs", List.of(id.apply(1_003L), id.apply(1_001L), id.apply(1_002L))));
+			return null;
+		});
+
+		CompositeIdRefRoot target = template.findOne(query(where("id").is("root-1")), CompositeIdRefRoot.class);
+
+		assertThat(target.refs).extracting(it -> it.value).containsExactly("three", "one", "two");
+		assertThat(target.refs).extracting(it -> it.id).containsExactly(new CompositeId("spring", created, 1_003L),
+				new CompositeId("spring", created, 1_001L), new CompositeId("spring", created, 1_002L));
+	}
+
 	@Test // GH-3602
 	void loadCollectionReferenceWithMissingRefs() {
 
@@ -758,7 +788,8 @@ public class MongoTemplateDocumentReferenceTests {
 
 		template.save(source);
 
-		WithLazyRequiredArgsCtor target = template.findOne(query(where("id").is(source.id)), WithLazyRequiredArgsCtor.class);
+		WithLazyRequiredArgsCtor target = template.findOne(query(where("id").is(source.id)),
+				WithLazyRequiredArgsCtor.class);
 
 		// proxy not yet resolved
 		LazyLoadingTestUtils.assertProxy(target.publisher, (proxy) -> {
@@ -1138,7 +1169,8 @@ public class MongoTemplateDocumentReferenceTests {
 		template.save(root);
 
 		Document target = template.execute(db -> {
-			return db.getCollection(template.getCollectionName(UsingAtReference.class)).find(Filters.eq("_id", root.id)).first();
+			return db.getCollection(template.getCollectionName(UsingAtReference.class)).find(Filters.eq("_id", root.id))
+					.first();
 		});
 
 		assertThat(target).containsEntry("publisher", "p-1");
@@ -1161,10 +1193,12 @@ public class MongoTemplateDocumentReferenceTests {
 		root.id = "book-1";
 
 		template.save(root);
-		template.update(UsingAtReference.class).matching(where("id").is(root.id)).apply(new Update().set("publisher", publisher)).first();
+		template.update(UsingAtReference.class).matching(where("id").is(root.id))
+				.apply(new Update().set("publisher", publisher)).first();
 
 		Document target = template.execute(db -> {
-			return db.getCollection(template.getCollectionName(UsingAtReference.class)).find(Filters.eq("_id", root.id)).first();
+			return db.getCollection(template.getCollectionName(UsingAtReference.class)).find(Filters.eq("_id", root.id))
+					.first();
 		});
 
 		assertThat(target).containsEntry("publisher", "p-1");
@@ -1194,7 +1228,8 @@ public class MongoTemplateDocumentReferenceTests {
 
 		template.save(publisher);
 
-		OneToManyStylePublisher target = template.findOne(query(where("id").is(publisher.id)), OneToManyStylePublisher.class);
+		OneToManyStylePublisher target = template.findOne(query(where("id").is(publisher.id)),
+				OneToManyStylePublisher.class);
 		assertThat(target.books).containsExactlyInAnyOrder(book1, book3);
 	}
 
@@ -1268,7 +1303,8 @@ public class MongoTemplateDocumentReferenceTests {
 	@Test // GH-4484
 	void resolveReferenceForOneToManyLookupWithSelfVariableWhenUsedInCtorArgument() {
 
-		OneToManyStylePublisherWithRequiredArgsCtor publisher = new OneToManyStylePublisherWithRequiredArgsCtor("p-100", null);
+		OneToManyStylePublisherWithRequiredArgsCtor publisher = new OneToManyStylePublisherWithRequiredArgsCtor("p-100",
+				null);
 		template.save(publisher);
 
 		OneToManyStyleBook book1 = new OneToManyStyleBook();
@@ -1287,8 +1323,30 @@ public class MongoTemplateDocumentReferenceTests {
 		template.save(book2);
 		template.save(book3);
 
-		OneToManyStylePublisherWithRequiredArgsCtor target = template.findOne(query(where("id").is(publisher.id)), OneToManyStylePublisherWithRequiredArgsCtor.class);
+		OneToManyStylePublisherWithRequiredArgsCtor target = template.findOne(query(where("id").is(publisher.id)),
+				OneToManyStylePublisherWithRequiredArgsCtor.class);
 		assertThat(target.books).containsExactlyInAnyOrder(book1, book3);
+	}
+
+	record CompositeId(String tenant, Date created, Long sequence) {
+	}
+
+	static class CompositeIdRef {
+
+		@Id CompositeId id;
+		String value;
+
+		CompositeIdRef(CompositeId id, String value) {
+
+			this.id = id;
+			this.value = value;
+		}
+	}
+
+	static class CompositeIdRefRoot {
+
+		@Id String id;
+		@DocumentReference List<CompositeIdRef> refs;
 	}
 
 	static class SingleRefRoot {
@@ -1441,8 +1499,7 @@ public class MongoTemplateDocumentReferenceTests {
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
 		List<SimpleObjectRef> simpleValueRef;
 
-		@DocumentReference
-		List<SimpleObjectRef> simplePreinitializedValueRef = new ArrayList<>();
+		@DocumentReference List<SimpleObjectRef> simplePreinitializedValueRef = new ArrayList<>();
 
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }", sort = "{ '_id' : -1 } ") //
 		List<SimpleObjectRef> simpleSortedValueRef;
@@ -2137,8 +2194,7 @@ public class MongoTemplateDocumentReferenceTests {
 
 	static class OneToManyStyleBook {
 
-		@Id
-		String id;
+		@Id String id;
 
 		private String publisherId;
 
@@ -2183,12 +2239,10 @@ public class MongoTemplateDocumentReferenceTests {
 
 	static class OneToManyStylePublisher {
 
-		@Id
-		String id;
+		@Id String id;
 
 		@ReadOnlyProperty
-		@DocumentReference(lookup="{'publisherId':?#{#self._id} }")
-		List<OneToManyStyleBook> books;
+		@DocumentReference(lookup = "{'publisherId':?#{#self._id} }") List<OneToManyStyleBook> books;
 
 		public String getId() {
 			return this.id;
@@ -2275,12 +2329,10 @@ public class MongoTemplateDocumentReferenceTests {
 
 	static class OneToManyStylePublisherWithRequiredArgsCtor {
 
-		@Id
-		String id;
+		@Id String id;
 
 		@ReadOnlyProperty
-		@DocumentReference(lookup="{'publisherId':?#{#self._id} }")
-		List<OneToManyStyleBook> books;
+		@DocumentReference(lookup = "{'publisherId':?#{#self._id} }") List<OneToManyStyleBook> books;
 
 		public OneToManyStylePublisherWithRequiredArgsCtor(String id, List<OneToManyStyleBook> books) {
 			this.id = id;
@@ -2304,8 +2356,8 @@ public class MongoTemplateDocumentReferenceTests {
 		}
 
 		public String toString() {
-			return "MongoTemplateDocumentReferenceTests.OneToManyStylePublisherWithRequiredArgsCtor(id=" + this.getId() + ", book="
-				+ this.getBooks() + ")";
+			return "MongoTemplateDocumentReferenceTests.OneToManyStylePublisherWithRequiredArgsCtor(id=" + this.getId()
+					+ ", book=" + this.getBooks() + ")";
 		}
 	}
 }

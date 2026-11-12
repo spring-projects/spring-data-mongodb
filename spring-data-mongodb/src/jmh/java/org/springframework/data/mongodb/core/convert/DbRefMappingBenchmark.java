@@ -19,10 +19,13 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.bson.types.ObjectId;
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -45,6 +48,8 @@ public class DbRefMappingBenchmark extends AbstractMicrobenchmark {
 
 	private static final String DB_NAME = "dbref-loading-benchmark";
 
+	@Param({ "1", "10", "100", "1000" }) int references;
+
 	private MongoClient client;
 	private MongoTemplate template;
 
@@ -58,7 +63,7 @@ public class DbRefMappingBenchmark extends AbstractMicrobenchmark {
 		template = new MongoTemplate(client, DB_NAME);
 
 		List<RefObject> refObjects = new ArrayList<>();
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < references; i++) {
 			RefObject o = new RefObject();
 			template.save(o);
 			refObjects.add(o);
@@ -69,7 +74,8 @@ public class DbRefMappingBenchmark extends AbstractMicrobenchmark {
 		template.save(singleDBRef);
 
 		ObjectWithDBRef multipleDBRefs = new ObjectWithDBRef();
-		multipleDBRefs.refList = refObjects;
+		multipleDBRefs.refList = new ArrayList<>(refObjects);
+		Collections.shuffle(multipleDBRefs.refList, new Random(42));
 		template.save(multipleDBRefs);
 
 		queryObjectWithDBRef = query(where("id").is(singleDBRef.id));

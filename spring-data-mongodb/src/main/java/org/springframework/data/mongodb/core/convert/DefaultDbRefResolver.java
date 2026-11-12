@@ -17,9 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +31,6 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentPropert
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
@@ -72,8 +69,8 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	}
 
 	@Override
-	public @Nullable Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
-			DbRefProxyHandler handler) {
+	public @Nullable Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref,
+			DbRefResolverCallback callback, DbRefProxyHandler handler) {
 
 		Assert.notNull(property, "Property must not be null");
 		Assert.notNull(callback, "Callback must not be null");
@@ -130,19 +127,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 				.find(new Document(BasicMongoPersistentProperty.ID_FIELD_NAME, new Document("$in", ids))) //
 				.into(new ArrayList<>(ids.size()));
 
-		Map<DbRefId, Document> documentsById = new HashMap<>(result.size());
-		for (Document document : result) {
-			documentsById.putIfAbsent(new DbRefId(document.get(BasicMongoPersistentProperty.ID_FIELD_NAME)), document);
-		}
-
-		List<Document> ordered = new ArrayList<>(ids.size());
-		for (Object id : ids) {
-			Document document = documentsById.get(new DbRefId(id));
-			if (document != null) {
-				ordered.add(document);
-			}
-		}
-		return ordered;
+		return DocumentIdIndex.of(result).select(ids);
 	}
 
 	/**
@@ -170,19 +155,6 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	 */
 	private boolean isLazyDbRef(MongoPersistentProperty property) {
 		return property.getDBRef() != null && property.getDBRef().lazy();
-	}
-
-	private record DbRefId(@Nullable Object value) {
-
-		@Override
-		public boolean equals(Object other) {
-			return other instanceof DbRefId id && ObjectUtils.nullSafeEquals(value, id.value);
-		}
-
-		@Override
-		public int hashCode() {
-			return ObjectUtils.nullSafeHashCode(value);
-		}
 	}
 
 	/**
