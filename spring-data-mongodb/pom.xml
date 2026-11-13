@@ -20,6 +20,7 @@
 		<java-module-name>spring.data.mongodb</java-module-name>
 		<project.root>${basedir}/..</project.root>
 		<multithreadedtc>1.01</multithreadedtc>
+		<antlr>4.13.2</antlr>
 	</properties>
 
 	<dependencies>
@@ -46,6 +47,12 @@
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-crypt</artifactId>
 			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr4-runtime</artifactId>
+			<version>${antlr}</version>
 		</dependency>
 
 		<!-- Spring -->
@@ -383,6 +390,22 @@
 			</build>
 		</profile>
 		<profile>
+			<id>antlr-parser</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<systemPropertyVariables>
+								<spring.data.mongodb.json.antlr-parser>true</spring.data.mongodb.json.antlr-parser>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>nullaway</id>
 			<build>
 				<plugins>
@@ -465,6 +488,25 @@
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.antlr</groupId>
+				<artifactId>antlr4-maven-plugin</artifactId>
+				<version>${antlr}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>antlr4</goal>
+						</goals>
+						<phase>generate-sources</phase>
+						<configuration>
+							<listener>false</listener>
+							<visitor>true</visitor>
+							<sourceDirectory>${project.basedir}/src/main/antlr4</sourceDirectory>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>

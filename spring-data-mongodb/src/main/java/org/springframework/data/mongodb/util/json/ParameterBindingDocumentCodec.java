@@ -29,6 +29,7 @@ import java.util.UUID;
 import org.bson.AbstractBsonReader.State;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonDocument;
+import org.bson.BsonDocumentReader;
 import org.bson.BsonDocumentWriter;
 import org.bson.BsonInvalidOperationException;
 import org.bson.BsonReader;
@@ -42,6 +43,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
+import org.springframework.core.SpringProperties;
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.FieldName;
@@ -74,10 +76,18 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			asList(new ValueCodecProvider(), new BsonValueCodecProvider(), new DocumentCodecProvider()));
 	private static final BsonTypeClassMap DEFAULT_BSON_TYPE_CLASS_MAP = new BsonTypeClassMap();
 
+	/**
+	 * System property to opt in to the ANTLR based template parser for {@link #decode(String, ParameterBindingContext)}
+	 * and {@link #captureExpressionDependencies(String, ValueProvider, ValueExpressionParser)}.
+	 */
+	static final String ANTLR_PARSER_PROPERTY = "spring.data.mongodb.json.antlr-parser";
+
 	private final BsonTypeCodecMap bsonTypeCodecMap;
 	private final CodecRegistry registry;
 	private final IdGenerator idGenerator;
 	private final Transformer valueTransformer;
+	private final boolean antlrParser;
+	private final TemplateNode.LiteralDecoder literalDecoder = new TemplateLiteralDecoder();
 
 	/**
 	 * Construct a new instance with a default {@code CodecRegistry}.
@@ -118,6 +128,12 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	 */
 	public ParameterBindingDocumentCodec(final CodecRegistry registry, final BsonTypeClassMap bsonTypeClassMap,
 			final Transformer valueTransformer) {
+		this(registry, bsonTypeClassMap, valueTransformer, SpringProperties.getFlag(ANTLR_PARSER_PROPERTY));
+	}
+
+	ParameterBindingDocumentCodec(final CodecRegistry registry, final BsonTypeClassMap bsonTypeClassMap,
+			final Transformer valueTransformer, boolean antlrParser) {
+		this.antlrParser = antlrParser;
 		this.registry = notNull("registry", registry);
 		this.bsonTypeCodecMap = new BsonTypeCodecMap(notNull("bsonTypeClassMap", bsonTypeClassMap), registry);
 		this.idGenerator = new ObjectIdGenerator();
@@ -180,6 +196,10 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			return new Document();
 		}
 
+		if (antlrParser) {
+			return MqlTemplate.parse(json).bind(bindingContext, literalDecoder);
+		}
+
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, bindingContext);
 		return this.decode(reader, DecoderContext.builder().build());
 	}
@@ -199,6 +219,10 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 
 		if (!StringUtils.hasText(json)) {
 			return ExpressionDependencies.none();
+		}
+
+		if (antlrParser) {
+			return MqlTemplate.parse(json).getExpressionDependencies(expressionParser);
 		}
 
 		DependencyCapturingExpressionEvaluator expressionEvaluator = new DependencyCapturingExpressionEvaluator(
@@ -380,6 +404,44 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		}
 		reader.readEndArray();
 		return list;
+	}
+
+	/**
+	 * Decodes literal template values with the codec configured for their {@link BsonType}, mirroring
+	 * {@link #readValue(BsonReader, DecoderContext)}.
+	 */
+	private class TemplateLiteralDecoder implements TemplateNode.LiteralDecoder {
+
+		@Override
+		public boolean decodesNested(BsonType type) {
+			return isDefaultCodec(bsonTypeCodecMap.get(type));
+		}
+
+		@Override
+		public @Nullable Object decode(BsonType type, @Nullable Object value) {
+
+			Codec<?> codec = bsonTypeCodecMap.get(type);
+			if (isDefaultCodec(codec)) {
+				return valueTransformer.transform(value);
+			}
+
+			BsonDocument holder = new BsonDocument();
+			BsonDocumentWriter writer = new BsonDocumentWriter(holder);
+			writer.writeStartDocument();
+			writer.writeName("value");
+			writeValue(writer, EncoderContext.builder().build(), value);
+			writer.writeEndDocument();
+
+			BsonDocumentReader reader = new BsonDocumentReader(holder);
+			reader.readStartDocument();
+			reader.readBsonType();
+			reader.skipName();
+			return valueTransformer.transform(codec.decode(reader, DecoderContext.builder().build()));
+		}
+
+		private static boolean isDefaultCodec(Codec<?> codec) {
+			return codec instanceof DocumentCodec || codec instanceof BsonUndefinedCodec;
+		}
 	}
 
 	/**
