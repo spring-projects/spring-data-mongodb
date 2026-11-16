@@ -63,6 +63,11 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	}
 
 	@Override
+	public Document getMappedCriteria(Document criteria) {
+		return delegate.getMappedCriteria(criteria);
+	}
+
+	@Override
 	public FieldReference getReference(Field field) {
 
 		FieldReference reference = delegate.getReference(field);
@@ -93,6 +98,10 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	@Override
 	public Fields getFields(Class<?> type) {
 		return delegate.getFields(type);
+	}
+
+	AggregationOperationContext getDelegate() {
+		return delegate;
 	}
 
 	@Override

@@ -25,7 +25,9 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.path.MongoPathBinder;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
+import org.springframework.data.mongodb.core.mapping.path.Scope;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Contract;
@@ -197,9 +199,7 @@ public class VectorIndex implements SearchIndexDefinition {
 			return path;
 		}
 
-		QueryMapper.MetadataBackedField mbf = new QueryMapper.MetadataBackedField(path, persistentEntity, mappingContext);
-
-		return mbf.getMappedKey();
+		return MongoPathBinder.of(mappingContext).bind(path, PathType.PROPERTY, Scope.of(persistentEntity)).toMappedPath();
 	}
 
 	interface SearchField {

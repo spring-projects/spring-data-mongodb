@@ -22,10 +22,16 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.path.BoundMongoPath;
+import org.springframework.data.mongodb.core.mapping.path.BoundMongoPath.Segment;
+import org.springframework.data.mongodb.core.mapping.path.MongoPathBinder;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
+import org.springframework.data.mongodb.core.mapping.path.Scope;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.util.Assert;
 
@@ -121,7 +127,7 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 
 		if (entity != null && sink.containsKey(Type.objectType().representation())) {
 
-			MongoPersistentProperty property = entity.getPersistentProperty(sourceFieldName);
+			MongoPersistentProperty property = findProperty(entity, sourceFieldName);
 			if (property != null && property.isEntity()) {
 				sink = mapSchemaObject(mappingContext.getPersistentEntity(property.getActualType()), source);
 			}
@@ -154,7 +160,26 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 			return sourceField;
 		}
 
-		MongoPersistentProperty property = entity.getPersistentProperty(sourceField);
+		MongoPersistentProperty property = findProperty(entity, sourceField);
 		return property != null ? property.getFieldName() : sourceField;
+	}
+
+	/**
+	 * Resolve a schema property name by Java property name or a unique stored field name.
+	 */
+	private @Nullable MongoPersistentProperty findProperty(PersistentEntity<?, MongoPersistentProperty> entity,
+			String name) {
+
+		MongoPersistentProperty property = entity.getPersistentProperty(name);
+		if (property != null || !(entity instanceof MongoPersistentEntity<?> mongoEntity)) {
+			return property;
+		}
+
+		try {
+			BoundMongoPath path = MongoPathBinder.of(mappingContext).bind(name, PathType.PROPERTY, Scope.of(mongoEntity));
+			return path.segments().size() == 1 && path.leaf() instanceof Segment.Property segment ? segment.property() : null;
+		} catch (MappingException | IllegalArgumentException ex) {
+			return null;
+		}
 	}
 }

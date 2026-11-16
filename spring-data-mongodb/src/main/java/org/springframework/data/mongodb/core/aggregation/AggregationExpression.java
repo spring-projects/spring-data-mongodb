@@ -47,7 +47,8 @@ public interface AggregationExpression extends MongoExpression {
 			return aggregationExpression;
 		}
 
-		return context -> context.getMappedObject(expression.toDocument());
+		return context -> context
+				.getMappedObject(AggregationScopes.mapDocument(expression.toDocument(), context));
 	}
 
 	/**

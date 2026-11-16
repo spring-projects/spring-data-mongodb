@@ -127,12 +127,11 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 	@Override
 	public ExposedFields getFields() {
 
-		List<ExposedField> fields = new ArrayList<>(2);
-		fields.add(new ExposedField(as, true));
+		ExposedFields fields = ExposedFields.from(new ExposedField(as, true)).withComputed(as.getName());
 		if (depthField != null) {
-			fields.add(new ExposedField(depthField, true));
+			fields = fields.and(new ExposedField(depthField, true)).withComputed(depthField.getName());
 		}
-		return ExposedFields.from(fields.toArray(new ExposedField[0]));
+		return fields;
 	}
 
 	/**

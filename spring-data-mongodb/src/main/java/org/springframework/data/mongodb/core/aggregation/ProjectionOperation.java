@@ -235,7 +235,19 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			fields = fields == null ? ExposedFields.from(field) : fields.and(field);
 		}
 
-		return fields != null ? fields : ExposedFields.empty();
+		if (fields == null) {
+			return ExposedFields.empty();
+		}
+
+		for (Projection projection : projections) {
+			if (projection instanceof ProjectionOperationBuilder.FieldProjection fieldProjection
+					&& fieldProjection.isPlainReference()) {
+				fields = fields.withReference(fieldProjection.getExposedField().getName(),
+						fieldProjection.getReferencedTarget(), false);
+			}
+		}
+
+		return fields;
 	}
 
 	@Override
@@ -1389,6 +1401,18 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			 */
 			public boolean isExcluded() {
 				return Boolean.FALSE.equals(value);
+			}
+
+			/**
+			 * @return {@literal true} if the projection passes through the value of an input field as is.
+			 */
+			boolean isPlainReference() {
+				return (value == null || Boolean.TRUE.equals(value))
+						&& !SystemVariable.isReferingToSystemVariable(field.getTarget());
+			}
+
+			String getReferencedTarget() {
+				return field.getTarget();
 			}
 
 			@Override

@@ -17,12 +17,16 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.List;
+
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.aggregation.ObjectOperators.MergeObjects;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
@@ -145,6 +149,61 @@ public class ObjectOperatorsUnitTests {
 
 		assertThat(ObjectOperators.setValueTo("population", "robin").toDocument(new TypeBasedAggregationOperationContext(ZipInfo.class, converter.getMappingContext(), new QueryMapper(converter), FieldLookupPolicy.relaxed())))
 				.isEqualTo(Document.parse("{ $setField : { field : \"pop\", value : \"robin\", input : \"$$CURRENT\" }}"));
+	}
+
+	@Test // GH-5011, GH-4516
+	public void mapsFieldAgainstInputType() {
+
+		AggregationOperationContext context = contextFor(Person.class);
+
+		assertThat(ObjectOperators.valueOf("address").getField("street").toDocument(context))
+				.isEqualTo(Document.parse("{ $getField : { field : \"s\", input : \"$addr\" } }"));
+		assertThat(ObjectOperators.valueOf("address").setField("street").toValue(1).toDocument(context))
+				.isEqualTo(Document.parse("{ $setField : { field : \"s\", value : 1, input : \"$addr\" } }"));
+		assertThat(ObjectOperators.valueOf("address").removeField("street").toDocument(context))
+				.isEqualTo(Document.parse("{ $setField : { field : \"s\", value : \"$$REMOVE\", input : \"$addr\" } }"));
+		assertThat(ObjectOperators.valueOf("addresses").getField("street").toDocument(context))
+				.isEqualTo(Document.parse("{ $getField : { field : \"s\", input : \"$addresses\" } }"));
+	}
+
+	@Test // GH-5011, GH-4516
+	public void mapsFieldToStoredKeyContainingDots() {
+
+		assertThat(ObjectOperators.getValueOf("dotted").toDocument(contextFor(Person.class)))
+				.isEqualTo(Document.parse("{ $getField : { field : \"with.dots\", input : \"$$CURRENT\" } }"));
+	}
+
+	@Test // GH-5011, GH-4516
+	public void failsForUnresolvableFieldInStrictMode() {
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
+		converter.afterPropertiesSet();
+
+		AggregationOperationContext strict = new TypeBasedAggregationOperationContext(Person.class,
+				converter.getMappingContext(), new QueryMapper(converter), FieldLookupPolicy.strict());
+
+		assertThatExceptionOfType(RuntimeException.class)
+				.isThrownBy(() -> ObjectOperators.valueOf("address").getField("nope").toDocument(strict));
+	}
+
+	private static AggregationOperationContext contextFor(Class<?> type) {
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
+		converter.afterPropertiesSet();
+
+		return new TypeBasedAggregationOperationContext(type, converter.getMappingContext(), new QueryMapper(converter),
+				FieldLookupPolicy.relaxed());
+	}
+
+	static class Person {
+
+		@Field("addr") Address address;
+		List<Address> addresses;
+		@Field(name = "with.dots", nameType = FieldName.Type.KEY) String dotted;
+	}
+
+	static class Address {
+		@Field("s") String street;
 	}
 
 	@Test // GH-4139

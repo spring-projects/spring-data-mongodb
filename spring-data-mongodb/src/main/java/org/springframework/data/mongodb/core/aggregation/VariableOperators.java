@@ -164,7 +164,11 @@ public class VariableOperators {
 
 		@Override
 		public Document toDocument(final AggregationOperationContext context) {
-			return toMap(ExposedFields.synthetic(Fields.fields(itemVariableName)), context);
+			ExposedFields fields = ExposedFields.synthetic(Fields.fields(itemVariableName));
+			if (sourceArray instanceof Field field) {
+				fields = fields.withReference(itemVariableName, field.getTarget(), true);
+			}
+			return toMap(fields, context);
 		}
 
 		private Document toMap(ExposedFields exposedFields, AggregationOperationContext context) {
@@ -314,7 +318,16 @@ public class VariableOperators {
 			letExpression.put("vars", mappedVars);
 			if (expression != null) {
 
-				AggregationOperationContext operationContext = context.inheritAndExpose(exposedFields);
+				ExposedFields fields = exposedFields;
+				for (ExpressionVariable var : this.vars) {
+
+					String name = var.variableName;
+					if (name != null && var.expression instanceof Field field) {
+						fields = fields.withReference(name, field.getTarget(), false);
+					}
+				}
+
+				AggregationOperationContext operationContext = context.inheritAndExpose(fields);
 				letExpression.put("in", getMappedIn(operationContext));
 			}
 

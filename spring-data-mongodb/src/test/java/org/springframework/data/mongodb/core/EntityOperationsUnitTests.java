@@ -96,6 +96,32 @@ class EntityOperationsUnitTests {
 		assertThat(keys).containsEntry("nested.id", "bar");
 	}
 
+	@Test // GH-4516
+	void shouldExtractKeysFromDocumentByPropertyAndStoredFieldName() {
+
+		Document object = new Document("_id", "1").append("fn", "luke");
+
+		assertThat(operations.forEntity(object).extractKeys(new Document("name", 1), WithRenamedField.class))
+				.containsEntry("name", "luke");
+		assertThat(operations.forEntity(object).extractKeys(new Document("fn", 1), WithRenamedField.class))
+				.containsEntry("fn", "luke");
+	}
+
+	@Test // GH-4516
+	void rejectsKeysWithoutValueInDocument() {
+
+		Document object = new Document("_id", "1");
+
+		assertThatIllegalStateException()
+				.isThrownBy(() -> operations.forEntity(object).extractKeys(new Document("unknown", 1), WithRenamedField.class));
+	}
+
+	static class WithRenamedField {
+
+		@Id String id;
+		@org.springframework.data.mongodb.core.mapping.Field("fn") String name;
+	}
+
 	@Test // GH-4308
 	void shouldExtractKeysFromNestedEntityDocument() {
 

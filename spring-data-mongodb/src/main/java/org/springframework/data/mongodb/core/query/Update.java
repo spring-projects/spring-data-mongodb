@@ -696,8 +696,8 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Filter elements in an array that match the given criteria for update. {@link CriteriaDefinition} is passed directly
-	 * to the driver without further type or field mapping.
+	 * Filter elements in an array that match the given criteria for update. {@link CriteriaDefinition} keys are mapped
+	 * against the element type the identifier refers to in the update.
 	 *
 	 * @param criteria must not be {@literal null}.
 	 * @return this.
@@ -715,8 +715,8 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Filter elements in an array that match the given criteria for update. {@code expression} is used directly with the
-	 * driver without further type or field mapping.
+	 * Filter elements in an array that match the given criteria for update. {@code expression} is mapped against the
+	 * element type the {@code identifier} refers to in the update.
 	 *
 	 * @param identifier the positional operator identifier filter criteria name.
 	 * @param expression the positional operator filter expression.

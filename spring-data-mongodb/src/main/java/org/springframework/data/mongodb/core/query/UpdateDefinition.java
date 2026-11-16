@@ -83,8 +83,8 @@ public interface UpdateDefinition {
 	interface ArrayFilter {
 
 		/**
-		 * Get the {@link Document} representation of the filter to apply. The returned {@link Document} is used directly
-		 * with the driver without further type or field mapping.
+		 * Get the {@link Document} representation of the filter to apply. Keys and values are mapped against the element
+		 * type the filter identifier refers to in the update. Unresolvable keys are retained as-is.
 		 *
 		 * @return never {@literal null}.
 		 */

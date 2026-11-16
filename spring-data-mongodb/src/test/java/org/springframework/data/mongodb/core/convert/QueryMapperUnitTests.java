@@ -47,6 +47,7 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
@@ -66,6 +67,11 @@ import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField;
+import org.springframework.data.mongodb.core.mapping.path.BoundMongoPath;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
+import org.springframework.data.mongodb.core.mapping.path.MongoPathBinder;
+import org.springframework.data.mongodb.core.mapping.path.Scope;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
@@ -1201,65 +1207,24 @@ public class QueryMapperUnitTests {
 		assertThat(target).isEqualTo(org.bson.Document.parse("{\"_id\": {\"$in\": [{\"$oid\": \"" + id + "\"}]}}"));
 	}
 
-	@Test // DATAMONGO-2488
-	void mapsNestedArrayPathCorrectlyForNonMatchingPath() {
+	@Test // GH-5011, GH-4516
+	void parsesKeysAsQueryPaths() {
 
-		org.bson.Document target = mapper.getMappedObject(
-				query(where("array.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
-				context.getPersistentEntity(Foo.class));
+		MetadataBackedField field = (MetadataBackedField) mapper.createPropertyField(
+				context.getPersistentEntity(WithNestedArray.class), "arrayObj.nested", context);
 
-		assertThat(target).isEqualTo(new org.bson.Document("array.$[some_item].nested.$[other_item]", "value"));
+		assertThat(field.getBoundPath().source().type()).isEqualTo(PathType.QUERY);
+		assertThat(field.nested("foo").getBoundPath().source().type()).isEqualTo(PathType.QUERY);
 	}
 
-	@Test // DATAMONGO-2488
-	void mapsNestedArrayPathCorrectlyForObjectTargetArray() {
+	@Test // DATAMONGO-2488, GH-5011, GH-4516
+	void retainsFilteredPositionalOperatorsInQueryKeysAsIs() {
 
 		org.bson.Document target = mapper.getMappedObject(
-				query(where("arrayObj.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				query(where("arrayCustomName.$[some_item].nested").is("value")).getQueryObject(),
 				context.getPersistentEntity(WithNestedArray.class));
 
-		assertThat(target).isEqualTo(new org.bson.Document("arrayObj.$[some_item].nested.$[other_item]", "value"));
-	}
-
-	@Test // DATAMONGO-2488
-	void mapsNestedArrayPathCorrectlyForStringTargetArray() {
-
-		org.bson.Document target = mapper.getMappedObject(
-				query(where("arrayString.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
-				context.getPersistentEntity(WithNestedArray.class));
-
-		assertThat(target).isEqualTo(new org.bson.Document("arrayString.$[some_item].nested.$[other_item]", "value"));
-	}
-
-	@Test // DATAMONGO-2488
-	void mapsCustomFieldNamesForNestedArrayPathCorrectly() {
-
-		org.bson.Document target = mapper.getMappedObject(
-				query(where("arrayCustomName.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
-				context.getPersistentEntity(WithNestedArray.class));
-
-		assertThat(target).isEqualTo(new org.bson.Document("arrayCustomName.$[some_item].nes-ted.$[other_item]", "value"));
-	}
-
-	@Test // DATAMONGO-2502
-	void shouldAllowDeeplyNestedPlaceholders() {
-
-		org.bson.Document target = mapper.getMappedObject(
-				query(where("level0.$[some_item].arrayObj.$[other_item].nested").is("value")).getQueryObject(),
-				context.getPersistentEntity(WithDeepArrayNesting.class));
-
-		assertThat(target).isEqualTo(new org.bson.Document("level0.$[some_item].arrayObj.$[other_item].nested", "value"));
-	}
-
-	@Test // DATAMONGO-2502
-	void shouldAllowDeeplyNestedPlaceholdersWithCustomName() {
-
-		org.bson.Document target = mapper.getMappedObject(
-				query(where("level0.$[some_item].arrayCustomName.$[other_item].nested").is("value")).getQueryObject(),
-				context.getPersistentEntity(WithDeepArrayNesting.class));
-
-		assertThat(target)
-				.isEqualTo(new org.bson.Document("level0.$[some_item].arrayCustomName.$[other_item].nes-ted", "value"));
+		assertThat(target).isEqualTo(new org.bson.Document("arrayCustomName.$[some_item].nested", "value"));
 	}
 
 	@Test // DATAMONGO-2517
@@ -1735,13 +1700,169 @@ public class QueryMapperUnitTests {
 		assertThat(mappedObject).containsEntry("$and.[0]._id.$all", List.of(oid));
 	}
 
-	class WithSimpleMap {
-		Map<String, String> simpleMap;
+	@Test // GH-4516
+	void mapsFieldNamesBelowMapValues() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("map.key.name").is("x")).getQueryObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("map.key.n", "x"));
 	}
 
-	class WithDeepArrayNesting {
+	@Test // GH-4516
+	void resolvesStoredFieldNames() {
 
-		List<WithNestedArray> level0;
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("nv.name").is("x")).getQueryObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("nv.n", "x"));
+	}
+
+	@Test // GH-4516
+	void mapsIndexesOfNestedLists() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("lists.0.1.name").is("x")).getQueryObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("lists.0.1.n", "x"));
+	}
+
+	@Test // GH-4516
+	void mapsResolvablePrefixOfPartiallyUnresolvablePath() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(
+				query(where("nested.unknown.name").is("x")).getQueryObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("nv.unknown.name", "x"));
+	}
+
+	@Test // GH-4516
+	void doesNotResolveCamelCaseConcatenatedPaths() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("nestedName").is("x")).getQueryObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("nestedName", "x"));
+	}
+
+	@Test // GH-4516
+	void mapsNonIdPropertyOfDocumentReferenceTarget() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("customer.name").is("c1")).getQueryObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("customer.name", "c1"));
+	}
+
+	@Test // GH-4516
+	void mapsNestedDocumentBelowMapRelativeToParentPath() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(
+				new org.bson.Document("map", new org.bson.Document("key", new org.bson.Document("name", "x"))),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("map",
+				new org.bson.Document("key", new org.bson.Document("n", "x"))));
+	}
+
+	@Test // GH-4516
+	void mapsNestedDocumentBelowNestedListRelativeToParentPath() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(
+				new org.bson.Document("lists.0", new org.bson.Document("1", new org.bson.Document("name", "x"))),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("lists.0",
+				new org.bson.Document("1", new org.bson.Document("n", "x"))));
+	}
+
+	@Test // GH-4516
+	void mapsElemMatchRelativeToParentPath() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(
+				query(where("items").elemMatch(where("name").is("x"))).getQueryObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedObject).isEqualTo(new org.bson.Document("items",
+				new org.bson.Document("$elemMatch", new org.bson.Document("n", "x"))));
+	}
+
+	@Test // GH-4516
+	void retainsEmptySegmentsOfKeys() {
+
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithPathMappingCases.class);
+
+		assertThat(mapper.getMappedObject(new org.bson.Document("..items", "x"), entity))
+				.isEqualTo(new org.bson.Document("..items", "x"));
+		assertThat(mapper.getMappedObject(new org.bson.Document("nested..name", "x"), entity))
+				.isEqualTo(new org.bson.Document("nv..name", "x"));
+		assertThat(mapper.getMappedObject(new org.bson.Document(".$where", "x"), entity))
+				.isEqualTo(new org.bson.Document(".$where", "x"));
+	}
+
+	@Test // GH-4516
+	void doesNotMergeKeysDifferingInEmptySegments() {
+
+		Query query = query(where("items").is("a"));
+		query.addCriteria(where("..items").is("b"));
+
+		assertThat(mapper.getMappedObject(query.getQueryObject(),
+				context.getRequiredPersistentEntity(WithPathMappingCases.class)))
+				.isEqualTo(new org.bson.Document("items", "a").append("..items", "b"));
+	}
+
+	@Test // GH-4516
+	void rejectsKeysMappedToOperators() {
+
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> mapper.getMappedObject(
+				query(where("value").is("x")).getQueryObject(), context.getRequiredPersistentEntity(WithOperatorName.class)));
+	}
+
+	@Test // GH-4516
+	void rendersMappedKeyFromOverriddenBoundPath() {
+
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithPathMappingCases.class);
+		BoundMongoPath custom = MongoPathBinder.of(context).bind("nested.name", PathType.QUERY,
+				Scope.of(entity));
+
+		MetadataBackedField field = new MetadataBackedField("items", entity, context) {
+			@Override
+			protected BoundMongoPath getBoundPath() {
+				return custom;
+			}
+		};
+
+		assertThat(field.getMappedKey()).isEqualTo("nv.n");
+	}
+
+	@Test // GH-4516
+	void rendersNameOfUnresolvedFieldDerivedViaWith() {
+
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(PathMappingNested.class);
+
+		assertThat(new MetadataBackedField("unknown", entity, context).with("name").getMappedKey()).isEqualTo("n");
+		assertThat(new MetadataBackedField("unknown", entity, context).with("other").getMappedKey()).isEqualTo("other");
+	}
+
+	static class WithOperatorName {
+		@Field("$where") String value;
+	}
+
+	static class WithPathMappingCases {
+
+		Map<String, PathMappingNested> map;
+		@Field("nv") PathMappingNested nested;
+		List<List<PathMappingNested>> lists;
+		List<PathMappingNested> items;
+	}
+
+	static class PathMappingNested {
+		@Field("n") String name;
+	}
+
+	class WithSimpleMap {
+		Map<String, String> simpleMap;
 	}
 
 	class WithNestedArray {

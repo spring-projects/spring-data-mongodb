@@ -123,7 +123,6 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Contract;
@@ -2644,7 +2643,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			return executeFindOneInternal(
 					new FindAndModifyCallback(collectionPreparer, mappedQuery, fields, sort, mappedUpdate,
-							update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
+							updateMapper.getMappedArrayFilters(update, entity), options),
 					callback, collectionName);
 		});
 	}

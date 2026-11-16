@@ -122,6 +122,14 @@ class FieldsUnitTests {
 		assertThat(Fields.field("person.$id").getTarget()).isEqualTo("person.$id");
 	}
 
+	@Test // GH-5011, GH-4516
+	void keepsRawMappingToDbRefRefAndDb() {
+
+		assertThat(Fields.field("person.$ref").getTarget()).isEqualTo("person.$ref");
+		assertThat(Fields.field("person.$db").getTarget()).isEqualTo("person.$db");
+		assertThat(Fields.field("collection", "person.$ref").getTarget()).isEqualTo("person.$ref");
+	}
+
 	private static void verify(Field field, String name, String target) {
 
 		assertThat(field).isNotNull();

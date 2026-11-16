@@ -537,8 +537,34 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		return (T) o.get(key);
 	}
 
+	@Test // GH-4516
+	void rendersReferencesToMapValuesAndListElements() {
+
+		TypeBasedAggregationOperationContext context = getContext(WithPathMappingCases.class);
+
+		assertThat(context.getReference("map.key.name").toString()).isEqualTo("$map.key.n");
+		assertThat(context.getReference("list.0.name").toString()).isEqualTo("$list.0.n");
+	}
+
+	@Test // GH-4516
+	void rendersReferenceToDbRefIdAsStoredIdField() {
+		assertThat(getContext(WithPathMappingCases.class).getReference("ref.id").toString()).isEqualTo("$ref.$id");
+	}
+
 	private TypeBasedAggregationOperationContext getContext(Class<?> type) {
 		return new TypeBasedAggregationOperationContext(type, context, mapper);
+	}
+
+	static class WithPathMappingCases {
+
+		@Id String id;
+		java.util.Map<String, PathMappingNested> map;
+		List<PathMappingNested> list;
+		@org.springframework.data.mongodb.core.mapping.DBRef WithPathMappingCases ref;
+	}
+
+	static class PathMappingNested {
+		@org.springframework.data.mongodb.core.mapping.Field("n") String name;
 	}
 
 	static class Foo {

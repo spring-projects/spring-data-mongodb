@@ -31,7 +31,6 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.core.convert.converter.Converter;
@@ -982,8 +981,7 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target).containsEntry("simpleValueRef", Arrays.asList("ref-1", "ref-2"));
 	}
 
-	@Test // GH-3602
-	@Disabled("Property path resolution does not work inside maps, the key is considered :/")
+	@Test // GH-3602, GH-4516
 	void updateReferenceMapWithEntity() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);

@@ -726,6 +726,21 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link LookupOperation} joining the collection of the given type. In contrast to
+	 * {@link #lookup(String, String, String, String)} the {@literal foreignField} is mapped against {@code from}.
+	 *
+	 * @param from must not be {@literal null}.
+	 * @param localField must not be {@literal null}.
+	 * @param foreignField must not be {@literal null}.
+	 * @param as must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 5.3
+	 */
+	public static LookupOperation lookup(Class<?> from, String localField, String foreignField, String as) {
+		return new LookupOperation(from, field(localField), field(foreignField), null, null, field(as));
+	}
+
+	/**
 	 * Entrypoint for creating {@link LookupOperation $lookup} using a fluent builder API.
 	 *
 	 * <pre class="code">

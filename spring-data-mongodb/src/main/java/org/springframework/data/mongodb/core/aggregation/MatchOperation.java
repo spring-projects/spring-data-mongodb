@@ -73,7 +73,7 @@ public class MatchOperation implements AggregationOperation {
 	public Document toDocument(AggregationOperationContext context) {
 
 		return new Document(getOperator(),
-				context.getMappedObject(expression != null ? expression.toDocument() : criteriaDefinition.getCriteriaObject()));
+				context.getMappedCriteria(expression != null ? expression.toDocument() : criteriaDefinition.getCriteriaObject()));
 	}
 
 	@Override

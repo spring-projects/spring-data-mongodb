@@ -84,6 +84,44 @@ public class DocumentPointerFactoryUnitTests {
 				.isEqualTo(new Document("metadata", new Document("pages", 272)));
 	}
 
+	@Test // GH-4516
+	void computesPlaceholderForStoredFieldName() {
+
+		LinkageDocument source = LinkageDocument.from("{ 'acronym' : ?#{acc}, 'meta.p' : ?#{pages} }");
+
+		assertThat(getPointerValue(source, new WithRenamedFields("ACME", new RenamedMetadata(7))))
+				.isEqualTo(new Document("acc", "ACME").append("pages", 7));
+	}
+
+	@Test // GH-4516
+	void rejectsUnresolvableLookupKey() {
+
+		LinkageDocument source = LinkageDocument.from("{ 'unknown' : ?#{x} }");
+
+		assertThatExceptionOfType(RuntimeException.class)
+				.isThrownBy(() -> getPointerValue(source, new WithRenamedFields("ACME", null)));
+	}
+
+	static class WithRenamedFields {
+
+		@org.springframework.data.mongodb.core.mapping.Field("acronym") String acc;
+		@org.springframework.data.mongodb.core.mapping.Field("meta") RenamedMetadata metadata;
+
+		WithRenamedFields(String acc, RenamedMetadata metadata) {
+			this.acc = acc;
+			this.metadata = metadata;
+		}
+	}
+
+	static class RenamedMetadata {
+
+		@org.springframework.data.mongodb.core.mapping.Field("p") int pages;
+
+		RenamedMetadata(int pages) {
+			this.pages = pages;
+		}
+	}
+
 	Object getPointerValue(LinkageDocument linkageDocument, Object value) {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();

@@ -72,7 +72,7 @@ class AggregationOperationRenderer {
 		return operationDocuments;
 	}
 
-	private static class ConverterAwareNoOpContext implements AggregationOperationContext {
+	static class ConverterAwareNoOpContext implements AggregationOperationContext {
 
 		AggregationOperationContext ctx;
 

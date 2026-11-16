@@ -17,28 +17,39 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.Nullable;
 
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mapping.Association;
-import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext.WriteOperatorContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.path.BoundMongoPath;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.FilteredPositional;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.Token;
+import org.springframework.data.mongodb.core.mapping.path.MongoPathBinder;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
+import org.springframework.data.mongodb.core.mapping.path.Scope;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -50,6 +61,8 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  */
 public class UpdateMapper extends QueryMapper {
+
+	private static final Set<String> LOGICAL_OPERATORS = Set.of("$and", "$or", "$nor");
 
 	private final MongoConverter converter;
 
@@ -126,6 +139,163 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	/**
+	 * Map the {@link UpdateDefinition#getArrayFilters() array filters} of the given {@link UpdateDefinition}. Filter keys
+	 * are resolved against the element type of the array the {@code $[<identifier>]} refers to in the update. Filters
+	 * using identifiers that cannot be resolved unambiguously are retained as-is.
+	 *
+	 * @param update must not be {@literal null}.
+	 * @param entity can be {@literal null}.
+	 * @return the mapped array filters.
+	 * @since 5.3
+	 */
+	public List<Document> getMappedArrayFilters(UpdateDefinition update, @Nullable MongoPersistentEntity<?> entity) {
+
+		List<Document> filters = new ArrayList<>(update.getArrayFilters().size());
+		for (ArrayFilter arrayFilter : update.getArrayFilters()) {
+			filters.add(arrayFilter.asDocument());
+		}
+
+		if (entity == null || filters.isEmpty()) {
+			return filters;
+		}
+
+		Map<String, MetadataBackedField> identifiers = getArrayFilterIdentifiers(update.getUpdateObject(), entity);
+		if (identifiers.isEmpty()) {
+			return filters;
+		}
+
+		List<Document> mapped = new ArrayList<>(filters.size());
+		for (Document filter : filters) {
+			mapped.add(getMappedArrayFilter(filter, identifiers));
+		}
+		return mapped;
+	}
+
+	private Map<String, MetadataBackedField> getArrayFilterIdentifiers(Document updateObject,
+			MongoPersistentEntity<?> entity) {
+
+		Map<String, BoundMongoPath> paths = new LinkedHashMap<>();
+		Set<String> ambiguous = new HashSet<>();
+
+		for (Entry<String, Object> entry : updateObject.entrySet()) {
+			if (isKeyword(entry.getKey()) && entry.getValue() instanceof Document operation) {
+				for (String key : operation.keySet()) {
+					collectArrayFilterIdentifiers(key, entity, paths, ambiguous);
+				}
+			} else {
+				collectArrayFilterIdentifiers(entry.getKey(), entity, paths, ambiguous);
+			}
+		}
+
+		if (!ambiguous.isEmpty() && LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Not mapping array filters for ambiguous identifiers %s".formatted(ambiguous));
+		}
+
+		Map<String, MetadataBackedField> identifiers = new LinkedHashMap<>(paths.size());
+		paths.forEach((identifier, path) -> {
+			if (!ambiguous.contains(identifier)) {
+				identifiers.put(identifier,
+						MetadataBackedField.arrayFilterElement(identifier, path, entity, getMappingContext()));
+			}
+		});
+		return identifiers;
+	}
+
+	private void collectArrayFilterIdentifiers(String key, MongoPersistentEntity<?> entity,
+			Map<String, BoundMongoPath> paths, Set<String> ambiguous) {
+
+		MongoPath path;
+		try {
+			path = MongoPath.parse(key, PathType.UPDATE);
+		} catch (IllegalArgumentException ex) {
+			return;
+		}
+
+		List<Token> tokens = path.tokens();
+		for (int i = 0; i < tokens.size(); i++) {
+
+			if (!(tokens.get(i) instanceof FilteredPositional positional)) {
+				continue;
+			}
+
+			String identifier = positional.identifier();
+			BoundMongoPath elementPath = bindArrayFilterElement(tokens.subList(0, i + 1), entity);
+
+			if (elementPath == null) {
+				ambiguous.add(identifier);
+				continue;
+			}
+
+			BoundMongoPath existing = paths.putIfAbsent(identifier, elementPath);
+			if (existing != null && !ObjectUtils.nullSafeEquals(existing.targetType(), elementPath.targetType())) {
+				ambiguous.add(identifier);
+			}
+		}
+	}
+
+	private @Nullable BoundMongoPath bindArrayFilterElement(List<Token> tokens, MongoPersistentEntity<?> entity) {
+
+		String path = tokens.stream().map(Token::text).collect(Collectors.joining("."));
+
+		try {
+			BoundMongoPath bound = MongoPathBinder.of(getMappingContext()).bind(path, PathType.UPDATE, Scope.of(entity));
+			return bound.isResolved() && bound.association() == null ? bound : null;
+		} catch (MappingException ex) {
+			return null;
+		}
+	}
+
+	private Document getMappedArrayFilter(Document filter, Map<String, MetadataBackedField> identifiers) {
+
+		Document result = new Document();
+
+		for (Entry<String, Object> entry : filter.entrySet()) {
+
+			String key = entry.getKey();
+			Object value = entry.getValue();
+
+			if (LOGICAL_OPERATORS.contains(key) && value instanceof Iterable<?> conditions) {
+
+				List<Object> mapped = new ArrayList<>();
+				for (Object condition : conditions) {
+					mapped.add(condition instanceof Document document ? getMappedArrayFilter(document, identifiers) : condition);
+				}
+				result.put(key, mapped);
+				continue;
+			}
+
+			Field field = getArrayFilterField(key, identifiers);
+			if (field == null) {
+				result.put(key, value);
+				continue;
+			}
+
+			Entry<String, @Nullable Object> mapped = super.getMappedObjectForField(field, value);
+			result.put(mapped.getKey(), mapped.getValue());
+		}
+
+		return result;
+	}
+
+	private static @Nullable Field getArrayFilterField(String key, Map<String, MetadataBackedField> identifiers) {
+
+		int dot = key.indexOf('.');
+		String identifier = dot == -1 ? key : key.substring(0, dot);
+
+		MetadataBackedField element = identifiers.get(identifier);
+		if (element == null || dot == -1) {
+			return element;
+		}
+
+		return element.nested(key.substring(dot + 1), identifier);
+	}
+
+	@Override
+	protected PathType getPathType() {
+		return PathType.UPDATE;
+	}
+
+	/**
 	 * Converts the given source object to a mongo type retaining the original type information of the source type on the
 	 * mongo type.
 	 *
@@ -149,8 +319,11 @@ public class UpdateMapper extends QueryMapper {
 
 		if (isDocument(rawValue)) {
 
-			Object val = field.isMap() ? new LinkedHashMap<>((Document) rawValue) : rawValue; // unwrap to preserve field type
-			return createMapEntry(field, convertSimpleOrDocument(val, field.getPropertyEntity()));
+			if (field.isMap()) { // unwrap to preserve field type
+				return createMapEntry(field,
+						convertSimpleOrDocument(new LinkedHashMap<>((Document) rawValue), field.getPropertyEntity()));
+			}
+			return createMapEntry(field, getMappedNestedObject((Document) rawValue, field));
 		}
 
 		if (isQuery(rawValue)) {
@@ -259,14 +432,6 @@ public class UpdateMapper extends QueryMapper {
 		return NESTED_DOCUMENT;
 	}
 
-	@Override
-	protected Field createPropertyField(@Nullable MongoPersistentEntity<?> entity, String key,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-
-		return entity == null ? super.createPropertyField(entity, key, mappingContext)
-				: new MetadataBackedUpdateField(entity, key, mappingContext);
-	}
-
 	private static Document getSortObject(Sort sort) {
 
 		Document document = new Document();
@@ -276,81 +441,5 @@ public class UpdateMapper extends QueryMapper {
 		}
 
 		return document;
-	}
-
-	/**
-	 * {@link MetadataBackedField} that handles {@literal $} paths inside a field key. We clean up an update key
-	 * containing a {@literal $} before handing it to the super class to make sure property lookups and transformations
-	 * continue to work as expected. We provide a custom property converter to re-applied the cleaned up {@literal $}s
-	 * when constructing the mapped key.
-	 *
-	 * @author Thomas Darimont
-	 * @author Oliver Gierke
-	 * @author Christoph Strobl
-	 */
-	private static class MetadataBackedUpdateField extends MetadataBackedField {
-
-		private final String key;
-
-		/**
-		 * Creates a new {@link MetadataBackedField} with the given {@link MongoPersistentEntity}, key and
-		 * {@link MappingContext}. We clean up the key before handing it up to the super class to make sure it continues to
-		 * work as expected.
-		 *
-		 * @param entity must not be {@literal null}.
-		 * @param key must not be {@literal null} or empty.
-		 * @param mappingContext must not be {@literal null}.
-		 */
-		public MetadataBackedUpdateField(MongoPersistentEntity<?> entity, String key,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-
-			super(key, entity, mappingContext);
-			this.key = key;
-		}
-
-		@Override
-		public String getMappedKey() {
-			return this.getPath() == null ? key : super.getMappedKey();
-		}
-
-		@Override
-		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
-			return new PositionParameterRetainingPropertyKeyConverter(key, getMappingContext());
-		}
-
-		@Override
-		@SuppressWarnings("NullAway")
-		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
-			return new UpdateAssociationConverter(getMappingContext(), getAssociation(), key);
-		}
-
-		/**
-		 * {@link Converter} retaining positional parameter {@literal $} for {@link Association}s.
-		 *
-		 * @author Christoph Strobl
-		 */
-		@SuppressWarnings("NullAway")
-		protected static class UpdateAssociationConverter extends AssociationConverter {
-
-			private final KeyMapper mapper;
-
-			/**
-			 * Creates a new {@link AssociationConverter} for the given {@link Association}.
-			 *
-			 * @param association must not be {@literal null}.
-			 */
-			public UpdateAssociationConverter(
-					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-					Association<MongoPersistentProperty> association, String key) {
-
-				super(key, association);
-				this.mapper = new KeyMapper(key, mappingContext);
-			}
-
-			@Override
-			public String convert(MongoPersistentProperty source) {
-				return super.convert(source) == null ? null : mapper.mapPropertyName(source);
-			}
-		}
 	}
 }

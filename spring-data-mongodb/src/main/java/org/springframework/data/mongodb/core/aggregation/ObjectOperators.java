@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
@@ -32,6 +33,22 @@ import org.springframework.util.Assert;
  * @since 2.1
  */
 public class ObjectOperators {
+
+	/**
+	 * Map the {@code field} operand of {@code $getField}/{@code $setField} against the type of {@code input}. Returns
+	 * {@literal null} if the operand is to be rendered as-is.
+	 */
+	private static @Nullable Object mapFieldOperand(@Nullable Object field, @Nullable Object input,
+			AggregationOperationContext context) {
+
+		if (field instanceof Field fieldRef) {
+
+			String mapped = AggregationScopes.mapFieldName(fieldRef.getTarget(), input, context);
+			return mapped != null ? mapped : context.getReference(fieldRef).getRaw();
+		}
+
+		return field instanceof String name ? AggregationScopes.mapFieldName(name, input, context) : null;
+	}
 
 	/**
 	 * Take the value referenced by given {@literal fieldReference}.
@@ -355,8 +372,16 @@ public class ObjectOperators {
 	 */
 	public static class GetField extends AbstractAggregationExpression {
 
+		private final boolean fieldMapped;
+
 		protected GetField(Object value) {
+			this(value, false);
+		}
+
+		private GetField(Object value, boolean fieldMapped) {
+
 			super(value);
+			this.fieldMapped = fieldMapped;
 		}
 
 		/**
@@ -410,8 +435,12 @@ public class ObjectOperators {
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
-			if(isArgumentMap() && get("field") instanceof Field field) {
-				return new GetField(append("field", context.getReference(field).getRaw())).toDocument(context);
+			if (!fieldMapped && isArgumentMap()) {
+
+				Object mapped = mapFieldOperand(get("field"), get("input"), context);
+				if (mapped != null) {
+					return new GetField(append("field", mapped), true).toDocument(context);
+				}
 			}
 			return super.toDocument(context);
 		}
@@ -430,8 +459,16 @@ public class ObjectOperators {
 	 */
 	public static class SetField extends AbstractAggregationExpression {
 
+		private final boolean fieldMapped;
+
 		protected SetField(Object value) {
+			this(value, false);
+		}
+
+		private SetField(Object value, boolean fieldMapped) {
+
 			super(value);
+			this.fieldMapped = fieldMapped;
 		}
 
 		/**
@@ -527,8 +564,12 @@ public class ObjectOperators {
 
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
-			if(get("field") instanceof Field field) {
-				return new SetField(append("field", context.getReference(field).getRaw())).toDocument(context);
+			if (!fieldMapped) {
+
+				Object mapped = mapFieldOperand(get("field"), get("input"), context);
+				if (mapped != null) {
+					return new SetField(append("field", mapped), true).toDocument(context);
+				}
 			}
 			return super.toDocument(context);
 		}

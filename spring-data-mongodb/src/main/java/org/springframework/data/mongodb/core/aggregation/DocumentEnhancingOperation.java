@@ -81,7 +81,32 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 
 	@Override
 	public ExposedFields getFields() {
-		return exposedFields;
+
+		ExposedFields fields = exposedFields;
+
+		for (Entry<Object, Object> entry : valueMap.entrySet()) {
+
+			String name = entry.getKey() instanceof Field field ? field.getName() : entry.getKey().toString();
+			fields = fields.withInputMappedName(name);
+
+			String target = referencedTarget(entry.getValue());
+			if (target != null) {
+				fields = fields.withReference(name, target, false);
+			}
+		}
+
+		return fields;
+	}
+
+	private static @Nullable String referencedTarget(@Nullable Object value) {
+
+		if (value instanceof Field field) {
+			return field.getTarget();
+		}
+		if (value instanceof String reference && reference.startsWith("$") && !reference.startsWith("$$")) {
+			return reference.substring(1);
+		}
+		return null;
 	}
 
 	private ExposedFields add(Object fieldValue) {

@@ -125,6 +125,7 @@ public class DefaultIndexOperations implements IndexOperations {
 			IndexOptions indexOptions = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
 
 			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
+			indexOptions = addWildcardProjectionIfPresent(indexOptions, entity);
 			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
 
 			Document mappedKeys = mapper.getMappedSort(indexDefinition.getIndexKeys(), entity);
@@ -226,7 +227,16 @@ public class DefaultIndexOperations implements IndexOperations {
 
 		Assert.isInstanceOf(Document.class, sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
 		return ops.partialFilterExpression(
-				mapper.getMappedSort((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
+				mapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
+	}
+
+	private IndexOptions addWildcardProjectionIfPresent(IndexOptions ops, @Nullable MongoPersistentEntity<?> entity) {
+
+		if (entity == null || !(ops.getWildcardProjection() instanceof Document projection)) {
+			return ops;
+		}
+
+		return ops.wildcardProjection(mapper.getMappedSort(projection, entity));
 	}
 
 	@SuppressWarnings("NullAway")

@@ -723,7 +723,12 @@ public class ArrayOperators {
 		public Document toDocument(final AggregationOperationContext context) {
 
 			Assert.notNull(as, "As must be set first");
-			return toFilter(ExposedFields.from(as), context);
+
+			ExposedFields fields = ExposedFields.from(as);
+			if (input instanceof Field field) {
+				fields = fields.withReference(as.getName(), field.getTarget(), true);
+			}
+			return toFilter(fields, context);
 		}
 
 		@SuppressWarnings("NullAway")
@@ -1402,15 +1407,18 @@ public class ArrayOperators {
 			document.put("input", getMappedValue(input, context));
 			document.put("initialValue", getMappedValue(initialValue, context));
 
+			AggregationOperationContext inContext = VariableMappingAggregationOperationContext.forElementsOf(context,
+					"this", input);
+
 			if (reduceExpressions.iterator().next() instanceof PropertyExpression) {
 
 				Document properties = new Document();
 				for (AggregationExpression e : reduceExpressions) {
-					properties.putAll(e.toDocument(context));
+					properties.putAll(e.toDocument(inContext));
 				}
 				document.put("in", properties);
 			} else {
-				document.put("in", (reduceExpressions.iterator().next()).toDocument(context));
+				document.put("in", (reduceExpressions.iterator().next()).toDocument(inContext));
 			}
 
 			return new Document("$reduce", document);

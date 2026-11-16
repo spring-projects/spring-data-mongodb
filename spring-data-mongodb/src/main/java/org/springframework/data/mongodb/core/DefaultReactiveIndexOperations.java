@@ -93,6 +93,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 			IndexOptions indexOptions = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
 
 			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
+			indexOptions = addWildcardProjectionIfPresent(indexOptions, entity);
 			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
 
 			return collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
@@ -162,6 +163,15 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		Assert.isInstanceOf(Document.class, sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
 		return ops.partialFilterExpression(
 				queryMapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
+	}
+
+	private IndexOptions addWildcardProjectionIfPresent(IndexOptions ops, @Nullable MongoPersistentEntity<?> entity) {
+
+		if (entity == null || !(ops.getWildcardProjection() instanceof Document projection)) {
+			return ops;
+		}
+
+		return ops.wildcardProjection(queryMapper.getMappedSort(projection, entity));
 	}
 
 	@SuppressWarnings("NullAway")

@@ -37,7 +37,6 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.model.BulkWriteOptions;
@@ -220,11 +219,7 @@ abstract class BulkOperationsSupport {
 		options.upsert(upsert);
 
 		if (update.hasArrayFilters()) {
-			List<Document> list = new ArrayList<>(update.getArrayFilters().size());
-			for (ArrayFilter arrayFilter : update.getArrayFilters()) {
-				list.add(arrayFilter.asDocument());
-			}
-			options.arrayFilters(list);
+			options.arrayFilters(updateMapper().getMappedArrayFilters(update, entity().orElse(null)));
 		}
 
 		if (!multi && filterQuery.isSorted()) {

@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,9 +32,13 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.HashedIndex;
 import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.PartialIndexFilter;
+import org.springframework.data.mongodb.core.index.WildcardIndex;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -131,6 +136,31 @@ public class DefaultIndexOperationsUnitTests {
 		verify(db).getCollection(eq("foo"), any(Class.class));
 	}
 
+	@Test // GH-4516
+	void mapsPartialFilterKeysAndValues() {
+
+		ObjectId id = new ObjectId();
+		indexOpsFor(Jedi.class).ensureIndex(new Index("name", Direction.DESC)
+				.partial(PartialIndexFilter.of(Criteria.where("name").is("luke").and("master").is(id.toHexString()))));
+
+		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
+		verify(collection).createIndex(any(), options.capture());
+
+		assertThat(options.getValue().getPartialFilterExpression())
+				.isEqualTo(new Document("firstname", "luke").append("master", id));
+	}
+
+	@Test // GH-4516
+	void mapsWildcardProjectionKeys() {
+
+		indexOpsFor(Jedi.class).ensureIndex(new WildcardIndex().wildcardProjectionInclude("name"));
+
+		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
+		verify(collection).createIndex(any(), options.capture());
+
+		assertThat(options.getValue().getWildcardProjection()).isEqualTo(new Document("firstname", 1));
+	}
+
 	private DefaultIndexOperations indexOpsFor(Class<?> type) {
 		return new DefaultIndexOperations(template, template.getCollectionName(type), type);
 	}
@@ -138,6 +168,7 @@ public class DefaultIndexOperationsUnitTests {
 	static class Jedi {
 
 		@Field("firstname") String name;
+		@Field(targetType = FieldType.OBJECT_ID) String master;
 
 		public Jedi() {}
 

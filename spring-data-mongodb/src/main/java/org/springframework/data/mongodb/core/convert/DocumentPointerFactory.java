@@ -21,9 +21,11 @@ import java.util.Map.Entry;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -38,6 +40,10 @@ import org.springframework.data.mongodb.core.mapping.DocumentPointer;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.path.BoundMongoPath;
+import org.springframework.data.mongodb.core.mapping.path.MongoPathBinder;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
+import org.springframework.data.mongodb.core.mapping.path.Scope;
 
 /**
  * Internal API to construct {@link DocumentPointer} for a given property. Considers {@link LazyLoadingProxy},
@@ -216,7 +222,8 @@ class DocumentPointerFactory {
 
 				if (entry.getValue() instanceof Document document) {
 
-					MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(entry.getKey());
+					MongoPersistentProperty persistentProperty = resolveProperty(entry.getKey(), persistentEntity,
+							mappingContext);
 					if (persistentProperty != null && persistentProperty.isEntity()) {
 
 						MongoPersistentEntity<?> nestedEntity = mappingContext.getRequiredPersistentEntity(persistentProperty.getType());
@@ -244,17 +251,29 @@ class DocumentPointerFactory {
 					}
 
 					String fieldName = entry.getKey().equals(FieldName.ID.name()) ? "id" : entry.getKey();
-					if (!fieldName.contains(".")) {
+					PersistentPropertyPath<MongoPersistentProperty> path = resolvePath(fieldName, persistentEntity,
+							mappingContext);
 
-						Object targetValue = propertyAccessor.getProperty(persistentEntity.getRequiredPersistentProperty(fieldName));
-						target.put(attribute, targetValue);
+					if (path == null) {
+
+						// retain the exception previously raised for unresolvable keys
+						if (!fieldName.contains(".")) {
+							persistentEntity.getRequiredPersistentProperty(fieldName);
+						}
+						mappingContext
+								.getPersistentPropertyPath(PropertyPath.from(fieldName, persistentEntity.getTypeInformation()));
+						throw new InvalidDataAccessApiUsageException("Cannot resolve '%s' of lookup '%s' against %s"
+								.formatted(fieldName, lookup, persistentEntity.getName()));
+					}
+
+					if (path.getLength() == 1) {
+
+						target.put(attribute, propertyAccessor.getProperty(path.getLeafProperty()));
 						continue;
 					}
 
 					PersistentPropertyPathAccessor<?> propertyPathAccessor = persistentEntity
 							.getPropertyPathAccessor(propertyAccessor.getBean());
-					PersistentPropertyPath<?> path = mappingContext
-							.getPersistentPropertyPath(PropertyPath.from(fieldName, persistentEntity.getTypeInformation()));
 					Object targetValue = propertyPathAccessor.getProperty(path);
 					target.put(attribute, targetValue);
 					continue;
@@ -268,6 +287,36 @@ class DocumentPointerFactory {
 			}
 
 			return target;
+		}
+
+		/**
+		 * Resolve a lookup key segment by segment by Java property name or unique stored field name.
+		 */
+		private static @Nullable PersistentPropertyPath<MongoPersistentProperty> resolvePath(String key,
+				MongoPersistentEntity<?> entity,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+			try {
+
+				BoundMongoPath path = MongoPathBinder.of(mappingContext).bind(key, PathType.PROPERTY, Scope.of(entity));
+				if (!path.isResolved() || path.properties().isEmpty()) {
+					return null;
+				}
+
+				String dotPath = path.properties().stream().map(MongoPersistentProperty::getName)
+						.collect(Collectors.joining("."));
+				return mappingContext
+						.getPersistentPropertyPath(PropertyPath.from(Pattern.quote(dotPath), entity.getTypeInformation()));
+			} catch (RuntimeException ex) {
+				return null;
+			}
+		}
+
+		private static @Nullable MongoPersistentProperty resolveProperty(String key, MongoPersistentEntity<?> entity,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+			PersistentPropertyPath<MongoPersistentProperty> path = resolvePath(key, entity, mappingContext);
+			return path != null && path.getLength() == 1 ? path.getLeafProperty() : null;
 		}
 	}
 }

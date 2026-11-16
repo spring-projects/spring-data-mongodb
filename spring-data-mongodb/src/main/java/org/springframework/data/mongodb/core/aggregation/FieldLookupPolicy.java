@@ -22,6 +22,7 @@ package org.springframework.data.mongodb.core.aggregation;
  *
  * @author Mark Paluch
  * @since 4.3.1
+ * @see org.springframework.data.mongodb.core.mapping.path.LookupPolicy
  */
 public abstract class FieldLookupPolicy {
 

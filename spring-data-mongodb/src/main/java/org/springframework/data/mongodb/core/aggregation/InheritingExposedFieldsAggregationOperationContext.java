@@ -53,6 +53,11 @@ class InheritingExposedFieldsAggregationOperationContext extends ExposedFieldsAg
 	}
 
 	@Override
+	boolean inheritsFields() {
+		return true;
+	}
+
+	@Override
 	protected FieldReference resolveExposedField(@Nullable Field field, String name) {
 
 		FieldReference fieldReference = super.resolveExposedField(field, name);

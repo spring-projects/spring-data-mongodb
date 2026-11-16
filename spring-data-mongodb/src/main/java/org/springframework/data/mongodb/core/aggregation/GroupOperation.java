@@ -410,6 +410,10 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 			fields = fields.and(operation.asField());
 		}
 
+		for (ExposedField idField : this.idFields) {
+			fields = fields.withReference(idField.getName(), idField.getTarget(), false);
+		}
+
 		return fields;
 	}
 

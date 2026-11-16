@@ -48,6 +48,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -1090,6 +1091,69 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("aliased.$[element]", 10)));
 	}
 
+	@Test // GH-5011, GH-4516
+	void parsesKeysAsUpdatePaths() {
+
+		QueryMapper.MetadataBackedField field = (QueryMapper.MetadataBackedField) mapper
+				.createPropertyField(context.getPersistentEntity(WithNestedArray.class), "arrayObj.$[e].nested", context);
+
+		assertThat(field.getBoundPath().source().type()).isEqualTo(PathType.UPDATE);
+	}
+
+	@Test // DATAMONGO-2488, GH-4516
+	void mapsNestedArrayPathCorrectlyForNonMatchingPath() {
+
+		Document mappedUpdate = mapper.getMappedObject(new Update().set("array.$[some_item].nested.$[other_item]", "value").getUpdateObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("array.$[some_item].nested.$[other_item]", "value")));
+	}
+
+	@Test // DATAMONGO-2488, GH-4516
+	void mapsNestedArrayPathCorrectlyForObjectTargetArray() {
+
+		Document mappedUpdate = mapper.getMappedObject(new Update().set("arrayObj.$[some_item].nested.$[other_item]", "value").getUpdateObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("arrayObj.$[some_item].nested.$[other_item]", "value")));
+	}
+
+	@Test // DATAMONGO-2488, GH-4516
+	void mapsNestedArrayPathCorrectlyForStringTargetArray() {
+
+		Document mappedUpdate = mapper.getMappedObject(new Update().set("arrayString.$[some_item].nested.$[other_item]", "value").getUpdateObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("arrayString.$[some_item].nested.$[other_item]", "value")));
+	}
+
+	@Test // DATAMONGO-2488, GH-4516
+	void mapsCustomFieldNamesForNestedArrayPathCorrectly() {
+
+		Document mappedUpdate = mapper.getMappedObject(new Update().set("arrayCustomName.$[some_item].nested.$[other_item]", "value").getUpdateObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("arrayCustomName.$[some_item].nes-ted.$[other_item]", "value")));
+	}
+
+	@Test // DATAMONGO-2502, GH-4516
+	void shouldAllowDeeplyNestedPlaceholders() {
+
+		Document mappedUpdate = mapper.getMappedObject(new Update().set("level0.$[some_item].arrayObj.$[other_item].nested", "value").getUpdateObject(),
+				context.getPersistentEntity(WithDeepArrayNesting.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("level0.$[some_item].arrayObj.$[other_item].nested", "value")));
+	}
+
+	@Test // DATAMONGO-2502, GH-4516
+	void shouldAllowDeeplyNestedPlaceholdersWithCustomName() {
+
+		Document mappedUpdate = mapper.getMappedObject(new Update().set("level0.$[some_item].arrayCustomName.$[other_item].nested", "value").getUpdateObject(),
+				context.getPersistentEntity(WithDeepArrayNesting.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("level0.$[some_item].arrayCustomName.$[other_item].nes-ted", "value")));
+	}
+
 	@Test // DATAMONGO-2215
 	void mappingShouldAllowNestedPositionParameterWithIdentifierWhenFieldHasExplicitFieldName() {
 
@@ -1360,6 +1424,123 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(WithPropertyValueConverter.class));
 
 		assertThat(mappedUpdate).isEqualTo("{ $set : { 'text' : 'eulav' } }");
+	}
+
+	@Test // GH-4516
+	void mapsFieldNamesBelowMapValues() {
+
+		Update update = new Update().set("map.key.name", "x");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedUpdate).isEqualTo("{ $set : { 'map.key.n' : 'x' } }");
+	}
+
+	@Test // GH-4516
+	void mapsNestedDocumentOfMapValue() {
+
+		Update update = new Update().set("map.key", new Document("name", "x"));
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedUpdate).isEqualTo("{ $set : { 'map.key' : { 'n' : 'x' } } }");
+	}
+
+	@Test // GH-4516
+	void mapsPositionalOperatorsOfNestedLists() {
+
+		Update update = new Update().set("lists.$[].$[elem].name", "x").set("lists.0.1.name", "y");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithPathMappingCases.class));
+
+		assertThat(mappedUpdate).isEqualTo("{ $set : { 'lists.$[].$[elem].n' : 'x', 'lists.0.1.n' : 'y' } }");
+	}
+
+	@Test // GH-4516
+	void mapsArrayFilterAgainstElementType() {
+
+		Update update = new Update().set("grades.$[elem].mean", 100).filterArray(Criteria.where("elem.grade").gte(85));
+
+		assertThat(mapper.getMappedArrayFilters(update, context.getPersistentEntity(WithArrayFilters.class)))
+				.containsExactly(Document.parse("{ 'elem.g' : { $gte : 85 } }"));
+	}
+
+	@Test // GH-4516
+	void mapsArrayFilterLogicalOperators() {
+
+		Update update = new Update().set("grades.$[elem].mean", 100)
+				.filterArray(new Criteria().orOperator(Criteria.where("elem.grade").gte(85), Criteria.where("elem.mean").is(1)));
+
+		assertThat(mapper.getMappedArrayFilters(update, context.getPersistentEntity(WithArrayFilters.class)))
+				.containsExactly(Document.parse("{ $or : [ { 'elem.g' : { $gte : 85 } }, { 'elem.m' : 1 } ] }"));
+	}
+
+	@Test // GH-4516
+	void convertsBareArrayFilterIdentifierByElementType() {
+
+		Update update = new Update().set("states.$[s]", State.B).filterArray("s", State.A);
+
+		assertThat(mapper.getMappedArrayFilters(update, context.getPersistentEntity(WithArrayFilters.class)))
+				.containsExactly(new Document("s", "A"));
+	}
+
+	@Test // GH-4516
+	void retainsArrayFilterOfAmbiguousIdentifier() {
+
+		Update update = new Update().set("grades.$[e].mean", 100).set("others.$[e].value", 1)
+				.filterArray(Criteria.where("e.grade").gte(85));
+
+		assertThat(mapper.getMappedArrayFilters(update, context.getPersistentEntity(WithArrayFilters.class)))
+				.containsExactly(Document.parse("{ 'e.grade' : { $gte : 85 } }"));
+	}
+
+	@Test // GH-4516
+	void retainsArrayFilterOfUnknownIdentifier() {
+
+		Update update = new Update().set("grades.$[elem].mean", 100).filterArray(Criteria.where("other.grade").gte(85));
+
+		assertThat(mapper.getMappedArrayFilters(update, context.getPersistentEntity(WithArrayFilters.class)))
+				.containsExactly(Document.parse("{ 'other.grade' : { $gte : 85 } }"));
+	}
+
+	@Test // GH-4516
+	void retainsEmptySegmentsOfUpdateKeys() {
+
+		var entity = context.getRequiredPersistentEntity(WithPathMappingCases.class);
+
+		assertThat(mapper.getMappedObject(new Update().set("..name", "x").set(".$where", "y").getUpdateObject(), entity))
+				.isEqualTo(new org.bson.Document("$set", new org.bson.Document("..name", "x").append(".$where", "y")));
+	}
+
+	static class WithArrayFilters {
+
+		List<Grade> grades;
+		List<Other> others;
+		List<State> states;
+	}
+
+	static class Grade {
+
+		@Field("g") int grade;
+		@Field("m") int mean;
+	}
+
+	static class Other {
+		int value;
+	}
+
+	enum State {
+		A, B
+	}
+
+	static class WithPathMappingCases {
+
+		Map<String, PathMappingNested> map;
+		List<List<PathMappingNested>> lists;
+	}
+
+	static class PathMappingNested {
+		@Field("n") String name;
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
@@ -1829,5 +2010,32 @@ class UpdateMapperUnitTests {
 
 		@ValueConverter(ReversingValueConverter.class)
 		String text;
+	}
+
+	static class WithDeepArrayNesting {
+		List<WithNestedArray> level0;
+	}
+
+	static class WithNestedArray {
+
+		List<NestedArrayOfObj> arrayObj;
+		List<NestedArrayOfString> arrayString;
+		List<NestedArrayOfObjCustomFieldName> arrayCustomName;
+	}
+
+	static class NestedArrayOfObj {
+		List<ArrayObj> nested;
+	}
+
+	static class NestedArrayOfObjCustomFieldName {
+		@Field("nes-ted") List<ArrayObj> nested;
+	}
+
+	static class NestedArrayOfString {
+		List<String> nested;
+	}
+
+	static class ArrayObj {
+		String foo;
 	}
 }

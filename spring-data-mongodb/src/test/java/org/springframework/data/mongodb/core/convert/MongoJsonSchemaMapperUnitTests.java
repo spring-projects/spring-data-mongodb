@@ -181,6 +181,22 @@ public class MongoJsonSchemaMapperUnitTests {
 		assertThat(mapper.mapSchema(schema.toDocument(), Student.class)).isEqualTo(Document.parse(complexSchemaJsonString));
 	}
 
+	@Test // GH-4516
+	void mapsNestedObjectReferencedByStoredFieldName() {
+
+		Document schema = new Document("$jsonSchema", new Document("type", "object").append("properties",
+				new Document("addr", new Document("type", "object").append("properties",
+						new Document("postCode", new Document("type", "string"))))));
+
+		assertThat(mapper.mapSchema(schema, WithRenamedAddress.class)).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("properties", new Document("addr", new Document("type", "object")
+						.append("properties", new Document("post_code", new Document("type", "string")))))));
+	}
+
+	static class WithRenamedAddress {
+		@Field("addr") Address address;
+	}
+
 	static class Student {
 
 		String name;

@@ -51,6 +51,18 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 	}
 
 	/**
+	 * Returns the mapped query criteria (e.g. of {@code $match}) considering the document shape produced by previous
+	 * stages. Defaults to {@link #getMappedObject(Document)}.
+	 *
+	 * @param criteria will never be {@literal null}.
+	 * @return must not be {@literal null}.
+	 * @since 5.3
+	 */
+	default Document getMappedCriteria(Document criteria) {
+		return getMappedObject(criteria);
+	}
+
+	/**
 	 * Returns the mapped {@link Document}, potentially converting the source considering mapping metadata for the given
 	 * type.
 	 *

@@ -111,7 +111,6 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.projection.EntityProjection;
@@ -2921,7 +2920,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return executeFindOneInternal(
 				new FindAndModifyCallback(collectionPreparer, mappedQuery, fields, sort, mappedUpdate,
-						update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
+						updateMapper.getMappedArrayFilters(update, entity), options),
 				callback, collectionName);
 	}
 

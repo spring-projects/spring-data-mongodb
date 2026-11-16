@@ -112,7 +112,9 @@ public class UnwindOperation
 
 	@Override
 	public ExposedFields getFields() {
-		return arrayIndex != null ? ExposedFields.from(arrayIndex) : ExposedFields.from();
+		ExposedFields fields = arrayIndex != null ? ExposedFields.from(arrayIndex).withComputed(arrayIndex.getName())
+				: ExposedFields.from();
+		return fields.withReference(field.getName(), field.getTarget(), true);
 	}
 
 	/**

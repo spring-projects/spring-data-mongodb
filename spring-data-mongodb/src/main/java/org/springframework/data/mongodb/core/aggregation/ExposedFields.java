@@ -19,7 +19,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -38,10 +42,14 @@ import org.springframework.util.ObjectUtils;
 public final class ExposedFields implements Iterable<ExposedField> {
 
 	private static final List<ExposedField> NO_FIELDS = Collections.emptyList();
-	private static final ExposedFields EMPTY = new ExposedFields(NO_FIELDS, NO_FIELDS);
+	private static final ExposedFields EMPTY = new ExposedFields(NO_FIELDS, NO_FIELDS, Map.of(), Set.of(),
+			Set.of());
 
 	private final List<ExposedField> originalFields;
 	private final List<ExposedField> syntheticFields;
+	private final Map<String, DeclaredReference> references;
+	private final Set<String> inputMappedNames;
+	private final Set<String> computedNames;
 
 	/**
 	 * Returns an empty {@link ExposedFields} instance.
@@ -125,10 +133,14 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 * @param originals must not be {@literal null}.
 	 * @param synthetic must not be {@literal null}.
 	 */
-	private ExposedFields(List<ExposedField> originals, List<ExposedField> synthetic) {
+	private ExposedFields(List<ExposedField> originals, List<ExposedField> synthetic,
+			Map<String, DeclaredReference> references, Set<String> inputMappedNames, Set<String> computedNames) {
 
 		this.originalFields = originals;
 		this.syntheticFields = synthetic;
+		this.references = references;
+		this.inputMappedNames = inputMappedNames;
+		this.computedNames = computedNames;
 	}
 
 	/**
@@ -145,8 +157,96 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		result.addAll(field.synthetic ? syntheticFields : originalFields);
 		result.add(field);
 
-		return new ExposedFields(field.synthetic ? originalFields : result, field.synthetic ? result : syntheticFields);
+		return new ExposedFields(field.synthetic ? originalFields : result, field.synthetic ? result : syntheticFields,
+				references, inputMappedNames, computedNames);
 	}
+
+	/**
+	 * Declare that the field {@code name} is a plain reference to the input path {@code target}, so paths into it can be
+	 * mapped against the domain type behind {@code target}.
+	 *
+	 * @param name the exposed field name, must not be {@literal null} or empty.
+	 * @param target the referenced input path, must not be {@literal null} or empty.
+	 * @param element whether the field holds a single element of {@code target}.
+	 * @return new instance of {@link ExposedFields}.
+	 * @since 5.3
+	 */
+	public ExposedFields withReference(String name, String target, boolean element) {
+
+		Assert.hasText(name, "Name must not be null or empty");
+		Assert.hasText(target, "Target must not be null or empty");
+
+		Map<String, DeclaredReference> references = new LinkedHashMap<>(this.references);
+		references.put(name, new DeclaredReference(target, element));
+		return new ExposedFields(originalFields, syntheticFields, references, inputMappedNames, computedNames);
+	}
+
+	/**
+	 * Declare that the stage renders the field {@code name} mapped against its input document, e.g. {@code $set}.
+	 *
+	 * @param name the exposed field name, must not be {@literal null} or empty.
+	 * @return new instance of {@link ExposedFields}.
+	 * @since 5.3
+	 */
+	public ExposedFields withInputMappedName(String name) {
+
+		Assert.hasText(name, "Name must not be null or empty");
+
+		Set<String> names = new LinkedHashSet<>(this.inputMappedNames);
+		names.add(name);
+		return new ExposedFields(originalFields, syntheticFields, references, names, computedNames);
+	}
+
+	/**
+	 * Declare that the field {@code name} holds a computed value, so paths into it are not mapped against the domain
+	 * type.
+	 *
+	 * @param name the exposed field name, must not be {@literal null} or empty.
+	 * @return new instance of {@link ExposedFields}.
+	 * @since 5.3
+	 */
+	public ExposedFields withComputed(String name) {
+
+		Assert.hasText(name, "Name must not be null or empty");
+
+		Set<String> names = new LinkedHashSet<>(this.computedNames);
+		names.add(name);
+		return new ExposedFields(originalFields, syntheticFields, references, inputMappedNames, names);
+	}
+
+	/**
+	 * @param name the exposed field name.
+	 * @return whether {@code name} was declared via {@link #withReference}, {@link #withInputMappedName} or
+	 *         {@link #withComputed}.
+	 */
+	boolean isDeclared(String name) {
+		return references.containsKey(name) || inputMappedNames.contains(name) || computedNames.contains(name);
+	}
+
+	/**
+	 * @param name the exposed field name.
+	 * @return whether the stage renders {@code name} mapped against its input document.
+	 */
+	boolean isInputMappedName(String name) {
+		return inputMappedNames.contains(name);
+	}
+
+	/**
+	 * @param name the exposed field name.
+	 * @return the {@link DeclaredReference} or {@literal null} if {@code name} is not a plain reference.
+	 */
+	@Nullable
+	DeclaredReference getDeclaredReference(String name) {
+		return references.get(name);
+	}
+
+	/**
+	 * A plain reference of an exposed field to an input path.
+	 *
+	 * @param target the referenced input path.
+	 * @param element whether the field holds a single element of {@code target}.
+	 */
+	record DeclaredReference(String target, boolean element) {}
 
 	/**
 	 * Returns the field with the given name or {@literal null} if no field with the given name is available.

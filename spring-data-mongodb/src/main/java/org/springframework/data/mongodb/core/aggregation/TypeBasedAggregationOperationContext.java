@@ -24,7 +24,6 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -32,6 +31,10 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.path.BoundMongoPath;
+import org.springframework.data.mongodb.core.mapping.path.MongoPathBinder;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
+import org.springframework.data.mongodb.core.mapping.path.Scope;
 import org.springframework.data.util.Lazy;
 import org.springframework.util.Assert;
 
@@ -206,16 +209,49 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 			return new DirectFieldReference(new ExposedField(field, true));
 		}
 
-		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext
-				.getPersistentPropertyPath(field.getTarget(), type);
-		Field mappedField = field(field.getName(),
-				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
+		BoundMongoPath path = MongoPathBinder.of(mappingContext).bind(field.getTarget(), PathType.AGGREGATION,
+				Scope.of(entity.get()));
 
-		return new DirectFieldReference(new ExposedField(mappedField, true));
+		if (!path.isResolved() && lookupPolicy.isStrict()) {
+
+			// retain the exception previously raised for unresolvable paths
+			mappingContext.getPersistentPropertyPath(field.getTarget(), type);
+			throw new MappingException("Cannot resolve '%s' against %s".formatted(field.getTarget(), type.getName()));
+		}
+
+		return new DirectFieldReference(new ExposedField(field(field.getName(), path.toMappedPath()), true));
 	}
 
 	public Class<?> getType() {
 		return type;
+	}
+
+	/**
+	 * @return the collection the {@link #getType() type} is stored in or {@literal null} if unknown.
+	 */
+	@Nullable
+	String getCollection() {
+
+		MongoPersistentEntity<?> persistentEntity = entity.getNullable();
+		return persistentEntity != null ? persistentEntity.getCollection() : null;
+	}
+
+	FieldLookupPolicy getLookupPolicy() {
+		return lookupPolicy;
+	}
+
+	Scope getScope() {
+
+		MongoPersistentEntity<?> persistentEntity = entity.getNullable();
+		return persistentEntity != null ? Scope.of(persistentEntity) : Scope.none();
+	}
+
+	QueryMapper getQueryMapper() {
+		return mapper;
+	}
+
+	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
+		return mappingContext;
 	}
 
 	@Override

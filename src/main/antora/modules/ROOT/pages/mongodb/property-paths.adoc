@@ -1,1 +1,53 @@
 include::{commons}@data-commons::page$property-paths.adoc[]
+
+[[mongodb.path-mapping]]
+== Path Mapping
+
+Keys used in queries, sort and field specifications (such as `address.street` or `items.$.name`) are mapped against the domain model segment by segment.
+
+* Paths are split on dot (`.`) only.
+* A segment matches the Java property name first, then the stored field name (`@Field`) if that name is unique within the type.
+* Numeric segments are list indexes after collections, map keys after maps, and property names otherwise.
+* Mapping continues into collection element and map value types, so `map.key.nested` maps `nested` to its stored field name.
+* Positional operators are retained: `$` in queries and updates, `$[]` and `$[<identifier>]` in updates. In query keys, `$[…]` and the segments following it are passed on as-is.
+* Array filters are mapped against the element type the `$[<identifier>]` refers to in the update. Filters for identifiers used with different element types are left as-is.
+* Segments that cannot be resolved, and all segments following them, are passed on as-is.
+* In aggregations, `$match` criteria are mapped against the document shape produced by previous stages. Group keys map to `_id`. Projected, `$set`, unwound and group key fields that plainly reference a property are converted like that property (e.g. `@Field(targetType = …)`), and paths into them continue with its type. Fields computed by expressions or written by `$lookup` are not mapped.
+* Variables of `$map`, `$filter`, `$let` and `$$this` of `$reduce` referring to a property map against its (element) type, e.g. `$$item.street`.
+* `$lookup` maps `localField` and `let` variable values against the input. `foreignField` and the `pipeline` address the `from` collection: they are mapped when `from` is given as a type (`Aggregation.lookup(Class, …)`, `newLookup().from(Class)`) or names the collection of the type being aggregated, and used as-is otherwise.
+* `$getField`, `$setField` and `$unsetField` map their `field` operand as a single field name (not split on dots) against the type of `input`, defaulting to the current document. Names that cannot be resolved, `$literal` wrapped and `$`-prefixed ones are left as-is.
+* Raw expressions passed via `AggregationExpression.from(MongoExpression)` map `$`-prefixed values (not keys) except within `$literal`. Raw `$expr` criteria (`Criteria.expr(MongoExpression)`) and `Aggregation.stage(..)` are used as-is.
+* Index keys, `partialFilterExpression` (including values) and `wildcardProjection` keys are mapped when an index is created for a domain type.
+* `$jsonSchema` property names and `@DocumentReference(lookup = …)` keys may use property or stored field names.
+* Behind a `@DBRef`, only the identifier can be referenced. Aggregations may also use its stored fields `$id`, `$ref` and `$db` (e.g. `person.$id` or `$$person.$id`). Behind a `@DocumentReference`, any property of the target type can be referenced.
+* Paths may consist of at most `MongoPath.MAX_SEGMENTS` (100) segments.
+
+[[mongodb.path-mapping.api]]
+=== Mapping Paths Programmatically
+
+The `org.springframework.data.mongodb.core.mapping.path` package exposes the mapping used by the template:
+
+* `MongoPath.parse(path, PathType)` splits a path into tokens. The `PathType` (`PROPERTY`, `QUERY`, `UPDATE`, `AGGREGATION`) defines which operators are recognized.
+* `MongoPathBinder` binds a path against a `Scope`: an entity (`Scope.of(entity)`), the fields exposed by an aggregation stage (`Scope.exposing(…)`) or nothing known (`Scope.none()`).
+* `LookupPolicy.RELAXED` (default) passes unresolvable segments on as-is, `LookupPolicy.STRICT` fails on unresolvable or ambiguous segments. Paths into computed fields are not validated beyond the field itself. Scopes and lookup policies validate against the mapping only, they do not restrict which fields a client may access.
+* `BoundMongoPath` holds the resolved segments and renders the mapped path. Aggregation paths render references to `@DBRef` identifiers as `$id`, other path types omit them. Use `toMappedPath(Rendering)` to override.
+* `ExpressionPathMapper` maps the paths within raw aggregation expressions.
+
+.Mapping a path
+====
+[source,java]
+----
+MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(Person.class);
+
+BoundMongoPath path = MongoPathBinder.of(mappingContext)
+    .bind("address.street", PathType.QUERY, Scope.of(entity), LookupPolicy.STRICT);
+
+path.toMappedPath();  // stored field names, e.g. addr.str
+path.leafProperty();  // MongoPersistentProperty of street
+----
+====
+
+[NOTE]
+====
+Since 5.3, camel case (`addressStreet`) or underscore (`address_street`) concatenated keys are no longer resolved to nested properties. Use dot notation (`address.street`) instead.
+====

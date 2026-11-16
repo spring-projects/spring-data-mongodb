@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.bson.BsonValue;
 import org.bson.Document;
@@ -32,8 +31,8 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
-import org.springframework.data.core.PropertyPath;
-import org.springframework.data.core.PropertyReferenceException;
+import org.springframework.data.core.TypeInformation;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoExpression;
@@ -54,12 +53,16 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.ShardKey;
+import org.springframework.data.mongodb.core.mapping.path.BoundMongoPath;
+import org.springframework.data.mongodb.core.mapping.path.BoundMongoPath.Segment;
+import org.springframework.data.mongodb.core.mapping.path.MongoPathBinder;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
+import org.springframework.data.mongodb.core.mapping.path.Scope;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Lazy;
@@ -573,20 +576,35 @@ class QueryOperations {
 		 */
 		Class<?> getMostSpecificConversionTargetType(Class<?> requestedTargetType, Class<?> domainType) {
 
-			Class<?> conversionTargetType = requestedTargetType;
+			TypeInformation<?> targetType;
 			try {
 
-				Class<?> propertyType = PropertyPath.from(fieldName, domainType).getLeafProperty().getLeafType();
-
-				// use the more specific type but favor UserType over property one
-				if (ClassUtils.isAssignable(requestedTargetType, propertyType)) {
-					conversionTargetType = propertyType;
-				}
-			} catch (PropertyReferenceException e) {
-				// just don't care about it as we default to Object.class anyway.
+				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainType);
+				targetType = entity != null ? getTargetType(entity) : null;
+			} catch (MappingException e) {
+				// just don't care about it as we default to the requested type anyway.
+				targetType = null;
 			}
 
-			return conversionTargetType;
+			if (targetType == null) {
+				return requestedTargetType;
+			}
+
+			Class<?> propertyType = targetType.getRequiredActualType().getType();
+
+			// use the more specific type but favor UserType over property one
+			return ClassUtils.isAssignable(requestedTargetType, propertyType) ? propertyType : requestedTargetType;
+		}
+
+		private @Nullable TypeInformation<?> getTargetType(MongoPersistentEntity<?> entity) {
+
+			BoundMongoPath path = MongoPathBinder.of(mappingContext).bind(fieldName, PathType.PROPERTY, Scope.of(entity));
+
+			// stored field names (e.g. _id) retain the stored representation
+			boolean propertyNamesOnly = path.segments().stream()
+					.noneMatch(segment -> segment instanceof Segment.Property property && property.isMapped());
+
+			return path.isResolved() && propertyNamesOnly ? path.targetType() : null;
 		}
 	}
 
@@ -799,8 +817,7 @@ class QueryOperations {
 			options.upsert(upsert);
 
 			if (update != null && update.hasArrayFilters()) {
-				options
-						.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
+				options.arrayFilters(updateMapper.getMappedArrayFilters(update, entity));
 			}
 
 			if (query != null && query.isSorted()) {

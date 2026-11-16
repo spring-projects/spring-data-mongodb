@@ -208,6 +208,7 @@ public final class Fields implements Iterable<Field> {
 	static class AggregationField implements Field {
 
 		private final String raw;
+		private final @Nullable String rawTarget;
 		private final String name;
 		private final @Nullable String target;
 
@@ -233,6 +234,7 @@ public final class Fields implements Iterable<Field> {
 		public AggregationField(String name, @Nullable String target) {
 
 			raw = name;
+			rawTarget = target;
 			String nameToSet = name != null ? cleanUp(name) : null;
 			String targetToSet = target != null ? cleanUp(target) : null;
 
@@ -265,8 +267,12 @@ public final class Fields implements Iterable<Field> {
 		@Override
 		public String getTarget() {
 
-			if (isLocalVar() || pointsToDBRefId()) {
+			if (isLocalVar() || pointsToDBRefId() || endsWithDbRefMember(raw)) {
 				return this.getRaw();
+			}
+
+			if (rawTarget != null && (rawTarget.endsWith(".$id") || endsWithDbRefMember(rawTarget))) {
+				return rawTarget;
 			}
 
 			return StringUtils.hasText(this.target) ? this.target : this.name;
@@ -288,6 +294,10 @@ public final class Fields implements Iterable<Field> {
 		 */
 		public boolean isLocalVar() {
 			return raw.startsWith("$$") && !raw.startsWith("$$$");
+		}
+
+		private static boolean endsWithDbRefMember(String source) {
+			return source.endsWith(".$ref") || source.endsWith(".$db");
 		}
 
 		protected boolean pointsToDBRefId() { // see https://jira.mongodb.org/browse/SERVER-14466

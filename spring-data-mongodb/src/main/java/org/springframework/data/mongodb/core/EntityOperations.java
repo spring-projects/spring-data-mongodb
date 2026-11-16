@@ -34,13 +34,11 @@ import org.springframework.core.env.EnvironmentCapable;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.core.PropertyPath;
 import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.core.CollectionOptions.EncryptedFieldsOptions;
@@ -49,6 +47,9 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.path.MongoPathBinder;
+import org.springframework.data.mongodb.core.mapping.path.MongoPath.PathType;
+import org.springframework.data.mongodb.core.mapping.path.Scope;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -700,10 +701,9 @@ class EntityOperations {
 			if (sourceEntity == null) {
 				return BsonUtils.resolveValue(map, key);
 			}
-			PropertyPath from = PropertyPath.from(key, sourceEntity.getTypeInformation());
-			PersistentPropertyPath<MongoPersistentProperty> persistentPropertyPath = entityOperations.context
-					.getPersistentPropertyPath(from);
-			return BsonUtils.resolveValue(map, persistentPropertyPath.toDotPath(MongoPersistentProperty::getFieldName));
+			String mappedKey = MongoPathBinder.of(entityOperations.context)
+					.bind(key, PathType.PROPERTY, Scope.of(sourceEntity)).toMappedPath();
+			return BsonUtils.resolveValue(map, mappedKey);
 		}
 	}
 

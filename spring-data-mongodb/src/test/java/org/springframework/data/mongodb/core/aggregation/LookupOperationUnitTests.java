@@ -90,9 +90,10 @@ public class LookupOperationUnitTests {
 		return lookupClause;
 	}
 
-	@Test // DATAMONGO-1326
+	@Test // DATAMONGO-1326, GH-4516
 	public void builderRejectsNullFromField() {
-		assertThatIllegalArgumentException().isThrownBy(() -> LookupOperation.newLookup().from(null));
+		assertThatIllegalArgumentException().isThrownBy(() -> LookupOperation.newLookup().from((String) null));
+		assertThatIllegalArgumentException().isThrownBy(() -> LookupOperation.newLookup().from((Class<?>) null));
 	}
 
 	@Test // DATAMONGO-1326

@@ -72,7 +72,11 @@ public class SetWindowFieldsOperation
 
 	@Override
 	public ExposedFields getFields() {
-		return ExposedFields.synthetic(Fields.from(output.fields.toArray(new Field[0])));
+		ExposedFields fields = ExposedFields.synthetic(Fields.from(output.fields.toArray(new Field[0])));
+		for (Field field : output.fields) {
+			fields = fields.withComputed(field.getName());
+		}
+		return fields;
 	}
 
 	@Override
