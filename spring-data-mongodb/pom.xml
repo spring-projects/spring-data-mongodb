@@ -485,7 +485,7 @@
 							<goal>test-process</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>target/generated-test-sources</outputDirectory>
+							<outputDirectory>target/generated-test-sources/querydsl</outputDirectory>
 							<processor>
 								org.springframework.data.mongodb.repository.support.MongoAnnotationProcessor
 							</processor>
