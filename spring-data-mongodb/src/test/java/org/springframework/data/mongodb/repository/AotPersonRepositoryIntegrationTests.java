@@ -41,6 +41,11 @@ class AotPersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegr
 	@ImportResource("classpath:/org/springframework/data/mongodb/repository/PersonRepositoryIntegrationTests-infrastructure.xml")
 	static class Config extends TestMongoConfiguration {
 
+		@Override
+		public String getDatabaseName() {
+			return "aot-person-repository-tests";
+		}
+
 		@Bean
 		static AotFragmentTestConfigurationSupport aot() {
 			return new AotFragmentTestConfigurationSupport(PersonRepository.class, false);
