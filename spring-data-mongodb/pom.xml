@@ -20,7 +20,6 @@
 		<java-module-name>spring.data.mongodb</java-module-name>
 		<project.root>${basedir}/..</project.root>
 		<multithreadedtc>1.01</multithreadedtc>
-		<antlr>4.13.2</antlr>
 	</properties>
 
 	<dependencies>
@@ -501,7 +500,6 @@
 						</goals>
 						<phase>generate-sources</phase>
 						<configuration>
-							<listener>false</listener>
 							<visitor>true</visitor>
 							<sourceDirectory>${project.basedir}/src/main/antlr4</sourceDirectory>
 						</configuration>

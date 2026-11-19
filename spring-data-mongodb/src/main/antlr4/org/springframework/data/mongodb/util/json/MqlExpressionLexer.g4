@@ -18,11 +18,19 @@ lexer grammar MqlExpressionLexer;
 @header {
 /**
  * Locates parameter placeholders ({@code ?0}, {@code '?0'}) within the source of a value expression.
+ * <p>
+ * Applied to the source of {@code #{…}} expressions within {@code EXPRESSION} tokens produced by {@code Mql.g4} or
+ * {@code MqlStringLexer.g4}; {@code ${…}} is not inspected. A separate lexer because the main grammar is a combined
+ * grammar and ANTLR allows lexical modes only in lexer grammars.
  *
  * @author Christoph Strobl
  * @since 5.3
  */
 }
+
+/*
+    Lexer rules
+ */
 
 QUOTED_PLACEHOLDER : '\'?' [0-9]+ '\'' ;
 

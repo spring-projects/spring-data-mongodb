@@ -13,20 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-grammar MqlTemplate;
+grammar Mql;
 
 @header {
 /**
- * Structure of JSON query templates: relaxed JSON, Extended JSON, shell constructors, parameter placeholders and value
- * expressions.
+ * MQL query templates: relaxed JSON, Extended JSON, shell constructors, parameter placeholders and value expressions.
  *
+ * @see https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/
  * @author Christoph Strobl
  * @since 5.3
  */
 }
 
+/*
+    Parser rules
+ */
+
 // content following the first value is ignored for compatibility with the JsonScanner based reader.
-template
+start
     : value .*? EOF
     ;
 
@@ -66,6 +70,10 @@ array
 arguments
     : LPAREN (value (COMMA value)*)? RPAREN
     ;
+
+/*
+    Lexer rules
+ */
 
 LBRACE : '{' ;
 RBRACE : '}' ;

@@ -13,17 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-lexer grammar MqlStringTemplateLexer;
+lexer grammar MqlStringLexer;
 
 @header {
 /**
  * Splits the content of quoted strings and regular expressions into literal text, parameter placeholders and value
  * expressions.
+ * <p>
+ * Applied to the content of {@code STRING} and {@code REGEX} tokens produced by {@code Mql.g4}. A separate lexer
+ * because the main grammar is a combined grammar and ANTLR allows lexical modes only in lexer grammars.
  *
  * @author Christoph Strobl
  * @since 5.3
  */
 }
+
+/*
+    Lexer rules
+ */
 
 EXPRESSION
     : [?:] '#' '{' EXPRESSION_PART* '}'

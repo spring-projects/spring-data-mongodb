@@ -26,6 +26,7 @@
 		<project.type>multi</project.type>
 		<antora.javadoc-artifactId>spring-data-mongodb</antora.javadoc-artifactId>
 		<dist.id>spring-data-mongodb</dist.id>
+		<antlr>4.13.2</antlr> <!-- TODO: move antlr version to data-build -->
 		<springdata.commons>4.2.0-SNAPSHOT</springdata.commons>
 		<mongo>5.13.0</mongo>
 	</properties>

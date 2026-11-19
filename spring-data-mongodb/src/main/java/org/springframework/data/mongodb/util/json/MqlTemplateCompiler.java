@@ -68,7 +68,7 @@ import org.springframework.data.mongodb.util.json.TemplateNode.StringTemplate.Ex
 import org.springframework.data.mongodb.util.json.TemplateNode.StringTemplate.ParameterPart;
 import org.springframework.data.mongodb.util.json.TemplateNode.StringTemplate.Part;
 import org.springframework.data.mongodb.util.json.TemplateNode.StringTemplate.Text;
-import org.springframework.data.mongodb.util.json.MqlTemplateParser.*;
+import org.springframework.data.mongodb.util.json.MqlParser.*;
 import org.springframework.util.NumberUtils;
 
 /**
@@ -78,7 +78,7 @@ import org.springframework.util.NumberUtils;
  * @author Christoph Strobl
  * @since 5.3
  */
-class MqlTemplateCompiler extends MqlTemplateBaseVisitor<TemplateNode> {
+class MqlTemplateCompiler extends MqlBaseVisitor<TemplateNode> {
 
 	static final int MAX_NESTING_DEPTH = 256;
 
@@ -111,19 +111,19 @@ class MqlTemplateCompiler extends MqlTemplateBaseVisitor<TemplateNode> {
 
 	private static ValueContext doParse(String source) {
 
-		MqlTemplateLexer lexer = new MqlTemplateLexer(CharStreams.fromString(source));
+		MqlLexer lexer = new MqlLexer(CharStreams.fromString(source));
 		lexer.removeErrorListeners();
 		lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
 
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
-		MqlTemplateParser parser = new MqlTemplateParser(tokens);
+		MqlParser parser = new MqlParser(tokens);
 		parser.removeErrorListeners();
 		parser.setErrorHandler(new BailErrorStrategy());
 		parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
 		parser.addParseListener(new NestingDepthLimit());
 
 		try {
-			return parser.template().value();
+			return parser.start().value();
 		} catch (ParseCancellationException ex) {
 
 			// retry with full LL prediction and report the actual syntax error
@@ -135,7 +135,7 @@ class MqlTemplateCompiler extends MqlTemplateBaseVisitor<TemplateNode> {
 			parser.setErrorHandler(new DefaultErrorStrategy());
 			parser.getInterpreter().setPredictionMode(PredictionMode.LL);
 
-			return parser.template().value();
+			return parser.start().value();
 		}
 	}
 
@@ -259,7 +259,7 @@ class MqlTemplateCompiler extends MqlTemplateBaseVisitor<TemplateNode> {
 			return null;
 		}
 
-		Lexer lexer = new MqlStringTemplateLexer(CharStreams.fromString(content));
+		Lexer lexer = new MqlStringLexer(CharStreams.fromString(content));
 		lexer.removeErrorListeners();
 
 		List<Part> parts = new ArrayList<>();
@@ -269,8 +269,8 @@ class MqlTemplateCompiler extends MqlTemplateBaseVisitor<TemplateNode> {
 		for (Token token = lexer.nextToken(); token.getType() != Token.EOF; token = lexer.nextToken()) {
 
 			Part part = switch (token.getType()) {
-				case MqlStringTemplateLexer.PLACEHOLDER -> new ParameterPart(index(token.getText().substring(1)));
-				case MqlStringTemplateLexer.EXPRESSION -> new ExpressionPart(expression(token.getText()));
+				case MqlStringLexer.PLACEHOLDER -> new ParameterPart(index(token.getText().substring(1)));
+				case MqlStringLexer.EXPRESSION -> new ExpressionPart(expression(token.getText()));
 				default -> null;
 			};
 
@@ -1062,8 +1062,8 @@ class MqlTemplateCompiler extends MqlTemplateBaseVisitor<TemplateNode> {
 
 		private static boolean isNesting(ParserRuleContext ctx) {
 			int rule = ctx.getRuleIndex();
-			return rule == MqlTemplateParser.RULE_object || rule == MqlTemplateParser.RULE_array
-					|| rule == MqlTemplateParser.RULE_arguments;
+			return rule == MqlParser.RULE_object || rule == MqlParser.RULE_array
+					|| rule == MqlParser.RULE_arguments;
 		}
 	}
 }
