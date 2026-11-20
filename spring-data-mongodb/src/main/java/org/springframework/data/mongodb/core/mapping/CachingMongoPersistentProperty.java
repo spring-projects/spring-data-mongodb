@@ -27,6 +27,7 @@ import org.springframework.data.util.Lazy;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author dragonfsky
  */
 public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty {
 
@@ -58,6 +59,11 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	public CachingMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
 		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
+	}
+
+	CachingMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder,
+			@Nullable FieldNamingStrategy fieldNamingStrategy, boolean autoIdFieldMappingOnlyForDocumentTypes) {
+		super(property, owner, simpleTypeHolder, fieldNamingStrategy, autoIdFieldMappingOnlyForDocumentTypes);
 	}
 
 	@Override
