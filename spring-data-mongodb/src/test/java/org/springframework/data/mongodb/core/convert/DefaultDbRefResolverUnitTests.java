@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -49,6 +50,7 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Priyanshu Gagiya
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -134,4 +136,24 @@ class DefaultDbRefResolverUnitTests {
 
 		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(document, document);
 	}
+
+	@Test
+	void bulkFetchShouldOmitMissingReferences() {
+
+		Document document = new Document("_id", "present");
+		doReturn(List.of(document)).when(cursorMock).into(any());
+
+		assertThat(resolver.bulkFetch(List.of(new DBRef("items", "missing"), new DBRef("items", "present"))))
+				.containsExactly(document);
+	}
+
+	@Test
+	void bulkFetchShouldMatchBinaryIdsByContents() {
+
+		Document document = new Document("_id", new byte[] { 1, 2 });
+		doReturn(List.of(document)).when(cursorMock).into(any());
+
+		assertThat(resolver.bulkFetch(List.of(new DBRef("items", new byte[] { 1, 2 })))).containsExactly(document);
+	}
+
 }
