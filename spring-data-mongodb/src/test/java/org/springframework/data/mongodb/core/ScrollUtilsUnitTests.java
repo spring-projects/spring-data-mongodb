@@ -16,18 +16,18 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
-import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Window;
-import org.springframework.data.mongodb.core.EntityOperations.Entity;
+import org.springframework.data.mongodb.core.ScrollUtils.KeysetScrollResult;
 import org.springframework.data.mongodb.core.query.Query;
 
 /**
@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.query.Query;
  *
  * @author Mark Paluch
  * @author Jens Schauder
+ * @author Priyanshu Gagiya
  */
 class ScrollUtilsUnitTests {
 
@@ -48,7 +49,7 @@ class ScrollUtilsUnitTests {
 				ScrollPosition.Direction.FORWARD);
 
 		Document result = ScrollUtils.KeysetScrollDirector.of(ScrollPosition.Direction.FORWARD).createQuery(keyset,
-				baseQuery, sortObject);
+				baseQuery, sortObject, Function.identity());
 
 		assertThat(result.containsKey("$and"))
 				.as("query with a top-level $or must combine base criteria and keyset criteria with $and, "
@@ -67,14 +68,8 @@ class ScrollUtilsUnitTests {
 
 		Query query = new Query();
 		query.with(ScrollPosition.keyset().backward());
-		EntityOperations entityOperationsMock = mock(EntityOperations.class);
-		Entity entityMock = mock(Entity.class);
-
-		when(entityOperationsMock.forEntity(any())).thenReturn(entityMock);
-		when(entityMock.extractKeys(any(), any())).thenReturn(Map.of("k", "v"));
-
-		Window<Integer> window = ScrollUtils.createWindow(query, new ArrayList<>(List.of(1, 2, 3)), Integer.class,
-				entityOperationsMock);
+		Window<Integer> window = ScrollUtils.createWindow(query, new ArrayList<>(
+				List.of(new KeysetScrollResult<>(1, Map.of("k", "v")), new KeysetScrollResult<>(2, Map.of("k", "w")))));
 
 		assertThat(window.positionAt(0)).isInstanceOf(KeysetScrollPosition.class);
 		assertThat(((KeysetScrollPosition) window.positionAt(0)).scrollsBackward()).isTrue();
