@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.List;
+
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.ProxyFactory;
@@ -27,7 +29,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.SpecialDoc;
 
 /**
@@ -220,15 +221,48 @@ class QueryTests {
 	}
 
 	@Test // DATAMONGO-1421
-	void addCriteriaForSamePropertyMultipleTimesShouldThrowAndSafelySerializeErrorMessage() {
+	void addCriteriaForSamePropertyMultipleTimesShouldRenderAsAnd() {
 
-		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class).isThrownBy(() -> {
+		Query query = new Query(where("amount").gte(100));
+		query.addCriteria(where("amount").lte(500));
 
-			Query query = new Query();
-			query.addCriteria(where("value").is(EnumType.VAL_1));
-			query.addCriteria(where("value").is(EnumType.VAL_2));
-		}).withMessageContaining("second 'value' criteria")
-				.withMessageContaining("already contains '{ \"value\" : { \"$java\" : VAL_1 } }'");
+		assertThat(query.getQueryObject()).isEqualTo(new Document("$and", List.of(
+				new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500)))));
+	}
+
+	@Test
+	void addCriteriaShouldPreserveDuplicateKeyInChainedCriteria() {
+
+		Query query = new Query();
+		query.addCriteria(where("amount").gte(100).and("status").is("NEW"));
+		query.addCriteria(where("amount").lte(500));
+
+		assertThat(query.getQueryObject()).isEqualTo(new Document("$and", List.of(
+				new Document("amount", new Document("$gte", 100)).append("status", "NEW"),
+				new Document("amount", new Document("$lte", 500)))));
+	}
+
+	@Test
+	void clonedQueryShouldRenderDuplicateCriteriaAsAnd() {
+
+		BasicQuery source = new BasicQuery("{ 'amount' : { '$gte' : 100 }}");
+		Query target = Query.of(source);
+		target.addCriteria(where("amount").lte(500));
+
+		assertThat(target.getQueryObject()).isEqualTo(new Document("$and", List.of(
+				new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500)))));
+	}
+
+	@Test
+	void clonedQueryShouldKeepRestrictedTypesOutsideAndWhenMergingDuplicateCriteria() {
+
+		Query source = new Query(where("amount").gte(100)).restrict(SpecialDoc.class);
+		Query target = Query.of(source);
+		target.addCriteria(where("amount").lte(500));
+
+		assertThat(target.getQueryObject()).isEqualTo(new Document("$and", List.of(
+				new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500))))
+					.append("_$RESTRICTED_TYPES", source.getRestrictedTypes()));
 	}
 
 	@Test // DATAMONGO-1783
