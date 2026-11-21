@@ -41,6 +41,9 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jonghun Ju
+ * @see <a href="https://www.mongodb.com/docs/manual/reference/command/listIndexes/">MongoDB Reference Documentation:
+ *      listIndexes</a>
  */
 public class IndexInfo {
 
@@ -60,6 +63,15 @@ public class IndexInfo {
 	private @Nullable Document collation;
 	private @Nullable Document wildcardProjection;
 
+	/**
+	 * Create a new {@link IndexInfo} instance.
+	 *
+	 * @param indexFields the fields that make up the index; must not be {@literal null}.
+	 * @param name the name of the index.
+	 * @param unique whether the index enforces a uniqueness constraint.
+	 * @param sparse whether the index only contains entries for documents that have the indexed field.
+	 * @param language the default language for a text index.
+	 */
 	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language) {
 
 		this.indexFields = Collections.unmodifiableList(indexFields);
@@ -70,6 +82,16 @@ public class IndexInfo {
 		this.hidden = false;
 	}
 
+	/**
+	 * Create a new {@link IndexInfo} instance.
+	 *
+	 * @param indexFields the fields that make up the index; must not be {@literal null}.
+	 * @param name the name of the index.
+	 * @param unique whether the index enforces a uniqueness constraint.
+	 * @param sparse whether the index only contains entries for documents that have the indexed field.
+	 * @param language the default language for a text index.
+	 * @param hidden whether the index is hidden from the query planner.
+	 */
 	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language,
 			boolean hidden) {
 
@@ -175,7 +197,7 @@ public class IndexInfo {
 	/**
 	 * Returns the individual index fields of the index.
 	 *
-	 * @return
+	 * @return the index fields.
 	 */
 	public List<IndexField> getIndexFields() {
 		return this.indexFields;
@@ -185,7 +207,7 @@ public class IndexInfo {
 	 * Returns whether the index is covering exactly the fields given independently of the order.
 	 *
 	 * @param keys must not be {@literal null}.
-	 * @return
+	 * @return {@literal true} if the index covers the given fields.
 	 */
 	public boolean isIndexForFields(Collection<String> keys) {
 
@@ -194,29 +216,57 @@ public class IndexInfo {
 		return this.indexFields.stream().map(IndexField::getKey).collect(Collectors.toSet()).containsAll(keys);
 	}
 
+	/**
+	 * Returns the name of the index.
+	 *
+	 * @return the index name.
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * Returns whether the index enforces a uniqueness constraint.
+	 *
+	 * @return {@literal true} if the index is unique.
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/index-unique/">MongoDB Reference Documentation: Unique Indexes</a>
+	 */
 	public boolean isUnique() {
 		return unique;
 	}
 
+	/**
+	 * Returns whether the index only contains entries for documents that have the indexed field.
+	 *
+	 * @return {@literal true} if the index is sparse.
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/index-sparse/">MongoDB Reference Documentation: Sparse Indexes</a>
+	 */
 	public boolean isSparse() {
 		return sparse;
 	}
 
 	/**
-	 * @return
+	 * Returns the default language for a text index.
+	 *
+	 * @return the default language, or an empty {@link String} if not configured.
 	 * @since 1.6
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/indexes/index-types/index-text/specify-text-index-language/">MongoDB
+	 *      Reference Documentation: Specify the Default Language for a Text Index</a>
 	 */
 	public String getLanguage() {
 		return language;
 	}
 
 	/**
-	 * @return
+	 * Returns the partial filter expression of the index.
+	 *
+	 * @return the partial filter expression, or {@literal null} if not configured.
 	 * @since 1.0
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/index-partial/">MongoDB Reference Documentation: Partial Indexes</a>
 	 */
 	@Nullable
 	public String getPartialFilterExpression() {
@@ -226,8 +276,10 @@ public class IndexInfo {
 	/**
 	 * Get collation information.
 	 *
-	 * @return
+	 * @return the collation, or {@link Optional#empty()} if not configured.
 	 * @since 2.0
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/reference/collation/">MongoDB Reference Documentation: Collation</a>
 	 */
 	public Optional<Document> getCollation() {
 		return Optional.ofNullable(collation);
@@ -238,6 +290,9 @@ public class IndexInfo {
 	 *
 	 * @return {@link Optional#empty() empty} if not set.
 	 * @since 3.3
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/indexes/index-types/index-wildcard/create-wildcard-index-multiple-fields/">MongoDB
+	 *      Reference Documentation: Index Specific Fields with Wildcard Indexes</a>
 	 */
 	public Optional<Document> getWildcardProjection() {
 		return Optional.ofNullable(wildcardProjection);
@@ -248,6 +303,8 @@ public class IndexInfo {
 	 *
 	 * @return the expiration time if set, {@link Optional#empty()} otherwise.
 	 * @since 2.2
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/index-ttl/">MongoDB Reference Documentation: TTL Indexes</a>
 	 */
 	public Optional<Duration> getExpireAfter() {
 		return Optional.ofNullable(expireAfter);
@@ -269,6 +326,13 @@ public class IndexInfo {
 		return getIndexFields().stream().anyMatch(IndexField::isWildcard);
 	}
 
+	/**
+	 * Returns whether the index is hidden from the query planner.
+	 *
+	 * @return {@literal true} if the index is hidden.
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/index-hidden/">MongoDB Reference Documentation: Hidden Indexes</a>
+	 */
 	public boolean isHidden() {
 		return hidden;
 	}
