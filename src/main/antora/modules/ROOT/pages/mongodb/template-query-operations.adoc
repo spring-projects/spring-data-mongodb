@@ -125,6 +125,23 @@ The `Query` class has some additional methods that allow to select certain field
 * `Query` *with* `(ScrollPosition position)` used to provide a scroll position (Offset- or Keyset-based pagination) to start or resume a `Scroll`
 ====
 
+Multiple criteria for the same field, either via repeated `addCriteria` calls or chained `Criteria` (`where("amount").gte(100).and("amount").lte(500)`), are combined using `$and`.
+This applies to derived repository queries such as `findByLastnameStartingWithAndLastnameEndingWith(…)` as well.
+Criteria for other fields remain at the top level of the query document.
+An existing top-level `$and`, for example from `andOperator(…)`, is extended rather than nested.
+
+[source,java]
+----
+Query query = new Query(where("status").is("NEW"));
+query.addCriteria(where("amount").gte(100));
+query.addCriteria(where("amount").lte(500));
+
+// { "status" : "NEW", "$and" : [ { "amount" : { "$gte" : 100 } }, { "amount" : { "$lte" : 500 } } ] }
+----
+
+NOTE: MongoDB allows only one `$text` and one `$near`/`$nearSphere` expression per query.
+Adding a second `$text` criteria or a second `$near`/`$nearSphere` criteria for the same field raises an `InvalidMongoDbApiUsageException`.
+
 [[mongo-template.query.result-projection]]
 
 The template API allows direct usage of result projections that enable you to map queries against a given domain type while projecting the operation result onto another one as outlined below.

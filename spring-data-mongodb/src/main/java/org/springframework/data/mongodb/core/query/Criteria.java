@@ -196,7 +196,8 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Static factory method to create a Criteria using the provided key
+	 * Adds a chained {@link Criteria} for the given {@code key}. Criteria for a key already present in the chain are
+	 * combined using {@literal $and}.
 	 *
 	 * @return new instance of {@link Criteria}.
 	 */
@@ -996,15 +997,11 @@ public class Criteria implements CriteriaDefinition {
 		} else if (CollectionUtils.isEmpty(this.criteriaChain) && !CollectionUtils.isEmpty(this.criteria)) {
 			return getSingleCriteriaObject();
 		} else {
-			Document criteriaObject = new Document();
+			List<Document> criteriaObjects = new ArrayList<>(this.criteriaChain.size());
 			for (Criteria c : this.criteriaChain) {
-				Document document = c.getSingleCriteriaObject();
-				for (String k : document.keySet()) {
-					Object o = document.get(k);
-					setValue(criteriaObject, k, o);
-				}
+				criteriaObjects.add(c.getSingleCriteriaObject());
 			}
-			return criteriaObject;
+			return CriteriaMerger.merge(criteriaObjects);
 		}
 	}
 
@@ -1069,19 +1066,6 @@ public class Criteria implements CriteriaDefinition {
 			bsonList.add(c.getCriteriaObject());
 		}
 		return bsonList;
-	}
-
-	private void setValue(Document document, String key, Object value) {
-
-		Object existing = document.get(key);
-
-		if (existing == null) {
-			document.put(key, value);
-		} else {
-			throw new InvalidMongoDbApiUsageException("Due to limitations of the org.bson.Document, "
-					+ "you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "';"
-					+ " Criteria already contains '" + key + " : " + existing + "'");
-		}
 	}
 
 	private boolean createNearCriteriaForCommand(String command, String operation, double maxDistance) {

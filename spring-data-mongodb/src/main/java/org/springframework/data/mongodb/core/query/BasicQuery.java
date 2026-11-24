@@ -106,7 +106,16 @@ public class BasicQuery extends Query {
 	@Contract("_ -> this")
 	public Query addCriteria(CriteriaDefinition criteria) {
 
-		this.queryObject.putAll(criteria.getCriteriaObject());
+		Document criteriaObject = criteria.getCriteriaObject();
+
+		if (CriteriaMerger.requiresMerge(this.queryObject, criteriaObject)) {
+
+			Document merged = CriteriaMerger.merge(this.queryObject, criteriaObject);
+			this.queryObject.clear();
+			this.queryObject.putAll(merged);
+		} else {
+			this.queryObject.putAll(criteriaObject);
+		}
 
 		return this;
 	}

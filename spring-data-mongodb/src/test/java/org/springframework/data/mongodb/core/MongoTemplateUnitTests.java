@@ -79,6 +79,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Sharded;
 import org.springframework.data.mongodb.core.mapping.TimeSeries;
@@ -96,6 +97,8 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.TextQuery;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -2076,6 +2079,47 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verifyNoInteractions(findIterable);
 	}
 
+	@Test // GH-5209
+	void replaceShouldNotAppendShardKeyWhenPresentInFilterWithDuplicateCriteria() {
+
+		Query query = new Query(Criteria.where("country").is("AT")).addCriteria(Criteria.where("userId").is(4230))
+				.addCriteria(Criteria.where("rating").gt(1)).addCriteria(Criteria.where("rating").lt(5));
+
+		template.updateFirst(query, Update.fromDocument(new Document("country", "DE").append("userid", 9999)),
+				ShardedEntityWithNonDefaultImmutableShardKey.class);
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any(com.mongodb.client.model.ReplaceOptions.class));
+
+		assertThat((Document) filter.getValue()).containsEntry("country", "AT").containsEntry("userid", 4230);
+	}
+
+	@Test // GH-5209
+	void replaceShouldNotAppendShardKeyWhenShardKeyHasDuplicateCriteria() {
+
+		Query query = new Query(Criteria.where("country").is("AT")).addCriteria(Criteria.where("country").in("AT", "DE"))
+				.addCriteria(Criteria.where("userId").is(4230));
+
+		template.updateFirst(query, Update.fromDocument(new Document("country", "DE").append("userid", 9999)),
+				ShardedEntityWithNonDefaultImmutableShardKey.class);
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any(com.mongodb.client.model.ReplaceOptions.class));
+
+		assertThat((Document) filter.getValue()).doesNotContainKey("country").containsEntry("userid", 4230);
+	}
+
+	@Test // GH-5209
+	void findShouldRetainTextScoreProjectionWhenTextQueryHasDuplicateCriteria() {
+
+		Query query = TextQuery.queryText(TextCriteria.forDefaultLanguage().matching("spring"))
+				.addCriteria(Criteria.where("value").gt(1)).addCriteria(Criteria.where("value").lt(5));
+
+		template.find(query, WithTextScore.class);
+
+		verify(findIterable).projection(eq(new Document("score", new Document("$meta", "textScore"))));
+	}
+
 	@Test // DATAMONGO-2341
 	void saveShouldAppendDefaultShardKeyIfNotPresentInFilter() {
 
@@ -3013,5 +3057,11 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		public ServerAddress getServerAddress() {
 			throw new IllegalStateException("Not implemented");
 		}
+	}
+	static class WithTextScore {
+
+		@Id String id;
+		Integer value;
+		@TextScore Float score;
 	}
 }

@@ -232,6 +232,17 @@ class MongoQueryCreatorUnitTests {
 		assertThat(query).isEqualTo(query(where("username").regex("^Matt")));
 	}
 
+	@Test // GH-5209
+	void createsQueryWithMultiplePredicatesForSameProperty() {
+
+		PartTree tree = new PartTree("findByUsernameStartingWithAndUsernameEndingWith", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Matt", "ews"), context);
+		Query query = creator.createQuery();
+
+		assertThat(query).isEqualTo(query(where("username").regex("^Matt").and("username").regex("ews$")));
+		assertThat(query.getQueryObject()).containsOnlyKeys("$and");
+	}
+
 	@Test // DATAMONGO-418
 	void createsQueryWithEndingWithPredicateCorrectly() {
 

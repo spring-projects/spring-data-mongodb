@@ -170,12 +170,72 @@ class CriteriaUnitTests {
 		assertThat(query.getQueryObject()).isEqualTo(Document.parse("{ \"ID1\" : \"1\", \"ID2\" : \"2\" }"));
 	}
 
-	@Test
+	@Test // GH-5209
 	void testCriteriaWithMultipleConditionsForSameKey() {
 
-		Criteria c = new Criteria("name").gte("M").and("name").ne("A");
+		Criteria c = new Criteria("name").gte("M").and("age").is(42).and("name").ne("A");
 
-		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class).isThrownBy(c::getCriteriaObject);
+		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse(
+				"{ 'age' : 42, '$and' : [ { 'name' : { '$gte' : 'M' } }, { 'name' : { '$ne' : 'A' } } ] }"));
+	}
+
+	@Test // GH-5209
+	void chainedOrOperatorsShouldRenderAsAnd() {
+
+		Criteria c = new Criteria().orOperator(Criteria.where("a").is(1), Criteria.where("b").is(2))
+				.orOperator(Criteria.where("c").is(3), Criteria.where("d").is(4));
+
+		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse(
+				"{ '$and' : [ { '$or' : [ { 'a' : 1 }, { 'b' : 2 } ] }, { '$or' : [ { 'c' : 3 }, { 'd' : 4 } ] } ] }"));
+	}
+
+	@Test // GH-5209
+	void chainedAndOperatorsShouldRenderFlatAnd() {
+
+		Criteria c = new Criteria().andOperator(Criteria.where("a").is(1)).andOperator(Criteria.where("b").is(2));
+
+		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ '$and' : [ { 'a' : 1 }, { 'b' : 2 } ] }"));
+	}
+
+	@Test // GH-5209
+	void chainedCriteriaForSameKeyShouldRetainEmptyAndOperator() {
+
+		Criteria c = Criteria.where("amount").gte(100).andOperator(Collections.emptyList()).and("amount").lte(500);
+
+		assertThat(c.getCriteriaObject()).isEqualTo(Document
+				.parse("{ '$and' : [ { 'amount' : { '$gte' : 100 } }, { '$and' : [] }, { 'amount' : { '$lte' : 500 } } ] }"));
+	}
+
+	@Test // GH-5209
+	void chainedCriteriaShouldRenderInOrderOfAppearance() {
+
+		Criteria c = Criteria.where("x").gt(1).andOperator(Criteria.where("b").is(1)).orOperator(Criteria.where("a").is(1))
+				.and("x").lt(5);
+
+		Document document = c.getCriteriaObject();
+
+		assertThat(document.keySet()).containsExactly("$and", "$or");
+		assertThat(document.getList("$and", Document.class)).containsExactly(new Document("x", new Document("$gt", 1)),
+				new Document("b", 1), new Document("x", new Document("$lt", 5)));
+	}
+
+	@Test // GH-5209
+	void chainedNearAndOtherCriteriaForSameKeyShouldRenderAsAnd() {
+
+		Criteria c = Criteria.where("location").near(new Point(1, 1)).and("location").exists(true);
+
+		assertThat(c.getCriteriaObject()).isEqualTo(new Document("$and",
+				Arrays.asList(new Document("location", new Document("$near", new Point(1, 1))),
+						new Document("location", new Document("$exists", true)))));
+	}
+
+	@Test // GH-5209
+	void chainedNearForSameKeyShouldBeRejected() {
+
+		Criteria c = Criteria.where("location").near(new Point(1, 1)).and("location").nearSphere(new Point(2, 2));
+
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class).isThrownBy(c::getCriteriaObject)
+				.withMessageContaining("$near");
 	}
 
 	@Test

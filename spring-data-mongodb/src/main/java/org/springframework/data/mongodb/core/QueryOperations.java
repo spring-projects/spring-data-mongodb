@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -877,9 +878,10 @@ class QueryOperations {
 			Document shardKeySource = existing != null ? existing
 					: mappedDocument != null ? mappedDocument.getDocument() : getMappedUpdate(domainType);
 
+			Set<String> filterKeys = collectConjunctiveKeys(filter, new HashSet<>());
 			Document filterWithShardKey = new Document(filter);
-			getMappedShardKeyFields(domainType)
-					.forEach(key -> filterWithShardKey.putIfAbsent(key, BsonUtils.resolveValue((Bson) shardKeySource, key)));
+			getMappedShardKeyFields(domainType).stream().filter(key -> !filterKeys.contains(key))
+					.forEach(key -> filterWithShardKey.put(key, BsonUtils.resolveValue((Bson) shardKeySource, key)));
 
 			return filterWithShardKey;
 		}
@@ -887,7 +889,23 @@ class QueryOperations {
 		boolean requiresShardKey(Document filter, @Nullable MongoPersistentEntity<?> domainType) {
 
 			return !multi && domainType != null && domainType.isSharded() && !shardedById(domainType)
-					&& !filter.keySet().containsAll(getMappedShardKeyFields(domainType));
+					&& !collectConjunctiveKeys(filter, new HashSet<>()).containsAll(getMappedShardKeyFields(domainType));
+		}
+
+		private static Set<String> collectConjunctiveKeys(Document filter, Set<String> keys) {
+
+			for (Entry<String, Object> entry : filter.entrySet()) {
+				if ("$and".equals(entry.getKey()) && entry.getValue() instanceof Iterable<?> branches) {
+					for (Object branch : branches) {
+						if (branch instanceof Document document) {
+							collectConjunctiveKeys(document, keys);
+						}
+					}
+				} else {
+					keys.add(entry.getKey());
+				}
+			}
+			return keys;
 		}
 
 		/**

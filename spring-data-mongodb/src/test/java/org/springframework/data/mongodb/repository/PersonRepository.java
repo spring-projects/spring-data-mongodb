@@ -315,6 +315,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	List<Person> findByFirstnameStartingWith(String firstName);
 
+	// GH-5209
+	List<Person> findByLastnameStartingWithAndLastnameEndingWith(String prefix, String suffix);
+
 	// DATAMONGO-770
 	List<Person> findByFirstnameStartingWithIgnoreCase(String firstName);
 

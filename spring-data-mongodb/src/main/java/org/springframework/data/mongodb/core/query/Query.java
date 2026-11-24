@@ -23,9 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -45,6 +43,8 @@ import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -64,8 +64,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	private static final String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
 
 	private Set<Class<?>> restrictedTypes = Collections.emptySet();
-	private final Map<String, List<CriteriaDefinition>> criteria = new LinkedHashMap<>();
-	private final List<CriteriaDefinition> criteriaDefinitions = new ArrayList<>();
+	private final List<CriteriaDefinition> criteria = new ArrayList<>();
 	private @Nullable Field fieldSpec = null;
 	private Sort sort = Sort.unsorted();
 	private long skip;
@@ -119,7 +118,8 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	}
 
 	/**
-	 * Adds the given {@link CriteriaDefinition} to the current {@link Query}.
+	 * Adds the given {@link CriteriaDefinition} to the current {@link Query}. Criteria sharing the same key are combined
+	 * using {@literal $and}.
 	 *
 	 * @param criteriaDefinition must not be {@literal null}.
 	 * @return this.
@@ -130,9 +130,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 		Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null");
 
-		String key = criteriaDefinition.getKey();
-		this.criteria.computeIfAbsent(key, it -> new ArrayList<>()).add(criteriaDefinition);
-		this.criteriaDefinitions.add(criteriaDefinition);
+		this.criteria.add(criteriaDefinition);
 
 		return this;
 	}
@@ -428,16 +426,16 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 			return BsonUtils.EMPTY_DOCUMENT;
 		}
 
-		if (criteriaDefinitions.size() == 1 && restrictedTypes.isEmpty()) {
-			return criteriaDefinitions.get(0).getCriteriaObject();
+		if (criteria.size() == 1 && restrictedTypes.isEmpty()) {
+			return criteria.get(0).getCriteriaObject();
 		}
 
-		List<Document> criteriaDocuments = new ArrayList<>(criteriaDefinitions.size());
-		for (CriteriaDefinition definition : criteriaDefinitions) {
+		List<Document> criteriaDocuments = new ArrayList<>(criteria.size());
+		for (CriteriaDefinition definition : criteria) {
 			criteriaDocuments.add(definition.getCriteriaObject());
 		}
 
-		Document document = mergeCriteriaDocuments(criteriaDocuments);
+		Document document = CriteriaMerger.merge(criteriaDocuments);
 
 		if (!restrictedTypes.isEmpty()) {
 			document.put(RESTRICTED_TYPES_KEY, getRestrictedTypes());
@@ -704,51 +702,27 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	}
 
 	protected List<CriteriaDefinition> getCriteria() {
-		return new ArrayList<>(this.criteriaDefinitions);
-	}
-
-	private static Document mergeCriteriaDocuments(List<Document> criteriaDocuments) {
-
-		Set<String> keys = new HashSet<>();
-		boolean hasDuplicateKey = false;
-
-		for (Document criteriaDocument : criteriaDocuments) {
-			for (String key : criteriaDocument.keySet()) {
-				if (!keys.add(key)) {
-					hasDuplicateKey = true;
-					break;
-				}
-			}
-			if (hasDuplicateKey) {
-				break;
-			}
-		}
-
-		if (hasDuplicateKey) {
-			return new Document("$and", criteriaDocuments);
-		}
-
-		Document merged = new Document();
-		criteriaDocuments.forEach(merged::putAll);
-		return merged;
+		return new ArrayList<>(this.criteria);
 	}
 
 	private static Document mergeQueryObjects(Document sourceQuery, Document targetQuery) {
 
-		Document source = new Document(sourceQuery);
-		Document target = new Document(targetQuery);
+		Document source = sourceQuery;
+		Document target = targetQuery;
 
-		Object sourceRestrictedTypes = source.remove(RESTRICTED_TYPES_KEY);
-		Object restrictedTypes = target.remove(RESTRICTED_TYPES_KEY);
-
-		boolean hasDuplicateKey = target.keySet().stream().anyMatch(source::containsKey);
-
-		Document merged;
-		if (hasDuplicateKey) {
-			merged = new Document("$and", Arrays.asList(source, target));
-		} else {
-			merged = BsonUtils.merge(source, target);
+		Object sourceRestrictedTypes = null;
+		if (source.containsKey(RESTRICTED_TYPES_KEY)) {
+			source = new Document(source);
+			sourceRestrictedTypes = source.remove(RESTRICTED_TYPES_KEY);
 		}
+
+		Object restrictedTypes = null;
+		if (target.containsKey(RESTRICTED_TYPES_KEY)) {
+			target = new Document(target);
+			restrictedTypes = target.remove(RESTRICTED_TYPES_KEY);
+		}
+
+		Document merged = CriteriaMerger.merge(source, target);
 
 		Object effectiveRestrictedTypes = restrictedTypes != null ? restrictedTypes : sourceRestrictedTypes;
 		if (effectiveRestrictedTypes != null) {
@@ -840,7 +814,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 */
 	protected boolean querySettingsEquals(Query that) {
 
-		boolean criteriaEqual = this.criteria.equals(that.criteria);
+		boolean criteriaEqual = criteriaEquals(this.criteria, that.criteria);
 		boolean fieldsEqual = nullSafeEquals(this.fieldSpec, that.fieldSpec);
 		boolean sortEqual = this.sort.equals(that.sort);
 		boolean hintEqual = nullSafeEquals(this.hint, that.hint);
@@ -853,12 +827,33 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 				&& collationEqual;
 	}
 
+	private static boolean criteriaEquals(List<CriteriaDefinition> left, List<CriteriaDefinition> right) {
+
+		if (left.equals(right)) {
+			return true;
+		}
+
+		return left.size() == right.size() && groupByKey(left).equals(groupByKey(right));
+	}
+
+	@SuppressWarnings("NullAway")
+	private static MultiValueMap<@Nullable String, CriteriaDefinition> groupByKey(List<CriteriaDefinition> criteria) {
+
+		MultiValueMap<@Nullable String, CriteriaDefinition> criteriaByKey = new LinkedMultiValueMap<>(criteria.size());
+		for (CriteriaDefinition definition : criteria) {
+			criteriaByKey.add(definition.getKey(), definition);
+		}
+		return criteriaByKey;
+	}
+
 	@Override
 	public int hashCode() {
 
 		int result = 17;
 
-		result += 31 * criteria.hashCode();
+		for (CriteriaDefinition definition : criteria) {
+			result += 31 * definition.hashCode();
+		}
 		result += 31 * nullSafeHashCode(fieldSpec);
 		result += 31 * nullSafeHashCode(sort);
 		result += 31 * nullSafeHashCode(hint);

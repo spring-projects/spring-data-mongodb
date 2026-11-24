@@ -16,19 +16,26 @@
 package org.springframework.data.mongodb.core.query;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Named.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.SpecialDoc;
 
 /**
@@ -220,49 +227,199 @@ class QueryTests {
 		assertThat(query.getRestrictedTypes()).containsExactly(SpecialDoc.class);
 	}
 
-	@Test // DATAMONGO-1421
-	void addCriteriaForSamePropertyMultipleTimesShouldRenderAsAnd() {
+	@ParameterizedTest // GH-5209
+	@MethodSource
+	void addCriteriaForSamePropertyShouldRenderAsAnd(Query query) {
 
-		Query query = new Query(where("amount").gte(100));
 		query.addCriteria(where("amount").lte(500));
 
-		assertThat(query.getQueryObject()).isEqualTo(new Document("$and", List.of(
-				new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500)))));
+		assertThat(query.getQueryObject())
+				.isEqualTo(Document.parse("{ '$and' : [ { 'amount' : { '$gte' : 100 } }, { 'amount' : { '$lte' : 500 } } ] }"));
 	}
 
-	@Test
+	static Stream<Named<Query>> addCriteriaForSamePropertyShouldRenderAsAnd() {
+		return Stream.of(named("Query", new Query(where("amount").gte(100))),
+				named("BasicQuery", new BasicQuery("{ 'amount' : { '$gte' : 100 } }")),
+				named("Query.of", Query.of(new BasicQuery("{ 'amount' : { '$gte' : 100 } }"))));
+	}
+
+	@ParameterizedTest // GH-5209
+	@MethodSource
+	void addCriteriaWithAndOperatorShouldExtendExistingAnd(Query query) {
+
+		query.addCriteria(new Criteria().andOperator(where("b").is(2)));
+
+		assertThat(query.getQueryObject()).isEqualTo(Document.parse("{ '$and' : [ { 'a' : 1 }, { 'b' : 2 } ] }"));
+	}
+
+	static Stream<Named<Query>> addCriteriaWithAndOperatorShouldExtendExistingAnd() {
+		return Stream.of(named("Query", new Query(new Criteria().andOperator(where("a").is(1)))),
+				named("BasicQuery", new BasicQuery("{ '$and' : [ { 'a' : 1 } ] }")),
+				named("Query.of", Query.of(new Query(new Criteria().andOperator(where("a").is(1))))));
+	}
+
+	@ParameterizedTest // GH-5209
+	@MethodSource
+	void addCriteriaForSamePropertyShouldRetainEmptyAndOperator(Query query) {
+
+		query.addCriteria(where("amount").lte(500));
+
+		assertThat(query.getQueryObject()).isEqualTo(Document
+				.parse("{ '$and' : [ { '$and' : [] }, { 'amount' : { '$gte' : 100 } }, { 'amount' : { '$lte' : 500 } } ] }"));
+	}
+
+	static Stream<Named<Query>> addCriteriaForSamePropertyShouldRetainEmptyAndOperator() {
+		return Stream.of(
+				named("Query", new Query(new Criteria().andOperator(List.of())).addCriteria(where("amount").gte(100))),
+				named("BasicQuery", new BasicQuery("{ '$and' : [], 'amount' : { '$gte' : 100 } }")),
+				named("Query.of", Query.of(new BasicQuery("{ '$and' : [], 'amount' : { '$gte' : 100 } }"))));
+	}
+
+	@ParameterizedTest // GH-5209
+	@MethodSource
+	void addCriteriaShouldRejectSecondNearForSameKey(Query query) {
+
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class)
+				.isThrownBy(() -> query.addCriteria(where("location").near(new Point(2, 2))).getQueryObject())
+				.withMessageContaining("$near");
+	}
+
+	static Stream<Named<Query>> addCriteriaShouldRejectSecondNearForSameKey() {
+		return Stream.of(named("Query", new Query(where("location").near(new Point(1, 1)))),
+				named("Query with $and", new Query(where("location").near(new Point(1, 1)).and("location").exists(true))),
+				named("BasicQuery", new BasicQuery("{ 'location' : { '$near' : [1, 1] } }")),
+				named("BasicQuery with $and",
+						new BasicQuery("{ 'location' : { '$near' : [1, 1] } }").addCriteria(where("location").exists(true))),
+				named("Query.of", Query.of(new Query(where("location").near(new Point(1, 1))))), named("Query.of with $and",
+						Query.of(new Query(where("location").near(new Point(1, 1))).addCriteria(where("location").exists(true)))));
+	}
+
+	@ParameterizedTest // GH-5209
+	@MethodSource
+	void addCriteriaShouldRejectSecondText(Query query) {
+
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class)
+				.isThrownBy(() -> query.addCriteria(TextCriteria.forDefaultLanguage().matching("data")).getQueryObject())
+				.withMessageContaining("$text");
+	}
+
+	static Stream<Named<Query>> addCriteriaShouldRejectSecondText() {
+		return Stream.of(named("Query", new Query(TextCriteria.forDefaultLanguage().matching("spring"))),
+				named("BasicQuery", new BasicQuery("{ '$text' : { '$search' : 'spring' } }")),
+				named("BasicQuery with $and", new BasicQuery("{ '$and' : [ { '$text' : { '$search' : 'spring' } } ] }")),
+				named("Query.of", Query.of(new Query(TextCriteria.forDefaultLanguage().matching("spring")))));
+	}
+
+	@Test // GH-5209
+	void addCriteriaWithDuplicateKeyShouldKeepNonConflictingCriteriaTopLevel() {
+
+		Query query = new Query(where("_id").is("id-1"));
+		query.addCriteria(where("amount").gte(100));
+		query.addCriteria(where("amount").lte(500));
+
+		assertThat(query.getQueryObject()).containsEntry("_id", "id-1");
+	}
+
+	@Test // GH-5209
 	void addCriteriaShouldPreserveDuplicateKeyInChainedCriteria() {
 
 		Query query = new Query();
 		query.addCriteria(where("amount").gte(100).and("status").is("NEW"));
 		query.addCriteria(where("amount").lte(500));
 
-		assertThat(query.getQueryObject()).isEqualTo(new Document("$and", List.of(
-				new Document("amount", new Document("$gte", 100)).append("status", "NEW"),
-				new Document("amount", new Document("$lte", 500)))));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("status", "NEW").append("$and",
+				List.of(new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500)))));
 	}
 
-	@Test
-	void clonedQueryShouldRenderDuplicateCriteriaAsAnd() {
+	@Test // GH-5209
+	void addCriteriaWithDuplicateKeyShouldRetainExistingAndOperator() {
 
-		BasicQuery source = new BasicQuery("{ 'amount' : { '$gte' : 100 }}");
-		Query target = Query.of(source);
-		target.addCriteria(where("amount").lte(500));
+		Query query = new Query(new Criteria().andOperator(where("a").is(1), where("b").is(2)));
+		query.addCriteria(where("amount").gte(100));
+		query.addCriteria(where("amount").lte(500));
 
-		assertThat(target.getQueryObject()).isEqualTo(new Document("$and", List.of(
-				new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500)))));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new Document("$and", List.of(new Document("a", 1), new Document("b", 2),
+						new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500)))));
 	}
 
-	@Test
+	@Test // GH-5209
+	void basicQueryRepeatedAddCriteriaForSamePropertyShouldRenderFlatAnd() {
+
+		BasicQuery query = new BasicQuery("{ 'amount' : { '$gte' : 100 }}");
+		query.addCriteria(where("amount").lte(500));
+		query.addCriteria(where("amount").ne(200));
+		query.addCriteria(where("amount").ne(300));
+
+		assertThat(query.getQueryObject()).isEqualTo(new Document("$and",
+				List.of(new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500)),
+						new Document("amount", new Document("$ne", 200)), new Document("amount", new Document("$ne", 300)))));
+	}
+
+	@Test // GH-5209
+	void addCriteriaWithDuplicateKeyShouldKeepTextCriteriaTopLevel() {
+
+		Query query = new Query(TextCriteria.forDefaultLanguage().matching("spring"));
+		query.addCriteria(where("amount").gte(100));
+		query.addCriteria(where("amount").lte(500));
+
+		assertThat(query.getQueryObject()).containsKey("$text").containsKey("$and");
+	}
+
+	@Test // GH-5209
+	void equalsShouldIgnoreOrderOfCriteriaForDistinctKeys() {
+
+		Query ab = new Query(where("a").is(1)).addCriteria(where("b").is(2));
+		Query ba = new Query(where("b").is(2)).addCriteria(where("a").is(1));
+
+		assertThat(ab).isEqualTo(ba).hasSameHashCodeAs(ba);
+	}
+
+	@Test // GH-5209
+	void equalsShouldConsiderOrderOfCriteriaForSameKey() {
+
+		Query gteLte = new Query(where("a").gte(1)).addCriteria(where("a").lte(5));
+		Query lteGte = new Query(where("a").lte(5)).addCriteria(where("a").gte(1));
+
+		assertThat(gteLte).isNotEqualTo(lteGte);
+	}
+
+	@Test // GH-5209
+	void equalsShouldIgnoreInterleavingOfCriteriaForDistinctKeys() {
+
+		Query interleaved = new Query(where("a").gt(1)).addCriteria(where("b").gt(2)).addCriteria(where("a").lt(3));
+		Query grouped = new Query(where("a").gt(1)).addCriteria(where("a").lt(3)).addCriteria(where("b").gt(2));
+		Query reordered = new Query(where("a").lt(3)).addCriteria(where("b").gt(2)).addCriteria(where("a").gt(1));
+		Query sameSize = new Query(where("a").gt(1)).addCriteria(where("b").gt(2)).addCriteria(where("b").gt(2));
+
+		assertThat(interleaved).isEqualTo(grouped).hasSameHashCodeAs(grouped).isNotEqualTo(reordered)
+				.isNotEqualTo(sameSize);
+		assertThat(sameSize).isNotEqualTo(interleaved);
+	}
+
+	@Test // GH-5209
+	void addCriteriaShouldRenderAndInInsertionOrder() {
+
+		Query query = new Query(where("a").gt(1)).addCriteria(where("b").gt(2)).addCriteria(where("a").lt(3))
+				.addCriteria(where("b").lt(4));
+
+		assertThat(query.getQueryObject())
+				.isEqualTo(where("a").gt(1).and("b").gt(2).and("a").lt(3).and("b").lt(4).getCriteriaObject());
+		assertThat(query.getQueryObject().getList("$and", Document.class)).containsExactly(
+				new Document("a", new Document("$gt", 1)), new Document("b", new Document("$gt", 2)),
+				new Document("a", new Document("$lt", 3)), new Document("b", new Document("$lt", 4)));
+	}
+
+	@Test // GH-5209
 	void clonedQueryShouldKeepRestrictedTypesOutsideAndWhenMergingDuplicateCriteria() {
 
 		Query source = new Query(where("amount").gte(100)).restrict(SpecialDoc.class);
 		Query target = Query.of(source);
 		target.addCriteria(where("amount").lte(500));
 
-		assertThat(target.getQueryObject()).isEqualTo(new Document("$and", List.of(
-				new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500))))
-					.append("_$RESTRICTED_TYPES", source.getRestrictedTypes()));
+		assertThat(target.getQueryObject()).isEqualTo(new Document("$and",
+				List.of(new Document("amount", new Document("$gte", 100)), new Document("amount", new Document("$lte", 500))))
+				.append("_$RESTRICTED_TYPES", source.getRestrictedTypes()));
 	}
 
 	@Test // DATAMONGO-1783

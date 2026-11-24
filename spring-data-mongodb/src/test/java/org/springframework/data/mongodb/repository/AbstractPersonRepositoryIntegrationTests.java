@@ -200,6 +200,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result.get(0).getAge()).isNull();
 	}
 
+	@Test // GH-5209
+	void findsPersonsByMultipleCriteriaForSameProperty() {
+
+		List<Person> result = repository.findByLastnameStartingWithAndLastnameEndingWith("M", "s");
+		assertThat(result).containsExactlyInAnyOrder(dave, oliver);
+	}
+
 	@Test
 	void findsPersonsByFirstnameLike() {
 
