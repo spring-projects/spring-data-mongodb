@@ -17,16 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -40,7 +31,6 @@ import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
@@ -82,6 +72,8 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
 import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.mapping.IdTargetTypeStrategy;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersistentPropertyTranslator;
@@ -203,7 +195,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}, expressionEvaluatorFactory::create);
 
 		this.referenceLookupDelegate = new ReferenceLookupDelegate(mappingContext, spELContext);
-		this.documentPointerFactory = new DocumentPointerFactory(conversionService, mappingContext);
+		this.documentPointerFactory = new DocumentPointerFactory(this);
 	}
 
 	/**
@@ -261,6 +253,29 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		return conversions;
 	}
 
+	@Override
+	public IdTargetTypeStrategy getIdTargetTypeStrategy() {
+
+		return conversions instanceof MongoCustomConversions mongoConversions ? mongoConversions.getIdTargetTypeStrategy()
+				: IdTargetTypeStrategy.OBJECT_ID;
+	}
+
+	@Override
+	public void afterPropertiesSet() {
+
+		super.afterPropertiesSet();
+
+		if (mappingContext instanceof MongoMappingContext mongoMappingContext
+				&& mongoMappingContext.getIdTargetTypeStrategy() != getIdTargetTypeStrategy() && LOGGER.isWarnEnabled()) {
+			LOGGER.warn(String.format(
+					"IdTargetTypeStrategy of MongoMappingContext [%s] differs from the one of MongoCustomConversions [%s]; "
+							+ "Typed and untyped queries may convert _id values differently. "
+							+ "Apply the same strategy to both, e.g. via mappingContext.setIdTargetTypeStrategy(conversions.getIdTargetTypeStrategy()).",
+					ClassUtils.getShortName(mongoMappingContext.getIdTargetTypeStrategy().getClass()),
+					ClassUtils.getShortName(getIdTargetTypeStrategy().getClass())));
+		}
+	}
+
 	/**
 	 * Configure the characters dots potentially contained in a {@link Map} shall be replaced with. By default, we don't
 	 * do any translation but rather reject a {@link Map} with keys containing dots causing the conversion for the entire
@@ -310,7 +325,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		this.environment = applicationContext.getEnvironment();
 		this.spELContext = new SpELContext(this.spELContext, applicationContext);
 		this.projectionFactory.setBeanFactory(applicationContext);
-		if(applicationContext.getClassLoader() != null) {
+		if (applicationContext.getClassLoader() != null) {
 			this.projectionFactory.setBeanClassLoader(applicationContext.getClassLoader());
 		}
 
@@ -471,12 +486,12 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	 * @return the converted object, will never be {@literal null}.
 	 * @since 3.2
 	 */
-	@SuppressWarnings({"unchecked","NullAway"})
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	protected <S extends Object> S readDocument(ConversionContext context, @Nullable Bson bson,
 			TypeInformation<? extends S> typeHint) {
 
-		if(bson == null) {
-			bson  = new Document();
+		if (bson == null) {
+			bson = new Document();
 		}
 
 		Document document = bson instanceof BasicDBObject dbObject ? new Document(dbObject) : (Document) bson;
@@ -692,8 +707,9 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				(prop, bson, e, path) -> MappingMongoConverter.this.getValueInternal(context, prop, bson, e));
 	}
 
-	private @Nullable Object readAssociation(Association<MongoPersistentProperty> association, DocumentAccessor documentAccessor,
-			DbRefProxyHandler handler, DbRefResolverCallback callback, ConversionContext context) {
+	private @Nullable Object readAssociation(Association<MongoPersistentProperty> association,
+			DocumentAccessor documentAccessor, DbRefProxyHandler handler, DbRefResolverCallback callback,
+			ConversionContext context) {
 
 		MongoPersistentProperty property = association.getInverse();
 		Object value = documentAccessor.get(property);
@@ -825,8 +841,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		if (ClassUtils.isAssignableValue(referringProperty.getAssociationTargetType(), source)) {
-			return documentPointerFactory.computePointer(mappingContext, referringProperty, source,
-					referringProperty.getActualType());
+			return documentPointerFactory.computePointer(referringProperty, source, referringProperty.getActualType());
 		}
 
 		return () -> source;
@@ -873,7 +888,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	/**
 	 * Internal write conversion method which should be used for nested invocations.
 	 */
-	@SuppressWarnings({"unchecked","NullAway"})
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	protected void writeInternal(@Nullable Object obj, Bson bson, @Nullable TypeInformation<?> typeHint) {
 
 		if (null == obj) {
@@ -1041,8 +1056,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 		if (prop.isAssociation() && prop.isAnnotationPresent(Reference.class)) {
 
-			accessor.put(prop, new DocumentPointerFactory(conversionService, mappingContext)
-					.computePointer(mappingContext, prop, obj, valueType.getType()).getPointer());
+			accessor.put(prop, new DocumentPointerFactory(this).computePointer(prop, obj, valueType.getType()).getPointer());
 			return;
 		}
 
@@ -1087,8 +1101,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			if (property.isAssociation()) {
 
 				List<Object> targetCollection = collection.stream().map(it -> {
-					return documentPointerFactory.computePointer(mappingContext, property, it, property.getActualType())
-							.getPointer();
+					return documentPointerFactory.computePointer(property, it, property.getActualType()).getPointer();
 				}).collect(Collectors.toList());
 
 				return writeCollectionInternal(targetCollection, TypeInformation.of(DocumentPointer.class),
@@ -1146,8 +1159,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				if (property.isDbReference()) {
 					document.put(simpleKey, value != null ? createDBRef(value, property) : null);
 				} else {
-					document.put(simpleKey, documentPointerFactory
-							.computePointer(mappingContext, property, value, property.getActualType()).getPointer());
+					document.put(simpleKey,
+							documentPointerFactory.computePointer(property, value, property.getActualType()).getPointer());
 				}
 
 			} else {
@@ -1355,11 +1368,12 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}, property, this, spELContext);
 
 		PropertyValueConversions propertyValueConversions = conversions.getPropertyValueConversions();
-		if(propertyValueConversions == null) {
+		if (propertyValueConversions == null) {
 			return value;
 		}
 
-		PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter = propertyValueConversions.getValueConverter(property);
+		PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter = propertyValueConversions
+				.getValueConverter(property);
 		return value != null ? valueConverter.write(value, context) : valueConverter.writeNull(context);
 	}
 
@@ -1488,7 +1502,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	 * @since 3.2
 	 * @return the converted {@link Collection} or array, will never be {@literal null}.
 	 */
-	@SuppressWarnings({"unchecked","NullAway"})
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	protected @Nullable Object readCollectionOrArray(ConversionContext context, @Nullable Collection<?> source,
 			TypeInformation<?> targetType) {
 
@@ -1535,7 +1549,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	 * @return the converted {@link Map}, will never be {@literal null}.
 	 * @since 3.2
 	 */
-	protected @Nullable Map<Object, Object> readMap(ConversionContext context, @Nullable Bson bson, TypeInformation<?> targetType) {
+	protected @Nullable Map<Object, Object> readMap(ConversionContext context, @Nullable Bson bson,
+			TypeInformation<?> targetType) {
 
 		Assert.notNull(bson, "Document must not be null");
 		Assert.notNull(targetType, "TypeInformation must not be null");
@@ -1988,7 +2003,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked", "NullAway"})
+		@SuppressWarnings({ "unchecked", "NullAway" })
 		public <T> @Nullable T getPropertyValue(MongoPersistentProperty property) {
 
 			String expression = property.getSpelExpression();
@@ -2377,7 +2392,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 		DefaultConversionContext(MongoConverter sourceConverter,
 				org.springframework.data.convert.CustomConversions customConversions, ObjectPath path,
-				ContainerValueConverter<@Nullable Bson> documentConverter, ContainerValueConverter<@Nullable Collection<?>> collectionConverter,
+				ContainerValueConverter<@Nullable Bson> documentConverter,
+				ContainerValueConverter<@Nullable Collection<?>> collectionConverter,
 				ContainerValueConverter<@Nullable Bson> mapConverter, ContainerValueConverter<@Nullable DBRef> dbRefConverter,
 				ValueConverter<@Nullable Object> elementConverter) {
 
@@ -2392,7 +2408,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked", "NullAway"})
+		@SuppressWarnings({ "unchecked", "NullAway" })
 		public <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint,
 				ConversionContext context) {
 
@@ -2473,7 +2489,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		 */
 		interface ValueConverter<T> {
 
-			@Nullable Object convert(@Nullable T source, TypeInformation<?> typeHint);
+			@Nullable
+			Object convert(@Nullable T source, TypeInformation<?> typeHint);
 
 		}
 
@@ -2485,7 +2502,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		 */
 		interface ContainerValueConverter<T> {
 
-			@Nullable Object convert(ConversionContext context, @Nullable T source, TypeInformation<?> typeHint);
+			@Nullable
+			Object convert(ConversionContext context, @Nullable T source, TypeInformation<?> typeHint);
 
 		}
 

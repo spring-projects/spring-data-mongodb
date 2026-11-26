@@ -18,17 +18,24 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.Instant;
+import java.math.BigInteger;
 import java.util.Map;
 
 import org.bson.Document;
+import org.bson.types.Decimal128;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mongodb.core.MappedDocument.MappedQuery;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.BigDecimalRepresentation;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.TimeSeries;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 
@@ -183,5 +190,42 @@ class EntityOperationsUnitTests {
 
 	interface ProjectionInterface {
 		String getValue();
+	}
+
+	@Test // GH-4466
+	void removeQueryForDocumentAppliesWriteConversionToId() {
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE,
+				MongoTestMappingContext.newTestContext());
+		converter.setCustomConversions(
+				MongoCustomConversions.create(it -> it.bigDecimal(BigDecimalRepresentation.DECIMAL128)));
+		converter.afterPropertiesSet();
+
+		Query query = new EntityOperations(converter).forEntity(new Document("_id", BigInteger.TEN)).getRemoveByQuery();
+
+		assertThat(query).isInstanceOf(MappedQuery.class);
+		assertThat(query.getQueryObject()).isEqualTo(new Document("_id", new Document("$eq", new Decimal128(10))));
+	}
+
+	@Test // GH-4466
+	void removeQueryForDocumentRetainsHexStringId() {
+
+		String hex = new ObjectId().toHexString();
+
+		Query query = operations.forEntity(new Document("_id", hex)).getRemoveByQuery();
+
+		assertThat(query).isInstanceOf(MappedQuery.class);
+		assertThat(query.getQueryObject()).isEqualTo(new Document("_id", new Document("$eq", hex)));
+	}
+
+	@Test // GH-4466
+	void removeQueryBindsOperatorShapedIdLiterally() {
+
+		Document operatorShapedId = new Document("$ne", null);
+
+		assertThat(operations.forEntity(new Document("_id", operatorShapedId)).getRemoveByQuery().getQueryObject())
+				.isEqualTo(new Document("_id", new Document("$eq", operatorShapedId)));
+		assertThat(operations.forEntity("{ '_id' : { '$ne' : null } }").getRemoveByQuery().getQueryObject())
+				.isEqualTo(new Document("_id", new Document("$eq", operatorShapedId)));
 	}
 }

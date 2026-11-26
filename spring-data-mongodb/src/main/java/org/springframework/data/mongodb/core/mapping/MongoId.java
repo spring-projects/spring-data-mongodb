@@ -28,8 +28,9 @@ import org.springframework.data.annotation.Id;
  * Id properties use {@link org.springframework.data.mongodb.core.mapping.FieldType#IMPLICIT} as the default
  * {@literal id's} target type. This means that the actual property value is used. No conversion attempts to any other
  * type are made. <br />
- * In contrast to {@link Id &#64;Id}, {@link String} {@literal id's} are stored as the such even when the actual value
- * represents a valid {@link org.bson.types.ObjectId#isValid(String) ObjectId hex String}. To trigger {@link String} to
+ * In contrast to {@link Id &#64;Id} using the default {@link IdTargetTypeStrategy}, {@link String} {@literal id's} are
+ * stored as the such even when the actual value represents a valid
+ * {@link org.bson.types.ObjectId#isValid(String) ObjectId hex String}. To trigger {@link String} to
  * {@link org.bson.types.ObjectId} conversion use {@link MongoId#targetType() &#64;MongoId(FieldType.OBJECT_ID)}.
  *
  * @author Christoph Strobl

@@ -47,7 +47,6 @@ import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -140,30 +139,12 @@ import com.mongodb.CursorType;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.CreateViewOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.EstimatedDocumentCountOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.*;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
-import com.mongodb.reactivestreams.client.AggregatePublisher;
-import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
-import com.mongodb.reactivestreams.client.ClientSession;
-import com.mongodb.reactivestreams.client.DistinctPublisher;
-import com.mongodb.reactivestreams.client.FindPublisher;
-import com.mongodb.reactivestreams.client.MapReducePublisher;
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoCluster;
-import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.reactivestreams.client.*;
 
 /**
  * Primary implementation of {@link ReactiveMongoOperations}. It simplifies the use of Reactive MongoDB usage and helps
@@ -366,8 +347,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * Used by {@link #prepareCollection(MongoCollection)} to set the {@link ReadPreference} before any operations
-	 * are performed.
+	 * Used by {@link #prepareCollection(MongoCollection)} to set the {@link ReadPreference} before any operations are
+	 * performed.
 	 *
 	 * @param readPreference
 	 */
@@ -397,7 +378,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			setEntityCallbacks(ReactiveEntityCallbacks.create(applicationContext));
 		}
 
-		if (eventPublisher != null && mappingContext instanceof ApplicationEventPublisherAware applicationEventPublisherAware) {
+		if (eventPublisher != null
+				&& mappingContext instanceof ApplicationEventPublisherAware applicationEventPublisherAware) {
 			applicationEventPublisherAware.setApplicationEventPublisher(eventPublisher);
 		}
 	}
@@ -1099,7 +1081,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		AggregationOptions options = aggregation.getOptions();
 		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming");
-
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("Streaming aggregation: %s in collection %s",
@@ -1809,8 +1790,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					deferredFilter = Mono.just(filter);
 				}
 
-				publisher = deferredFilter.flatMapMany(
-						it -> collectionToUse.replaceOne(it, replacement, updateContext.getReplaceOptions(entity)));
+				publisher = deferredFilter
+						.flatMapMany(it -> collectionToUse.replaceOne(it, replacement, updateContext.getReplaceOptions(entity)));
 			}
 
 			return Mono.from(publisher).map(o -> mapped.getId());
@@ -1981,7 +1962,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(object, "Object must not be null");
 
-		return remove(operations.forEntity(object).getRemoveByQuery(), object.getClass());
+		return doRemove(getCollectionName(object.getClass()), operations.forEntity(object).getRemoveByQuery(),
+				object.getClass(), false);
 	}
 
 	@Override
@@ -1990,7 +1972,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(object, "Object must not be null");
 		Assert.hasText(collectionName, "Collection name must not be null or empty");
 
-		return doRemove(collectionName, operations.forEntity(object).getRemoveByQuery(), object.getClass());
+		return doRemove(collectionName, operations.forEntity(object).getRemoveByQuery(), object.getClass(), false);
 	}
 
 	@Override
@@ -2009,6 +1991,21 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected <T> Mono<DeleteResult> doRemove(String collectionName, Query query, @Nullable Class<T> entityClass) {
+		return doRemove(collectionName, query, entityClass, true);
+	}
+
+	/**
+	 * Remove all, or just the first, document matching the given {@link Query}.
+	 *
+	 * @param collectionName must not be {@literal null}.
+	 * @param query must not be {@literal null}.
+	 * @param entityClass can be {@literal null}.
+	 * @param multi use {@literal true} to remove all matching documents, {@literal false} for just the first one.
+	 * @return the {@link DeleteResult}.
+	 * @since 5.3
+	 */
+	protected <T> Mono<DeleteResult> doRemove(String collectionName, Query query, @Nullable Class<T> entityClass,
+			boolean multi) {
 
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
@@ -2018,7 +2015,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
 
-		DeleteContext deleteContext = queryOperations.deleteQueryContext(query);
+		DeleteContext deleteContext = multi ? queryOperations.deleteQueryContext(query)
+				: queryOperations.deleteSingleContext(query);
 		Document queryObject = deleteContext.getMappedQuery(entity);
 		DeleteOptions deleteOptions = deleteContext.getDeleteOptions(entity);
 		Document removeQuery = deleteContext.getMappedQuery(entity);
@@ -2053,7 +2051,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 							return collectionToUse.deleteMany(MappedDocument.getIdIn(val), deleteOptions);
 						});
 			} else {
-				return collectionToUse.deleteMany(removeQuery, deleteOptions);
+				return multi ? collectionToUse.deleteMany(removeQuery, deleteOptions)
+						: collectionToUse.deleteOne(removeQuery, deleteOptions);
 			}
 
 		}).doOnNext(it -> maybeEmitEvent(new AfterDeleteEvent<>(queryObject, entityClass, collectionName))) //

@@ -85,6 +85,7 @@ public abstract class MongoConfigurationSupport {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setManagedTypes(mongoManagedTypes);
 		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
+		mappingContext.setIdTargetTypeStrategy(customConversions.getIdTargetTypeStrategy());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 		mappingContext.setAutoIndexCreation(autoIndexCreation());
 

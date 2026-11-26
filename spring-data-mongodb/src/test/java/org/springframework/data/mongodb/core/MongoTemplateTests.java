@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.data.mongodb.core.query.Criteria.expr;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -1560,6 +1561,35 @@ public class MongoTemplateTests {
 
 		template.remove(person, collectionName);
 		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty()).isTrue();
+	}
+
+	@Test // GH-4466
+	void removesRawDocumentUsingStoredId() {
+
+		// hex String is not converted to ObjectId, BigInteger is stored as Decimal128
+		for (Object id : List.of(new ObjectId().toHexString(), new ObjectId(), BigInteger.TEN)) {
+
+			template.insert(new org.bson.Document("_id", id).append("name", "Dave"), "collection");
+
+			assertThat(template.remove(new org.bson.Document("_id", id), "collection").getDeletedCount())
+					.as("removing %s", id.getClass().getSimpleName()).isOne();
+			assertThat(template.getCollection("collection").countDocuments()).isZero();
+		}
+	}
+
+	@Test // GH-4466
+	void doesNotInterpretOperatorShapedIdOnRawDocumentRemoval() {
+
+		template.insert(List.of(new org.bson.Document("_id", "1"), new org.bson.Document("_id", "2")), "collection");
+
+		// the server either rejects the literal or matches nothing
+		Throwable error = catchThrowable(() -> assertThat(template
+				.remove(new org.bson.Document("_id", new org.bson.Document("$ne", null)), "collection").getDeletedCount())
+				.isZero());
+
+		assertThat(error).satisfiesAnyOf(it -> assertThat(it).isNull(),
+				it -> assertThat(it).isInstanceOf(DataIntegrityViolationException.class));
+		assertThat(template.getCollection("collection").countDocuments()).isEqualTo(2);
 	}
 
 	// DATAMONGO-549

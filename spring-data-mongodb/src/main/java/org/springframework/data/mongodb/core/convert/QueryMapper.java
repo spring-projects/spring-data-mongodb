@@ -100,6 +100,13 @@ public class QueryMapper {
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", FieldName.ID.name());
 	private static final Document META_TEXT_SCORE = new Document("$meta", "textScore");
+
+	/**
+	 * Operators whose operands are compared to {@literal _id} values. Operands of other operators, like {@code $exists}
+	 * or {@code $mod}, are not subject to {@literal id} conversion.
+	 */
+	private static final Set<String> ID_VALUE_OPERATORS = Set.of("$eq", "$ne", "$gt", "$gte", "$lt", "$lte", "$not");
+
 	static final TypeInformation<?> NESTED_DOCUMENT = TypeInformation.of(NestedDocument.class);
 
 	private enum MetaMapping {
@@ -503,7 +510,7 @@ public class QueryMapper {
 
 	@SuppressWarnings("NullAway")
 	private Class<?> getIdTypeForField(Field documentField) {
-		return isIdField(documentField) ? documentField.getProperty().getFieldType() : ObjectId.class;
+		return isIdField(documentField) ? documentField.getProperty().getFieldType() : getUntypedIdTargetType();
 	}
 
 	/**
@@ -646,18 +653,6 @@ public class QueryMapper {
 			return source;
 		}
 
-		if (source instanceof DBRef ref) {
-
-			Object id = convertId(ref.getId(),
-					property.getOwner().isIdProperty(property) ? property.getFieldType() : ObjectId.class);
-
-			if (StringUtils.hasText(ref.getDatabaseName())) {
-				return new DBRef(ref.getDatabaseName(), ref.getCollectionName(), id);
-			} else {
-				return new DBRef(ref.getCollectionName(), id);
-			}
-		}
-
 		if (source instanceof Iterable<?> iterable) {
 			BasicDBList result = new BasicDBList();
 			for (Object element : iterable) {
@@ -760,7 +755,8 @@ public class QueryMapper {
 				}
 				resultDbo.put(key, ids);
 			} else if (isKeyword(key)) {
-				resultDbo.put(key, convertIdField(documentField, entry.getValue()));
+				resultDbo.put(key, ID_VALUE_OPERATORS.contains(key) ? convertIdField(documentField, entry.getValue())
+						: delegateConvertToMongoType(entry.getValue(), null));
 			} else {
 				if (documentField.getProperty() != null && documentField.getProperty().isEntity()) {
 					Field propertyField = createPropertyField(documentField.getPropertyEntity(), key, mappingContext);
@@ -821,7 +817,12 @@ public class QueryMapper {
 	private Object createReferenceFor(Object source, MongoPersistentProperty property) {
 
 		if (source instanceof DBRef dbRef) {
-			return dbRef;
+
+			Object id = convertId(dbRef.getId(), getDbRefIdTargetType(property));
+
+			return StringUtils.hasText(dbRef.getDatabaseName())
+					? new DBRef(dbRef.getDatabaseName(), dbRef.getCollectionName(), id)
+					: new DBRef(dbRef.getCollectionName(), id);
 		}
 
 		if (property != null && (property.isDocumentReference()
@@ -833,7 +834,8 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
+	 * Converts the given raw id value into the target type determined by the
+	 * {@link MongoConverter#getIdTargetTypeStrategy() IdTargetTypeStrategy}, which is {@link ObjectId} by default.
 	 *
 	 * @param id
 	 * @return
@@ -841,11 +843,27 @@ public class QueryMapper {
 	 */
 	@Nullable
 	public Object convertId(@Nullable Object id) {
-		return convertId(id, ObjectId.class);
+		return convertId(id, getUntypedIdTargetType());
+	}
+
+	private Class<?> getDbRefIdTargetType(MongoPersistentProperty property) {
+
+		if (property.getOwner().isIdProperty(property)) {
+			return property.getFieldType();
+		}
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(property);
+		MongoPersistentProperty idProperty = entity != null ? entity.getIdProperty() : null;
+
+		return idProperty != null ? idProperty.getFieldType() : getUntypedIdTargetType();
+	}
+
+	private Class<?> getUntypedIdTargetType() {
+		return converter.getIdTargetTypeStrategy().getIdTargetType(null);
 	}
 
 	/**
-	 * Converts the given raw id value into either {@link ObjectId} or {@link Class targetType}.
+	 * Converts the given raw id value into the given {@link Class targetType}.
 	 *
 	 * @param id can be {@literal null}.
 	 * @param targetType

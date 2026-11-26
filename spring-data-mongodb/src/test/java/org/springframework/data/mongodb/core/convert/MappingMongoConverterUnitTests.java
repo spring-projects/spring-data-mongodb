@@ -2185,6 +2185,20 @@ class MappingMongoConverterUnitTests {
 		assertThat(target.get("bigDecimal")).isEqualTo(source.bigDecimal.toString());
 	}
 
+	@Test // GH-4466
+	void readsLargeBigIntegerFromDecimal128() {
+
+		converter = createConverter(BigDecimalRepresentation.DECIMAL128);
+
+		WithoutExplicitTargetTypes source = new WithoutExplicitTargetTypes();
+		source.bigInteger = BigInteger.TWO.pow(80);
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(converter.read(WithoutExplicitTargetTypes.class, target).bigInteger).isEqualTo(source.bigInteger);
+	}
+
 	@Test // GH-5037
 	void mapsBigNumbersToDecimal128() {
 

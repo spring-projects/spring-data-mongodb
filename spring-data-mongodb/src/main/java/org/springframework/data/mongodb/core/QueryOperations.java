@@ -37,6 +37,7 @@ import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoExpression;
+import org.springframework.data.mongodb.core.MappedDocument.MappedQuery;
 import org.springframework.data.mongodb.core.MappedDocument.MappedUpdate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
@@ -49,6 +50,7 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -251,6 +253,33 @@ class QueryOperations {
 	}
 
 	/**
+	 * Prepare the {@literal _id} field of the given {@link MappedDocument}. Generates a new {@literal id} value converted
+	 * to the id properties {@link MongoPersistentProperty#getFieldType() target type} if the document has no
+	 * {@literal _id} and the target type is not {@link ObjectId}.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @param entity can be {@literal null}.
+	 * @param queryMapper must not be {@literal null}.
+	 * @return the given {@link MappedDocument}.
+	 */
+	static MappedDocument prepareId(MappedDocument source, @Nullable MongoPersistentEntity<?> entity,
+			QueryMapper queryMapper) {
+
+		if (entity == null || source.hasId()) {
+			return source;
+		}
+
+		MongoPersistentProperty idProperty = entity.getIdProperty();
+		if (idProperty != null && (idProperty.hasExplicitWriteTarget() || idProperty.isAnnotationPresent(MongoId.class)
+				|| !idProperty.isAnnotationPresent(Field.class))) {
+			if (!ClassUtils.isAssignable(ObjectId.class, idProperty.getFieldType())) {
+				source.updateId(queryMapper.convertId(new ObjectId(), idProperty.getFieldType()));
+			}
+		}
+		return source;
+	}
+
+	/**
 	 * {@link InsertContext} encapsulates common tasks required to interact with {@link Document} to be inserted.
 	 *
 	 * @since 3.4.3
@@ -286,19 +315,7 @@ class QueryOperations {
 		 */
 		@SuppressWarnings("NullAway")
 		<T> MappedDocument prepareId(@Nullable MongoPersistentEntity<T> entity) {
-
-			if (entity == null || source.hasId()) {
-				return source;
-			}
-
-			MongoPersistentProperty idProperty = entity.getIdProperty();
-			if (idProperty != null
-					&& (idProperty.hasExplicitWriteTarget() || idProperty.isAnnotationPresent(MongoId.class))) {
-				if (!ClassUtils.isAssignable(ObjectId.class, idProperty.getFieldType())) {
-					source.updateId(queryMapper.convertId(new ObjectId(), idProperty.getFieldType()));
-				}
-			}
-			return source;
+			return QueryOperations.prepareId(source, entity, queryMapper);
 		}
 	}
 
@@ -360,7 +377,7 @@ class QueryOperations {
 		 * @return never {@literal null}.
 		 */
 		<T> Document getMappedQuery(@Nullable MongoPersistentEntity<T> entity) {
-			return queryMapper.getMappedObject(getQueryObject(), entity);
+			return query instanceof MappedQuery ? getQueryObject() : queryMapper.getMappedObject(getQueryObject(), entity);
 		}
 
 		@SuppressWarnings("NullAway")

@@ -49,6 +49,7 @@ import org.springframework.data.convert.PropertyValueConverterRegistrar;
 import org.springframework.data.convert.SimplePropertyValueConversions;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.mapping.IdTargetTypeStrategy;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.lang.Contract;
@@ -87,6 +88,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	 */
 	private final List<Converter<?, ?>> fallbackConversionServiceConverters = new ArrayList<>();
 
+	private final IdTargetTypeStrategy idTargetTypeStrategy;
+
 	/**
 	 * Creates an empty {@link MongoCustomConversions} object.
 	 */
@@ -110,12 +113,15 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	 * @since 2.3
 	 */
 	protected MongoCustomConversions(MongoConverterConfigurationAdapter conversionConfiguration) {
-		this(conversionConfiguration.createConverterConfiguration());
+		this(conversionConfiguration.createConverterConfiguration(), conversionConfiguration.idTargetTypeStrategy);
 	}
 
-	private MongoCustomConversions(MongoConverterConfiguration converterConfiguration) {
+	private MongoCustomConversions(MongoConverterConfiguration converterConfiguration,
+			IdTargetTypeStrategy idTargetTypeStrategy) {
+
 		super(converterConfiguration);
 		this.fallbackConversionServiceConverters.addAll(converterConfiguration.fallbackConversionServiceConverters);
+		this.idTargetTypeStrategy = idTargetTypeStrategy;
 	}
 
 	/**
@@ -132,6 +138,15 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		configurer.accept(adapter);
 
 		return new MongoCustomConversions(adapter);
+	}
+
+	/**
+	 * @return the {@link IdTargetTypeStrategy} to determine the target type of {@literal _id} values where none is
+	 *         defined explicitly. Never {@literal null}.
+	 * @since 5.3
+	 */
+	public IdTargetTypeStrategy getIdTargetTypeStrategy() {
+		return idTargetTypeStrategy;
 	}
 
 	@Override
@@ -176,6 +191,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
 		private BigDecimalRepresentation bigDecimals = BigDecimalRepresentation.UNSPECIFIED;
+		private IdTargetTypeStrategy idTargetTypeStrategy = IdTargetTypeStrategy.OBJECT_ID;
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
@@ -340,6 +356,25 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 			Assert.notNull(representation, "BigDecimalDataType must not be null");
 			this.bigDecimals = representation;
+			return this;
+		}
+
+		/**
+		 * Configures the {@link IdTargetTypeStrategy} to determine the target type of {@literal _id} values where none is
+		 * defined explicitly, i.e. {@literal id} properties without {@link org.springframework.data.mongodb.core.mapping.MongoId
+		 * &#64;MongoId} or {@link org.springframework.data.mongodb.core.mapping.Field &#64;Field} annotation and
+		 * {@literal _id} values without mapping information. Defaults to {@link IdTargetTypeStrategy#OBJECT_ID}. Use the
+		 * same strategy for the {@link org.springframework.data.mongodb.core.mapping.MongoMappingContext} when not using
+		 * {@link org.springframework.data.mongodb.config.MongoConfigurationSupport}.
+		 *
+		 * @param idTargetTypeStrategy must not be {@literal null}.
+		 * @return this.
+		 * @since 5.3
+		 */
+		public MongoConverterConfigurationAdapter idTargetTypeStrategy(IdTargetTypeStrategy idTargetTypeStrategy) {
+
+			Assert.notNull(idTargetTypeStrategy, "IdTargetTypeStrategy must not be null");
+			this.idTargetTypeStrategy = idTargetTypeStrategy;
 			return this;
 		}
 

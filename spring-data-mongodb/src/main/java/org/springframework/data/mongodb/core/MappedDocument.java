@@ -22,6 +22,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.StreamUtils;
@@ -31,6 +32,7 @@ import org.springframework.data.util.StreamUtils;
  * entity the source document was supposed to represent.
  *
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 2.1
  */
 public class MappedDocument {
@@ -107,6 +109,20 @@ public class MappedDocument {
 	 */
 	public void updateId(Object value) {
 		document.put(ID_FIELD, value);
+	}
+
+	/**
+	 * A {@link BasicQuery} that indicates that the {@link #getQueryObject() query object} is already in its mapped state
+	 * and must be used as is.
+	 *
+	 * @author Christoph Strobl
+	 * @since 5.3
+	 */
+	static class MappedQuery extends BasicQuery {
+
+		MappedQuery(Document queryObject) {
+			super(queryObject);
+		}
 	}
 
 	/**

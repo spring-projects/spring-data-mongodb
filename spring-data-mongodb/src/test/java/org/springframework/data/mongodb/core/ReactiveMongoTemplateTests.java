@@ -81,6 +81,7 @@ import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 
 import com.mongodb.WriteConcern;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 
@@ -907,6 +908,36 @@ public class ReactiveMongoTemplateTests {
 				.as(StepVerifier::create) //
 				.expectNextCount(1).verifyComplete();
 		template.count(new Query(), Sample.class).as(StepVerifier::create).expectNext(2L).verifyComplete();
+	}
+
+	@Test // GH-4466
+	void removesRawDocumentUsingStoredId() {
+
+		// hex String is not converted to ObjectId
+		for (Object id : List.of(new ObjectId().toHexString(), new ObjectId())) {
+
+			template.insert(new Document("_id", id).append("name", "Dave"), "collection").as(StepVerifier::create)
+					.expectNextCount(1).verifyComplete();
+
+			template.remove(new Document("_id", id), "collection").map(DeleteResult::getDeletedCount) //
+					.as(StepVerifier::create) //
+					.expectNext(1L).verifyComplete();
+			template.count(new Query(), "collection").as(StepVerifier::create).expectNext(0L).verifyComplete();
+		}
+	}
+
+	@Test // GH-4466
+	void doesNotInterpretOperatorShapedIdOnRawDocumentRemoval() {
+
+		template.insert(List.of(new Document("_id", "1"), new Document("_id", "2")), "collection")
+				.as(StepVerifier::create).expectNextCount(2).verifyComplete();
+
+		// the server either rejects the literal or matches nothing
+		template.remove(new Document("_id", new Document("$ne", null)), "collection").map(DeleteResult::getDeletedCount) //
+				.onErrorResume(DataIntegrityViolationException.class, it -> Mono.just(0L)) //
+				.as(StepVerifier::create) //
+				.expectNext(0L).verifyComplete();
+		template.count(new Query(), "collection").as(StepVerifier::create).expectNext(2L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2195

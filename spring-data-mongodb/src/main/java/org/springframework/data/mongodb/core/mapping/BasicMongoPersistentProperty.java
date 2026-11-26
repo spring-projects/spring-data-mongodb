@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -62,6 +63,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = Set.of("id", ID_FIELD_NAME);
 
 	private final FieldNamingStrategy fieldNamingStrategy;
+	private final IdTargetTypeStrategy idTargetTypeStrategy;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentProperty}.
@@ -73,10 +75,30 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	public BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
+		this(property, owner, simpleTypeHolder, fieldNamingStrategy, IdTargetTypeStrategy.OBJECT_ID);
+	}
+
+	/**
+	 * Creates a new {@link BasicMongoPersistentProperty}.
+	 *
+	 * @param property the source property.
+	 * @param owner the owing entity.
+	 * @param simpleTypeHolder must not be {@literal null}.
+	 * @param fieldNamingStrategy can be {@literal null}.
+	 * @param idTargetTypeStrategy must not be {@literal null}.
+	 * @since 5.3
+	 */
+	public BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
+			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy,
+			IdTargetTypeStrategy idTargetTypeStrategy) {
 
 		super(property, owner, simpleTypeHolder);
+
+		Assert.notNull(idTargetTypeStrategy, "IdTargetTypeStrategy must not be null");
+
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
+		this.idTargetTypeStrategy = idTargetTypeStrategy;
 	}
 
 	/**
@@ -126,20 +148,12 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		}
 
 		if (fieldAnnotation == null) {
-			return FieldType.OBJECT_ID.getJavaClass();
+			return idTargetTypeStrategy.getIdTargetType(this);
 		}
 
 		FieldType fieldType = getMongoField().getFieldType();
-		if (fieldType == FieldType.IMPLICIT) {
-
-			if (isEntity()) {
-				return org.bson.Document.class;
-			}
-
-			return getType();
-		}
-
-		return fieldType.getJavaClass();
+		return fieldType == FieldType.IMPLICIT ? IdTargetTypeStrategy.IMPLICIT.getIdTargetType(this)
+				: fieldType.getJavaClass();
 	}
 
 	/**
