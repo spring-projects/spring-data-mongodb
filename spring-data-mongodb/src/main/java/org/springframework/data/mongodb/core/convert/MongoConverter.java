@@ -29,6 +29,8 @@ import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mongodb.CodecRegistryProvider;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.IdTargetTypeStrategy;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -78,6 +80,17 @@ public interface MongoConverter
 	CustomConversions getCustomConversions();
 
 	/**
+	 * Returns the {@link IdTargetTypeStrategy} to determine the target type of {@literal _id} values where none is
+	 * defined explicitly.
+	 *
+	 * @return never {@literal null}. {@link IdTargetTypeStrategy#OBJECT_ID} by default.
+	 * @since 5.3
+	 */
+	default IdTargetTypeStrategy getIdTargetTypeStrategy() {
+		return IdTargetTypeStrategy.OBJECT_ID;
+	}
+
+	/**
 	 * Apply a projection to {@link Bson} and return the projection return type {@code R}.
 	 * {@link EntityProjection#isProjection() Non-projecting} descriptors fall back to {@link #read(Class, Object) regular
 	 * object materialization}.
@@ -102,7 +115,7 @@ public interface MongoConverter
 	 * @throws IllegalArgumentException if {@literal targetType} is {@literal null}.
 	 * @since 2.1
 	 */
-	@SuppressWarnings({"unchecked","NullAway"})
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	default <S, T> @Nullable T mapValueToTargetType(S source, Class<T> targetType, DbRefResolver dbRefResolver) {
 
 		Assert.notNull(targetType, "TargetType must not be null");
@@ -139,7 +152,8 @@ public interface MongoConverter
 
 				return read(targetType, document);
 			} else {
-				if (!ClassUtils.isAssignable(targetType, value.getClass()) && getConversionService().canConvert(value.getClass(), targetType)) {
+				if (!ClassUtils.isAssignable(targetType, value.getClass())
+						&& getConversionService().canConvert(value.getClass(), targetType)) {
 					return getConversionService().convert(value, targetType);
 				}
 			}
@@ -150,7 +164,9 @@ public interface MongoConverter
 	}
 
 	/**
-	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
+	 * Converts the given raw id value into the given target type. Values of BSON target types (see {@link FieldType}) are
+	 * converted to that type. Values of other target types are converted to the target type, if necessary, and written
+	 * like any other value of that type.
 	 *
 	 * @param id can be {@literal null}.
 	 * @param targetType must not be {@literal null}.
@@ -160,7 +176,30 @@ public interface MongoConverter
 	@Nullable
 	default Object convertId(@Nullable Object id, Class<?> targetType) {
 
-		if (id == null || ClassUtils.isAssignableValue(targetType, id)) {
+		if (id == null) {
+			return null;
+		}
+
+		if (FieldType.representsBsonType(targetType)) {
+			return convertIdToBsonType(id, targetType);
+		}
+
+		// non BSON target type, e.g. derived from the property type: write like any other value of that type
+		Object value = id;
+		if (!ClassUtils.isAssignableValue(targetType, id) && getConversionService().canConvert(id.getClass(), targetType)) {
+			try {
+				value = getConversionService().convert(id, targetType);
+			} catch (ConversionException o_O) {
+				// fall back to the plain value
+			}
+		}
+
+		return value != null ? convertToMongoType(value, (TypeInformation<?>) null) : null;
+	}
+
+	private @Nullable Object convertIdToBsonType(Object id, Class<?> targetType) {
+
+		if (ClassUtils.isAssignableValue(targetType, id)) {
 			return id;
 		}
 
@@ -182,7 +221,7 @@ public interface MongoConverter
 					? getConversionService().convert(id, targetType)
 					: convertToMongoType(id, (TypeInformation<?>) null);
 		} catch (ConversionException o_O) {
-			return convertToMongoType(id,(TypeInformation<?>)  null);
+			return convertToMongoType(id, (TypeInformation<?>) null);
 		}
 	}
 

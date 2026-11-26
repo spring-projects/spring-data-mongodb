@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.model.DeleteOptions;
@@ -71,8 +72,8 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		return writeToMultipleCollections(defaultDatabase, bulk, options);
 	}
 
-	private Mono<BulkWriteResult> writeToSingleCollection(String defaultDatabase, Bulk bulk,
-			BulkWriteOptions options, TypedNamespace namespace) {
+	private Mono<BulkWriteResult> writeToSingleCollection(String defaultDatabase, Bulk bulk, BulkWriteOptions options,
+			TypedNamespace namespace) {
 
 		MongoNamespace mongoNamespace = new MongoNamespace(defaultDatabase, resolveCollectionName(namespace));
 
@@ -82,12 +83,12 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 			String collectionName = collector.getNamespace().getCollectionName();
 			List<SourceAwareDocument<Object>> afterSaveCallables = collector.getAfterSaveCallables();
 
-			return template
-					.createMono(collectionName,
-							col -> col.bulkWrite(collector.getWriteModels(),
-									new com.mongodb.client.model.BulkWriteOptions()
-											.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.map(BulkWriteResult::from)
+			return template.createMono(collectionName,
+					col -> col.bulkWrite(collector.getWriteModels(),
+							new com.mongodb.client.model.BulkWriteOptions()
+									.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
+					.map(
+							BulkWriteResult::from)
 					.doOnSuccess(
 							v -> afterSaveCallables
 									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
@@ -112,7 +113,8 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 					.doWithCluster(client -> client.bulkWrite(writeModels,
 							ClientBulkWriteOptions
 									.clientBulkWriteOptions().ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.map(BulkWriteResult::from)
+					.map(
+							BulkWriteResult::from)
 					.doOnSuccess(
 							v -> afterSaveCallables
 									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
@@ -134,16 +136,17 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 
 		if (bulkOp instanceof Insert insert) {
 
-			return template
-					.prepareObjectForSaveReactive(namespace.getCollectionName(), insert.value())
-					.doOnNext(sad -> collector.addInsert(namespace, sad.document(), toObject(sad))).then();
+			return template.prepareObjectForSaveReactive(namespace.getCollectionName(), insert.value()).doOnNext(sad -> {
+				queryOperations.createInsertContext(MappedDocument.of(sad.document()))
+						.prepareId(ClassUtils.getUserClass(insert.value()));
+				collector.addInsert(namespace, sad.document(), toObject(sad));
+			}).then();
 		}
 
 		if (bulkOp instanceof Update update) {
 
 			boolean multi = !(bulkOp instanceof UpdateFirst);
-			UpdateContext updateContext = queryOperations.updateContext(update.update(), update.query(),
-					update.upsert());
+			UpdateContext updateContext = queryOperations.updateContext(update.update(), update.query(), update.upsert());
 
 			Document mappedQuery = updateContext.getMappedQuery(entity);
 			Object mappedUpdate = updateContext.isAggregationUpdate() ? updateContext.getUpdatePipeline(entity)
@@ -167,17 +170,14 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 
 		if (bulkOp instanceof Replace replace) {
 
-			return template
-					.prepareObjectForSaveReactive(namespace.getCollectionName(), replace.replacement())
+			return template.prepareObjectForSaveReactive(namespace.getCollectionName(), replace.replacement())
 					.doOnNext(sad -> {
 
 						UpdateContext updateContext = queryOperations.replaceSingleContext(replace.query(),
 								MappedDocument.of(sad.document()), replace.upsert());
 
-						Document mappedQuery = updateContext
-								.getMappedQuery(entity);
-						UpdateOptions updateOptions = updateContext.getUpdateOptions(entity,
-								replace.query());
+						Document mappedQuery = updateContext.getMappedQuery(entity);
+						UpdateOptions updateOptions = updateContext.getUpdateOptions(entity, replace.query());
 
 						collector.addReplace(namespace, mappedQuery, sad.document(), updateOptions, toObject(sad));
 					}).then();

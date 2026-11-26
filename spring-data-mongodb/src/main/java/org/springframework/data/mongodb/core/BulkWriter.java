@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.bulk.BulkWriteOptions;
 import org.springframework.data.mongodb.core.bulk.BulkWriteResult;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoNamespace;
@@ -68,11 +69,10 @@ class BulkWriter extends BulkWriterSupport {
 	}
 
 	@SuppressWarnings("NullAway")
-	private BulkWriteResult writeToSingleCollection(String defaultDatabase, Bulk bulk,
-			BulkWriteOptions options, TypedNamespace namespace) {
+	private BulkWriteResult writeToSingleCollection(String defaultDatabase, Bulk bulk, BulkWriteOptions options,
+			TypedNamespace namespace) {
 
-		MongoNamespace mongoNamespace = new MongoNamespace(defaultDatabase,
-				resolveCollectionName(namespace));
+		MongoNamespace mongoNamespace = new MongoNamespace(defaultDatabase, resolveCollectionName(namespace));
 
 		SingleCollectionCollector collector = new SingleCollectionCollector(mongoNamespace);
 		buildWriteModels(bulk, collector);
@@ -98,8 +98,7 @@ class BulkWriter extends BulkWriterSupport {
 	}
 
 	@SuppressWarnings("NullAway")
-	private BulkWriteResult writeToMultipleCollections(String defaultDatabase, Bulk bulk,
-			BulkWriteOptions options) {
+	private BulkWriteResult writeToMultipleCollections(String defaultDatabase, Bulk bulk, BulkWriteOptions options) {
 
 		MultiCollectionCollector collector = new MultiCollectionCollector(defaultDatabase);
 		buildWriteModels(bulk, collector);
@@ -136,13 +135,14 @@ class BulkWriter extends BulkWriterSupport {
 
 				SourceAwareDocument<Object> sourceAwareDocument = template.prepareObjectForSave(namespace.getCollectionName(),
 						insert.value());
+				queryOperations.createInsertContext(MappedDocument.of(sourceAwareDocument.document()))
+						.prepareId(ClassUtils.getUserClass(insert.value()));
 				collector.addInsert(namespace, sourceAwareDocument.document(), sourceAwareDocument);
 			} else if (bulkOp instanceof Update update) {
 
 				boolean multi = !(bulkOp instanceof UpdateFirst);
 
-				UpdateContext updateContext = queryOperations.updateContext(update.update(), update.query(),
-						update.upsert());
+				UpdateContext updateContext = queryOperations.updateContext(update.update(), update.query(), update.upsert());
 
 				Document mappedQuery = updateContext.getMappedQuery(entity);
 				Object mappedUpdate = updateContext.isAggregationUpdate() ? updateContext.getUpdatePipeline(entity)

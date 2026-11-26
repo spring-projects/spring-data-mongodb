@@ -45,6 +45,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.core.CollectionOptions.EncryptedFieldsOptions;
 import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
+import org.springframework.data.mongodb.core.MappedDocument.MappedQuery;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
@@ -96,6 +97,7 @@ class EntityOperations {
 
 	private static final String ID_FIELD = FieldName.ID.name();
 
+	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
 	private final QueryMapper queryMapper;
 
@@ -117,6 +119,7 @@ class EntityOperations {
 	EntityOperations(MongoConverter converter,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
 			CustomConversions conversions, ProjectionFactory projectionFactory, QueryMapper queryMapper) {
+		this.converter = converter;
 		this.context = context;
 		this.queryMapper = queryMapper;
 		this.introspector = EntityProjectionIntrospector.create(projectionFactory,
@@ -593,6 +596,14 @@ class EntityOperations {
 		Number getVersion();
 	}
 
+	/**
+	 * Create a {@link MappedQuery} matching the given, already mapped, {@literal _id} value literally, so that values
+	 * shaped like query operators are not interpreted as such.
+	 */
+	private static Query byIdQuery(@Nullable Object id) {
+		return new MappedQuery(new Document(ID_FIELD, new Document("$eq", id)));
+	}
+
 	private static class UnmappedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
 
 		private final T map;
@@ -620,7 +631,7 @@ class EntityOperations {
 
 		@Override
 		public Query getByIdQuery() {
-			return Query.query(Criteria.where(ID_FIELD).is(map.get(ID_FIELD)));
+			return byIdQuery(map.get(ID_FIELD));
 		}
 
 		@Override
@@ -709,8 +720,20 @@ class EntityOperations {
 
 	private static class SimpleMappedEntity<T extends Map<String, Object>> extends UnmappedEntity<T> {
 
+		private final EntityOperations entityOperations;
+
 		protected SimpleMappedEntity(T map, EntityOperations entityOperations) {
 			super(map, entityOperations);
+			this.entityOperations = entityOperations;
+		}
+
+		@Override
+		public Query getByIdQuery() {
+
+			Document document = new Document();
+			entityOperations.converter.write(new Document(ID_FIELD, getId()), document);
+
+			return byIdQuery(document.get(ID_FIELD));
 		}
 
 		@Override

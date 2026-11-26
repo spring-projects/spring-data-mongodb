@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -29,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.data.TemporalUnitLessThanOffset;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
+import org.bson.types.Decimal128;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -42,6 +44,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.AtomicLongT
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BsonTimestampToInstantConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.CurrencyToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.Decimal128ToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.DocumentToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.IntegerToAtomicIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.LongToAtomicLongConverter;
@@ -181,5 +184,15 @@ class MongoConvertersUnitTests {
 		UUID uuid = UUID.randomUUID();
 		assertThat(DocumentToStringConverter.INSTANCE.convert(new Document("_id", uuid)))
 				.isEqualTo("{\"_id\": \"" + uuid.toString() + "\"}");
+	}
+
+	@Test // GH-4466
+	void convertsDecimal128ToBigInteger() {
+
+		BigInteger value = BigInteger.TWO.pow(80);
+
+		assertThat(Decimal128ToBigIntegerConverter.INSTANCE.convert(new Decimal128(new BigDecimal(value))))
+				.isEqualTo(value);
+		assertThat(Decimal128ToBigIntegerConverter.INSTANCE.convert(Decimal128.parse("42.9"))).isEqualTo(BigInteger.valueOf(42));
 	}
 }

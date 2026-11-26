@@ -60,6 +60,22 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
+	/**
+	 * Creates a new {@link CachingMongoPersistentProperty}.
+	 *
+	 * @param property must not be {@literal null}.
+	 * @param owner must not be {@literal null}.
+	 * @param simpleTypeHolder must not be {@literal null}.
+	 * @param fieldNamingStrategy can be {@literal null}.
+	 * @param idTargetTypeStrategy must not be {@literal null}.
+	 * @since 5.3
+	 */
+	public CachingMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
+			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy,
+			IdTargetTypeStrategy idTargetTypeStrategy) {
+		super(property, owner, simpleTypeHolder, fieldNamingStrategy, idTargetTypeStrategy);
+	}
+
 	@Override
 	public boolean isEntity() {
 		return isEntity.get();

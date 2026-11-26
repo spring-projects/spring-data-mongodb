@@ -23,7 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
-import org.bson.types.ObjectId;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -49,8 +48,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
  */
 class DocumentPointerFactory {
 
-	private final ConversionService conversionService;
-	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final MongoConverter converter;
 	private final Map<String, LinkageDocument> cache;
 
 	/**
@@ -63,18 +61,18 @@ class DocumentPointerFactory {
 			"['\"]?\\?#\\{#target\\}['\"]?" + // leading to the potentially quoted ?#{#target} expression
 			"\\s*}"); // some optional whitespaces and document close
 
-	DocumentPointerFactory(ConversionService conversionService,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+	DocumentPointerFactory(MongoConverter converter) {
 
-		this.conversionService = conversionService;
-		this.mappingContext = mappingContext;
+		this.converter = converter;
 		this.cache = new WeakHashMap<>();
 	}
 
 	@SuppressWarnings("NullAway")
-	DocumentPointer<?> computePointer(
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			MongoPersistentProperty property, Object value, Class<?> typeHint) {
+	DocumentPointer<?> computePointer(MongoPersistentProperty property, Object value, Class<?> typeHint) {
+
+		ConversionService conversionService = converter.getConversionService();
+		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = converter
+				.getMappingContext();
 
 		if (value instanceof LazyLoadingProxy proxy) {
 			return proxy::getSource;
@@ -92,16 +90,7 @@ class DocumentPointerFactory {
 			MongoPersistentProperty idProperty = persistentEntity.getRequiredIdProperty();
 			Object idValue = persistentEntity.getIdentifierAccessor(value).getIdentifier();
 
-			if (idProperty.hasExplicitWriteTarget()
-					&& conversionService.canConvert(idValue.getClass(), idProperty.getFieldType())) {
-				return () -> conversionService.convert(idValue, idProperty.getFieldType());
-			}
-
-			if (idValue instanceof String stringValue && ObjectId.isValid((String) idValue)) {
-				return () -> new ObjectId(stringValue);
-			}
-
-			return () -> idValue;
+			return () -> converter.convertId(idValue, idProperty.getFieldType()); // same as the target _id
 		}
 
 		MongoPersistentEntity<?> valueEntity = mappingContext.getPersistentEntity(value.getClass());
@@ -219,15 +208,16 @@ class DocumentPointerFactory {
 					MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(entry.getKey());
 					if (persistentProperty != null && persistentProperty.isEntity()) {
 
-						MongoPersistentEntity<?> nestedEntity = mappingContext.getRequiredPersistentEntity(persistentProperty.getType());
+						MongoPersistentEntity<?> nestedEntity = mappingContext
+								.getRequiredPersistentEntity(persistentProperty.getType());
 						Object propertyValue = propertyAccessor.getProperty(persistentProperty);
 
-						if(propertyValue == null) {
+						if (propertyValue == null) {
 							target.put(entry.getKey(), propertyValue);
 						} else {
 							PersistentPropertyAccessor<?> nestedAccessor = nestedEntity.getPropertyAccessor(propertyValue);
-							target.put(entry.getKey(), updatePlaceholders(document, new Document(), mappingContext,
-								nestedEntity, nestedAccessor));
+							target.put(entry.getKey(),
+									updatePlaceholders(document, new Document(), mappingContext, nestedEntity, nestedAccessor));
 						}
 					} else {
 						target.put(entry.getKey(), updatePlaceholders((Document) entry.getValue(), new Document(), mappingContext,
@@ -246,7 +236,8 @@ class DocumentPointerFactory {
 					String fieldName = entry.getKey().equals(FieldName.ID.name()) ? "id" : entry.getKey();
 					if (!fieldName.contains(".")) {
 
-						Object targetValue = propertyAccessor.getProperty(persistentEntity.getRequiredPersistentProperty(fieldName));
+						Object targetValue = propertyAccessor
+								.getProperty(persistentEntity.getRequiredPersistentProperty(fieldName));
 						target.put(attribute, targetValue);
 						continue;
 					}

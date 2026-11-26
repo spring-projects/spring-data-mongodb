@@ -316,6 +316,20 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
+	@Test // GH-4466
+	void removeObjectUsesSingleDelete() {
+
+		when(collection.deleteOne(any(Bson.class), any(DeleteOptions.class))).thenReturn(Mono.empty());
+
+		template.remove(new Document("_id", "1"), "collection-1").subscribe();
+		Person person = new Person();
+		person.id = "1";
+		template.remove(person).subscribe();
+
+		verify(collection, times(2)).deleteOne(any(Bson.class), any(DeleteOptions.class));
+		verify(collection, never()).deleteMany(any(Bson.class), any(DeleteOptions.class));
+	}
+
 	@Test // DATAMONGO-1518
 	void findAndRemoveManyShouldUseCollationWhenPresent() {
 

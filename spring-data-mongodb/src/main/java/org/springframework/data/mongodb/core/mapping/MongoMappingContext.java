@@ -30,6 +30,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.util.Assert;
 
 /**
  * Default implementation of a {@link MappingContext} for MongoDB using {@link BasicMongoPersistentEntity} and
@@ -45,6 +46,7 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
+	private IdTargetTypeStrategy idTargetTypeStrategy = IdTargetTypeStrategy.OBJECT_ID;
 	private boolean autoIndexCreation = false;
 
 	private @Nullable ApplicationContext applicationContext;
@@ -67,6 +69,29 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? DEFAULT_NAMING_STRATEGY : fieldNamingStrategy;
 	}
 
+	/**
+	 * Configures the {@link IdTargetTypeStrategy} to determine the target type of {@literal id} properties that do not
+	 * define one explicitly. Defaults to {@link IdTargetTypeStrategy#OBJECT_ID}. Must be set before entities are
+	 * created. Use the same strategy for {@link org.springframework.data.mongodb.core.convert.MongoCustomConversions}
+	 * to apply it to {@literal _id} values without mapping information.
+	 *
+	 * @param idTargetTypeStrategy must not be {@literal null}.
+	 * @since 5.3
+	 */
+	public void setIdTargetTypeStrategy(IdTargetTypeStrategy idTargetTypeStrategy) {
+
+		Assert.notNull(idTargetTypeStrategy, "IdTargetTypeStrategy must not be null");
+		this.idTargetTypeStrategy = idTargetTypeStrategy;
+	}
+
+	/**
+	 * @return the {@link IdTargetTypeStrategy} in use. Never {@literal null}.
+	 * @since 5.3
+	 */
+	public IdTargetTypeStrategy getIdTargetTypeStrategy() {
+		return idTargetTypeStrategy;
+	}
+
 	@Override
 	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
 
@@ -81,7 +106,8 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	public MongoPersistentProperty createPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder) {
 
-		CachingMongoPersistentProperty cachingMongoPersistentProperty = new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+		CachingMongoPersistentProperty cachingMongoPersistentProperty = new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy,
+				idTargetTypeStrategy);
 		cachingMongoPersistentProperty.validate();
 		return cachingMongoPersistentProperty;
 	}

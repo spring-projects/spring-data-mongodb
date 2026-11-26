@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.DeleteManyModel;
@@ -54,6 +55,7 @@ import com.mongodb.client.model.WriteModel;
  * Support class for bulk operations.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 4.1
  */
 abstract class BulkOperationsSupport {
@@ -104,6 +106,13 @@ abstract class BulkOperationsSupport {
 	}
 
 	WriteModel<Document> mapWriteModel(Object source, WriteModel<Document> writeModel) {
+
+		if (writeModel instanceof InsertOneModel<Document> model) {
+
+			QueryOperations.prepareId(MappedDocument.of(model.getDocument()),
+					queryMapper().getMappingContext().getPersistentEntity(ClassUtils.getUserClass(source)), queryMapper());
+			return writeModel;
+		}
 
 		if (writeModel instanceof UpdateOneModel<Document> model) {
 

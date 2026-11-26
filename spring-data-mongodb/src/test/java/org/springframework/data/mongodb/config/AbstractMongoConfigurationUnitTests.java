@@ -37,8 +37,10 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoManagedTypes;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.IdTargetTypeStrategy;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.spel.EvaluationContextProvider;
@@ -126,6 +128,31 @@ public class AbstractMongoConfigurationUnitTests {
 		context.close();
 	}
 
+	@Test // GH-4466
+	void usesObjectIdTargetTypeStrategyByDefault() {
+
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
+
+		assertThat(context.getBean(MongoMappingContext.class).getIdTargetTypeStrategy())
+				.isSameAs(IdTargetTypeStrategy.OBJECT_ID);
+		assertThat(context.getBean(MappingMongoConverter.class).getIdTargetTypeStrategy())
+				.isSameAs(IdTargetTypeStrategy.OBJECT_ID);
+		context.close();
+	}
+
+	@Test // GH-4466
+	void appliesConfiguredIdTargetTypeStrategyToMappingContextAndConverter() {
+
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(
+				ConfigurationWithIdTargetTypeStrategy.class);
+
+		assertThat(context.getBean(MongoMappingContext.class).getIdTargetTypeStrategy())
+				.isSameAs(IdTargetTypeStrategy.IMPLICIT);
+		assertThat(context.getBean(MappingMongoConverter.class).getIdTargetTypeStrategy())
+				.isSameAs(IdTargetTypeStrategy.IMPLICIT);
+		context.close();
+	}
+
 	@Test // DATAMONGO-1470
 	@SuppressWarnings("unchecked")
 	public void allowsMultipleEntityBasePackages() throws ClassNotFoundException {
@@ -177,6 +204,15 @@ public class AbstractMongoConfigurationUnitTests {
 			return new CustomMongoTypeMapper();
 		}
 
+	}
+
+	@Configuration
+	static class ConfigurationWithIdTargetTypeStrategy extends SampleMongoConfiguration {
+
+		@Override
+		protected void configureConverters(MongoConverterConfigurationAdapter adapter) {
+			adapter.idTargetTypeStrategy(IdTargetTypeStrategy.IMPLICIT);
+		}
 	}
 
 	static class ConfigurationWithMultipleBasePackages extends AbstractMongoClientConfiguration {

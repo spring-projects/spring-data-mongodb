@@ -74,6 +74,9 @@ public class MongoTestMappingContext extends MongoMappingContext {
 		setAutoIndexCreation(contextConfigurer.autocreateIndex);
 		if (converterConfigurer.customConversions != null) {
 			setSimpleTypeHolder(converterConfigurer.customConversions.getSimpleTypeHolder());
+			if (converterConfigurer.customConversions instanceof MongoCustomConversions mongoConversions) {
+				setIdTargetTypeStrategy(mongoConversions.getIdTargetTypeStrategy());
+			}
 		} else {
 			setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
 		}

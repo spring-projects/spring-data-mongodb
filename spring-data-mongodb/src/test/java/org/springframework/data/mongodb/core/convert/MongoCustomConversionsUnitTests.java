@@ -28,6 +28,7 @@ import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.Foo;
+import org.springframework.data.mongodb.core.mapping.IdTargetTypeStrategy;
 
 /**
  * Unit tests for {@link MongoCustomConversions}.
@@ -72,6 +73,31 @@ class MongoCustomConversionsUnitTests {
 		});
 
 		assertThat(conversions.getCustomWriteTarget(Date.class)).isEmpty();
+	}
+
+	@Test // GH-4466
+	void usesObjectIdTargetTypeStrategyByDefault() {
+
+		assertThat(new MongoCustomConversions(Collections.emptyList()).getIdTargetTypeStrategy())
+				.isSameAs(IdTargetTypeStrategy.OBJECT_ID);
+		assertThat(MongoCustomConversions.create(config -> {}).getIdTargetTypeStrategy())
+				.isSameAs(IdTargetTypeStrategy.OBJECT_ID);
+	}
+
+	@Test // GH-4466
+	void exposesConfiguredIdTargetTypeStrategy() {
+
+		MongoCustomConversions conversions = MongoCustomConversions.create(config -> {
+			config.idTargetTypeStrategy(IdTargetTypeStrategy.IMPLICIT);
+		});
+
+		assertThat(conversions.getIdTargetTypeStrategy()).isSameAs(IdTargetTypeStrategy.IMPLICIT);
+	}
+
+	@Test // GH-4466
+	void rejectsNullIdTargetTypeStrategy() {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> MongoCustomConversions.create(config -> config.idTargetTypeStrategy(null)));
 	}
 
 	static class DateToZonedDateTimeConverter implements Converter<Date, ZonedDateTime> {

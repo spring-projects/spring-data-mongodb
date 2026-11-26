@@ -15,14 +15,18 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.bson.types.BSONTimestamp;
 import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Enumeration of field value types that can be used to represent a {@link org.bson.Document} field value. This
@@ -57,6 +61,11 @@ public enum FieldType {
 	INT64(17, Long.class), //
 	DECIMAL128(18, Decimal128.class);
 
+	private static final Set<Class<?>> BSON_TYPES = Arrays.stream(values()) //
+			.filter(it -> it != IMPLICIT) //
+			.map(FieldType::getJavaClass) //
+			.collect(Collectors.toUnmodifiableSet());
+
 	private final int bsonType;
 	private final Class<?> javaClass;
 
@@ -82,5 +91,17 @@ public enum FieldType {
 	 */
 	public Class<?> getJavaClass() {
 		return javaClass;
+	}
+
+	/**
+	 * Returns whether the given Java type represents a BSON type, that is whether it is the {@link #getJavaClass() Java
+	 * class} of any {@link FieldType} other than {@link #IMPLICIT}.
+	 *
+	 * @param javaClass can be {@literal null}.
+	 * @return {@literal true} if the given type represents a BSON type.
+	 * @since 5.3
+	 */
+	public static boolean representsBsonType(@Nullable Class<?> javaClass) {
+		return javaClass != null && BSON_TYPES.contains(javaClass);
 	}
 }

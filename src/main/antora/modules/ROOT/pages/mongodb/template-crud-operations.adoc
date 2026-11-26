@@ -233,6 +233,42 @@ public class StringToObjectId {
 Corresponds to `@Id` usage.
 ====
 
+[[mongo-template.id-handling.strategy]]
+==== Configuring the Default `_id` Target Type
+
+`@MongoId` controls `_id` conversion per property.
+As of Spring Data MongoDB 5.3, an `IdTargetTypeStrategy` changes the default for `id` properties without `@MongoId` or `@Field` annotation, and for `_id` values without mapping information, such as queries against collections of plain `Document`:
+
+.Configuring `IdTargetTypeStrategy`
+====
+[source,java]
+----
+@Configuration
+class MongoConfig extends AbstractMongoClientConfiguration {
+
+  @Override
+  protected void configureConverters(MongoConverterConfigurationAdapter adapter) {
+    adapter.idTargetTypeStrategy(IdTargetTypeStrategy.IMPLICIT); <1>
+  }
+}
+----
+<1> Use the property type, as `@MongoId` does. `_id` values without mapping information retain their type.
+====
+
+`IdTargetTypeStrategy.OBJECT_ID` is the default and applies the conversion rules described above.
+A custom strategy receives the `id` property, or `null` if no mapping information is available, and returns the target type.
+Properties annotated with `@MongoId` or `@Field` are not subject to the strategy.
+
+When not extending `AbstractMongoClientConfiguration` or `AbstractReactiveMongoConfiguration`, apply the strategy to both `MongoMappingContext` (`setIdTargetTypeStrategy`) and `MappingMongoConverter` (via `MongoCustomConversions`).
+`MappingMongoConverter` logs a warning if the two differ.
+
+NOTE: Changing the strategy does not migrate existing data.
+For example, with `IMPLICIT`, a `String` id no longer matches a document stored with an `ObjectId` `_id`.
+
+NOTE: `_id` values that do not represent a BSON type, such as `LocalDateTime`, are written using the regular write conversion.
+Prior to 5.3, `@MongoId` ids of such types were passed to the driver codec, which uses UTC.
+To keep matching data written that way by a JVM not running in UTC, use `useNativeDriverJavaTimeCodecs()`, which applies to all local date and time values.
+
 [[mongo-template.save-insert.collection]]
 === Into Which Collection Are My Documents Saved?
 
