@@ -857,7 +857,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 */
 	@Contract("_ -> this")
-	public Criteria orOperator(Criteria... criteria) {
+	public Criteria orOperator(CriteriaDefinition... criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
 
@@ -875,7 +875,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 3.2
 	 */
 	@Contract("_ -> this")
-	public Criteria orOperator(Collection<Criteria> criteria) {
+	public Criteria orOperator(Collection<? extends CriteriaDefinition> criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
 
@@ -893,7 +893,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 */
 	@Contract("_ -> this")
-	public Criteria norOperator(Criteria... criteria) {
+	public Criteria norOperator(CriteriaDefinition... criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
 
@@ -911,7 +911,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 3.2
 	 */
 	@Contract("_ -> this")
-	public Criteria norOperator(Collection<Criteria> criteria) {
+	public Criteria norOperator(Collection<? extends CriteriaDefinition> criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
 
@@ -929,7 +929,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 */
 	@Contract("_ -> this")
-	public Criteria andOperator(Criteria... criteria) {
+	public Criteria andOperator(CriteriaDefinition... criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
 
@@ -947,7 +947,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 3.2
 	 */
 	@Contract("_ -> this")
-	public Criteria andOperator(Collection<Criteria> criteria) {
+	public Criteria andOperator(Collection<? extends CriteriaDefinition> criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
 
@@ -1063,9 +1063,9 @@ public class Criteria implements CriteriaDefinition {
 		return queryCriteria;
 	}
 
-	private BasicDBList createCriteriaList(Collection<Criteria> criteria) {
+	private BasicDBList createCriteriaList(Collection<? extends CriteriaDefinition> criteria) {
 		BasicDBList bsonList = new BasicDBList();
-		for (Criteria c : criteria) {
+		for (CriteriaDefinition c : criteria) {
 			bsonList.add(c.getCriteriaObject());
 		}
 		return bsonList;
