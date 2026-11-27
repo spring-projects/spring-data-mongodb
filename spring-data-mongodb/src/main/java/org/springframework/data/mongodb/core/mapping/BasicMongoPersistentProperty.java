@@ -270,6 +270,9 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		Lazy<EvaluationContext> evaluationContext = Lazy.of(() -> {
 			EvaluationContext ctx = getEvaluationContext(null);
 			ctx.setVariable("target", getOwner().getType().getSimpleName() + "." + getName());
+			if (getOwner() instanceof MongoPersistentEntity<?> mongoPersistentEntity) {
+				ctx.setVariable("collection", mongoPersistentEntity.getCollection());
+			}
 			return ctx;
 		});
 
