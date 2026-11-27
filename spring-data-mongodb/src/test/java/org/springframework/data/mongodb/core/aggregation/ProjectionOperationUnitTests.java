@@ -54,6 +54,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
  * @author Christoph Strobl
  * @author Divya Srivastava
  * @author Mark Paluch
+ * @author Seonwoo Jung
  */
 public class ProjectionOperationUnitTests {
 
@@ -232,6 +233,25 @@ public class ProjectionOperationUnitTests {
 		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		assertThat((Integer) projectClause.get(Fields.UNDERSCORE_ID)).isEqualTo(0);
+	}
+
+	@Test // GH-3490
+	void excludeShouldRenderNestedFieldPath() {
+
+		ProjectionOperation projectionOp = new ProjectionOperation().andExclude("address.street");
+		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(DocumentTestUtils.getAsDocument(document, PROJECT)).isEqualTo(new Document("address.street", 0));
+	}
+
+	@Test // GH-3490
+	void excludeShouldAllowNestedFieldsWithSameLeafName() {
+
+		ProjectionOperation projectionOp = new ProjectionOperation().andExclude("home.street", "work.street");
+		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(DocumentTestUtils.getAsDocument(document, PROJECT))
+				.isEqualTo(new Document("home.street", 0).append("work.street", 0));
 	}
 
 	@Test // DATAMONGO-1906
