@@ -187,6 +187,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael Krog
  * @author Jakub Zurawa
  * @author Florian Lüdiger
+ * @author Sangyeop Jeong
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider,
 		SearchIndexOperationsProvider, ReadPreferenceAware {
@@ -1403,6 +1404,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return collection;
+	}
+
+	/**
+	 * Resolve the {@link WriteConcern} to use for a bulk write against the given collection considering the configured
+	 * {@link #setWriteConcern(WriteConcern) default} and {@link #setWriteConcernResolver(WriteConcernResolver) resolver}.
+	 *
+	 * @param collectionName the collection to write to.
+	 * @param entityType the entity type the bulk was declared for, can be {@literal null}.
+	 * @return the {@link WriteConcern} to apply or {@literal null} to use the collection default.
+	 * @since 5.2
+	 */
+	@Nullable
+	WriteConcern prepareBulkWriteConcern(String collectionName, @Nullable Class<?> entityType) {
+		return prepareWriteConcern(
+				new MongoAction(writeConcern, MongoActionOperation.BULK, collectionName, entityType, null, null));
 	}
 
 	/**

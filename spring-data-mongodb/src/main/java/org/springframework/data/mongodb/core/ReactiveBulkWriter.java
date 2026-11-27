@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
 import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
@@ -40,6 +41,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 
 import com.mongodb.MongoNamespace;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteOptions;
@@ -50,6 +52,7 @@ import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Sangyeop Jeong
  * @since 5.1
  */
 class ReactiveBulkWriter extends BulkWriterSupport {
@@ -80,21 +83,15 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		return buildWriteModelsReactive(bulk, collector).then(Mono.defer(() -> {
 
 			String collectionName = collector.getNamespace().getCollectionName();
-			List<SourceAwareDocument<Object>> afterSaveCallables = collector.getAfterSaveCallables();
+			WriteConcern writeConcern = template.prepareBulkWriteConcern(collectionName, namespace.type());
 
 			return template
 					.createMono(collectionName,
-							col -> col.bulkWrite(collector.getWriteModels(),
-									new com.mongodb.client.model.BulkWriteOptions()
+							col -> (writeConcern != null ? col.withWriteConcern(writeConcern) : col).bulkWrite(
+									collector.getWriteModels(), new com.mongodb.client.model.BulkWriteOptions()
 											.ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.map(BulkWriteResult::from)
-					.doOnSuccess(
-							v -> afterSaveCallables
-									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
-											callable.document(), callable.collectionName()))))
-					.flatMap(result -> Flux.concat(afterSaveCallables.stream().map(callable -> template
-							.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName())).toList())
-							.then(Mono.just(result)));
+					.flatMap(result -> completeSaves(collector)
+							.map(savedEntities -> BulkWriteResult.from(result, savedEntities)));
 		}));
 	}
 
@@ -106,20 +103,13 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 		return buildWriteModelsReactive(bulk, collector).then(Mono.defer(() -> {
 
 			List<ClientNamespacedWriteModel> writeModels = collector.getWriteModels();
-			List<SourceAwareDocument<Object>> afterSaveCallables = collector.getAfterSaveCallables();
 
 			return template
 					.doWithCluster(client -> client.bulkWrite(writeModels,
 							ClientBulkWriteOptions
 									.clientBulkWriteOptions().ordered(options.getOrder().equals(BulkWriteOptions.Order.ORDERED))))
-					.map(BulkWriteResult::from)
-					.doOnSuccess(
-							v -> afterSaveCallables
-									.forEach(callable -> template.maybeEmitEvent(new AfterSaveEvent<>(callable.source(),
-											callable.document(), callable.collectionName()))))
-					.flatMap(result -> Flux.concat(afterSaveCallables.stream().map(callable -> template
-							.maybeCallAfterSave(callable.source(), callable.document(), callable.collectionName())).toList())
-							.then(Mono.just(result)));
+					.flatMap(result -> completeSaves(collector)
+							.map(savedEntities -> BulkWriteResult.from(result, savedEntities)));
 		}));
 	}
 
@@ -136,7 +126,13 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 
 			return template
 					.prepareObjectForSaveReactive(namespace.getCollectionName(), insert.value())
-					.doOnNext(sad -> collector.addInsert(namespace, sad.document(), toObject(sad))).then();
+					.doOnNext(sad -> {
+
+						Document document = queryOperations.createInsertContext(MappedDocument.of(sad.document()))
+								.prepareId(sad.source().getClass()).getDocument();
+
+						collector.addInsert(namespace, document, toObject(sad));
+					}).then();
 		}
 
 		if (bulkOp instanceof Update update) {
@@ -169,21 +165,74 @@ class ReactiveBulkWriter extends BulkWriterSupport {
 
 			return template
 					.prepareObjectForSaveReactive(namespace.getCollectionName(), replace.replacement())
-					.doOnNext(sad -> {
+					.flatMap(sad -> {
 
 						UpdateContext updateContext = queryOperations.replaceSingleContext(replace.query(),
 								MappedDocument.of(sad.document()), replace.upsert());
 
-						Document mappedQuery = updateContext
-								.getMappedQuery(entity);
 						UpdateOptions updateOptions = updateContext.getUpdateOptions(entity,
 								replace.query());
 
-						collector.addReplace(namespace, mappedQuery, sad.document(), updateOptions, toObject(sad));
+						return applyShardKeyIfRequired(updateContext, entity, updateContext.getMappedQuery(entity),
+								namespace.getCollectionName())
+								.doOnNext(mappedQuery -> collector.addReplace(namespace, mappedQuery, sad.document(),
+										updateOptions, toObject(sad)));
 					}).then();
 		}
 
 		return Mono.error(new IllegalStateException("Unknown bulk operation type: " + bulkOp.getClass()));
+	}
+
+	/**
+	 * Append the {@link MongoPersistentEntity#getShardKey() shard key} to the given replacement filter if the entity is
+	 * sharded and the filter does not contain the shard key yet. Mutable shard key values are read from the existing
+	 * document, falling back to the replacement if there is none.
+	 *
+	 * @param updateContext the replacement context.
+	 * @param entity the entity the replacement is declared for, can be {@literal null}.
+	 * @param filter the mapped replacement filter.
+	 * @param collectionName the collection to look up the existing document in.
+	 * @return the filter to use.
+	 */
+	private Mono<Document> applyShardKeyIfRequired(UpdateContext updateContext,
+			@Nullable MongoPersistentEntity<?> entity, Document filter, String collectionName) {
+
+		if (entity == null || !updateContext.requiresShardKey(filter, entity)) {
+			return Mono.just(filter);
+		}
+
+		if (entity.getShardKey().isImmutable()) {
+			return Mono.just(updateContext.applyShardKey(entity, filter, null));
+		}
+
+		return template
+				.createMono(collectionName,
+						collection -> collection.find(filter, Document.class)
+								.projection(updateContext.getMappedShardKey(entity)).first())
+				.map(existing -> updateContext.applyShardKey(entity, filter, existing))
+				.switchIfEmpty(Mono.fromSupplier(() -> updateContext.applyShardKey(entity, filter, null)));
+	}
+
+	private Mono<List<Object>> completeSaves(WriteModelCollector collector) {
+		return Flux.fromIterable(collector.getAfterSaveCallables()).concatMap(this::completeSave).collectList();
+	}
+
+	/**
+	 * Completes the save lifecycle after an entity has been written through an {@literal insert} or {@literal replace}
+	 * operation by propagating a generated identifier back to the entity and emitting the after save event and
+	 * callbacks.
+	 *
+	 * @param written the entity along with the document handed to the driver, carrying an identifier generated during
+	 *          the write.
+	 * @return the entity as returned by the after save callbacks.
+	 */
+	private Mono<Object> completeSave(SourceAwareDocument<Object> written) {
+
+		Object entity = populateIdIfNecessary(written.source(), written.document(),
+				template.getConverter().getConversionService());
+
+		template.maybeEmitEvent(new AfterSaveEvent<>(entity, written.document(), written.collectionName()));
+		return template.maybeCallAfterSave(entity, written.document(), written.collectionName());
 	}
 
 	@SuppressWarnings("unchecked")
