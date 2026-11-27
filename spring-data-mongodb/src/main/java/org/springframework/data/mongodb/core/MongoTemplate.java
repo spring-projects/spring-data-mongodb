@@ -71,6 +71,7 @@ import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContex
 import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.ScrollUtils.KeysetScrollQuery;
+import org.springframework.data.mongodb.core.ScrollUtils.KeysetScrollResult;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -187,6 +188,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael Krog
  * @author Jakub Zurawa
  * @author Florian Lüdiger
+ * @author Priyanshu Gagiya
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider,
 		SearchIndexOperationsProvider, ReadPreferenceAware {
@@ -970,13 +972,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (query.hasKeyset()) {
 
 			KeysetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
-					operations.getIdPropertyName(sourceClass));
+					operations.getIdPropertyName(sourceClass), sort -> {
+						return queryMapper.getMappedSort(sort, mappingContext.getPersistentEntity(sourceClass));
+					});
 
-			List<R> result = doFind(collectionName, createDelegate(query), keysetPaginationQuery.query(),
+			List<KeysetScrollResult<R>> result = doFind(collectionName, createDelegate(query), keysetPaginationQuery.query(),
 					keysetPaginationQuery.fields(), sourceClass,
-					new QueryCursorPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback);
+					new QueryCursorPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), document -> {
+						Map<String, Object> keys = keysetPaginationQuery.captureKeys(document, mongoDbFactory.getCodecRegistry());
+						return new KeysetScrollResult<>(callback.doWith(document), keys);
+					});
 
-			return ScrollUtils.createWindow(query, result, sourceClass, operations);
+			return ScrollUtils.createWindow(query, result);
 		}
 
 		List<R> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
