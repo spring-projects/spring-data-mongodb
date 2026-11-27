@@ -16,7 +16,10 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+
+import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +40,8 @@ import org.springframework.data.mongodb.core.query.Collation;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.CreateIndexOptions;
+import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -64,7 +69,7 @@ public class DefaultIndexOperationsUnitTests {
 		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(any(), any(Class.class))).thenReturn(collection);
-		when(collection.createIndex(any(), any(IndexOptions.class))).thenReturn("OK");
+		when(collection.createIndexes(anyList(), any(CreateIndexOptions.class))).thenReturn(List.of("OK"));
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = spy(new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext));
@@ -76,7 +81,9 @@ public class DefaultIndexOperationsUnitTests {
 
 		indexOpsFor(Jedi.class).ensureIndex(new Index("name", Direction.DESC));
 
-		verify(collection).createIndex(eq(new Document("firstname", -1)), any());
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+		verify(collection).createIndexes(captor.capture(), any(CreateIndexOptions.class));
+		assertThat(captor.getValue().get(0).getKeys()).isEqualTo(new Document("firstname", -1));
 	}
 
 	@Test // DATAMONGO-1854
@@ -84,10 +91,10 @@ public class DefaultIndexOperationsUnitTests {
 
 		indexOpsFor(Jedi.class).ensureIndex(new Index("firstname", Direction.DESC));
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+		verify(collection).createIndexes(captor.capture(), any(CreateIndexOptions.class));
 
-		assertThat(options.getValue().getCollation()).isNull();
+		assertThat(captor.getValue().get(0).getOptions().getCollation()).isNull();
 	}
 
 	@Test // DATAMONGO-1854
@@ -95,10 +102,10 @@ public class DefaultIndexOperationsUnitTests {
 
 		indexOpsFor(Sith.class).ensureIndex(new Index("firstname", Direction.DESC));
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+		verify(collection).createIndexes(captor.capture(), any(CreateIndexOptions.class));
 
-		assertThat(options.getValue().getCollation())
+		assertThat(captor.getValue().get(0).getOptions().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
@@ -107,10 +114,10 @@ public class DefaultIndexOperationsUnitTests {
 
 		indexOpsFor(Sith.class).ensureIndex(new Index("firstname", Direction.DESC).collation(Collation.of("en_US")));
 
-		ArgumentCaptor<IndexOptions> options = ArgumentCaptor.forClass(IndexOptions.class);
-		verify(collection).createIndex(any(), options.capture());
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+		verify(collection).createIndexes(captor.capture(), any(CreateIndexOptions.class));
 
-		assertThat(options.getValue().getCollation())
+		assertThat(captor.getValue().get(0).getOptions().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("en_US").build());
 	}
 
@@ -119,7 +126,9 @@ public class DefaultIndexOperationsUnitTests {
 
 		indexOpsFor(Jedi.class).ensureIndex(HashedIndex.hashed("name"));
 
-		verify(collection).createIndex(eq(new Document("firstname", "hashed")), any());
+		ArgumentCaptor<List<IndexModel>> captor = ArgumentCaptor.forClass(List.class);
+		verify(collection).createIndexes(captor.capture(), any(CreateIndexOptions.class));
+		assertThat(captor.getValue().get(0).getKeys()).isEqualTo(new Document("firstname", "hashed"));
 	}
 
 	@Test // GH-4698
@@ -129,6 +138,22 @@ public class DefaultIndexOperationsUnitTests {
 
 		operations.ensureIndex(HashedIndex.hashed("name"));
 		verify(db).getCollection(eq("foo"), any(Class.class));
+	}
+
+	@Test // GH-4422
+	void shouldPassCreateIndexOptionsToDriver() {
+
+		CreateIndexOptions createIndexOptions = new CreateIndexOptions()
+				.commitQuorum(com.mongodb.CreateIndexCommitQuorum.MAJORITY);
+
+		DefaultIndexOperations operations = new DefaultIndexOperations(template, template.getCollectionName(Jedi.class),
+				Jedi.class, createIndexOptions);
+
+		operations.createIndex(new Index("name", Direction.DESC));
+
+		ArgumentCaptor<CreateIndexOptions> optionsCaptor = ArgumentCaptor.forClass(CreateIndexOptions.class);
+		verify(collection).createIndexes(anyList(), optionsCaptor.capture());
+		assertThat(optionsCaptor.getValue()).isSameAs(createIndexOptions);
 	}
 
 	private DefaultIndexOperations indexOpsFor(Class<?> type) {
