@@ -66,6 +66,7 @@ import org.springframework.mock.env.MockEnvironment;
  * @author Mark Paluch
  * @author Dave Perryman
  * @author Stefan Tirea
+ * @author Kamil Krzywanski
  */
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
@@ -943,6 +944,16 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertIndexPathAndCollection(new String[] { "nested.foo" }, "textIndexOnNestedRoot", indexDefinitions.get(0));
 		}
 
+		@Test // GH-5213
+		public void shouldResolveTextIndexThroughGenericTypeArguments() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					TextIndexThroughGenericRoot.class);
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection(new String[] { "holder.value.foo" }, "textIndexThroughGenericRoot",
+					indexDefinitions.get(0));
+		}
+
 		@Test // DATAMONGO-937
 		public void shouldResolveTextIndexOnElementWithWeightCorrectly() {
 
@@ -1064,6 +1075,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		class TextIndexOnNested {
 
 			String foo;
+		}
+
+		@Document
+		static class TextIndexThroughGenericRoot {
+			TextIndexGenericHolder<TextIndexGenericValue> holder;
+		}
+
+		static class TextIndexGenericHolder<T> {
+			T value;
+		}
+
+		static class TextIndexGenericValue {
+			@TextIndexed String foo;
 		}
 
 		@Document
@@ -1233,6 +1257,48 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					MultipleObjectsOfSameType.class);
 
 			assertThat(indexDefinitions).isEmpty();
+		}
+
+		@Test // GH-5213
+		public void shouldNotDetectCycleForGenericTypeUsedWithDifferentTypeArguments() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(FruitShop.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection("fruitBaskets.include.fruit.include.name", "fruitShop", indexDefinitions.get(0));
+		}
+
+		@Test // GH-5213
+		public void shouldStillDetectGenuineCycleThroughGenericType() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					GenericTreeDocument.class);
+
+			// Indexes on the first occurrence of the generic type are kept; further recursion into the same
+			// parameterized type is treated as a cycle and stops.
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection("children.name", "genericTreeDocument", indexDefinitions.get(0));
+		}
+
+		@Test // GH-5213
+		public void shouldDetectCycleThroughGenericTypeWithExpandingTypeArguments() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					ExpandingGenericRoot.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection("node.name", "expandingGenericRoot", indexDefinitions.get(0));
+		}
+
+		@Test // GH-5213
+		public void shouldResolveIndexesThroughNestedGenericTypeArguments() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					NestedSelectionDocument.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection("selection.include.include.name", "nestedSelectionDocument",
+					indexDefinitions.get(0));
 		}
 
 		@Test // DATAMONGO-962
@@ -1669,6 +1735,58 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<SelfCyclingViaCollectionType> cyclic;
 
+		}
+
+		/**
+		 * Reproducer for GH-5213: the same generic type appears twice with different type arguments.
+		 * That is not a structural cycle and nested {@link Indexed} fields must still be discovered.
+		 */
+		@Document
+		static class FruitShop {
+
+			Selection<FruitBasket> fruitBaskets;
+		}
+
+		static class FruitBasket {
+			Selection<IndexedItem> fruit;
+		}
+
+		static class IndexedItem {
+			@Indexed String name;
+		}
+
+		static class Selection<T> {
+			T include;
+		}
+
+		/**
+		 * Genuine cycle through a generic type: {@code GenericTreeDocument -> Box<GenericTreeDocument> -> GenericTreeDocument}.
+		 * Index resolution must still stop recursion after discovering indexes one level into the cycle.
+		 */
+		@Document
+		static class GenericTreeDocument {
+
+			Box<GenericTreeDocument> children;
+		}
+
+		static class Box<T> {
+			@Indexed String name;
+			T value;
+		}
+
+		@Document
+		static class ExpandingGenericRoot {
+			ExpandingNode<String> node;
+		}
+
+		static class ExpandingNode<T> {
+			@Indexed String name;
+			ExpandingNode<List<T>> next;
+		}
+
+		@Document
+		static class NestedSelectionDocument {
+			Selection<Selection<IndexedItem>> selection;
 		}
 
 		@Document

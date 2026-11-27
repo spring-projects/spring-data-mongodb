@@ -79,6 +79,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Perryman
  * @author Stefan Tirea
  * @author Sangbeen Moon
+ * @author Kamil Krzywanski
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -384,7 +385,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 						try {
 							appendTextIndexInformation(propertyDotPath, propertyPath, indexDefinitionBuilder,
-									mappingContext.getRequiredPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
+									mappingContext.getRequiredPersistentEntity(persistentProperty), optionsForNestedType, guard);
 						} catch (CyclicPropertyReferenceException e) {
 							LOGGER.info(e.getMessage());
 						} catch (InvalidDataAccessApiUsageException e) {
@@ -860,6 +861,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 *
 		 * @author Christoph Strobl
 		 * @author Mark Paluch
+		 * @author Kamil Krzywanski
 		 */
 		static class Path {
 
@@ -905,7 +907,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				elements.addAll(this.elements);
 				elements.add(breadcrumb);
 
-				return new Path(elements, this.elements.contains(breadcrumb));
+				return new Path(elements, indexOf(this.elements, breadcrumb, 0) != -1);
 			}
 
 			/**
@@ -946,15 +948,27 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				return toString();
 			}
 
-			private static <T> int indexOf(List<T> haystack, T needle, int offset) {
+			private static int indexOf(List<PersistentProperty<?>> haystack, PersistentProperty<?> needle, int offset) {
 
 				for (int i = offset; i < haystack.size(); i++) {
-					if (haystack.get(i).equals(needle)) {
+					if (isSameSegment(haystack.get(i), needle)) {
 						return i;
 					}
 				}
 
 				return -1;
+			}
+
+			/**
+			 * Two path segments are considered equal if they refer to the same property and resolve to the same actual
+			 * type. {@link PersistentProperty#equals(Object)} alone does not consider generics, so a generic property such
+			 * as {@code Selection<T>.include} would be considered a cycle when used as {@code Selection<FruitBasket>} and
+			 * {@code Selection<String>} within the same path. Comparing fully resolved types instead would not terminate for
+			 * recursive types that expand their type arguments (e.g. {@code Node<T>} declaring {@code Node<List<T>> next})
+			 * while the set of raw types is finite.
+			 */
+			private static boolean isSameSegment(PersistentProperty<?> left, PersistentProperty<?> right) {
+				return left.equals(right) && ObjectUtils.nullSafeEquals(left.getActualType(), right.getActualType());
 			}
 
 			private static String toPath(Iterator<PersistentProperty<?>> iterator) {
