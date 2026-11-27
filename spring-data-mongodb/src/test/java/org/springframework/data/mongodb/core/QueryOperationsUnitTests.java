@@ -45,6 +45,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * Unit tests for {@link QueryOperations}.
  *
  * @author Christoph Strobl
+ * @author Jeongkyun An
  */
 @ExtendWith(MockitoExtension.class)
 class QueryOperationsUnitTests {
@@ -224,6 +225,21 @@ class QueryOperationsUnitTests {
 
 	static class Person {
 
+	}
+
+	@Test
+	void skipAsIntRejectsValuesOutsideTheIntegerRange() {
+
+		// Pageable#getOffset() is a long, so deep pagination can produce an offset the driver cannot take
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> QueryOperations.skipAsInt((long) Integer.MAX_VALUE + 1L));
+	}
+
+	@Test
+	void skipAsIntPassesValuesInsideTheIntegerRange() {
+
+		assertThat(QueryOperations.skipAsInt(Integer.MAX_VALUE)).isEqualTo(Integer.MAX_VALUE);
+		assertThat(QueryOperations.skipAsInt(0)).isZero();
 	}
 
 }
