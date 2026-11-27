@@ -54,6 +54,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
  * @author Christoph Strobl
  * @author Divya Srivastava
  * @author Mark Paluch
+ * @author sathish256
  */
 public class ProjectionOperationUnitTests {
 
@@ -1506,6 +1507,15 @@ public class ProjectionOperationUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { eq250: { $eq: [\"$qty\", [250]]} } }"));
+	}
+
+	@Test // GH-3473
+	void shouldRenderEqNullAggregationExpression() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").isNull()).as("isNull")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { isNull: { $eq: [\"$qty\", null]} } }"));
 	}
 
 	@Test // DATAMONGO-1536
